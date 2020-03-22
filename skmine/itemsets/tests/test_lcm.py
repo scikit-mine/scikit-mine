@@ -102,6 +102,19 @@ def test_first_parent_limit_6():
     assert itemset == frozenset([4, 6])
     assert supp == 4
 
+def test_lcm_empty_fit():
+    # 1. test with a min_supp high above the maximum supp
+    lcm = LCM(min_supp=100)
+    res = lcm.fit_transform(D)
+    assert isinstance(res, pd.DataFrame)
+    assert res.empty
+
+    # 2. test with empty data
+    lcm = LCM(min_supp=3)
+    res = lcm.fit_transform([])
+    assert isinstance(res, pd.DataFrame)
+    assert res.empty
+
 
 def test_lcm_transform():
     lcm = LCM(min_supp=3)

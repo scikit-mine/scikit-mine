@@ -5,7 +5,7 @@ from joblib import delayed
 from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
-from ..base import BaseMiner, TransformerMixin
+from ..base import BaseMiner
 
 
 def _check_min_supp(min_supp):
@@ -18,7 +18,7 @@ def _check_min_supp(min_supp):
     else:
         raise TypeError('Mimimum support must be of type int or float')
 
-class LCM(BaseMiner, TransformerMixin):
+class LCM(BaseMiner):
     def __init__(self, *, min_supp=2, n_jobs=1):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
@@ -67,15 +67,39 @@ class LCM(BaseMiner, TransformerMixin):
 
         return self
 
-    partial_fit = fit
+    def fit_transform(self, D):
+        """fit LCM on the transactional database, and return the set of
+        closed itemsets in this database, with respect to the minium support
+        
+        Parameters
+        ----------
+        D : pd.Series or Iterable
+            The input transactional database
+            Where every entry contain singular items
+            Items must be both hashable and comparable
+        
+        Returns
+        -------
+        pd.DataFrame
 
-    def transform(self, D):
+        Examples
+        --------
+        >>> from skmine.datasets.fimi import load_chess
+        >>> from skmine.itemsets import LCM
+        >>> chess = load_chess()
+        >>> lcm = LCM()
+        >>> patterns = lcm.fit_transform(chess)
+        """
+        self.fit(D)
+        empty_df = pd.DataFrame(columns=['itemset', 'support'])
         items = filter(lambda e: len(e[1]) >= self._min_supp, self.item_to_tids.items())
         sorted_items = sorted(items, key=lambda e: len(e[1]), reverse=True)  # reverse order of support
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
             delayed(self._explore_item)(item, tids) for item, tids in sorted_items
         )
+
+        dfs.append(empty_df) # make sure we have something to concat
         return pd.concat(dfs, axis=0, ignore_index=True)
 
     def _explore_item(self, item, tids):
@@ -85,7 +109,6 @@ class LCM(BaseMiner, TransformerMixin):
         if not df.empty:
             print('LCM found {} new itemsets from item : {}'.format(len(df), item))
         return df
-
 
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P

@@ -37,27 +37,3 @@ class MDLOptimizer(ABC):
     def cover(self, codetable, D):
         """Cover the dataset D given the codetable."""
         pass
-
-
-
-class TransformerMixin:
-    """Mixin class for all transformers in scikit-mine."""
-
-    def fit_transform(self, D, **fit_params):
-        """
-        Fit to data, then transform it.
-
-        Fits transformer to D with optional parameters fit_params
-        and returns a transformed version of D.
-        Parameters
-        ----------
-        D : pd.Series
-            A set of transactions
-        **fit_params : dict
-            Additional fit parameters.
-        Returns
-        -------
-        D_new : pd.Series
-            Transformed transactions
-        """
-        return self.fit(D, **fit_params).transform(D)
