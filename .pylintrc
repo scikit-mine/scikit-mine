@@ -1,5 +1,5 @@
 [MASTER]
-ignore-patterns=**/tests/
+ignore-patterns=test.*?.py
 
 [MESSAGES CONTROL]
 disable=invalid-name
