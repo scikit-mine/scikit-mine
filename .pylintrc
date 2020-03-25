@@ -1,1 +1,5 @@
-pyLintUseMinimalCheckers=false
+[MASTER]
+ignore-patterns=**/tests/
+
+[MESSAGES CONTROL]
+disable=invalid-name
