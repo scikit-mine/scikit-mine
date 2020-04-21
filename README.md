@@ -1,4 +1,5 @@
-# scikit-mine
+[![codecov](https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg)](https://codecov.io/gh/remiadon/scikit-mine)
+
 scikit-mine : pattern mining in Python
 ============
 
