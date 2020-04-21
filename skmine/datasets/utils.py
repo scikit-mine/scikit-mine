@@ -1,3 +1,7 @@
+"""
+utils methods for skmine.datasets
+"""
+
 from itertools import chain
 
 
