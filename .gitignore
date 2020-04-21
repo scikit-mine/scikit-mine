@@ -1,0 +1,15 @@
+*.vscode
+*.pkl
+*.png
+*.pdf
+*.dot
+**/__pycache__/
+.coverage.*
+.coverage
+build/
+*.csv
+**/.ipynb_checkpoints/
+**/*.cpp
+**/*.so
+**/*.html
+.gitconfig
