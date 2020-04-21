@@ -1,0 +1,18 @@
+# Disable sudo to speed up the build
+sudo: false
+
+# Set the build language to Python
+language: python
+
+python: 
+  - "3.6"
+  - "3.8"
+  - "pypy3"
+
+# Install the codecov pip dependency
+install:
+  - pip install -r requirements.txt
+
+# Run the unit test
+script:
+  - pytest
