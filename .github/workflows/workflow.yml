@@ -27,7 +27,6 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
-    - name: Pylint action
-      uses: fylein/python-pylint-github-action@v1
-      with:
-        args: pylint --rcfile=.pylintrc skmine/
+    - name: Pylint
+      run: pylint --rcfile=.pylintrc skmine/
+  
