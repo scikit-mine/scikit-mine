@@ -16,9 +16,9 @@ Installation
 **pip installation coming soon**
 
 Dependencies
-~~~~~~~~~~~~
+------------
 
-scikit-learn requires:
+scikit-mine requires:
 
 - Python (>= 3.6)
 - Pandas (>= 1.0.0)
