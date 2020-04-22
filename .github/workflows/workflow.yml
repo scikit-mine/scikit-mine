@@ -12,11 +12,13 @@ jobs:
       uses: actions/setup-python@master
       with:
         python-version: 3.7
-    - name: Generate coverage report
+    - name: Install dependencies
       run: |
-        pip install pytest
-        pip install pytest-cov
-        pytest --cov-report xml --cov=skmine --cov-config=.coveragerc skmine
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pylint
+        pip install -r requirements.txt
+    - name: Generate coverage report
+      run: pytest --cov-report xml --cov=skmine --cov-config=.coveragerc skmine
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1
       with:
@@ -25,3 +27,7 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
+    - name: Pylint action
+      uses: fylein/python-pylint-github-action@v1
+      with:
+        args: pylint --rcfile=.pylintrc skmine/
