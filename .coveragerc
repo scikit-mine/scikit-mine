@@ -1,0 +1,15 @@
+[run]
+branch = True
+source = skmine
+parallel = True
+omit =
+    **/__init__.py
+    **/tests/*
+
+[report]
+# see `https://stackoverflow.com/questions/9202723/excluding-abstractproperties-from-coverage-reports`
+exclude_lines = 
+    pragma : no cover
+    pass
+    fetch_any
+    data_home
