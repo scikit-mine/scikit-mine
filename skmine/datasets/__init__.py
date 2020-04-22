@@ -1,7 +1,12 @@
-_REQ_TIMEOUT = 8
+"""
+The :mod:`skmine.datasets` module includes utilities to load datasets,
+including methods to load and fetch popular reference datasets.
+"""
 from functools import partial
 
 from ._base import get_data_home
+_REQ_TIMEOUT = 8
+
 
 try:
     from urllib.request import urlopen

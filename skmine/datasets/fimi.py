@@ -38,7 +38,6 @@ def fetch_any(filename, data_home=None):
     filepath = os.path.join(data_home, filename)
     if filename in os.listdir(data_home):  # already fetched
         s = pd.read_pickle(filepath)
-        return s
     else:                                  # not fetched yet
         url = BASE_URL + filename
         resp = urlopen(url)
@@ -46,7 +45,8 @@ def fetch_any(filename, data_home=None):
         name, _ = os.path.splitext(filename)
         s = pd.Series(it, name=name)
         s.to_pickle(filepath)
-        return s
+
+    return s
 
 def fetch_chess(data_home=None):
     """Fetch and return the chess dataset (Frequent Itemset Mining)

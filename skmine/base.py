@@ -3,15 +3,12 @@
 from abc import ABC
 from abc import abstractmethod
 
-import numpy as numpy
-import pandas as pd
-
 
 class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
 
     @abstractmethod
-    def fit(self, X, y=None):
+    def fit(self, D, y=None):
         """Fit method to be implemented."""
         pass
 
@@ -28,7 +25,7 @@ class MDLOptimizer(ABC):
         """
         Evaluate the gain, i.e compute L(D|CT) - L(CT|D).
 
-        L(D|CT) - L(CT|D) is the difference between 
+        L(D|CT) - L(CT|D) is the difference between
         the size of the dataset D encoded with the codetable CT and the size of the codetable CT
         """
         pass
