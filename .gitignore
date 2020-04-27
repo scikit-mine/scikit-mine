@@ -6,7 +6,6 @@
 **/__pycache__/
 .coverage.*
 .coverage
-build/
 *.csv
 **/.ipynb_checkpoints/
 **/*.cpp
