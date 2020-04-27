@@ -1,5 +1,5 @@
 name: workflows
-on: [push]
+on: [pull_request]
 jobs:
   run:
     runs-on: ${{ matrix.os }}
