@@ -70,19 +70,6 @@ def fetch_chess(data_home=None):
     -------
     pd.Series
         Transactions from the chess dataset, as an in-memory pandas Series.
-
-    Examples
-    --------
-    Let's say you want to load the chess dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_chess
-    >>> D = fetch_chess()
-    >>> D.head()
-    0    [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25...
-    1    [1, 3, 5, 7, 9, 12, 13, 15, 17, 19, 21, 23, 25...
-    2    [1, 3, 5, 7, 9, 12, 13, 16, 17, 19, 21, 23, 25...
-    3    [1, 3, 5, 7, 9, 11, 13, 15, 17, 20, 21, 23, 25...
-    4    [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25...
-    name: chess, dtype: object
     """
     return fetch_any('chess.dat', data_home=data_home)
 
@@ -107,19 +94,6 @@ def fetch_connect(data_home=None):
     -------
     pd.Series
         Transactions from the connect dataset, as an in-memory pandas Series.
-
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_connect
-    >>> D = fetch_connect()
-    >>> D.head()
-    0    [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, ...
-    1    [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, ...
-    2    [1, 4, 7, 10, 13, 16, 19, 23, 25, 28, 31, 34, ...
-    3    [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, ...
-    4    [1, 5, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, ...
-    name: connect, dtype: object
     """
     return fetch_any('connect.dat', data_home=data_home)
 
@@ -144,19 +118,6 @@ def fetch_mushroom(data_home=None):
     -------
     pd.Series
         Transactions from the mushroom dataset, as an in-memory pandas Series.
-
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_mushroom
-    >>> D = fetch_mushroom()
-    >>> D.head()
-    0    [1, 3, 9, 13, 23, 25, 34, 36, 38, 40, 52, 54, ...
-    1    [2, 3, 9, 14, 23, 26, 34, 36, 39, 40, 52, 55, ...
-    2    [2, 4, 9, 15, 23, 27, 34, 36, 39, 41, 52, 55, ...
-    3    [1, 3, 10, 15, 23, 25, 34, 36, 38, 41, 52, 54,...
-    4    [2, 3, 9, 16, 24, 28, 34, 37, 39, 40, 53, 54, ...
-    name: mushroom, dtype: object
     """
     return fetch_any('mushroom.dat', data_home=data_home)
 
@@ -181,19 +142,6 @@ def fetch_pumsb(data_home=None):
     -------
     pd.Series
         Transactions from the pumsb dataset, as an in-memory pandas Series
-
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_pumsb
-    >>> D = fetch_pumsb()
-    >>> D.head()
-    0    [0, 14, 17, 60, 66, 75, 84, 125, 155, 161, 163...
-    1    [1, 15, 54, 60, 66, 74, 84, 111, 155, 161, 167...
-    2    [0, 14, 17, 60, 66, 73, 84, 124, 155, 161, 163...
-    3    [1, 15, 17, 60, 66, 73, 84, 111, 155, 161, 165...
-    4    [2, 15, 17, 57, 70, 74, 84, 111, 160, 161, 167...
-    name: pumsb, dtype: object
     """
     return fetch_any('pumsb.dat', data_home=data_home)
 
@@ -218,19 +166,6 @@ def fetch_pumsb_star(data_home=None):
     -------
     pd.Series
         Transactions from the pumsb_star dataset, as an in-memory pandas Series
-
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_pumsb_star
-    >>> D = fetch_pumsb_star()
-    >>> D.head()
-    0    [0, 14, 60, 66, 75, 84, 125, 155, 161, 163, 16...
-    1    [1, 15, 54, 60, 66, 74, 84, 111, 155, 161, 167...
-    2    [0, 14, 60, 66, 73, 84, 124, 155, 161, 163, 16...
-    3    [1, 15, 60, 66, 73, 84, 111, 155, 161, 165, 16...
-    4    [2, 15, 57, 70, 74, 84, 111, 160, 161, 167, 16...
-    name: pumsb_star, dtype: object
     """
     return fetch_any('pumsb_star.dat', data_home=data_home)
 
@@ -255,7 +190,6 @@ def fetch_kosarak(data_home=None):
     -------
     pd.Series
         Transactions from the kosarak dataset, as an in-memory pandas Series
-
     """
     return fetch_any('kosarak.dat', data_home=data_home)
 
@@ -283,6 +217,7 @@ def fetch_retail(data_home=None):
     pd.Series
         Transactions from the retail dataset, as an in-memory pandas Series
     """
+    return fetch_any('retail.dat', data_home=data_home)
 
 def fetch_accidents(data_home=None):
     """Fetch and return the accidents dataset (Frequent Itemset Mining)
