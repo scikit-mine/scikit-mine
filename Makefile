@@ -1,6 +1,9 @@
 coverage:
 	pytest --cov-report term-missing --cov=skmine --cov-config=.coveragerc skmine
 
+setup:
+	python setup.py install
+
 clean: clean_doc
 	$(RM) *.cpp
 	$(RM) *.so
@@ -13,7 +16,7 @@ clean_doc:
 	$(RM) -f docs/skmine.rst docs/modules.rst
 
 
-docs: clean_doc
+docs: setup clean_doc
 	sphinx-apidoc -o docs/ skmine/ tests/*
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html

@@ -14,6 +14,9 @@ Welcome to scikit-mine's documentation!
    :maxdepth: 2
    :caption: Tutorials
 
+   tutorials/datasets/index
+   tutorials/itemsets/index
+
 
 .. toctree::
    :maxdepth: 1

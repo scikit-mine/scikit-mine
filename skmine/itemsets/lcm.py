@@ -85,14 +85,6 @@ class LCM(BaseMiner):
         -------
         self
 
-        Examples
-        --------
-        >>> from skmine.datasets.fimi import load_chess
-        >>> from skmine.itemsets import LCM
-        >>> chess = load_chess()
-        >>> lcm = LCM()
-        >>> lcm.fit(chess)
-        >>> print(list(lcm.item_to_tids))
         """
         for transaction in D:
             for item in transaction:
@@ -122,14 +114,12 @@ class LCM(BaseMiner):
         Returns
         -------
         pd.DataFrame
+            DataFrame containing itemsets and their supports
+                ==========  =========================================================
+                itemset     a set co-occured items (as `frozenset`)
+                support     support, i.e frequence for this itemsets (as `np.uint32`)
+                ==========  =========================================================
 
-        Examples
-        --------
-        >>> from skmine.datasets.fimi import load_chess
-        >>> from skmine.itemsets import LCM
-        >>> chess = load_chess()
-        >>> lcm = LCM()
-        >>> patterns = lcm.fit_transform(chess)
         """
         self.fit(D)
         empty_df = pd.DataFrame(columns=['itemset', 'support'])
