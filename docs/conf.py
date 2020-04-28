@@ -56,6 +56,8 @@ autodoc_default_options = {
 
 autosummary_generate = False
 
+autodoc_member_order = 'bysource'
+
 napoleon_use_ivar = True
 
 numpydoc_class_members_toctree = False

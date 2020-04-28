@@ -19,11 +19,13 @@ def fetch_any(filename, data_home=None):
     """Base loader for all datasets from the FIMI repository
     Each unique transaction will be represented as a Python list in the resulting pandas Series
 
+    see: http://fimi.uantwerpen.be/data/
+
     Parameters
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
 
     filename : str
         Name of the file to fetch
@@ -62,7 +64,7 @@ def fetch_chess(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -99,7 +101,7 @@ def fetch_connect(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -136,7 +138,7 @@ def fetch_mushroom(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -173,7 +175,7 @@ def fetch_pumsb(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -210,7 +212,7 @@ def fetch_pumsb_star(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -247,25 +249,13 @@ def fetch_kosarak(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
     pd.Series
         Transactions from the kosarak dataset, as an in-memory pandas Series
 
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_kosarak
-    >>> D = fetch_kosarak()
-    >>> D.head()
-    0       [1, 2, ]
-    1             []
-    2    [4, 5, 6, ]
-    3          [1, ]
-    4         [9, 1]
-    name: kosarak, dtype: object
     """
     return fetch_any('kosarak.dat', data_home=data_home)
 
@@ -274,44 +264,31 @@ def fetch_retail(data_home=None):
     """Fetch and return the retail dataset (Frequent Itemset Mining)
     Each unique transaction will be represented as a Python list in the resulting pandas Series
 
+    see: http://fimi.uantwerpen.be/data/retail.pdf
+
     ====================   ==============
     Nb of items                     16470
     Nb of transactions              88162
     Avg transaction size             10.3
     ====================   ==============
 
-    Full description : `http://fimi.uantwerpen.be/data/retail.pdf`
-
     Parameters
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
     pd.Series
         Transactions from the retail dataset, as an in-memory pandas Series
-
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_retail
-    >>> D = fetch_retail()
-    >>> D.head()
-    0    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,...
-    1                                         [30, 31, 32]
-    2                                         [33, 34, 35]
-    3         [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46]
-    4                                     [38, 39, 47, 48]
-    Name: retail, dtype: object
     """
-    return fetch_any('retail.dat', data_home=data_home)
-
 
 def fetch_accidents(data_home=None):
     """Fetch and return the accidents dataset (Frequent Itemset Mining)
     Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    see: http://fimi.uantwerpen.be/data/accidents.pdf
 
     ====================   ==============
     Nb of items                     16470
@@ -319,30 +296,16 @@ def fetch_accidents(data_home=None):
     Avg transaction size             10.3
     ====================   ==============
 
-    Full description : `http://fimi.uantwerpen.be/data/accidents.pdf`
-
     Parameters
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in '~/scikit_mine_data' subfolders.
+        all scikit-mine data is stored in `~/scikit_mine_data` subfolders.
 
     Returns
     -------
     pd.Series
         Transactions from the accidents dataset, as an in-memory pandas Series
 
-    Examples
-    --------
-    Let's say you want to load this dataset to benchmark your own mining algorithm
-    >>> from skmine.datasets import fetch_accidents
-    >>> D = fetch_accidents()
-    >>> D.head()
-    0    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14...
-    1    [2, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18...
-    2    [7, 10, 12, 13, 14, 15, 16, 17, 18, 20, 25, 28...
-    3    [1, 5, 8, 10, 12, 14, 15, 16, 17, 18, 19, 20, ...
-    4    [5, 8, 10, 12, 14, 15, 16, 17, 18, 21, 22, 24,...
-    Name: accidents, dtype: object
     """
     return fetch_any('accidents.dat', data_home=data_home)
