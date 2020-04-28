@@ -48,6 +48,34 @@ def test_generate_candidate_2():
     assert new_candidates == [frozenset('ABC')]
 
 
+def test_cover_order_pos_1():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    slim = SLIM()
+    codetable = ['A', 'B', 'C']
+    codetable = list(map(frozenset, codetable))
+    cand = frozenset('ABC')
+
+    pos = slim.get_cover_order_pos(codetable, cand)
+
+    assert pos == 0
+    # empty dict because checking supports was not necessary
+    assert not slim.supports
+
+
+def test_cover_order_pos_2():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    slim = SLIM()
+    slim._prefit(D)
+    codetable = ['ABC', 'B', 'C']
+    codetable = list(map(frozenset, codetable))
+    cand = frozenset('AB')
+
+    pos = slim.get_cover_order_pos(codetable, cand)
+
+    assert pos == 1
+    assert cand in slim.supports.keys()
+
+
 def test_prefit():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     slim = SLIM()
