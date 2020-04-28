@@ -19,3 +19,4 @@
 *.inv
 *.pickle
 docs/_build/*
+docs/skmine.*.rst
