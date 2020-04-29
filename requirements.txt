@@ -1,4 +1,0 @@
-pandas>=0.24
-roaringbitmap==0.7
-joblib==0.14.1
-sortedcontainers
