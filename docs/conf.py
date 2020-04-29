@@ -102,3 +102,4 @@ html_scaled_image_link = False
 
 nbsphinx_execute = 'always'
 nbsphinx_kernel_name = 'python3'
+nbsphinx_execute = 'never'
