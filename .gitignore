@@ -21,3 +21,4 @@
 docs/_build/*
 docs/skmine.*.rst
 build/
+*.egg

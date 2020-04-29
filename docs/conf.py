@@ -76,6 +76,9 @@ source_suffix = '.rst'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# With this enabled, navigation entries are not expandable – the [+] icons next to each entry are removed.
+collapse_navigation = True
+
 
 # The master toctree document.
 master_doc = 'index'

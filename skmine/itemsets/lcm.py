@@ -83,7 +83,8 @@ class LCM(BaseMiner):
 
         Returns
         -------
-        self
+        self: LCM
+            a reference to the model itself
 
         """
         for transaction in D:
@@ -113,7 +114,7 @@ class LCM(BaseMiner):
 
         Returns
         -------
-        pd.DataFrame
+        pd.DataFrame:
             DataFrame containing itemsets and their supports
                 ==========  =========================================================
                 itemset     a set co-occured items (as `frozenset`)

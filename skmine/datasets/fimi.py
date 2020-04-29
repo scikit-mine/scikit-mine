@@ -235,7 +235,7 @@ def fetch_accidents(data_home=None):
     ----------
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data` subfolders.
+        all scikit-mine data is stored in `~/scikit_mine_data`.
 
     Returns
     -------

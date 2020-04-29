@@ -8,7 +8,7 @@ Welcome to scikit-mine's documentation!
    :caption: Installation & API
 
    installation
-   modules
+   reference/index
 
 .. toctree::
    :maxdepth: 2
@@ -21,4 +21,3 @@ Welcome to scikit-mine's documentation!
 .. toctree::
    :maxdepth: 1
    :caption: About
-
