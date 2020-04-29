@@ -9,7 +9,7 @@ install:
   - pip install sphinx nbsphinx
   - pip install -e .
 
-build:
+script:
   - make docs
 
 deploy:
