@@ -115,11 +115,11 @@ class LCM(BaseMiner):
         Returns
         -------
         pd.DataFrame:
-            DataFrame containing itemsets and their supports
-                ==========  =========================================================
-                itemset     a set co-occured items (as `frozenset`)
-                support     support, i.e frequence for this itemsets (as `np.uint32`)
-                ==========  =========================================================
+            DataFrame with the following columns
+                ==========  =================================
+                itemset     a `frozenset` of co-occured items
+                support     frequence for this itemset
+                ==========  =================================
 
         """
         self.fit(D)

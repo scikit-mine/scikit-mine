@@ -1,4 +1,4 @@
-.. _datasets:
+.. _itemsets:
 
 Itemsets
 **********
