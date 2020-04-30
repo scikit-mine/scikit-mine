@@ -54,7 +54,7 @@ autodoc_default_options = {
     'inherited-members': True
 }
 
-autosummary_generate = False
+autosummary_generate = True
 
 autodoc_member_order = 'bysource'
 
@@ -68,7 +68,14 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    '**.ipynb_checkpoints',
+    'modules.rst',
+    'skmine*.rst',
+]
 
 
 source_suffix = '.rst'

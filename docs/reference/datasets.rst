@@ -3,11 +3,11 @@
 Datasets
 **********
 
-Methods to fetch datasets.
+Methods to fetch, generate, and describe datasets.
 
 
-FIMI
--------
+Standard datasets
+-----------------
 .. autofunction:: skmine.datasets.fimi.fetch_any
 
 .. autofunction:: skmine.datasets.fimi.fetch_chess
@@ -25,6 +25,12 @@ FIMI
 .. autofunction:: skmine.datasets.fimi.fetch_retail
 
 .. autofunction:: skmine.datasets.fimi.fetch_accidents
+
+
+Synthetic data generation
+-------------------------
+
+.. autofunction:: skmine.datasets.make_transactions
 
 
 utils
