@@ -19,6 +19,7 @@
 *.inv
 *.pickle
 docs/_build/*
+docs/_static/
 docs/skmine.*.rst
 build/
 *.egg
