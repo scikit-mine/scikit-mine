@@ -8,7 +8,7 @@ def test_describe():
     desc = describe_itemsets(D)
     assert isinstance(desc, dict)
     assert desc == {
-        'nb_items': 4,
+        'n_items': 4,
         'avg_transaction_size': 2.5,
-        'nb_transactions': 2,
+        'n_transactions': 2,
     }
