@@ -17,10 +17,10 @@ def describe_itemsets(D):
     >>> from skmine.datasets.fimi import fetch_connect
     >>> from skmine.datasets.utils import describe_itemsets
     >>> describe_itemsets(fetch_connect())
-    {'nb_items': 75, 'avg_transaction_size': 37.0, 'nb_transactions': 3196}
+    {'n_items': 75, 'avg_transaction_size': 37.0, 'n_transactions': 3196}
     """
     return dict(
-        nb_items=len(set(chain(*D))),
+        n_items=len(set(chain(*D))),
         avg_transaction_size=D.map(len).mean(),
-        nb_transactions=D.shape[0]
+        n_transactions=D.shape[0]
     )
