@@ -44,7 +44,7 @@ setup(
     #include_package_data=True,
     keywords='skmine',
     name='scikit-mine',
-    packages=['skmine'],
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     test_suite='tests',
     tests_require=['pytest'],
     url='https://github.com/scikit-mine/scikit-mine',
