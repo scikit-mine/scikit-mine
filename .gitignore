@@ -4,8 +4,7 @@
 *.pdf
 *.dot
 **/__pycache__/
-.coverage.*
-.coverage
+.coverage*
 *.csv
 **/.ipynb_checkpoints/
 **/*.cpp
@@ -22,4 +21,8 @@ docs/_build/*
 docs/_static/
 docs/skmine.*.rst
 build/
-*.egg
+*.egg*
+.vscode/
+.build/
+.pytest_cache/
+
