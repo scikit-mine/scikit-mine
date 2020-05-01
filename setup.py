@@ -8,16 +8,11 @@ from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
 import os
 from glob import glob
-from packaging.version import parse
 import skmine
 
 import numpy
 
-parsed_version = parse(skmine.__version__)
-if parsed_version.is_postrelease:
-    release = parsed_version.base_version
-else:
-    release = skmine.__version__
+release = skmine.__version__
 
 
 with open('README.rst') as readme_file:
