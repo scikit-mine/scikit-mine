@@ -14,8 +14,7 @@ script:
 
 deploy:
   provider: pages
-  skip-cleanup: true
-  keep-history: true
+  skip_cleanup: true
   project_name: scikit-mine
   on:
     branch: master
