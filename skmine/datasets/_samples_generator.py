@@ -38,6 +38,16 @@ def make_transactions(n_transactions=1000,
     .. [1] F. Flouvat, F. De Marchi, JM. Petit
            "A new classification of datasets for frequent itemsets", 2009
 
+    Example
+    -------
+    >>> from skmine.datasets import make_transactions
+    >>> make_transactions(n_transactions=5, n_items=20, avg_transaction_size=5)
+    0                  [7, 6, 11, 13, 12, 17, 1, 2, 16, 8]
+    1                 [15, 10, 2, 0, 6, 18, 5, 17, 16, 13]
+    2               [10, 5, 19, 17, 16, 11, 14, 3, 12, 13]
+    3             [16, 10, 11, 0, 5, 7, 15, 13, 18, 3, 14]
+    4    [10, 12, 13, 2, 1, 19, 9, 17, 0, 5, 7, 11, 18, 8]
+    dtype: object
 
     Raises
     ------
