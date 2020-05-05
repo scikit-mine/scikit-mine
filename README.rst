@@ -4,6 +4,9 @@
 .. image:: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
 
+.. image:: http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]
+        :target: https://asv.readthedocs.io/en/stable
+
 .. image:: ../skmine_logo.png
     :width: 30%
     :alt: logo skmine
