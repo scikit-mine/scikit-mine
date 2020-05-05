@@ -14,3 +14,5 @@ exclude_lines =
     pass
     fetch_any
     data_home
+    LXML_INSTALLED
+

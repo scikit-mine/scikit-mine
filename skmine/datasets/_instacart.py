@@ -3,7 +3,6 @@ Base IO for the Instacart dataset
 The dataset is available here : `https://www.instacart.com/datasets/grocery-shopping-2017`
 """
 import os
-import tarfile
 import pandas as pd
 import numpy as np
 
@@ -51,12 +50,15 @@ def fetch_instacart(data_home=None):
         Customers orders as a pandas Series
     """
     data_home = data_home or get_data_home()
+    tar_filename = _download(data_home)
     data_path = os.path.join(data_home, 'instacart_2017_05_01')
-    if not os.path.exists(data_path):
-        _download(data_home)
-        print("Downloading instacart, this may take a while")
 
-    final_path = os.path.join(data_path, 'instacart.pkl')
+    if not os.path.exists(data_path):  # tarfile present but not uncompressed
+        tar = tarfile.open(tar_filename, 'r:gz')
+        tar.extractall(data_home)
+        tar.close()
+
+    final_path = os.path.join(data_path, 'transactions.pkl')
     if os.path.exists(final_path):
         s = pd.read_pickle(final_path)
     else:
@@ -81,15 +83,17 @@ def _download(data_home):
     if not LXML_INSTALLED:
         raise ImportError(_IMPORT_MSG)
     tar_filename = os.path.join(data_home, 'instacart.tar.gz')
-    data_link = "https://www.instacart.com/datasets/grocery-shopping-2017"
-    tree = html.fromstring(urlopen(data_link).read())
-    buttons = tree.xpath("//*[contains(@class, 'ic-btn ic-btn-success ic-btn-lg')]")
-    download_link = buttons[0].attrib['href']
-    instacart_filedata = urlopen(download_link)
-    targz_data = instacart_filedata.read()
-    with open(tar_filename, "wb") as f:
-        f.write(targz_data)
 
-    tar = tarfile.open(tar_filename, 'r:gz')
-    tar.extractall(data_home)
-    tar.close()
+    if os.path.exists(tar_filename):
+        print('found instacart dataset at {}, fetching from there'.format(tar_filename))
+    else:
+        print('downloading instacart dataset, this may take a while')
+        data_link = "https://www.instacart.com/datasets/grocery-shopping-2017"
+        tree = html.fromstring(urlopen(data_link).read())
+        buttons = tree.xpath("//*[contains(@class, 'ic-btn ic-btn-success ic-btn-lg')]")
+        download_link = buttons[0].attrib['href']
+        instacart_filedata = urlopen(download_link)
+        targz_data = instacart_filedata.read()
+        with open(tar_filename, "wb") as f:
+            f.write(targz_data)
+    return tar_filename
