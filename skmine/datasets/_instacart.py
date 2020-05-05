@@ -3,6 +3,7 @@ Base IO for the Instacart dataset
 The dataset is available here : `https://www.instacart.com/datasets/grocery-shopping-2017`
 """
 import os
+import tarfile
 import pandas as pd
 import numpy as np
 
