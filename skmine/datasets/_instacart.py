@@ -12,7 +12,7 @@ try:
     LXML_INSTALLED = True
 except ImportError: LXML_INSTALLED = False
 
-from . import urlopen
+from .conf import urlopen
 from ._base import get_data_home
 
 _IMPORT_MSG = """

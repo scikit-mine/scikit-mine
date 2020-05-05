@@ -4,6 +4,7 @@ source = skmine
 parallel = True
 omit =
     **/__init__.py
+    **/conf.py
     **/tests/*
 
 [report]

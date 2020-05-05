@@ -27,6 +27,11 @@ Standard datasets
 .. autofunction:: skmine.datasets.fimi.fetch_accidents
 
 
+Instacart Market Basket Analysis
+--------------------------------
+.. autofunction:: skmine.datasets.fetch_instacart
+
+
 Synthetic data generation
 -------------------------
 
