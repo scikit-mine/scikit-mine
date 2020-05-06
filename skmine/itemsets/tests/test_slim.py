@@ -141,10 +141,9 @@ def test_compute_sizes_2():
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
-
 def test_fit():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     D = pd.Series(D)
     slim = SLIM()
-    slim.fit(D)
-    assert slim.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+    self = slim.fit(D)
+    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))

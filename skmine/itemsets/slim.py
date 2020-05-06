@@ -158,3 +158,5 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     is_better = False
             if not is_better:
                 n_iter_no_change += 1
+
+        return self
