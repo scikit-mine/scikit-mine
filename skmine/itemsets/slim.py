@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from roaringbitmap import RoaringBitmap
 
-from ..base import BaseMiner, MDLOptimizer
+from ..base import BaseMiner
 from ..utils import lazydict
 
 
@@ -66,15 +66,15 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         self.n_iter_no_change = n_iter_no_change
         self.standard_codetable = None
         self.codetable = None
-        self.supports = lazydict(self.get_support)
+        self.supports = lazydict(self._get_support)
         self.model_size = None          # L(CT|D)
         self.data_size = None           # L(D|CT)
 
-    def get_support(self, itemset):
+    def _get_support(self, itemset):
         U = reduce(RoaringBitmap.union, self.standard_codetable.loc[itemset])
         return len(U)
 
-    def get_cover_order_pos(self, codetable, cand):
+    def _get_cover_order_pos(self, codetable, cand):
         pos = 0
         while len(cand) < len(codetable[pos]):
             pos += 1
@@ -139,7 +139,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             candidates = generate_candidates(self.codetable)
             for cand in candidates:
                 CT_index = self.codetable.index
-                cand_pos = self.get_cover_order_pos(CT_index, cand)
+                cand_pos = self._get_cover_order_pos(CT_index, cand)
                 CTc_index = CT_index.insert(cand_pos, cand)
 
                 covers = D.map(lambda t: cover_one(CTc_index, t))

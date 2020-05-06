@@ -55,7 +55,7 @@ def test_cover_order_pos_1():
     codetable = list(map(frozenset, codetable))
     cand = frozenset('ABC')
 
-    pos = slim.get_cover_order_pos(codetable, cand)
+    pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 0
     # empty dict because checking supports was not necessary
@@ -70,7 +70,7 @@ def test_cover_order_pos_2():
     codetable = list(map(frozenset, codetable))
     cand = frozenset('AB')
 
-    pos = slim.get_cover_order_pos(codetable, cand)
+    pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 1
     assert cand in slim.supports.keys()

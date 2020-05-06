@@ -3,4 +3,5 @@ ignore-patterns=test.*?.py,docs/
 ignored-modules=roaringbitmap
 
 [MESSAGES CONTROL]
-disable=invalid-name, too-few-public-methods, unnecessary-pass, fixme, arguments-differ, not-callable
+disable=invalid-name, too-few-public-methods, unnecessary-pass,
+	fixme, arguments-differ, not-callable, cell-var-from-loop,
