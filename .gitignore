@@ -10,15 +10,12 @@
 **/.ipynb_checkpoints/
 **/*.cpp
 **/*.so
-**/*.html
 .gitconfig
 *.doctree
 *.rst.txt
-*.js
 *.buildinfo
-*.inv
 *.pickle
 docs/_build/*
 docs/skmine.*.rst
 build/
-*.egg
+*.egg*
