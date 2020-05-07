@@ -1,8 +1,5 @@
 *.vscode
 *.pkl
-*.png
-*.pdf
-*.dot
 **/__pycache__/
 .coverage.*
 .coverage
@@ -11,11 +8,7 @@
 **/*.cpp
 **/*.so
 .gitconfig
-*.doctree
-*.rst.txt
-*.buildinfo
 *.pickle
-docs/_build/*
 docs/skmine.*.rst
 build/
 *.egg*
