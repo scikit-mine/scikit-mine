@@ -16,7 +16,7 @@ Scikit-mine : pattern mining in Python
 
 * Free software: BSD license
 * GitHub: https://github.com/scikit-mine/scikit-mine
-* Documentation: https://scikit-mine.readthedocs.io
+* Documentation: https://scikit-mine.github.io/scikit-mine/
 
 
 Quickstart
@@ -28,9 +28,8 @@ Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.
 
 It is currently maintained by a team of volunteers.
 
-Website: https://scikit-mine.github.io/scikit-mine/
-
 See examples in the tutorials; the notebooks are available here_.
+
 
 .. _here: https://github.com/scikit-mine/scikit-mine/tree/master/docs/tutorials
 
