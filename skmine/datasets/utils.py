@@ -22,8 +22,7 @@ def describe_transactions(D):
 
     Notes
     -----
-        Density is equivalent to
-            .. math:: { avg\_transaction\_size \over n\_items }
+        .. math:: density = { avg\_transaction\_size \over n\_items }
 
     Example
     -------

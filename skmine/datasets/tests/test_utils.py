@@ -11,4 +11,5 @@ def test_describe():
         'n_items': 4,
         'avg_transaction_size': 2.5,
         'n_transactions': 2,
+        'density': .625
     }

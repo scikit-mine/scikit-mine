@@ -215,9 +215,10 @@ def fetch_retail(data_home=None):
 
     Retail market basket data set supplied by a anonymous Belgian retail supermarket store.
 
-    Results in approximately 5 months of data. The total amount of receipts being collected equals 88,163.
+    Results in approximately 5 months of data.
+    The total amount of receipts being collected equals 88,163.
 
-    In total, 5,133 customers have purchased at least one product in the supermarket during the data collection period
+    In total, 5,133 customers have purchased at least one product during the data collection period
 
     Parameters
     ----------
