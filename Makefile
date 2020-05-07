@@ -21,16 +21,5 @@ docs: setup clean_doc
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 
-docs-github: docs
-	cd docs/_build/html
-	tar czf /tmp/html.tgz .
-	cd ../../../
-	git checkout gh-pages
-	git rm -rf .
-	tar xzf /tmp/html.tgz
-	git add .
-	git commit -m 'update doc'
-	git push official gh-pages
-
 sort_python:
 	isort -sl -rc -y   # single line imports for cleaner versionning via git
