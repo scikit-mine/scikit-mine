@@ -28,7 +28,7 @@ Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.
 
 It is currently maintained by a team of volunteers.
 
-Website: **coming soon**
+Website: https://scikit-mine.github.io/scikit-mine/
 
 See examples in the tutorials; the notebooks are available here_.
 
