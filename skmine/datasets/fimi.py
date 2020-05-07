@@ -58,6 +58,7 @@ def fetch_chess(data_home=None):
     Nb of items                        75
     Nb of transactions               3196
     Avg transaction size             37.0
+    Density                         0.493
     ====================   ==============
 
     Parameters
@@ -82,6 +83,7 @@ def fetch_connect(data_home=None):
     Nb of items                       129
     Nb of transactions              67557
     Avg transaction size             43.0
+    Density                         0.333
     ====================   ==============
 
     Parameters
@@ -106,6 +108,7 @@ def fetch_mushroom(data_home=None):
     Nb of items                       119
     Nb of transactions               8124
     Avg transaction size             23.0
+    Density                         0.193
     ====================   ==============
 
     Parameters
@@ -130,6 +133,7 @@ def fetch_pumsb(data_home=None):
     Nb of items                      2113
     Nb of transactions              49046
     Avg transaction size             74.0
+    Density                         0.035
     ====================   ==============
 
     Parameters
@@ -154,6 +158,7 @@ def fetch_pumsb_star(data_home=None):
     Nb of items                      2088
     Nb of transactions              49046
     Avg transaction size            50.48
+    Density                         0.024
     ====================   ==============
 
     Parameters
@@ -178,6 +183,7 @@ def fetch_kosarak(data_home=None):
     Nb of items                     36855
     Nb of transactions             990002
     Avg transaction size              8.1
+    Density                      0.000220
     ====================   ==============
 
     Parameters
@@ -204,7 +210,14 @@ def fetch_retail(data_home=None):
     Nb of items                     16470
     Nb of transactions              88162
     Avg transaction size             10.3
+    Densisty                     0.000626
     ====================   ==============
+
+    Retail market basket data set supplied by a anonymous Belgian retail supermarket store.
+
+    Results in approximately 5 months of data. The total amount of receipts being collected equals 88,163.
+
+    In total, 5,133 customers have purchased at least one product in the supermarket during the data collection period
 
     Parameters
     ----------
@@ -226,9 +239,10 @@ def fetch_accidents(data_home=None):
     see: http://fimi.uantwerpen.be/data/accidents.pdf
 
     ====================   ==============
-    Nb of items                     16470
-    Nb of transactions              88162
-    Avg transaction size             10.3
+    Nb of items                       468
+    Nb of transactions             340183
+    Avg transaction size           33.807
+    Density                         0.072
     ====================   ==============
 
     Parameters
