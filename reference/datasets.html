@@ -1,45 +1,201 @@
 
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Datasets &#8212; scikit-mine 0.0.1 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Datasets &mdash; scikit-mine 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Itemsets" href="itemsets.html" />
-    <link rel="prev" title="API Reference" href="index.html" />
+    <link rel="prev" title="API Reference" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
-  </head><body>
-  
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="../index.html">
+          
+
+          
             
-  <div class="section" id="datasets">
+            <img src="../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fimi">FIMI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utils">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+        
+      <li>Datasets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/datasets.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="datasets">
 <span id="id1"></span><h1>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h1>
-<p>Methods to fetch, generate, and describe datasets.</p>
-<div class="section" id="standard-datasets">
-<h2>Standard datasets<a class="headerlink" href="#standard-datasets" title="Permalink to this headline">¶</a></h2>
+<p>Methods to fetch datasets.</p>
+<div class="section" id="fimi">
+<h2>FIMI<a class="headerlink" href="#fimi" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_any">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_any</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_any" title="Permalink to this definition">¶</a></dt>
@@ -67,7 +223,8 @@ as an in-memory pandas Series</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_chess">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_chess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_chess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_chess" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the chess dataset (Frequent Itemset Mining)</p>
+<dd><p>Fetch and return the chess dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -83,9 +240,6 @@ as an in-memory pandas Series</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>37.0</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.493</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -94,8 +248,7 @@ as an in-memory pandas Series</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the chess dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the chess dataset, as an in-memory pandas Series.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -106,7 +259,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_connect">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the connect dataset (Frequent Itemset Mining).</p>
+<dd><p>Fetch and return the connect dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -122,9 +276,6 @@ Each unique transaction is represented as a Python list.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>43.0</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.333</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -133,8 +284,7 @@ Each unique transaction is represented as a Python list.</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the connect dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the connect dataset, as an in-memory pandas Series.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -145,13 +295,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_mushroom">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_mushroom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_mushroom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_mushroom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the mushroom dataset (Frequent Itemset Mining)</p>
-<p>The Mushroom data set includes descriptions of hypothetical samples corresponding
-to 23 species of gilled mushrooms in the Agaricus and Lepiota Family.</p>
-<p>It contains information about 8124 mushrooms (transactions).
-4208 (51.8%) are edible and 3916 (48.2%) are poisonous.</p>
-<p>The data contains 22 nomoinal features plus the class attribure (edible or not).
-These features were translated into 114 items.</p>
+<dd><p>Fetch and return the mushroom dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -167,9 +312,6 @@ These features were translated into 114 items.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>23.0</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.193</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -178,8 +320,7 @@ These features were translated into 114 items.</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the mushroom dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the mushroom dataset, as an in-memory pandas Series.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -190,8 +331,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_pumsb">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_pumsb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_pumsb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_pumsb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the pumsb dataset (Frequent Itemset Mining)</p>
-<p>The Pumsb dataset contains census data for population and housing.</p>
+<dd><p>Fetch and return the pumsb dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -207,9 +348,6 @@ Each unique transaction is represented as a Python list.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>74.0</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.035</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -218,8 +356,7 @@ Each unique transaction is represented as a Python list.</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the pumsb dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the pumsb dataset, as an in-memory pandas Series</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -230,7 +367,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_pumsb_star">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_pumsb_star</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_pumsb_star"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_pumsb_star" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the pumsb_star dataset (Frequent Itemset Mining)</p>
+<dd><p>Fetch and return the pumsb_star dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -246,9 +384,6 @@ Each unique transaction is represented as a Python list.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>50.48</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.024</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -257,8 +392,7 @@ Each unique transaction is represented as a Python list.</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the pumsb_star dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the pumsb_star dataset, as an in-memory pandas Series</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -269,8 +403,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_kosarak">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_kosarak</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_kosarak"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_kosarak" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the kosarak dataset (Frequent Itemset Mining)</p>
-<p>Click-stream data from a hungarian on-line news portal.</p>
+<dd><p>Fetch and return the kosarak dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -286,9 +420,6 @@ Each unique transaction is represented as a Python list.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>8.1</p></td>
 </tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.000220</p></td>
-</tr>
 </tbody>
 </table>
 <dl class="field-list simple">
@@ -297,8 +428,7 @@ Each unique transaction is represented as a Python list.</p>
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the kosarak dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the kosarak dataset, as an in-memory pandas Series</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -309,8 +439,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_retail">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_retail</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_retail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_retail" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the retail dataset (Frequent Itemset Mining)</p>
-<p>Contains market basket data from a Belgian retail store, anonymized.</p>
+<dd><p>Fetch and return the retail dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <p>see: <a class="reference external" href="http://fimi.uantwerpen.be/data/retail.pdf">http://fimi.uantwerpen.be/data/retail.pdf</a></p>
 <table class="docutils align-default">
 <colgroup>
@@ -327,23 +457,15 @@ Each unique transaction is represented as a Python list.</p>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
 <td><p>10.3</p></td>
 </tr>
-<tr class="row-even"><td><p>Densisty</p></td>
-<td><p>0.000626</p></td>
-</tr>
 </tbody>
 </table>
-<p>Retail market basket data set supplied by a anonymous Belgian retail supermarket store.</p>
-<p>Results in approximately 5 months of data.
-The total amount of receipts being collected equals 88,163.</p>
-<p>In total, 5,133 customers have purchased at least one product during the data collection period</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
 all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the retail dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the retail dataset, as an in-memory pandas Series</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -354,8 +476,8 @@ Each unique transaction is represented as a Python list.</p>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_accidents">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_accidents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_accidents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_accidents" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch and return the accidents dataset (Frequent Itemset Mining)</p>
-<p>Traffic accident data, anonymized.</p>
+<dd><p>Fetch and return the accidents dataset (Frequent Itemset Mining)
+Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
 <p>see: <a class="reference external" href="http://fimi.uantwerpen.be/data/accidents.pdf">http://fimi.uantwerpen.be/data/accidents.pdf</a></p>
 <table class="docutils align-default">
 <colgroup>
@@ -364,16 +486,13 @@ Each unique transaction is represented as a Python list.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Nb of items</p></td>
-<td><p>468</p></td>
+<td><p>16470</p></td>
 </tr>
 <tr class="row-even"><td><p>Nb of transactions</p></td>
-<td><p>340183</p></td>
+<td><p>88162</p></td>
 </tr>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
-<td><p>33.807</p></td>
-</tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>0.072</p></td>
+<td><p>10.3</p></td>
 </tr>
 </tbody>
 </table>
@@ -383,8 +502,7 @@ Each unique transaction is represented as a Python list.</p>
 all scikit-mine data is stored in <cite>~/scikit_mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the accidents dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
+<dd class="field-even"><p>Transactions from the accidents dataset, as an in-memory pandas Series</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.Series</p>
@@ -393,103 +511,21 @@ Each unique transaction is represented as a Python list.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="synthetic-data-generation">
-<h2>Synthetic data generation<a class="headerlink" href="#synthetic-data-generation" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="skmine.datasets.make_transactions">
-<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">make_transactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_transactions</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">n_items</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/_samples_generator.html#make_transactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.make_transactions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a transactional dataset with predefined properties</p>
-<p>see: <a class="reference external" href="https://liris.cnrs.fr/Documents/Liris-3716.pdf">https://liris.cnrs.fr/Documents/Liris-3716.pdf</a></p>
-<p>Transaction sizes follow a normal distribution, centered around <code class="docutils literal notranslate"><span class="pre">density</span> <span class="pre">*</span> <span class="pre">n_items</span></code>.
-Individual items are integer values between 0 and <code class="docutils literal notranslate"><span class="pre">n_items</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_transactions</strong> (<em>int</em><em>, </em><em>default=1000</em>) – The number of transactions to generate</p></li>
-<li><p><strong>n_items</strong> (<em>int</em><em>, </em><em>default=100</em>) – The number of indidual items, i.e the size of the set of symbols</p></li>
-<li><p><strong>density</strong> (<em>float</em><em>, </em><em>default=0.5</em>) – Density of the resulting dataset</p></li>
-<li><p><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em>, </em><em>default=None</em>) – Determines random number generation for dataset creation. Pass an int
-for reproducible output across multiple function calls.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets">1</span></dt>
-<dd><p>F. Flouvat, F. De Marchi, JM. Petit
-“A new classification of datasets for frequent itemsets”, 2009</p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=.</span><span class="mi">25</span><span class="p">)</span>
-<span class="go">0    [0, 6, 18, 10, 1, 12]</span>
-<span class="go">1          [2, 18, 10, 14]</span>
-<span class="go">2                [4, 5, 1]</span>
-<span class="go">3         [10, 11, 16, 19]</span>
-<span class="go">4     [9, 4, 19, 8, 12, 5]</span>
-<span class="go">dtype: object</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<dl>
-<dt>With a binary matrix representation of the resulting dataset, we have the following equality</dt><dd><div class="math notranslate nohighlight">
-\[density = { Number\ of\ ones \over Number\ of\ cells }\]</div>
-</dd>
-<dt>This is equivalent to</dt><dd><div class="math notranslate nohighlight">
-\[density = { Average\ transaction\ size \over number\ of\ items }\]</div>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>pd.Series</strong> – Earch entry is a list of integer values</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>a Series of shape (<code class="docutils literal notranslate"><span class="pre">n_transactions</span></code>,)</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
 <div class="section" id="utils">
 <h2>utils<a class="headerlink" href="#utils" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="skmine.datasets.utils.describe_transactions">
-<code class="sig-prename descclassname">skmine.datasets.utils.</code><code class="sig-name descname">describe_transactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/utils.html#describe_transactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.utils.describe_transactions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Give some high level properties on transactions</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 62%" />
-<col style="width: 38%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p>Number of items</p></td>
-<td><p>int</p></td>
-</tr>
-<tr class="row-even"><td><p>Number of transactions</p></td>
-<td><p>int</p></td>
-</tr>
-<tr class="row-odd"><td><p>Average transaction size</p></td>
-<td><p>float</p></td>
-</tr>
-<tr class="row-even"><td><p>Density</p></td>
-<td><p>float in [0, 1]</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="field-list simple">
+<dt id="skmine.datasets.utils.describe_itemsets">
+<code class="sig-prename descclassname">skmine.datasets.utils.</code><code class="sig-name descname">describe_itemsets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/utils.html#describe_itemsets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.utils.describe_itemsets" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>D</strong> (<em>pd.Series</em>) – A transactional dataset</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<div class="math notranslate nohighlight">
-\[density = { avg\_transaction\_size \over n\_items }\]</div>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_connect</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_transactions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_transactions</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>
-<span class="go">{&#39;n_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;n_transactions&#39;: 3196, &#39;density&#39;: 0.4933}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_itemsets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_itemsets</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>
+<span class="go">{&#39;nb_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;nb_transactions&#39;: 3196}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -498,87 +534,52 @@ for reproducible output across multiple function calls.</p></li>
 </div>
 
 
+           </div>
+           
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="../index.html">
-              <img class="logo" src="../_static/skmine_logo.png" alt="Logo"/>
-            </a></p>
-<h1 class="logo"><a href="../index.html">scikit-mine</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Installation &amp; API</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">API Reference</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">API Reference</a></li>
-      <li>Next: <a href="itemsets.html" title="next chapter">Itemsets</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="itemsets.html" class="btn btn-neutral float-right" title="Itemsets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+  
 
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rémi Adon
 
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-
-
-
+</footer>
 
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2020, Rémi Adon.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="../_sources/reference/datasets.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>
