@@ -1,6 +1,3 @@
-.. image:: https://github.com/scikit-mine/scikit-mine/workflows/workflows/badge.svg
-        :target: https://github.com/scikit-mine/scikit-mine/workflows/workflows/badge.svg
-
 .. image:: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
 
