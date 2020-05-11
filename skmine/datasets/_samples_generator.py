@@ -9,15 +9,14 @@ import pandas as pd
 
 def make_transactions(n_transactions=1000,
                       n_items=100,
-                      avg_transaction_size=10,
+                      density=.5,
                       random_state=None):
     """
     Generate a transactional dataset with predefined properties
 
     see: https://liris.cnrs.fr/Documents/Liris-3716.pdf
 
-    Transaction sizes follow a normal distribution, centered around
-    ``avg_transaction_size``.
+    Transaction sizes follow a normal distribution, centered around ``density * n_items``.
     Individual items are integer values between 0 and ``n_items``.
 
     Parameters
@@ -26,12 +25,11 @@ def make_transactions(n_transactions=1000,
         The number of transactions to generate
     n_items: int, default=100
         The number of indidual items, i.e the size of the set of symbols
-    avg_transaction_size: int, default=10
-        The average size for a transactions
+    density: float, default=0.5
+        Density of the resulting dataset
     random_state : int, RandomState instance, default=None
         Determines random number generation for dataset creation. Pass an int
         for reproducible output across multiple function calls.
-        See :term:`Glossary <random_state>`.
 
     References
     ----------
@@ -41,31 +39,30 @@ def make_transactions(n_transactions=1000,
     Example
     -------
     >>> from skmine.datasets import make_transactions
-    >>> make_transactions(n_transactions=5, n_items=20, avg_transaction_size=5)
-    0                  [7, 6, 11, 13, 12, 17, 1, 2, 16, 8]
-    1                 [15, 10, 2, 0, 6, 18, 5, 17, 16, 13]
-    2               [10, 5, 19, 17, 16, 11, 14, 3, 12, 13]
-    3             [16, 10, 11, 0, 5, 7, 15, 13, 18, 3, 14]
-    4    [10, 12, 13, 2, 1, 19, 9, 17, 0, 5, 7, 11, 18, 8]
+    >>> make_transactions(n_transactions=5, n_items=20, density=.25)
+    0    [0, 6, 18, 10, 1, 12]
+    1          [2, 18, 10, 14]
+    2                [4, 5, 1]
+    3         [10, 11, 16, 19]
+    4     [9, 4, 19, 8, 12, 5]
     dtype: object
 
-    Raises
-    ------
-    ValueError
-        if ``n_items`` is lower than ``avg_transaction_size`` * 2,
-        which is not suited to generate well balanced
-        transactions containing distinct values.
+    Notes
+    -----
+    With a binary matrix representation of the resulting dataset, we have the following equality
+        .. math:: density = { Number\ of\ ones \over Number\ of\ cells }
+    This is equivalent to
+        .. math:: density = { Average\ transaction\ size \over number\ of\ items }
 
     Returns
     -------
     pd.Series: a Series of shape (``n_transactions``,)
         Earch entry is a list of integer values
     """
-    if avg_transaction_size * 2 > n_items:
-        raise ValueError("""
-            Average transaction size bigger than n_items // 2.
-            Please set a lower ``avg_transaction_size``, or a higher ``n_items``
-        """)
+    if not .0 < density < 1.0:
+        raise ValueError('density should be a float value between 0 and 1')
+    avg_transaction_size = density * n_items
+
     generator = np.random.RandomState(random_state)  # pylint: disable= no-member
 
     choices = np.arange(n_items)
@@ -74,6 +71,10 @@ def make_transactions(n_transactions=1000,
         p=.5,  # centered around avg_transaction_size
         size=n_transactions
     )
+    max_size = t_sizes.max()
+    if max_size > n_items:
+        delta = max_size - n_items
+        t_sizes = np.clip(t_sizes, a_min=t_sizes.min() + delta, a_max=n_items)
 
     D = [generator.choice(choices, size, replace=False) for size in t_sizes]
     return pd.Series(D)
