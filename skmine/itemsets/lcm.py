@@ -33,15 +33,22 @@ class LCM(BaseMiner):
 
     Parameters
     ----------
-
     min_supp: int or float, default=2
         The minimum support for itemsets to be rendered in the output
         Either an int representing the absolute support, or a float for relative support
-
     n_jobs : int, default=1
-        The number of jobs to use for the computation. Parallelism is done by launching a job
-        to compute a descent on each root node of the closed itemset lattice.
+        The number of jobs to use for the computation. Each single item is attributed a job
+        to discover potential itemsets, considering this item as a root in the search space.
         Processes are preffered over threads.
+
+    References
+    ----------
+    .. [1]
+        Takeaki Uno, Masashi Kiyomi, Hiroki Arimura
+        "LCM ver. 2: Efficient mining algorithms for frequent/closed/maximal itemsets", 2004
+
+    .. [2] Alexandre Termier
+        "Pattern mining rock: more, faster, better"
 
     Examples
     --------
