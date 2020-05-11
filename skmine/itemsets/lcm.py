@@ -104,7 +104,7 @@ class LCM(BaseMiner):
 
         if isinstance(self.min_supp, float):
             # make support absolute if needed
-            self._min_supp *= self.min_supp * self.n_transactions
+            self._min_supp = self.min_supp * self.n_transactions
 
         return self
 

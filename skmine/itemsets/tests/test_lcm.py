@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import numpy as np
 
 from skmine.itemsets import LCM
 
@@ -150,6 +151,7 @@ def test_relative_support_errors():
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
     lcm.fit(D)
+    np.testing.assert_almost_equal(lcm._min_supp, 2.8, 2)
 
     for item in lcm.item_to_tids.keys():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
