@@ -27,6 +27,3 @@ def get_data_home(data_home=None):
     if not os.path.exists(data_home):
         os.makedirs(data_home)
     return data_home
-
-
-# TODO : use this to fetch instacart dataset
