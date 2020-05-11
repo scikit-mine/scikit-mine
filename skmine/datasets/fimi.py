@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from . import urlopen
+from .conf import urlopen
 from ._base import get_data_home
 
 BASE_URL = 'http://fimi.uantwerpen.be/data/'
