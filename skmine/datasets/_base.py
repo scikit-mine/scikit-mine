@@ -5,14 +5,16 @@ Base IO code for all datasets
 import os
 
 def get_data_home(data_home=None):
-    """Return the path of the scikit-mine data dir.
+    """Return the path of the scikit-mine data home directory.
 
-    This folder is used by some large dataset loaders to avoid downloading the
+    This folder is used by some large dataset loaders to avoid downloading
     data several times.
-    By default the data dir is set to a folder named 'scikit_mine_data' in the
-    user home folder.
-    Alternatively, it can be set by the 'SCIKIT_MINE_DATA' environment
+
+    By default ``data_home`` is **$HOME/scikit_mine_data/**
+
+    Alternatively, it can be set by the **SCIKIT_MINE_DATA** environment
     variable or programmatically by giving an explicit folder path.
+
     Parameters
     ----------
     data_home : str | None

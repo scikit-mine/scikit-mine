@@ -53,7 +53,7 @@ def fetch_instacart(data_home=None):
 
     See Also
     --------
-    skmine.datasets.get_data_home : easily retrieve your ``data_home`` folder
+    get_data_home
 
     Examples
     --------
