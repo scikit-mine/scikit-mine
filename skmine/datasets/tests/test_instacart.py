@@ -60,6 +60,7 @@ def test_get_orders_not_fetched(monkeypatch):
     assert 'order_id' in orders.columns
 
 def test_fetch_orders_already_fetched(monkeypatch):
+    monkeypatch.setattr(_instacart, '_download', lambda *args : 'fake_file.tar.gz')
     monkeypatch.setattr(os.path, 'exists', lambda *ars: True)  # enforce branching
     monkeypatch.setattr(pd, 'read_pickle', mock_read_pickle)
     data = fetch_instacart('fake_data_home')
@@ -67,7 +68,7 @@ def test_fetch_orders_already_fetched(monkeypatch):
  
 
 def test_fetch_orders_not_fetched(monkeypatch):
-    monkeypatch.setattr(_instacart, '_download', lambda *args: None)
+    monkeypatch.setattr(_instacart, '_download', lambda *args: 'fake_file.tar.gz')
     monkeypatch.setattr(os.path, 'exists', lambda path: '.pkl' not in path)  # enforce branching
     monkeypatch.setattr(_instacart, '_get_orders', mock_get_orders)
     monkeypatch.setattr(pd.Series, 'to_pickle', lambda *args: None)
