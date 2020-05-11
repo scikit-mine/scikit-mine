@@ -22,7 +22,6 @@ Please run `pip install lxml` before using instacart.
 
 def fetch_instacart(data_home=None):
     """Fetch/load function for the instacart dataset
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
 
     see: https://www.instacart.com/datasets/grocery-shopping-2017
 
@@ -31,9 +30,6 @@ def fetch_instacart(data_home=None):
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
         all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
-
-    filename : str
-        Name of the file to fetch
 
     References
     ----------
@@ -45,12 +41,32 @@ def fetch_instacart(data_home=None):
     This returns instacart transactions as a pd.Series, note that you still have access to all
     other data downloaded in your ``data_home`` path
 
+    As instacart is a big dataset, ``fetch_instacart`` is designed to make the less computation
+    as possible. If you already have downloaded the instacart dataset, just place
+    `instacart.tar.gz` in your ``data_home``, or pass a ``data_home`` argument
+    and ``fetch_instacart`` will start from there.
+
+    Raises
+    ------
+    ImportError
+        In case download is necessary and the ``lxml`` package is not installed.
+
+    See Also
+    --------
+    skmine.datasets.get_data_home : easily retrieve your ``data_home`` folder
+
+    Examples
+    --------
+        >>> from skmine.datasets import fetch_instacart
+        >>> D = fetch_instacart(data_home='~/scikit_mine_data/')
+
     Returns
     -------
     pd.Series
-        Customers orders as a pandas Series
+        Customers orders. Each unique transaction will be represented as a Python list
     """
     data_home = data_home or get_data_home()
+    data_home = os.path.expanduser(data_home)
     tar_filename = _download(data_home)
     data_path = os.path.join(data_home, 'instacart_2017_05_01')
 
@@ -81,12 +97,12 @@ def _get_orders(data_path):
     return orders
 
 def _download(data_home):
-    if not LXML_INSTALLED:
-        raise ImportError(_IMPORT_MSG)
     tar_filename = os.path.join(data_home, 'instacart.tar.gz')
 
     if os.path.exists(tar_filename):
         print('found instacart dataset at {}, fetching from there'.format(tar_filename))
+    elif not LXML_INSTALLED:
+        raise ImportError(_IMPORT_MSG)
     else:
         print('downloading instacart dataset, this may take a while')
         data_link = "https://www.instacart.com/datasets/grocery-shopping-2017"
