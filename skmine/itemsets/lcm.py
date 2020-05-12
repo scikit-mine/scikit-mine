@@ -34,9 +34,11 @@ class LCM(BaseMiner):
 
     Parameters
     ----------
-    min_supp: int or float, default=2
+    min_supp: int or float, default=0.2
         The minimum support for itemsets to be rendered in the output
         Either an int representing the absolute support, or a float for relative support
+
+        Default to 0.2 (20%)
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
@@ -68,7 +70,7 @@ class LCM(BaseMiner):
     4  (21, 58)    2224
     >>> patterns[patterns.itemset.map(len) > 3]  # only keeps itemsets longer than 3
     """
-    def __init__(self, *, min_supp=2, n_jobs=1):
+    def __init__(self, *, min_supp=0.2, n_jobs=1):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self._min_supp = _check_min_supp(self.min_supp)
