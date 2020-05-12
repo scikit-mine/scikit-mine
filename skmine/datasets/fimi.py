@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from . import urlopen
+from .conf import urlopen
 from ._base import get_data_home
 
 BASE_URL = 'http://fimi.uantwerpen.be/data/'
@@ -52,12 +52,12 @@ def fetch_any(filename, data_home=None):
 
 def fetch_chess(data_home=None):
     """Fetch and return the chess dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
 
     ====================   ==============
     Nb of items                        75
     Nb of transactions               3196
     Avg transaction size             37.0
+    Density                         0.493
     ====================   ==============
 
     Parameters
@@ -70,18 +70,19 @@ def fetch_chess(data_home=None):
     -------
     pd.Series
         Transactions from the chess dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('chess.dat', data_home=data_home)
 
 
 def fetch_connect(data_home=None):
-    """Fetch and return the connect dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+    """Fetch and return the connect dataset (Frequent Itemset Mining).
 
     ====================   ==============
     Nb of items                       129
     Nb of transactions              67557
     Avg transaction size             43.0
+    Density                         0.333
     ====================   ==============
 
     Parameters
@@ -94,18 +95,28 @@ def fetch_connect(data_home=None):
     -------
     pd.Series
         Transactions from the connect dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('connect.dat', data_home=data_home)
 
 
 def fetch_mushroom(data_home=None):
     """Fetch and return the mushroom dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    The Mushroom data set includes descriptions of hypothetical samples corresponding
+    to 23 species of gilled mushrooms in the Agaricus and Lepiota Family.
+
+    It contains information about 8124 mushrooms (transactions).
+    4208 (51.8%) are edible and 3916 (48.2%) are poisonous.
+
+    The data contains 22 nomoinal features plus the class attribure (edible or not).
+    These features were translated into 114 items.
 
     ====================   ==============
     Nb of items                       119
     Nb of transactions               8124
     Avg transaction size             23.0
+    Density                         0.193
     ====================   ==============
 
     Parameters
@@ -118,18 +129,21 @@ def fetch_mushroom(data_home=None):
     -------
     pd.Series
         Transactions from the mushroom dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('mushroom.dat', data_home=data_home)
 
 
 def fetch_pumsb(data_home=None):
     """Fetch and return the pumsb dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    The Pumsb dataset contains census data for population and housing.
 
     ====================   ==============
     Nb of items                      2113
     Nb of transactions              49046
     Avg transaction size             74.0
+    Density                         0.035
     ====================   ==============
 
     Parameters
@@ -141,19 +155,20 @@ def fetch_pumsb(data_home=None):
     Returns
     -------
     pd.Series
-        Transactions from the pumsb dataset, as an in-memory pandas Series
+        Transactions from the pumsb dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('pumsb.dat', data_home=data_home)
 
 
 def fetch_pumsb_star(data_home=None):
     """Fetch and return the pumsb_star dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
 
     ====================   ==============
     Nb of items                      2088
     Nb of transactions              49046
     Avg transaction size            50.48
+    Density                         0.024
     ====================   ==============
 
     Parameters
@@ -165,19 +180,22 @@ def fetch_pumsb_star(data_home=None):
     Returns
     -------
     pd.Series
-        Transactions from the pumsb_star dataset, as an in-memory pandas Series
+        Transactions from the pumsb_star dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('pumsb_star.dat', data_home=data_home)
 
 
 def fetch_kosarak(data_home=None):
     """Fetch and return the kosarak dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    Click-stream data from a hungarian on-line news portal.
 
     ====================   ==============
     Nb of items                     36855
     Nb of transactions             990002
     Avg transaction size              8.1
+    Density                      0.000220
     ====================   ==============
 
     Parameters
@@ -189,14 +207,16 @@ def fetch_kosarak(data_home=None):
     Returns
     -------
     pd.Series
-        Transactions from the kosarak dataset, as an in-memory pandas Series
+        Transactions from the kosarak dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('kosarak.dat', data_home=data_home)
 
 
 def fetch_retail(data_home=None):
     """Fetch and return the retail dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    Contains market basket data from a Belgian retail store, anonymized.
 
     see: http://fimi.uantwerpen.be/data/retail.pdf
 
@@ -204,7 +224,15 @@ def fetch_retail(data_home=None):
     Nb of items                     16470
     Nb of transactions              88162
     Avg transaction size             10.3
+    Densisty                     0.000626
     ====================   ==============
+
+    Retail market basket data set supplied by a anonymous Belgian retail supermarket store.
+
+    Results in approximately 5 months of data.
+    The total amount of receipts being collected equals 88,163.
+
+    In total, 5,133 customers have purchased at least one product during the data collection period
 
     Parameters
     ----------
@@ -215,20 +243,23 @@ def fetch_retail(data_home=None):
     Returns
     -------
     pd.Series
-        Transactions from the retail dataset, as an in-memory pandas Series
+        Transactions from the retail dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
     """
     return fetch_any('retail.dat', data_home=data_home)
 
 def fetch_accidents(data_home=None):
     """Fetch and return the accidents dataset (Frequent Itemset Mining)
-    Each unique transaction will be represented as a Python list in the resulting pandas Series
+
+    Traffic accident data, anonymized.
 
     see: http://fimi.uantwerpen.be/data/accidents.pdf
 
     ====================   ==============
-    Nb of items                     16470
-    Nb of transactions              88162
-    Avg transaction size             10.3
+    Nb of items                       468
+    Nb of transactions             340183
+    Avg transaction size           33.807
+    Density                         0.072
     ====================   ==============
 
     Parameters
@@ -240,7 +271,8 @@ def fetch_accidents(data_home=None):
     Returns
     -------
     pd.Series
-        Transactions from the accidents dataset, as an in-memory pandas Series
+        Transactions from the accidents dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
 
     """
     return fetch_any('accidents.dat', data_home=data_home)
