@@ -6,6 +6,7 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 # Author: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
+from collections import defaultdict
 import numpy as np
 import pandas as pd
 from joblib import Parallel
@@ -71,7 +72,7 @@ class LCM(BaseMiner):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self._min_supp = _check_min_supp(self.min_supp)
-        self.item_to_tids = SortedDict()
+        self.item_to_tids = None
         self.n_transactions = 0
         self.ctr = 0
         self.n_jobs = n_jobs
@@ -94,22 +95,24 @@ class LCM(BaseMiner):
             a reference to the model itself
 
         """
-        self.item_to_tids.clear()  # avoid opportunistic partial fitting
         return self._fit(D)
 
     def _fit(self, D):
+        item_to_tids = defaultdict(RoaringBitmap)
         for transaction in D:
             for item in transaction:
-                if item in self.item_to_tids:
-                    self.item_to_tids[item].add(self.n_transactions)
-                else:
-                    self.item_to_tids[item] = RoaringBitmap([self.n_transactions])
+                item_to_tids[item].add(self.n_transactions)
             self.n_transactions += 1
 
         if isinstance(self.min_supp, float):
             # make support absolute if needed
             self._min_supp = self.min_supp * self.n_transactions
 
+        low_supp_items = [k for k, v in item_to_tids.items() if len(v) < self._min_supp]
+        for item in low_supp_items:
+            del item_to_tids[item]
+
+        self.item_to_tids = SortedDict(item_to_tids)
         return self
 
     def fit_discover(self, D, return_tids=False):
@@ -151,10 +154,9 @@ class LCM(BaseMiner):
         self.fit(D)
 
         empty_df = pd.DataFrame(columns=['itemset', 'tids'])
-        items = filter(lambda e: len(e[1]) >= self._min_supp, self.item_to_tids.items())
 
         # reverse order of support
-        supp_sorted_items = sorted(items, key=lambda e: len(e[1]), reverse=True)
+        supp_sorted_items = sorted(self.item_to_tids.items(), key=lambda e: len(e[1]), reverse=True)
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
             delayed(self._explore_item)(item, tids) for item, tids in supp_sorted_items
