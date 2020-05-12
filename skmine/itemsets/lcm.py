@@ -57,7 +57,7 @@ class LCM(BaseMiner):
     >>> from skmine.datasets.fimi import fetch_chess
     >>> chess = fetch_chess()
     >>> lcm = LCM(min_supp=2000)
-    >>> patterns = lcm.fit_transform(chess)
+    >>> patterns = lcm.fit_discover(chess)
     >>> patterns.head()
         itemset support
     0      (58)    3195
@@ -90,10 +90,14 @@ class LCM(BaseMiner):
 
         Returns
         -------
-        self: LCM
+        self:
             a reference to the model itself
 
         """
+        self.item_to_tids.clear()  # avoid opportunistic partial fitting
+        return self._fit(D)
+
+    def _fit(self, D):
         for transaction in D:
             for item in transaction:
                 if item in self.item_to_tids:
@@ -108,9 +112,11 @@ class LCM(BaseMiner):
 
         return self
 
-    def fit_transform(self, D):
+    def fit_discover(self, D, return_tids=False):
         """fit LCM on the transactional database, and return the set of
         closed itemsets in this database, with respect to the minium support
+
+        Different from ``fit_transform``, see the `Returns` section below.
 
         Parameters
         ----------
@@ -118,6 +124,10 @@ class LCM(BaseMiner):
             The input transactional database
             Where every entry contain singular items
             Items must be both hashable and comparable
+
+        return_tids: bool
+            Either to return transaction ids along with itemset.
+            Default to False, will return supports instead
 
         Returns
         -------
@@ -128,25 +138,83 @@ class LCM(BaseMiner):
                 support     frequence for this itemset
                 ==========  =================================
 
+        Example
+        -------
+        >>> from skmine.itemsets import LCM
+        >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
+        >>> lcm = LCM(min_supp=2)
+        >>> lcm.fit_discover(D)
+            itemset  support
+        0     (2, 5)        3
+        1  (2, 3, 5)        2
         """
         self.fit(D)
-        empty_df = pd.DataFrame(columns=['itemset', 'support'])
+
+        empty_df = pd.DataFrame(columns=['itemset', 'tids'])
         items = filter(lambda e: len(e[1]) >= self._min_supp, self.item_to_tids.items())
 
         # reverse order of support
-        sorted_items = sorted(items, key=lambda e: len(e[1]), reverse=True)
+        supp_sorted_items = sorted(items, key=lambda e: len(e[1]), reverse=True)
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
-            delayed(self._explore_item)(item, tids) for item, tids in sorted_items
+            delayed(self._explore_item)(item, tids) for item, tids in supp_sorted_items
         )
 
         dfs.append(empty_df) # make sure we have something to concat
-        return pd.concat(dfs, axis=0, ignore_index=True)
+        df = pd.concat(dfs, axis=0, ignore_index=True)
+        if not return_tids:
+            df.loc[:, 'support'] = df['tids'].map(len).astype(np.uint32)
+            df.drop('tids', axis=1, inplace=True)
+        return df
+
+    def fit_transform(self, D, sort=True):
+        """fit LCM on the transactional database, and return the set of
+        closed itemsets in this database, with respect to the minium support.
+
+        This basically calls the ``fit_discover`` method and one-hot-encode
+        the resulting patterns. This makes LCM a possible preprocessing step
+        in a ``scikit-learn pipeline``.
+
+        Parameters
+        ----------
+        D : pd.Series or Iterable
+            The input transactional database
+            Where every entry contain singular items
+            Items must be both hashable and comparable
+
+        sort: bool
+            if True, columns will be sorted by decreasing order of support
+
+        Returns
+        -------
+        One-hot-encoded itemsets : pd.DataFrame
+            A boolean DataFrame with itemsets as columns, and transactions as rows
+
+        Example
+        -------
+        >>> from skmine.itemsets import LCM
+        >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
+        >>> lcm = LCM(min_supp=2)
+        >>> lcm.fit_transform(D, sort=True)
+           (2, 5)  (2, 3, 5)
+        0       1          1
+        1       1          1
+        2       1          0
+        """
+        df = self.fit_discover(D, return_tids=True)
+        if sort:
+            index = df.tids.map(len).sort_values(ascending=False).index
+            df = df.reindex(index)
+        shape = (self.n_transactions, len(df))
+        mat = np.zeros(shape, dtype=np.uint32)
+        for idx, tids in enumerate(df['tids']):
+            mat[tids, idx] = 1.0
+        return pd.DataFrame(mat, columns=df['itemset'].values)
+
 
     def _explore_item(self, item, tids):
         it = self._inner(frozenset(), tids, item)
-        df = pd.DataFrame(data=it, columns=['itemset', 'support'])
-        df.support = df.support.astype(np.uint32)
+        df = pd.DataFrame(data=it, columns=['itemset', 'tids'])
         if not df.empty:
             print('LCM found {} new itemsets from item : {}'.format(len(df), item))
         return df
@@ -162,7 +230,7 @@ class LCM(BaseMiner):
 
         if max_k and max_k == limit:
             p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
-            yield p_prime, len(tids)
+            yield p_prime, tids
 
             candidates = self.item_to_tids.keys() - p_prime
             candidates = candidates[:candidates.bisect_left(limit)]

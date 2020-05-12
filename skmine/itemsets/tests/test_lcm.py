@@ -4,7 +4,7 @@ import numpy as np
 
 from skmine.itemsets import LCM
 
-D = pd.Series([
+D = [
     [1, 2, 3, 4, 5, 6],
     [2, 3, 5],
     [2, 5],
@@ -12,7 +12,7 @@ D = pd.Series([
     [2, 4],
     [1, 4, 6],
     [3, 4, 6],
-])
+]
 
 true_item_to_tids = {
     1 : {0, 3, 5},
@@ -22,6 +22,18 @@ true_item_to_tids = {
     5 : {0, 1, 2, 3},
     6 : {0, 3, 5, 6},
 }
+
+true_patterns = pd.DataFrame([  # from D with min_supp=3
+        [{2}, 5],
+        [{4}, 5],
+        [{2, 4}, 3],
+        [{2, 5}, 4],
+        [{4, 6}, 4],
+        [{1, 4, 6}, 3],
+        [{3}, 3],
+], columns=['itemset', 'support'])
+
+true_patterns.loc[:, 'itemset'] = true_patterns.itemset.map(frozenset)
 
 
 def test_lcm_fit():
@@ -39,14 +51,13 @@ def test_first_parent_limit_1():
     tids = lcm.item_to_tids[limit]
 
     ## pattern = {4, 6} -> first parent OK
-    itemset, supp = next(lcm._inner(frozenset([4, 6]), tids, limit), (None, None))
+    itemset, tids = next(lcm._inner(frozenset([4, 6]), tids, limit), (None, None))
     assert itemset == frozenset([1, 4, 6])
-    assert supp == 3
+    assert len(tids) == 3
 
     # pattern = {} -> first parent fails
-    itemset, supp = next(lcm._inner(frozenset(), tids, limit), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, limit), (None, None))
     assert itemset == None
-    assert supp == None
 
 
 def test_first_parent_limit_2():
@@ -55,15 +66,15 @@ def test_first_parent_limit_2():
 
     # pattern = {} -> first parent OK
     tids = lcm.item_to_tids[2]
-    itemset, supp = next(lcm._inner(frozenset(), tids, 2), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, 2), (None, None))
     assert itemset == frozenset([2])
-    assert supp == 5
+    assert len(tids) == 5
 
     # pattern = {4} -> first parent OK
     tids = lcm.item_to_tids[2] & lcm.item_to_tids[4]
-    itemset, supp = next(lcm._inner(frozenset([4]), tids, 2), (None, None))
+    itemset, tids = next(lcm._inner(frozenset([4]), tids, 2), (None, None))
     assert itemset == frozenset([2, 4])
-    assert supp == 3
+    assert len(tids) == 3
 
 
 def test_first_parent_limit_3():
@@ -71,27 +82,27 @@ def test_first_parent_limit_3():
     lcm.fit(D)
 
     tids = lcm.item_to_tids[3]
-    itemset, supp = next(lcm._inner(frozenset(), tids, 3), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, 3), (None, None))
     assert itemset == frozenset([3])
-    assert supp == 3
+    assert len(tids) == 3
 
 def test_first_parent_limit_4():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
     tids = lcm.item_to_tids[4]
-    itemset, supp = next(lcm._inner(frozenset(), tids, 4), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, 4), (None, None))
     assert itemset == frozenset([4])
-    assert supp == 5
+    assert len(tids) == 5
 
 def test_first_parent_limit_5():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
     tids = lcm.item_to_tids[5]
-    itemset, supp = next(lcm._inner(frozenset(), tids, 5), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, 5), (None, None))
     assert itemset == frozenset([2, 5])
-    assert supp == 4
+    assert len(tids) == 4
 
 
 def test_first_parent_limit_6():
@@ -99,44 +110,50 @@ def test_first_parent_limit_6():
     lcm.fit(D)
 
     tids = lcm.item_to_tids[6]
-    itemset, supp = next(lcm._inner(frozenset(), tids, 6), (None, None))
+    itemset, tids = next(lcm._inner(frozenset(), tids, 6), (None, None))
     assert itemset == frozenset([4, 6])
-    assert supp == 4
+    assert len(tids) == 4
 
 def test_lcm_empty_fit():
     # 1. test with a min_supp high above the maximum supp
     lcm = LCM(min_supp=100)
-    res = lcm.fit_transform(D)
+    res = lcm.fit_discover(D)
     assert isinstance(res, pd.DataFrame)
     assert res.empty
 
     # 2. test with empty data
     lcm = LCM(min_supp=3)
-    res = lcm.fit_transform([])
+    res = lcm.fit_discover([])
     assert isinstance(res, pd.DataFrame)
     assert res.empty
 
 
+def test_lcm_discover():
+    lcm = LCM(min_supp=3)
+    patterns = lcm.fit_discover(D)  # get new pattern set
+
+    for itemset, true_itemset in zip(patterns.itemset, true_patterns.itemset):
+        assert itemset == true_itemset
+    pd.testing.assert_series_equal(patterns.support, true_patterns.support, check_dtype=False)
+
 def test_lcm_transform():
     lcm = LCM(min_supp=3)
-    X = lcm.fit_transform(D)  # get new pattern set
+    X = lcm.fit_transform(D)
+    supps = X.sum(axis=0)
+    np.testing.assert_equal(
+        supps.sort_values().values,
+        true_patterns['support'].sort_values().values,
+    )
 
-    true_X = pd.DataFrame([
-            [{2}, 5],
-            [{4}, 5],
-            [{2, 4}, 3],
-            [{2, 5}, 4],
-            [{4, 6}, 4],
-            [{1, 4, 6}, 3],
-            [{3}, 3],
-    ], columns=['itemset', 'support'])
+def test_lcm_transform_sort():
+    lcm = LCM(min_supp=3)
+    X = lcm.fit_transform(D, sort=True)
+    assert X.columns[0] == frozenset([4])
 
-    true_X.loc[:, 'itemset'] = true_X.itemset.map(frozenset)
-
-    for itemset, true_itemset in zip(X.itemset, true_X.itemset):
-        assert itemset == true_itemset
-    pd.testing.assert_series_equal(X.support, true_X.support, check_dtype=False)
-
+def test_lcm_transform_sort():
+    lcm = LCM(min_supp=3)
+    X = lcm.fit_transform(D, sort=False)
+    assert X.columns[0] == frozenset([2])
 
 def test_relative_support_errors():
     wrong_values = [-1, -100, 2.33, 150.55]
