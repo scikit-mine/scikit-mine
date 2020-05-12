@@ -103,7 +103,7 @@ html_theme = 'alabaster'
 #html_static_path = ['_static']
 
 
-#html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_rtd_theme'
 html_logo = '../skmine_logo.png'
 html_theme_options = {
     'logo_only': True
