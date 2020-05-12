@@ -2,7 +2,7 @@ from skmine.itemsets import LCM
 from skmine.datasets import make_transactions
 
 class LCMBench:
-    params = ([.1, .3], [20], [.3, .6])
+    params = ([.1, .3], [20], [.4, .6])
     param_names = ['min_supp', 'n_transactions', 'density']
     #timeout = 20  # timeout for a single run, in seconds
     repeat = (1, 3, 20.0)
