@@ -88,6 +88,20 @@ def test_cover_order_pos_2():
     assert pos == 1
     assert cand in slim.supports.keys()
 
+def test_cover_order_pos_support_needed():
+    """support computation is needed to get the position in cover order"""
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    slim = SLIM()
+    slim._prefit(D)
+    codetable = ['ABC', 'B', 'C']
+    codetable = list(map(frozenset, codetable))
+    cand = frozenset('A')
+
+    pos = slim._get_cover_order_pos(codetable, cand)
+
+    assert pos == 1
+    assert cand in slim.supports.keys()
+
 
 def test_prefit():
     D = ['ABC'] * 5 + ['BC', 'B', 'C']
@@ -132,7 +146,7 @@ def test_compute_sizes_1():
         frozenset('ABC'): RoaringBitmap(range(0, 5)),
         frozenset('AB'): RoaringBitmap([5]),
         frozenset('A'): RoaringBitmap([6]),
-        frozenset('B'): RoaringBitmap([7]), 
+        frozenset('B'): RoaringBitmap([7]),
     })
 
     data_size, model_size = slim.compute_sizes(CT)
@@ -175,7 +189,7 @@ def test_prune():
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('AB')]]
 
-    
+
     new_codetable, new_data_size, new_model_size = slim._prune(
         slim.codetable, D, prune_set, slim.model_size, slim.data_size
     )
@@ -185,3 +199,38 @@ def test_prune():
 
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
+
+def test_prune_empty():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = pd.Series(D)
+
+    slim = SLIM(pruning=False).fit(D)
+    prune_set = slim.codetable.loc[[frozenset('ABC')]]
+
+    # nothing to prune so we should get the exact same codetable
+
+    new_codetable, new_data_size, new_model_size = slim._prune(
+        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+    )
+
+    assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+
+
+def test_predict_proba():
+    D = pd.Series(['ABC'] * 5 + ['AB', 'A', 'B'])
+    slim = SLIM().fit(D)
+
+    new_D = pd.Series(['AB'] * 2 + ['ABD', 'AC', 'B'])
+
+    probas = slim.predict_proba(new_D)
+    assert probas.dtype == np.float32
+    assert len(probas) == len(new_D)
+    np.testing.assert_array_almost_equal(
+        probas.values,
+        np.array([.44, .44, .44, .22, .22]),
+        decimal=2
+    )
+
+def test_get_codetable():  # FIXME : .get_codetable() be replace by self.codetable
+    slim = SLIM()
+    slim.get_codetable()

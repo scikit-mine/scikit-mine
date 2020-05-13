@@ -101,7 +101,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     def __init__(self, *, n_iter_no_change=5, pruning=True):
         self.n_iter_no_change = n_iter_no_change
         self.standard_codetable = None
-        self.codetable = None
+        self.codetable = pd.Series([])
         self.supports = lazydict(self._get_support)
         self.model_size = None          # L(CT|D)
         self.data_size = None           # L(D|CT)
@@ -122,8 +122,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             # TODO : add lexicographic order
         return pos
 
-    def __repr__(self):
-        return repr(self.get_codetable())
+    def __repr__(self): return repr(self.get_codetable())
 
     def _prefit(self, D: pd.Series):
         self.standard_codetable = make_codetable(D)
@@ -191,12 +190,14 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         This encode transactions with the current codetable.
         """
         assert isinstance(D, pd.Series)
-        codetable = self.get_codetable()  # FIXME self.codetable should be OK
-        # TODO : remove unseed items --> isin(self.standard_codetable.index)
+
+        codetable = self.codetable[self.codetable.map(len) > 0]
+        seen_items = frozenset(self.standard_codetable.index)
+        D = D.map(seen_items.intersection)  # remove never seen items
         covers = D.map(lambda t: cover_one(codetable.index, t))
         ct_codes = codetable.map(len) / codetable.map(len).sum()
         codes = covers.map(lambda c: sum((ct_codes[e] for e in c)))
-        return codes
+        return codes.astype(np.float32)
 
 
     def get_codetable(self):
