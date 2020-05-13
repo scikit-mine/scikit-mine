@@ -198,6 +198,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
 
     def fit(self, D):
+        """ fit SLIM on a transactional dataset
+
+        This generate new candidate patterns and add those which improve compression,
+        iteratibely refining the ``self.codetable``
+        """
         self._prefit(D)
         CTc_index = None
         n_iter_no_change = 0
