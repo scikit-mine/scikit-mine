@@ -70,6 +70,24 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     n_iter_no_change: int, default=5
         Number of iteration to count before stopping optimization.
 
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skmine.itemsets import SLIM
+    >>> D = pd.Sers([
+    >>>     ['bananas', 'milk'],
+    >>>     ['milk', 'bananas', 'cookies'],
+    >>>     ['cookies', 'butter', 'tea'],
+    >>>     ['tea'],
+    >>>     ['milk', 'bananas', 'tea'],
+    >>> ])
+    >>> SLIM().fit(D).get_codetable()
+        (milk, cookies, bananas)       [1]
+        (butter, cookies, tea)         [2]
+        (milk, bananas)             [0, 4]
+        (tea)                       [3, 4]
+        dtype: object
+
     References
     ----------
     .. [1]
@@ -103,8 +121,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             # TODO : add lexicographic order
         return pos
 
-    def get_codetable(self):
-        return self.codetable[self.codetable.map(len) > 0]  # FIXME : this should not be needed
+    def __repr__(self):
+        return repr(self.get_codetable())
 
     def _prefit(self, D: pd.Series):
         self.standard_codetable = make_codetable(D)
@@ -120,6 +138,60 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         return self
 
+    def fit(self, D):
+        """ fit SLIM on a transactional dataset
+
+        This generate new candidate patterns and add those which improve compression,
+        iteratibely refining the ``self.codetable``
+        """
+        self._prefit(D)
+        CTc_index = None
+        n_iter_no_change = 0
+        while n_iter_no_change < self.n_iter_no_change:
+            is_better = False
+            candidates = generate_candidates(self.codetable, stack=self._seen_cands)
+            for cand in candidates:
+                CT_index = self.codetable.index
+                cand_pos = self._get_cover_order_pos(CT_index, cand)
+                CTc_index = CT_index.insert(cand_pos, cand)
+
+                covers = D.map(lambda t: cover_one(CTc_index, t))
+                CTc = make_codetable(covers)
+                data_size, model_size = self.compute_sizes(CTc)
+
+                if data_size + model_size < self.data_size + model_size:
+                    zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
+                    CTc = CTc.reindex(CTc_index)
+                    for itemset in zeros_index:
+                        CTc[itemset] = RoaringBitmap()
+
+                    if self.pruning:  # TODO : remove in the future, this is for testing purposes
+                        prune_set = CTc.drop([cand])
+                        prune_set = prune_set[prune_set.map(len) < self.codetable.map(len)]
+                        prune_set = prune_set[prune_set.index.map(len) > 1]
+                        CTc, data_size, model_size = self._prune(
+                            CTc, D, prune_set, model_size, data_size
+                        )
+
+                    self.codetable = CTc
+                    self.data_size = data_size
+                    self.model_size = model_size
+                    is_better = True
+                self._seen_cands.add(cand)  # TODO : move to inner if statement ?
+
+            if not is_better:
+                n_iter_no_change += 1
+
+        return self
+
+    def get_codetable(self):
+        """
+        Returns
+        -------
+        pd.Series
+            codetable containing patterns and ids of transactions in which they are used
+        """
+        return self.codetable[self.codetable.map(len) > 0]  # FIXME : this should not be needed
 
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
@@ -133,17 +205,22 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     def compute_sizes(self, codetable):
         """
+        Compute sizes for both the data and the model
+
+        .. math:: L(D|CT)
+        .. math:: L(CT|D)
+
         Parameters
         ----------
         codetable : pd.Series
-            A series mapping itemsets for their tids
-            TODO : no need for tids here, only usages
+            A series mapping itemsets to their usage tids
 
         Returns
         -------
-        tuple(int, int)
+        tuple(float, float)
             (data_size, model_size)
         """
+        #TODO : no need for tids here, only usages
         usages = codetable.map(len).astype(np.uint32)
         codes = -np.log2(usages / usages.sum())
 
@@ -153,7 +230,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         data_size = (codes * usages).sum()
         return data_size, model_size
 
-    def prune(self, codetable, D, prune_set, model_size, data_size):
+    def _prune(self, codetable, D, prune_set, model_size, data_size):
         """ post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
@@ -198,50 +275,3 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                 new_model_size = m_size
 
         return new_codetable, new_data_size, new_model_size
-
-
-    def fit(self, D):
-        """ fit SLIM on a transactional dataset
-
-        This generate new candidate patterns and add those which improve compression,
-        iteratibely refining the ``self.codetable``
-        """
-        self._prefit(D)
-        CTc_index = None
-        n_iter_no_change = 0
-        while n_iter_no_change < self.n_iter_no_change:
-            is_better = False
-            candidates = generate_candidates(self.codetable, stack=self._seen_cands)
-            for cand in candidates:
-                CT_index = self.codetable.index
-                cand_pos = self._get_cover_order_pos(CT_index, cand)
-                CTc_index = CT_index.insert(cand_pos, cand)
-
-                covers = D.map(lambda t: cover_one(CTc_index, t))
-                CTc = make_codetable(covers)
-                data_size, model_size = self.compute_sizes(CTc)
-
-                if data_size + model_size < self.data_size + model_size:
-                    zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
-                    CTc = CTc.reindex(CTc_index)
-                    for itemset in zeros_index:
-                        CTc[itemset] = RoaringBitmap()
-
-                    if self.pruning:  # TODO : remove in the future, this is for testing purposes
-                        prune_set = CTc.drop([cand])
-                        prune_set = prune_set[prune_set.map(len) < self.codetable.map(len)]
-                        prune_set = prune_set[prune_set.index.map(len) > 1]
-                        CTc, data_size, model_size = self.prune(
-                            CTc, D, prune_set, model_size, data_size
-                        )
-
-                    self.codetable = CTc
-                    self.data_size = data_size
-                    self.model_size = model_size
-                    is_better = True
-                self._seen_cands.add(cand)  # TODO : move to inner if statement ?
-
-            if not is_better:
-                n_iter_no_change += 1
-
-        return self

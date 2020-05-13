@@ -176,7 +176,7 @@ def test_prune():
     prune_set = slim.codetable.loc[[frozenset('AB')]]
 
     
-    new_codetable, new_data_size, new_model_size = slim.prune(
+    new_codetable, new_data_size, new_model_size = slim._prune(
         slim.codetable, D, prune_set, slim.model_size, slim.data_size
     )
 
