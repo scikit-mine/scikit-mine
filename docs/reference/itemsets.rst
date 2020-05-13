@@ -10,3 +10,7 @@ LCM
 -------
 .. autoclass:: skmine.itemsets.LCM
 
+
+SLIM
+-------
+.. autoclass:: skmine.itemsets.SLIM
