@@ -63,7 +63,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     """SLIM: Directly Mining Descriptive Patterns
 
     Idea of early stopping is inspired from
-    `http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf`
+    http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf
 
     Parameters
     ----------
