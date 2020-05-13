@@ -67,9 +67,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     Parameters
     ----------
-    n_iter_to_change: int, default=5
+    n_iter_no_change: int, default=5
         Number of iteration to count before stopping optimization.
-    eps: int, default 2  # TODO
 
     References
     ----------
@@ -89,6 +88,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         self.data_size = None           # L(D|CT)
         self.pruning = pruning
         self._seen_cands = set()  # set of previously seen items
+        # TODO : add eps parameter for smarter early stopping
 
     def _get_support(self, itemset):
         U = reduce(RoaringBitmap.union, self.standard_codetable.loc[itemset])
@@ -102,6 +102,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                 break
             # TODO : add lexicographic order
         return pos
+
+    def get_codetable(self):
+        return self.codetable[self.codetable.map(len) > 0]  # FIXME : this should not be needed
 
     def _prefit(self, D: pd.Series):
         self.standard_codetable = make_codetable(D)
