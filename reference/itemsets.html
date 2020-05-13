@@ -93,6 +93,7 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Datasets</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Itemsets</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#lcm">LCM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#slim">SLIM</a></li>
 </ul>
 </li>
 </ul>
@@ -102,6 +103,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 </ul>
 
             
@@ -349,6 +352,106 @@ Items must be both hashable and comparable</p></li>
 <span class="go">2       1          0</span>
 </pre></div>
 </div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="slim">
+<h2>SLIM<a class="headerlink" href="#slim" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.itemsets.SLIM">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">n_iter_no_change</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
+<dd><p>SLIM: Directly Mining Descriptive Patterns</p>
+<p>Idea of early stopping is inspired from
+<a class="reference external" href="http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf">http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_iter_no_change</strong> (<em>int</em><em>, </em><em>default=5</em>) – Number of iteration to count before stopping optimization.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Sers</span><span class="p">([</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">()</span>
+<span class="go">    (milk, cookies, bananas)       [1]</span>
+<span class="go">    (butter, cookies, tea)         [2]</span>
+<span class="go">    (milk, bananas)             [0, 4]</span>
+<span class="go">    (tea)                       [3, 4]</span>
+<span class="go">    dtype: object</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets">1</span></dt>
+<dd><p>Smets, K &amp; Vreeken, J
+“Slim: Directly Mining Descriptive Patterns”, 2012</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets">2</span></dt>
+<dd><p>Gandhi, M &amp; Vreeken, J
+“Slimmer, outsmarting Slim”, 2014</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit SLIM on a transactional dataset</p>
+<p>This generate new candidate patterns and add those which improve compression,
+iteratibely refining the <code class="docutils literal notranslate"><span class="pre">self.codetable</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.predict_proba">
+<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.predict_proba"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd><p>make predictions on a new transactional data</p>
+<p>This encode transactions with the current codetable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.get_codetable">
+<code class="sig-name descname">get_codetable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.get_codetable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.get_codetable" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>codetable containing patterns and ids of transactions in which they are used</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.get_standard_codes">
+<code class="sig-name descname">get_standard_codes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.get_standard_codes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.get_standard_codes" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute the size of a codetable index given the standard codetable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.compute_sizes">
+<code class="sig-name descname">compute_sizes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">codetable</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.compute_sizes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.compute_sizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute sizes for both the data and the model</p>
+<div class="math notranslate nohighlight">
+\[L(D|CT)\]</div>
+<div class="math notranslate nohighlight">
+\[L(CT|D)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>codetable</strong> (<em>pd.Series</em>) – A series mapping itemsets to their usage tids</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(data_size, model_size)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple(float, float)</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

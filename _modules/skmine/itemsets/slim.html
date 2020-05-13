@@ -1,0 +1,490 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>skmine.itemsets.slim &mdash; scikit-mine 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>skmine.itemsets.slim</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for skmine.itemsets.slim</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;SLIM pattern discovery&quot;&quot;&quot;</span>
+
+<span class="c1"># Authors: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
+<span class="c1"># License: BSD 3 clause</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span>
+
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">lazydict</span>
+
+
+<span class="k">def</span> <span class="nf">make_codetable</span><span class="p">(</span><span class="n">D</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applied on an original dataset this makes up a standard codetable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">codetable</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">RoaringBitmap</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">transaction</span><span class="p">:</span>
+            <span class="n">codetable</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">codetable</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">cover_one</span><span class="p">(</span><span class="n">codetable</span><span class="p">,</span> <span class="n">cand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    assumes codetable is already sorted in Standard Cover Order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cover</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">codetable</span><span class="p">):</span>
+        <span class="n">iset</span> <span class="o">=</span> <span class="n">codetable</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">iset</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">stack</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">iset</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">cand</span><span class="p">):</span>
+            <span class="n">cover</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iset</span><span class="p">)</span>  <span class="c1"># TODO add index instead of element for performance</span>
+            <span class="n">stack</span> <span class="o">|=</span> <span class="n">iset</span>
+    <span class="k">return</span> <span class="n">cover</span>
+
+
+<span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="n">codetable</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    assumes codetable is sorted in Standard Cover Order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X_usage</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">codetable</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()):</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="n">XY_usage</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">X_usage</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+        <span class="n">XY_usage</span> <span class="o">=</span> <span class="n">XY_usage</span><span class="p">[</span><span class="n">XY_usage</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">XY_usage</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">XY_usage</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">union</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">XY_usage</span> <span class="o">=</span> <span class="n">XY_usage</span><span class="p">[</span><span class="o">~</span><span class="n">XY_usage</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">stack</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">XY_usage</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">best_XY</span> <span class="o">=</span> <span class="n">XY_usage</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best_XY</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<div class="viewcode-block" id="SLIM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM">[docs]</a><span class="k">class</span> <span class="nc">SLIM</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span> <span class="c1"># TODO : inherit MDLOptimizer</span>
+    <span class="sd">&quot;&quot;&quot;SLIM: Directly Mining Descriptive Patterns</span>
+
+<span class="sd">    Idea of early stopping is inspired from</span>
+<span class="sd">    http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_iter_no_change: int, default=5</span>
+<span class="sd">        Number of iteration to count before stopping optimization.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
+<span class="sd">    &gt;&gt;&gt; D = pd.Sers([</span>
+<span class="sd">    &gt;&gt;&gt;     [&#39;bananas&#39;, &#39;milk&#39;],</span>
+<span class="sd">    &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;],</span>
+<span class="sd">    &gt;&gt;&gt;     [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;],</span>
+<span class="sd">    &gt;&gt;&gt;     [&#39;tea&#39;],</span>
+<span class="sd">    &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;tea&#39;],</span>
+<span class="sd">    &gt;&gt;&gt; ])</span>
+<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).get_codetable()</span>
+<span class="sd">        (milk, cookies, bananas)       [1]</span>
+<span class="sd">        (butter, cookies, tea)         [2]</span>
+<span class="sd">        (milk, bananas)             [0, 4]</span>
+<span class="sd">        (tea)                       [3, 4]</span>
+<span class="sd">        dtype: object</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]</span>
+<span class="sd">        Smets, K &amp; Vreeken, J</span>
+<span class="sd">        &quot;Slim: Directly Mining Descriptive Patterns&quot;, 2012</span>
+
+<span class="sd">    .. [2] Gandhi, M &amp; Vreeken, J</span>
+<span class="sd">        &quot;Slimmer, outsmarting Slim&quot;, 2014</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span> <span class="o">=</span> <span class="n">n_iter_no_change</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports</span> <span class="o">=</span> <span class="n">lazydict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_support</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span> <span class="o">=</span> <span class="kc">None</span>          <span class="c1"># L(CT|D)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="kc">None</span>           <span class="c1"># L(D|CT)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span> <span class="o">=</span> <span class="n">pruning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># set of previously seen items</span>
+        <span class="c1"># TODO : add eps parameter for smarter early stopping</span>
+
+    <span class="k">def</span> <span class="nf">_get_support</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">RoaringBitmap</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">itemset</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_cover_order_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codetable</span><span class="p">,</span> <span class="n">cand</span><span class="p">):</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">codetable</span><span class="p">[</span><span class="n">pos</span><span class="p">]):</span>
+            <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports</span><span class="p">[</span><span class="n">cand</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supports</span><span class="p">[</span><span class="n">codetable</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]]:</span>
+                <span class="k">break</span>
+            <span class="c1"># TODO : add lexicographic order</span>
+        <span class="k">return</span> <span class="n">pos</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_prefit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">usage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+
+        <span class="n">sorted_index</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">usage</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">usage</span><span class="p">[</span><span class="n">e</span><span class="p">],</span> <span class="n">e</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">sorted_index</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">e</span><span class="p">]))</span>
+
+        <span class="n">codes</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">usage</span> <span class="o">/</span> <span class="n">usage</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">codes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>      <span class="c1"># L(code_ST(X)) = L(code_CT(X)), because CT=ST</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">codes</span> <span class="o">*</span> <span class="n">usage</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="SLIM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; fit SLIM on a transactional dataset</span>
+
+<span class="sd">        This generate new candidate patterns and add those which improve compression,</span>
+<span class="sd">        iteratibely refining the ``self.codetable``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prefit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">CTc_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">n_iter_no_change</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">n_iter_no_change</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span><span class="p">:</span>
+            <span class="n">is_better</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cand</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+                <span class="n">CT_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span>
+                <span class="n">cand_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cover_order_pos</span><span class="p">(</span><span class="n">CT_index</span><span class="p">,</span> <span class="n">cand</span><span class="p">)</span>
+                <span class="n">CTc_index</span> <span class="o">=</span> <span class="n">CT_index</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cand_pos</span><span class="p">,</span> <span class="n">cand</span><span class="p">)</span>
+
+                <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+                <span class="n">CTc</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">covers</span><span class="p">)</span>
+                <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sizes</span><span class="p">(</span><span class="n">CTc</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">:</span>
+                    <span class="n">zeros_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">CTc</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>  <span class="c1">#FIXME</span>
+                    <span class="n">CTc</span> <span class="o">=</span> <span class="n">CTc</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">itemset</span> <span class="ow">in</span> <span class="n">zeros_index</span><span class="p">:</span>
+                        <span class="n">CTc</span><span class="p">[</span><span class="n">itemset</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoaringBitmap</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span><span class="p">:</span>  <span class="c1"># TODO : remove in the future, this is for testing purposes</span>
+                        <span class="n">prune_set</span> <span class="o">=</span> <span class="n">CTc</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">cand</span><span class="p">])</span>
+                        <span class="n">prune_set</span> <span class="o">=</span> <span class="n">prune_set</span><span class="p">[</span><span class="n">prune_set</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)]</span>
+                        <span class="n">prune_set</span> <span class="o">=</span> <span class="n">prune_set</span><span class="p">[</span><span class="n">prune_set</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="n">CTc</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prune</span><span class="p">(</span>
+                            <span class="n">CTc</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">prune_set</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">data_size</span>
+                        <span class="p">)</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="n">CTc</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">data_size</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span> <span class="o">=</span> <span class="n">model_size</span>
+                    <span class="n">is_better</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>  <span class="c1"># TODO : move to inner if statement ?</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_better</span><span class="p">:</span>
+                <span class="n">n_iter_no_change</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SLIM.predict_proba"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;make predictions on a new transactional data</span>
+
+<span class="sd">        This encode transactions with the current codetable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>
+        <span class="n">codetable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">()</span>  <span class="c1"># FIXME self.codetable should be OK</span>
+        <span class="c1"># TODO : remove unseed items --&gt; isin(self.standard_codetable.index)</span>
+        <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+        <span class="n">ct_codes</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">/</span> <span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="n">covers</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="nb">sum</span><span class="p">((</span><span class="n">ct_codes</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">c</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">codes</span></div>
+
+
+<div class="viewcode-block" id="SLIM.get_codetable"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.get_codetable">[docs]</a>    <span class="k">def</span> <span class="nf">get_codetable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.Series</span>
+<span class="sd">            codetable containing patterns and ids of transactions in which they are used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># FIXME : this should not be needed</span></div>
+
+<div class="viewcode-block" id="SLIM.get_standard_codes"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.get_standard_codes">[docs]</a>    <span class="k">def</span> <span class="nf">get_standard_codes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;compute the size of a codetable index given the standard codetable&quot;&quot;&quot;</span>
+        <span class="n">flat_items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">items</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">flat_items</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">usages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">items</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+        <span class="n">usages</span> <span class="o">/=</span> <span class="n">usages</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">usages</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">codes</span> <span class="o">*</span> <span class="n">counts</span></div>
+
+<div class="viewcode-block" id="SLIM.compute_sizes"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.compute_sizes">[docs]</a>    <span class="k">def</span> <span class="nf">compute_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codetable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute sizes for both the data and the model</span>
+
+<span class="sd">        .. math:: L(D|CT)</span>
+<span class="sd">        .. math:: L(CT|D)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        codetable : pd.Series</span>
+<span class="sd">            A series mapping itemsets to their usage tids</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple(float, float)</span>
+<span class="sd">            (data_size, model_size)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO : no need for tids here, only usages</span>
+        <span class="n">usages</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">usages</span> <span class="o">/</span> <span class="n">usages</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+        <span class="n">stand_codes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_standard_codes</span><span class="p">(</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">model_size</span> <span class="o">=</span> <span class="n">stand_codes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="n">codes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="c1"># L(CTc|D) = L(X|ST) + L(X|CTc)</span>
+        <span class="n">data_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">codes</span> <span class="o">*</span> <span class="n">usages</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span></div>
+
+    <span class="k">def</span> <span class="nf">_prune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codetable</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">prune_set</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">data_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; post prune a codetable considering itemsets for which usage has decreased</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        codetable: pd.Series</span>
+<span class="sd">        D: pd.Series</span>
+<span class="sd">        prune_set: pd.Series</span>
+<span class="sd">            subset of ``codetable`` for which usage has decreased</span>
+<span class="sd">        models_size: float</span>
+<span class="sd">            current model_size for ``codetable``</span>
+<span class="sd">        data_size: float</span>
+<span class="sd">            current data size when encoding ``D`` with ``codetable``</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_codetable, new_data_size, new_model_size: pd.Series, float, float</span>
+<span class="sd">            a tuple containing the pruned codetable, and new model size and data size</span>
+<span class="sd">            w.r.t this new codetable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">prune_set</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">cand</span> <span class="o">=</span> <span class="n">prune_set</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+            <span class="n">prune_set</span> <span class="o">=</span> <span class="n">prune_set</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">cand</span><span class="p">])</span>
+            <span class="n">CTp_index</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">cand</span><span class="p">])</span>
+            <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">CTp_index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">CTp</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">covers</span><span class="p">)</span>
+            <span class="n">d_size</span><span class="p">,</span> <span class="n">m_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sizes</span><span class="p">(</span><span class="n">CTp</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">d_size</span> <span class="o">+</span> <span class="n">m_size</span> <span class="o">&lt;</span> <span class="n">model_size</span> <span class="o">+</span> <span class="n">data_size</span><span class="p">:</span>
+                <span class="n">zero_index</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">CTp</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">zero_singleton_index</span> <span class="o">=</span> <span class="n">zero_index</span><span class="p">[</span><span class="n">zero_index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">decreased</span> <span class="o">=</span> <span class="n">CTp</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">codetable</span><span class="p">[</span><span class="n">CTp</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
+                <span class="n">prune_set</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CTp</span><span class="p">[</span><span class="n">decreased</span><span class="p">])</span>
+
+                <span class="n">_u</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">RoaringBitmap</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">zero_singleton_index</span><span class="p">}</span>
+                <span class="n">CTp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="o">**</span><span class="n">CTp</span><span class="p">,</span> <span class="o">**</span><span class="n">_u</span><span class="p">})</span>  <span class="c1"># merge series</span>
+
+                <span class="n">codetable</span> <span class="o">=</span> <span class="n">CTp</span>
+                <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="n">d_size</span><span class="p">,</span> <span class="n">m_size</span>
+
+        <span class="k">return</span> <span class="n">codetable</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

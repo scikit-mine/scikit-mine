@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>A simple plot allow us to check the distrution of our transactions lenghts &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Building a symbolic classifier &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -37,7 +37,8 @@
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="SLIM for market basket analysis" href="SLIM.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,11 +91,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="fetch_fimi_datasets.html">fetch fimi datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LCM_on_chess.html">LCM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a symbolic classifier</a></li>
 </ul>
 
             
@@ -140,13 +141,15 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-      <li>A simple plot allow us to check the distrution of our transactions lenghts</li>
+          <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
+        
+      <li>Building a symbolic classifier</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/tutorials/datasets/synthetic transactions.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/tutorials/itemsets/symbolic_classifier.ipynb.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -401,170 +404,128 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
+<div class="section" id="Building-a-symbolic-classifier">
+<h1>Building a symbolic classifier<a class="headerlink" href="#Building-a-symbolic-classifier" title="Permalink to this headline">¶</a></h1>
+<p>MDL based algorithms encode data according to a given codetable</p>
+<p>When calling <code class="docutils literal notranslate"><span class="pre">.fit</span></code>, we iteratively look for the codetable that compress the training data the best</p>
+<p><strong>When we are done with training our model, we can benefit from the refined codetable to make some predictions</strong></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">%</span><span class="k">matplotlib</span> inline
-<span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                     <span class="n">n_items</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                     <span class="n">density</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">
-<h1>A simple plot allow us to check the distrution of our transactions lenghts<a class="headerlink" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="They-should-be-around-2-as-density-has-been-set-to-20%">
-<h2>They should be around 2 as density has been set to 20%<a class="headerlink" href="#They-should-be-around-2-as-density-has-been-set-to-20%" title="Permalink to this headline">¶</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;matplotlib.axes._subplots.AxesSubplot at 0x7f88e52d2a90&gt;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../../_images/tutorials_datasets_synthetic_transactions_3_1.png" src="../../_images/tutorials_datasets_synthetic_transactions_3_1.png" />
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_transactions</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">describe_transactions</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span>  <span class="c1"># SLIM takes a pd.Series as input</span>
+     <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
+     <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
+     <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+     <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+     <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+<span class="p">])</span>
+<span class="n">D</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{&#39;n_items&#39;: 10,
- &#39;avg_transaction_size&#39;: 1.96,
- &#39;n_transactions&#39;: 100,
- &#39;density&#39;: 0.196}
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0    10
-1    22
-2    37
-3    24
-4     7
-dtype: int64
-</pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=.</span><span class="mi">25</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0          [5, 7, 1, 3, 9]
-1    [8, 11, 7, 0, 19, 14]
-2        [8, 2, 10, 3, 16]
-3       [0, 11, 19, 14, 4]
-4       [10, 12, 5, 15, 9]
+0             [bananas, milk]
+1    [milk, bananas, cookies]
+2      [cookies, butter, tea]
+3                       [tea]
+4        [milk, bananas, tea]
 dtype: object
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span>
+<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-5    4
-6    1
-dtype: int64
+(milk, bananas, cookies)       [1]
+(cookies, tea, butter)         [2]
+(milk, bananas)             [0, 4]
+(tea)                       [3, 4]
+dtype: object
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<hr class="docutils" />
+<p>We define a new transactional dataset, we some unseen items inside and call the <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> function. This basically computes the probability of a given transaction to belong to the current codetable (Shannon Entropy)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
+<span></span><span class="n">new_D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span>  <span class="c1"># SLIM takes a pd.Series as input</span>
+   <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
+   <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;sirup&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
+   <span class="p">[</span><span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+   <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+   <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
+<span class="p">])</span>
+<span class="n">new_D</span>
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0           [bananas, milk]
+1    [milk, sirup, cookies]
+2             [butter, tea]
+3                     [tea]
+4      [milk, bananas, tea]
+dtype: object
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">slim</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0    0.333333
+1    0.000000
+2    0.333333
+3    0.333333
+4    0.666667
+dtype: float64
+</pre></div></div>
 </div>
 </div>
 
@@ -573,6 +534,13 @@ dtype: int64
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="SLIM.html" class="btn btn-neutral float-left" title="SLIM for market basket analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
