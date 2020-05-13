@@ -43,7 +43,7 @@ def cover_one(codetable, cand):
     return cover
 
 
-def generate_candidates(codetable, stack=set()):
+def generate_candidates(codetable, stack=None):
     """
     assumes codetable is sorted in Standard Cover Order
     """
@@ -53,7 +53,8 @@ def generate_candidates(codetable, stack=set()):
         XY_usage = Y.apply(lambda e: e.intersection_len(X_usage)).astype(np.uint32)
         XY_usage = XY_usage[XY_usage != 0]
         XY_usage.index = XY_usage.index.map(X.union)
-        XY_usage = XY_usage[~XY_usage.index.isin(stack)]
+        if stack is not None:
+            XY_usage = XY_usage[~XY_usage.index.isin(stack)]
         if not XY_usage.empty:
             best_XY = XY_usage.idxmax()
             res.append(best_XY)
@@ -250,9 +251,6 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             a tuple containing the pruned codetable, and new model size and data size
             w.r.t this new codetable
         """
-        new_model_size, new_data_size = model_size, data_size
-        new_codetable = codetable  # TODO : remove would be enough
-
         while not prune_set.empty:
             cand = prune_set.map(len).idxmin()
             prune_set = prune_set.drop([cand])
@@ -261,17 +259,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             CTp = make_codetable(covers)
             d_size, m_size = self.compute_sizes(CTp)
 
-            if d_size + m_size < new_model_size + new_data_size:
-                zero_index = new_codetable.index.difference(CTp.index)
+            if d_size + m_size < model_size + data_size:
+                zero_index = codetable.index.difference(CTp.index)
                 zero_singleton_index = zero_index[zero_index.map(len) == 1]
-                decreased = CTp.map(len) < new_codetable[CTp.index].map(len)
+                decreased = CTp.map(len) < codetable[CTp.index].map(len)
                 prune_set.update(CTp[decreased])
 
                 _u = {k: RoaringBitmap() for k in zero_singleton_index}
                 CTp = pd.Series({**CTp, **_u})  # merge series
 
-                new_codetable = CTp
-                new_data_size = d_size
-                new_model_size = m_size
+                codetable = CTp
+                data_size, model_size = d_size, m_size
 
-        return new_codetable, new_data_size, new_model_size
+        return codetable, data_size, model_size
