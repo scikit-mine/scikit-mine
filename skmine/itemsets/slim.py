@@ -185,6 +185,20 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         return self
 
+    def predict_proba(self, D):
+        """make predictions on a new transactional data
+
+        This encode transactions with the current codetable.
+        """
+        assert isinstance(D, pd.Series)
+        codetable = self.get_codetable()  # FIXME self.codetable should be OK
+        # TODO : remove unseed items --> isin(self.standard_codetable.index)
+        covers = D.map(lambda t: cover_one(codetable.index, t))
+        ct_codes = codetable.map(len) / codetable.map(len).sum()
+        codes = covers.map(lambda c: sum((ct_codes[e] for e in c)))
+        return codes
+
+
     def get_codetable(self):
         """
         Returns
