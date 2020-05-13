@@ -43,7 +43,7 @@ def cover_one(codetable, cand):
     return cover
 
 
-def generate_candidates(codetable):
+def generate_candidates(codetable, stack=set()):
     """
     assumes codetable is sorted in Standard Cover Order
     """
@@ -52,23 +52,43 @@ def generate_candidates(codetable):
         Y = codetable.iloc[idx + 1:]
         XY_usage = Y.apply(lambda e: e.intersection_len(X_usage)).astype(np.uint32)
         XY_usage = XY_usage[XY_usage != 0]
+        XY_usage.index = XY_usage.index.map(X.union)
+        XY_usage = XY_usage[~XY_usage.index.isin(stack)]
         if not XY_usage.empty:
-            best_Y = XY_usage.idxmax()
-            best_XY = best_Y.union(X)
+            best_XY = XY_usage.idxmax()
             res.append(best_XY)
     return res
 
-
 class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
-    """ SLIM : mining itemsets TODO
+    """SLIM: Directly Mining Descriptive Patterns
+
+    Idea of early stopping is inspired from
+    `http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf`
+
+    Parameters
+    ----------
+    n_iter_to_change: int, default=5
+        Number of iteration to count before stopping optimization.
+    eps: int, default 2  # TODO
+
+    References
+    ----------
+    .. [1]
+        Smets, K & Vreeken, J
+        "Slim: Directly Mining Descriptive Patterns", 2012
+
+    .. [2] Gandhi, M & Vreeken, J
+        "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=5):
+    def __init__(self, *, n_iter_no_change=5, pruning=True):
         self.n_iter_no_change = n_iter_no_change
         self.standard_codetable = None
         self.codetable = None
         self.supports = lazydict(self._get_support)
         self.model_size = None          # L(CT|D)
         self.data_size = None           # L(D|CT)
+        self.pruning = pruning
+        self._seen_cands = set()  # set of previously seen items
 
     def _get_support(self, itemset):
         U = reduce(RoaringBitmap.union, self.standard_codetable.loc[itemset])
@@ -130,13 +150,60 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         data_size = (codes * usages).sum()
         return data_size, model_size
 
+    def prune(self, codetable, D, prune_set, model_size, data_size):
+        """ post prune a codetable considering itemsets for which usage has decreased
+
+        Parameters
+        ----------
+        codetable: pd.Series
+        D: pd.Series
+        prune_set: pd.Series
+            subset of ``codetable`` for which usage has decreased
+        models_size: float
+            current model_size for ``codetable``
+        data_size: float
+            current data size when encoding ``D`` with ``codetable``
+
+        Returns
+        -------
+        new_codetable, new_data_size, new_model_size: pd.Series, float, float
+            a tuple containing the pruned codetable, and new model size and data size
+            w.r.t this new codetable
+        """
+        new_model_size, new_data_size = model_size, data_size
+        new_codetable = codetable  # TODO : remove would be enough
+
+        while not prune_set.empty:
+            cand = prune_set.map(len).idxmin()
+            prune_set = prune_set.drop([cand])
+            CTp_index = codetable.index.drop([cand])
+            covers = D.map(lambda t: cover_one(CTp_index, t))
+            CTp = make_codetable(covers)
+            d_size, m_size = self.compute_sizes(CTp)
+
+            if d_size + m_size < new_model_size + new_data_size:
+                zero_index = new_codetable.index.difference(CTp.index)
+                zero_singleton_index = zero_index[zero_index.map(len) == 1]
+                decreased = CTp.map(len) < new_codetable[CTp.index].map(len)
+                prune_set.update(CTp[decreased])
+
+                _u = {k: RoaringBitmap() for k in zero_singleton_index}
+                CTp = pd.Series({**CTp, **_u})  # merge series
+
+                new_codetable = CTp
+                new_data_size = d_size
+                new_model_size = m_size
+
+        return new_codetable, new_data_size, new_model_size
+
+
     def fit(self, D):
         self._prefit(D)
         CTc_index = None
         n_iter_no_change = 0
-        is_better = True
         while n_iter_no_change < self.n_iter_no_change:
-            candidates = generate_candidates(self.codetable)
+            is_better = False
+            candidates = generate_candidates(self.codetable, stack=self._seen_cands)
             for cand in candidates:
                 CT_index = self.codetable.index
                 cand_pos = self._get_cover_order_pos(CT_index, cand)
@@ -147,15 +214,25 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                 data_size, model_size = self.compute_sizes(CTc)
 
                 if data_size + model_size < self.data_size + model_size:
-                    zeros_index = self.codetable.index.difference(CTc.index)
+                    zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
                     CTc = CTc.reindex(CTc_index)
                     for itemset in zeros_index:
                         CTc[itemset] = RoaringBitmap()
+
+                    if self.pruning:  # TODO : remove in the future, this is for testing purposes
+                        prune_set = CTc.drop([cand])
+                        prune_set = prune_set[prune_set.map(len) < self.codetable.map(len)]
+                        prune_set = prune_set[prune_set.index.map(len) > 1]
+                        CTc, data_size, model_size = self.prune(
+                            CTc, D, prune_set, model_size, data_size
+                        )
+
                     self.codetable = CTc
                     self.data_size = data_size
                     self.model_size = model_size
-                else:
-                    is_better = False
+                    is_better = True
+                self._seen_cands.add(cand)  # TODO : move to inner if statement ?
+
             if not is_better:
                 n_iter_no_change += 1
 

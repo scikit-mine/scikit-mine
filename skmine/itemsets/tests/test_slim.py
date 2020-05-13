@@ -47,6 +47,19 @@ def test_generate_candidate_2():
     new_candidates = generate_candidates(codetable)
     assert new_candidates == [frozenset('ABC')]
 
+def test_generate_candidate_stack():
+    usage = list(map(RoaringBitmap, [
+        range(6),
+        [6, 7],
+        [6, 8],
+        [],
+    ]))
+    index = list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+    codetable = pd.Series(usage, index=index)
+
+    new_candidates = generate_candidates(codetable, stack={frozenset('AB')})
+    assert new_candidates == []
+
 
 def test_cover_order_pos_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
@@ -141,9 +154,34 @@ def test_compute_sizes_2():
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
+def test_fit_no_pruning():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = pd.Series(D)
+    slim = SLIM(pruning=False)
+    self = slim.fit(D)
+    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+
 def test_fit():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     D = pd.Series(D)
-    slim = SLIM()
+    slim = SLIM(pruning=True)
     self = slim.fit(D)
-    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+
+def test_prune():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = pd.Series(D)
+
+    slim = SLIM(pruning=False).fit(D)
+    prune_set = slim.codetable.loc[[frozenset('AB')]]
+
+    
+    new_codetable, new_data_size, new_model_size = slim.prune(
+        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+    )
+
+    assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+    np.testing.assert_almost_equal(new_data_size, 12.92, 2)
+
+    total_enc_size = new_data_size + new_model_size
+    np.testing.assert_almost_equal(total_enc_size, 26, 0)
