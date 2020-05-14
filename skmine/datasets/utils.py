@@ -5,7 +5,7 @@ utils methods for skmine.datasets
 from itertools import chain
 
 
-def describe_transactions(D):
+def describe(D):
     """Give some high level properties on transactions
 
     ========================    ===============
@@ -27,8 +27,8 @@ def describe_transactions(D):
     Example
     -------
     >>> from skmine.datasets.fimi import fetch_connect
-    >>> from skmine.datasets.utils import describe_transactions
-    >>> describe_transactions(fetch_connect())
+    >>> from skmine.datasets.utils import describe
+    >>> describe(fetch_connect())
     {'n_items': 75, 'avg_transaction_size': 37.0, 'n_transactions': 3196, 'density': 0.4933}
     """
     avg_transaction_size = D.map(len).mean()
