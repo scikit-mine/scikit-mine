@@ -63,6 +63,12 @@ def generate_candidates(codetable, stack=None):
 class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     """SLIM: Directly Mining Descriptive Patterns
 
+    SLIM looks for a compressed representation of transactional data.
+    This compressed representation if a set of descriptive patterns,
+    and can be used to:
+        - provide a natively interpretable modeling of this data
+        - make predictions on new data, using this condensed representation as an encoding scheme
+
     Idea of early stopping is inspired from
     http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf
 
@@ -70,19 +76,24 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     ----------
     n_iter_no_change: int, default=5
         Number of iteration to count before stopping optimization.
+    pruning: bool, default=True
+        Either to activate pruning or not. Pruned itemsets may be useful at
+        prediction time, so it is usually recommended to set it to False
+        to build a classifier. The model will be less concise, but will lead
+        to more accurate predictions on average.
 
     Examples
     --------
     >>> import pandas as pd
     >>> from skmine.itemsets import SLIM
-    >>> D = pd.Sers([
+    >>> D = pd.Series([
     >>>     ['bananas', 'milk'],
     >>>     ['milk', 'bananas', 'cookies'],
     >>>     ['cookies', 'butter', 'tea'],
     >>>     ['tea'],
     >>>     ['milk', 'bananas', 'tea'],
     >>> ])
-    >>> SLIM().fit(D).get_codetable()
+    >>> SLIM().fit(D)
         (milk, cookies, bananas)       [1]
         (butter, cookies, tea)         [2]
         (milk, bananas)             [0, 4]
@@ -145,27 +156,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         iteratibely refining the ``self.codetable``
         """
         self._prefit(D)
-        CTc_index = None
         n_iter_no_change = 0
+        is_better = False
+
         while n_iter_no_change < self.n_iter_no_change:
             is_better = False
             candidates = generate_candidates(self.codetable, stack=self._seen_cands)
             for cand in candidates:
-                CT_index = self.codetable.index
-                cand_pos = self._get_cover_order_pos(CT_index, cand)
-                CTc_index = CT_index.insert(cand_pos, cand)
-
-                covers = D.map(lambda t: cover_one(CTc_index, t))
-                CTc = make_codetable(covers)
-                data_size, model_size = self.compute_sizes(CTc)
-
-                if data_size + model_size < self.data_size + model_size:
-                    zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
-                    CTc = CTc.reindex(CTc_index)
-                    for itemset in zeros_index:
-                        CTc[itemset] = RoaringBitmap()
-
-                    if self.pruning:  # TODO : remove in the future, this is for testing purposes
+                CTc, data_size, model_size = self.evaluate(cand, D)
+                if data_size + model_size < self.data_size + self.model_size:
+                    if self.pruning:
                         prune_set = CTc.drop([cand])
                         prune_set = prune_set[prune_set.map(len) < self.codetable.map(len)]
                         prune_set = prune_set[prune_set.index.map(len) > 1]
@@ -176,8 +176,10 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     self.codetable = CTc
                     self.data_size = data_size
                     self.model_size = model_size
+
                     is_better = True
-                self._seen_cands.add(cand)  # TODO : move to inner if statement ?
+
+                self._seen_cands.add(cand)
 
             if not is_better:
                 n_iter_no_change += 1
@@ -188,6 +190,21 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         """make predictions on a new transactional data
 
         This encode transactions with the current codetable.
+
+        Example
+        -------
+        >>> D = pd.Series([
+        >>>     ['bananas', 'milk'],
+        >>>     ['milk', 'bananas', 'cookies'],
+        >>>     ['cookies', 'butter', 'tea'],
+        >>>     ['tea'],
+        >>>     ['milk', 'bananas', 'tea'],
+        >>> ])
+        >>> new_D = pd.Series([['cookies', 'butter']])
+        >>> slim = SLIM(pruning=False).fit(D)
+        >>> slim.predict_proba(new_D)
+        0    0.333333
+        dtype: float32
         """
         assert isinstance(D, pd.Series)
 
@@ -198,6 +215,37 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         ct_codes = codetable.map(len) / codetable.map(len).sum()
         codes = covers.map(lambda c: sum((ct_codes[e] for e in c)))
         return codes.astype(np.float32)
+
+    def evaluate(self, candidate, D):
+        """
+        Evaluate ``candidate``, considering the current codetable and a dataset ``D``
+
+        Parameters
+        ----------
+        candidate: frozenset
+            a new candidate to be evaluated
+        D: pd.Series
+            a transactional dataset
+
+        Returns
+        -------
+        (pd.Series, float, float, bool)
+            updated (codetable, data size, model size
+            and finally a boolean stating if compression improved
+        """
+        cand_pos = self._get_cover_order_pos(self.codetable.index, candidate)
+        CTc_index = self.codetable.index.insert(cand_pos, candidate)
+
+        covers = D.map(lambda t: cover_one(CTc_index, t))
+        CTc = make_codetable(covers)
+        data_size, model_size = self.compute_sizes(CTc)
+
+        zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
+        CTc = CTc.reindex(CTc_index)
+        for itemset in zeros_index:
+            CTc[itemset] = RoaringBitmap()
+
+        return CTc, data_size, model_size
 
 
     def get_codetable(self):
@@ -246,7 +294,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         data_size = (codes * usages).sum()
         return data_size, model_size
 
-    def _prune(self, codetable, D, prune_set, model_size, data_size):
+    def _prune(self, codetable, D, prune_set, model_size, data_size): # pylint: disable= too-many-arguments
         """ post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
@@ -276,11 +324,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
             if d_size + m_size < model_size + data_size:
                 zero_index = codetable.index.difference(CTp.index)
-                zero_singleton_index = zero_index[zero_index.map(len) == 1]
+                zero_index = zero_index[zero_index.map(len) == 1]
                 decreased = CTp.map(len) < codetable[CTp.index].map(len)
                 prune_set.update(CTp[decreased])
 
-                _u = {k: RoaringBitmap() for k in zero_singleton_index}
+                _u = {k: RoaringBitmap() for k in zero_index}
                 CTp = pd.Series({**CTp, **_u})  # merge series
 
                 codetable = CTp
