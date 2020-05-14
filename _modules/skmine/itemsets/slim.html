@@ -223,6 +223,12 @@
 <div class="viewcode-block" id="SLIM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM">[docs]</a><span class="k">class</span> <span class="nc">SLIM</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span> <span class="c1"># TODO : inherit MDLOptimizer</span>
     <span class="sd">&quot;&quot;&quot;SLIM: Directly Mining Descriptive Patterns</span>
 
+<span class="sd">    SLIM looks for a compressed representation of transactional data.</span>
+<span class="sd">    This compressed representation if a set of descriptive patterns,</span>
+<span class="sd">    and can be used to:</span>
+<span class="sd">        - provide a natively interpretable modeling of this data</span>
+<span class="sd">        - make predictions on new data, using this condensed representation as an encoding scheme</span>
+
 <span class="sd">    Idea of early stopping is inspired from</span>
 <span class="sd">    http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf</span>
 
@@ -230,19 +236,24 @@
 <span class="sd">    ----------</span>
 <span class="sd">    n_iter_no_change: int, default=5</span>
 <span class="sd">        Number of iteration to count before stopping optimization.</span>
+<span class="sd">    pruning: bool, default=True</span>
+<span class="sd">        Either to activate pruning or not. Pruned itemsets may be useful at</span>
+<span class="sd">        prediction time, so it is usually recommended to set it to False</span>
+<span class="sd">        to build a classifier. The model will be less concise, but will lead</span>
+<span class="sd">        to more accurate predictions on average.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
-<span class="sd">    &gt;&gt;&gt; D = pd.Sers([</span>
+<span class="sd">    &gt;&gt;&gt; D = pd.Series([</span>
 <span class="sd">    &gt;&gt;&gt;     [&#39;bananas&#39;, &#39;milk&#39;],</span>
 <span class="sd">    &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;],</span>
 <span class="sd">    &gt;&gt;&gt;     [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;],</span>
 <span class="sd">    &gt;&gt;&gt;     [&#39;tea&#39;],</span>
 <span class="sd">    &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;tea&#39;],</span>
 <span class="sd">    &gt;&gt;&gt; ])</span>
-<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).get_codetable()</span>
+<span class="sd">    &gt;&gt;&gt; SLIM().fit(D)</span>
 <span class="sd">        (milk, cookies, bananas)       [1]</span>
 <span class="sd">        (butter, cookies, tea)         [2]</span>
 <span class="sd">        (milk, bananas)             [0, 4]</span>
@@ -261,7 +272,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span> <span class="o">=</span> <span class="n">n_iter_no_change</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">supports</span> <span class="o">=</span> <span class="n">lazydict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_support</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span> <span class="o">=</span> <span class="kc">None</span>          <span class="c1"># L(CT|D)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="kc">None</span>           <span class="c1"># L(D|CT)</span>
@@ -282,8 +293,7 @@
             <span class="c1"># TODO : add lexicographic order</span>
         <span class="k">return</span> <span class="n">pos</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">())</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">_prefit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
@@ -306,27 +316,16 @@
 <span class="sd">        iteratibely refining the ``self.codetable``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-        <span class="n">CTc_index</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">n_iter_no_change</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">is_better</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="k">while</span> <span class="n">n_iter_no_change</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span><span class="p">:</span>
             <span class="n">is_better</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">cand</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
-                <span class="n">CT_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span>
-                <span class="n">cand_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cover_order_pos</span><span class="p">(</span><span class="n">CT_index</span><span class="p">,</span> <span class="n">cand</span><span class="p">)</span>
-                <span class="n">CTc_index</span> <span class="o">=</span> <span class="n">CT_index</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cand_pos</span><span class="p">,</span> <span class="n">cand</span><span class="p">)</span>
-
-                <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
-                <span class="n">CTc</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">covers</span><span class="p">)</span>
-                <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sizes</span><span class="p">(</span><span class="n">CTc</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">:</span>
-                    <span class="n">zeros_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">CTc</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>  <span class="c1">#FIXME</span>
-                    <span class="n">CTc</span> <span class="o">=</span> <span class="n">CTc</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">itemset</span> <span class="ow">in</span> <span class="n">zeros_index</span><span class="p">:</span>
-                        <span class="n">CTc</span><span class="p">[</span><span class="n">itemset</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoaringBitmap</span><span class="p">()</span>
-
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span><span class="p">:</span>  <span class="c1"># TODO : remove in the future, this is for testing purposes</span>
+                <span class="n">CTc</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">cand</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span><span class="p">:</span>
                         <span class="n">prune_set</span> <span class="o">=</span> <span class="n">CTc</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">cand</span><span class="p">])</span>
                         <span class="n">prune_set</span> <span class="o">=</span> <span class="n">prune_set</span><span class="p">[</span><span class="n">prune_set</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)]</span>
                         <span class="n">prune_set</span> <span class="o">=</span> <span class="n">prune_set</span><span class="p">[</span><span class="n">prune_set</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
@@ -337,8 +336,10 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span> <span class="o">=</span> <span class="n">CTc</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">data_size</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">model_size</span> <span class="o">=</span> <span class="n">model_size</span>
+
                     <span class="n">is_better</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>  <span class="c1"># TODO : move to inner if statement ?</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_seen_cands</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_better</span><span class="p">:</span>
                 <span class="n">n_iter_no_change</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -349,14 +350,62 @@
         <span class="sd">&quot;&quot;&quot;make predictions on a new transactional data</span>
 
 <span class="sd">        This encode transactions with the current codetable.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; D = pd.Series([</span>
+<span class="sd">        &gt;&gt;&gt;     [&#39;bananas&#39;, &#39;milk&#39;],</span>
+<span class="sd">        &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;],</span>
+<span class="sd">        &gt;&gt;&gt;     [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;],</span>
+<span class="sd">        &gt;&gt;&gt;     [&#39;tea&#39;],</span>
+<span class="sd">        &gt;&gt;&gt;     [&#39;milk&#39;, &#39;bananas&#39;, &#39;tea&#39;],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; new_D = pd.Series([[&#39;cookies&#39;, &#39;butter&#39;]])</span>
+<span class="sd">        &gt;&gt;&gt; slim = SLIM(pruning=False).fit(D)</span>
+<span class="sd">        &gt;&gt;&gt; slim.predict_proba(new_D)</span>
+<span class="sd">        0    0.333333</span>
+<span class="sd">        dtype: float32</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>
-        <span class="n">codetable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_codetable</span><span class="p">()</span>  <span class="c1"># FIXME self.codetable should be OK</span>
-        <span class="c1"># TODO : remove unseed items --&gt; isin(self.standard_codetable.index)</span>
+
+        <span class="n">codetable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">seen_items</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">seen_items</span><span class="o">.</span><span class="n">intersection</span><span class="p">)</span>  <span class="c1"># remove never seen items</span>
         <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
         <span class="n">ct_codes</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">/</span> <span class="n">codetable</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">codes</span> <span class="o">=</span> <span class="n">covers</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="nb">sum</span><span class="p">((</span><span class="n">ct_codes</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">c</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">codes</span></div>
+        <span class="k">return</span> <span class="n">codes</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SLIM.evaluate"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate ``candidate``, considering the current codetable and a dataset ``D``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        candidate: frozenset</span>
+<span class="sd">            a new candidate to be evaluated</span>
+<span class="sd">        D: pd.Series</span>
+<span class="sd">            a transactional dataset</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (pd.Series, float, float, bool)</span>
+<span class="sd">            updated (codetable, data size, model size</span>
+<span class="sd">            and finally a boolean stating if compression improved</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cand_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cover_order_pos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span>
+        <span class="n">CTc_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cand_pos</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span>
+
+        <span class="n">covers</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cover_one</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+        <span class="n">CTc</span> <span class="o">=</span> <span class="n">make_codetable</span><span class="p">(</span><span class="n">covers</span><span class="p">)</span>
+        <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sizes</span><span class="p">(</span><span class="n">CTc</span><span class="p">)</span>
+
+        <span class="n">zeros_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">CTc</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>  <span class="c1">#FIXME</span>
+        <span class="n">CTc</span> <span class="o">=</span> <span class="n">CTc</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">CTc_index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">itemset</span> <span class="ow">in</span> <span class="n">zeros_index</span><span class="p">:</span>
+            <span class="n">CTc</span><span class="p">[</span><span class="n">itemset</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoaringBitmap</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">CTc</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span></div>
 
 
 <div class="viewcode-block" id="SLIM.get_codetable"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.get_codetable">[docs]</a>    <span class="k">def</span> <span class="nf">get_codetable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -405,7 +454,7 @@
         <span class="n">data_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">codes</span> <span class="o">*</span> <span class="n">usages</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span></div>
 
-    <span class="k">def</span> <span class="nf">_prune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codetable</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">prune_set</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">data_size</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_prune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codetable</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">prune_set</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">data_size</span><span class="p">):</span> <span class="c1"># pylint: disable= too-many-arguments</span>
         <span class="sd">&quot;&quot;&quot; post prune a codetable considering itemsets for which usage has decreased</span>
 
 <span class="sd">        Parameters</span>
@@ -435,11 +484,11 @@
 
             <span class="k">if</span> <span class="n">d_size</span> <span class="o">+</span> <span class="n">m_size</span> <span class="o">&lt;</span> <span class="n">model_size</span> <span class="o">+</span> <span class="n">data_size</span><span class="p">:</span>
                 <span class="n">zero_index</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">CTp</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-                <span class="n">zero_singleton_index</span> <span class="o">=</span> <span class="n">zero_index</span><span class="p">[</span><span class="n">zero_index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">zero_index</span> <span class="o">=</span> <span class="n">zero_index</span><span class="p">[</span><span class="n">zero_index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
                 <span class="n">decreased</span> <span class="o">=</span> <span class="n">CTp</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">codetable</span><span class="p">[</span><span class="n">CTp</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
                 <span class="n">prune_set</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">CTp</span><span class="p">[</span><span class="n">decreased</span><span class="p">])</span>
 
-                <span class="n">_u</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">RoaringBitmap</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">zero_singleton_index</span><span class="p">}</span>
+                <span class="n">_u</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">RoaringBitmap</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">zero_index</span><span class="p">}</span>
                 <span class="n">CTp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="o">**</span><span class="n">CTp</span><span class="p">,</span> <span class="o">**</span><span class="n">_u</span><span class="p">})</span>  <span class="c1"># merge series</span>
 
                 <span class="n">codetable</span> <span class="o">=</span> <span class="n">CTp</span>
