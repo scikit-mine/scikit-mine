@@ -103,7 +103,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
@@ -668,8 +669,8 @@ for reproducible output across multiple function calls.</p></li>
 <div class="section" id="utils">
 <h2>utils<a class="headerlink" href="#utils" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="skmine.datasets.utils.describe_transactions">
-<code class="sig-prename descclassname">skmine.datasets.utils.</code><code class="sig-name descname">describe_transactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/utils.html#describe_transactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.utils.describe_transactions" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.datasets.utils.describe">
+<code class="sig-prename descclassname">skmine.datasets.utils.</code><code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/utils.html#describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.utils.describe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Give some high level properties on transactions</p>
 <table class="docutils align-default">
 <colgroup>
@@ -701,8 +702,8 @@ for reproducible output across multiple function calls.</p></li>
 \[density = { avg\_transaction\_size \over n\_items }\]</div>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_connect</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_transactions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_transactions</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>
 <span class="go">{&#39;n_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;n_transactions&#39;: 3196, &#39;density&#39;: 0.4933}</span>
 </pre></div>
 </div>

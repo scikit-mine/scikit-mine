@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SLIM for market basket analysis &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Generate synthetic data to train on &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Building a symbolic classifier" href="symbolic_classifier.html" />
-    <link rel="prev" title="LCM" href="LCM_on_chess.html" /> 
+    <link rel="next" title="&lt;no title&gt;" href="../itemsets/index.html" />
+    <link rel="prev" title="fetch FIMI datasets" href="fetch_fimi_datasets.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -93,11 +93,14 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LCM_on_chess.html">LCM</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Generate synthetic data to train on</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">A simple plot allow us to check the distrution of our transactions lenghts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 </ul>
 
             
@@ -145,13 +148,13 @@
         
           <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
         
-      <li>SLIM for market basket analysis</li>
+      <li>Generate synthetic data to train on</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/tutorials/itemsets/SLIM.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/tutorials/datasets/synthetic_transactions.ipynb.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -406,110 +409,72 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="SLIM-for-market-basket-analysis">
-<h1>SLIM for market basket analysis<a class="headerlink" href="#SLIM-for-market-basket-analysis" title="Permalink to this headline">¶</a></h1>
-<p>In this example, we are going to train a SLIM model on a transactional database</p>
-<p>SLIM uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Minimum_description_length">Minimum Description Length</a> principle to make pattern mining easier, as the resulting patterns will be a <strong>lossless compression of the original data</strong></p>
-<p>You end up having less data to consider, and your life just gets easier</p>
+<div class="section" id="Generate-synthetic-data-to-train-on">
+<h1>Generate synthetic data to train on<a class="headerlink" href="#Generate-synthetic-data-to-train-on" title="Permalink to this headline">¶</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
 </pre></div>
 </div>
 </div>
-<p>SLIM can be used to perform Market Basket Analysis</p>
-<p>Here we define a set of transactions containing items bought in a store</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span>  <span class="c1"># SLIM takes a pd.Series as input</span>
-    <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="p">])</span>
-<span class="n">D</span>
+<span></span><span class="n">D</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                     <span class="n">n_items</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                     <span class="n">density</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0             [bananas, milk]
-1    [milk, bananas, cookies]
-2      [cookies, butter, tea]
-3                       [tea]
-4        [milk, bananas, tea]
-dtype: object
-</pre></div></div>
-</div>
+<div class="section" id="A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">
+<h2>A simple plot allow us to check the distrution of our transactions lenghts<a class="headerlink" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts" title="Permalink to this headline">¶</a></h2>
+<p><strong>Transaction lengths should be centered</strong> around 2 as density has been set to 20% and there are 10 items in total</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span>
-<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span></span><span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(milk, bananas, cookies)       [1]
-(butter, tea, cookies)         [2]
-(milk, bananas)             [0, 4]
-(tea)                       [3, 4]
-dtype: object
+&lt;matplotlib.axes._subplots.AxesSubplot at 0x7f5819a262b0&gt;
 </pre></div></div>
 </div>
-<hr class="docutils" />
-<p>What if a new user comes to the store and buy some items ? We add its shopping cart to the data, like so</p>
-<div class="nbinput docutils container">
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_datasets_synthetic_transactions_4_1.png" src="../../_images/tutorials_datasets_synthetic_transactions_4_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">D</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;jelly&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">]</span>
-<span class="n">D</span>
+<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0              [bananas, milk]
-1     [milk, bananas, cookies]
-2       [cookies, butter, tea]
-3                        [tea]
-4         [milk, bananas, tea]
-5    [jelly, bananas, cookies]
-dtype: object
-</pre></div></div>
-</div>
-<p>Just retraining SLIM will give us a freshly updated summary of our market baskets</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span></span><span class="n">describe</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -519,13 +484,12 @@ dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(milk, bananas)              [0, 1, 4]
-(cookies)                          [1]
-(butter, tea, cookies)             [2]
-(tea)                           [3, 4]
-(jelly, bananas, cookies)          [5]
-dtype: object
+{&#39;n_items&#39;: 10,
+ &#39;avg_transaction_size&#39;: 2.04,
+ &#39;n_transactions&#39;: 100,
+ &#39;density&#39;: 0.20400000000000001}
 </pre></div></div>
+</div>
 </div>
 </div>
 
@@ -537,10 +501,10 @@ dtype: object
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="symbolic_classifier.html" class="btn btn-neutral float-right" title="Building a symbolic classifier" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../itemsets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="LCM_on_chess.html" class="btn btn-neutral float-left" title="LCM" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="fetch_fimi_datasets.html" class="btn btn-neutral float-left" title="fetch FIMI datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

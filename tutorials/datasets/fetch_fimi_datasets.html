@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fetch fimi datasets &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>fetch FIMI datasets &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="&lt;no title&gt;" href="../itemsets/index.html" />
+    <link rel="next" title="Generate synthetic data to train on" href="synthetic_transactions.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
 </head>
 
@@ -93,10 +93,11 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">fetch fimi datasets</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">fetch FIMI datasets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Describe-those-datasets">Describe those datasets</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
@@ -147,7 +148,7 @@
         
           <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
         
-      <li>fetch fimi datasets</li>
+      <li>fetch FIMI datasets</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -408,8 +409,8 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="fetch-fimi-datasets">
-<h1>fetch fimi datasets<a class="headerlink" href="#fetch-fimi-datasets" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="fetch-FIMI-datasets">
+<h1>fetch <a class="reference external" href="http://fimi.uantwerpen.be/data/">FIMI</a> datasets<a class="headerlink" href="#fetch-FIMI-datasets" title="Permalink to this headline">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">FIMI</span></code> is a popular repository referencing standard datasets and algorithms in pattern mining ### load datasets separately</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -471,45 +472,20 @@ Name: chess, dtype: object
 Name: accidents, dtype: object
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">!</span> ls ~/scikit_mine_data/
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-accidents.dat  chess.dat
-</pre></div></div>
-</div>
 <div class="section" id="Describe-those-datasets">
 <h2>Describe those datasets<a class="headerlink" href="#Describe-those-datasets" title="Permalink to this headline">¶</a></h2>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_transactions</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">describe_transactions</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
+<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
+<span class="n">describe</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -531,7 +507,7 @@ accidents.dat  chess.dat
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../itemsets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="synthetic_transactions.html" class="btn btn-neutral float-right" title="Generate synthetic data to train on" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

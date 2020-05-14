@@ -91,7 +91,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch fimi datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
@@ -165,7 +166,7 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
 
 
-<div class="viewcode-block" id="describe_transactions"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.utils.describe_transactions">[docs]</a><span class="k">def</span> <span class="nf">describe_transactions</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+<div class="viewcode-block" id="describe"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.utils.describe">[docs]</a><span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Give some high level properties on transactions</span>
 
 <span class="sd">    ========================    ===============</span>
@@ -187,8 +188,8 @@
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.datasets.fimi import fetch_connect</span>
-<span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe_transactions</span>
-<span class="sd">    &gt;&gt;&gt; describe_transactions(fetch_connect())</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe</span>
+<span class="sd">    &gt;&gt;&gt; describe(fetch_connect())</span>
 <span class="sd">    {&#39;n_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;n_transactions&#39;: 3196, &#39;density&#39;: 0.4933}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">avg_transaction_size</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
