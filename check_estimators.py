@@ -1,5 +1,3 @@
-import subprocess
-import sys
 import inspect
 
 import sklearn
@@ -15,11 +13,15 @@ MODULES = [
 OK = '\x1b[42m[ OK ]\x1b[0m'
 FAIL = "\x1b[41m[FAIL]\x1b[0m"
 
+def is_estimator(e):
+    _, est = e
+    meth = getattr(est, "fit", None)
+    return callable(meth)
 
 if __name__ == '__main__':
     for module in MODULES:
         clsmemembers = inspect.getmembers(skmine.itemsets, inspect.isclass)
-        estimators = filter(lambda e: hasattr(e[1], 'fit'), clsmemembers)
+        estimators = filter(is_estimator, clsmemembers)
         for est_name, est in estimators:
             # from sklearn 0.23 check_estimator takes an instance as input
             obj = est() if sklearn.__version__[:4] >= '0.23' else est
