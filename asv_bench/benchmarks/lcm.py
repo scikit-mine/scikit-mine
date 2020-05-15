@@ -15,14 +15,8 @@ class LCMBench:
         )
         self.lcm = LCM(min_supp=min_supp, n_jobs=1)  # set n_jobs to 1 for now
 
-    def time_fit_only(self, *args):
-        self.lcm.fit(self.transactions)
+    def time_fit_discover(self, *args):
+        self.lcm.fit_discover(self.transactions)
 
     def time_fit_transform(self, *args):
-        self.lcm.fit_transform(self.transactions)
-
-    def mem_fit_ony(self, *args):
-        self.lcm.fit(self.transactions)
-
-    def mem_fit_transform(self, *args):
         self.lcm.fit_transform(self.transactions)
