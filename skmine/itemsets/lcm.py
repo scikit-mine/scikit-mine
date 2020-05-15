@@ -14,8 +14,6 @@ from joblib import delayed
 from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
-from ..base import BaseMiner
-
 
 def _check_min_supp(min_supp):
     if isinstance(min_supp, int):
@@ -28,7 +26,7 @@ def _check_min_supp(min_supp):
         raise TypeError('Mimimum support must be of type int or float')
     return min_supp
 
-class LCM(BaseMiner):
+class LCM():
     """
     Linear time Closed item set Miner.
 
@@ -78,26 +76,6 @@ class LCM(BaseMiner):
         self.n_transactions = 0
         self.ctr = 0
         self.n_jobs = n_jobs
-
-    def fit(self, D):
-        """fit LCM on the transactional database
-        This simply iterates over transactions of D in order to keep
-        track of every item and transactions ids related
-
-        Parameters
-        ----------
-        D : pd.Series or Iterable
-            The input transactional database
-            Where every entry contain singular items
-            Items must be both hashable and comparable
-
-        Returns
-        -------
-        self:
-            a reference to the model itself
-
-        """
-        return self._fit(D)
 
     def _fit(self, D):
         item_to_tids = defaultdict(RoaringBitmap)
@@ -153,7 +131,7 @@ class LCM(BaseMiner):
         0     (2, 5)        3
         1  (2, 3, 5)        2
         """
-        self.fit(D)
+        self._fit(D)
 
         empty_df = pd.DataFrame(columns=['itemset', 'tids'])
 
@@ -171,49 +149,51 @@ class LCM(BaseMiner):
             df.drop('tids', axis=1, inplace=True)
         return df
 
-    def fit_transform(self, D, sort=True):
-        """fit LCM on the transactional database, and return the set of
-        closed itemsets in this database, with respect to the minium support.
+    def fit_transform(self, D):
+        """fit LCM on the transactional database, and encode the frequencies
+        of the resulting patterns in a tabular format.
 
-        This basically calls the ``fit_discover`` method and one-hot-encode
-        the resulting patterns. This makes LCM a possible preprocessing step
-        in a ``scikit-learn pipeline``.
+        This makes LCM a possible preprocessing step, compatible with ``scikit-learn``
+
+        Notes
+        -----
+        Cells in the result will contain frequencies of patterns. Note that this process
+        is somehow similar to Term-Frequency encoding, but operates on co-occuring terms
+        instead of singular terms.
 
         Parameters
         ----------
         D : pd.Series or Iterable
-            The input transactional database
-            Where every entry contain singular items
-            Items must be both hashable and comparable
-
-        sort: bool
-            if True, columns will be sorted by decreasing order of support
+            The input transactional database. Items must be both hashable and comparable
 
         Returns
         -------
-        One-hot-encoded itemsets : pd.DataFrame
-            A boolean DataFrame with itemsets as columns, and transactions as rows
+        pd.DataFrame
+            A DataFrame with itemsets as columns, and transactions as rows
 
         Example
         -------
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_transform(D, sort=True)
-           (2, 5)  (2, 3, 5)
-        0       1          1
-        1       1          1
-        2       1          0
+        >>> lcm.fit_transform(D)
+            2  3  5  # columns are single items w.r.t to the minium support
+        0   2  2  2  # (2, 3, 5) has length 3 but support of 2
+        1   2  2  2  # (2, 3, 5) has length 3 but support of 2
+        2   3  0  3  # (2, 5) has length 2 but support of 3
         """
-        df = self.fit_discover(D, return_tids=True)
-        if sort:
-            index = df.tids.map(len).sort_values(ascending=False).index
-            df = df.reindex(index)
-        shape = (self.n_transactions, len(df))
+        patterns = self.fit_discover(D, return_tids=True)
+        tid_s = patterns.set_index('itemset').tids
+        by_supp = tid_s.map(len).sort_values(ascending=False)
+        patterns = tid_s.reindex(by_supp.index)
+
+        shape = (self.n_transactions, len(self.item_to_tids))
         mat = np.zeros(shape, dtype=np.uint32)
-        for idx, tids in enumerate(df['tids']):
-            mat[tids, idx] = 1.0
-        return pd.DataFrame(mat, columns=df['itemset'].values)
+
+        df = pd.DataFrame(mat, columns=self.item_to_tids.keys())
+        for pattern, tids in tid_s.iteritems():
+            df.loc[tids, pattern] = len(tids)  # fill with support
+        return df
 
 
     def _explore_item(self, item, tids):

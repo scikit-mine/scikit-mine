@@ -38,14 +38,14 @@ true_patterns.loc[:, 'itemset'] = true_patterns.itemset.map(frozenset)
 
 def test_lcm_fit():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     for item in lcm.item_to_tids.keys():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
 
 def test_first_parent_limit_1():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     limit = 1
     tids = lcm.item_to_tids[limit]
@@ -62,7 +62,7 @@ def test_first_parent_limit_1():
 
 def test_first_parent_limit_2():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     # pattern = {} -> first parent OK
     tids = lcm.item_to_tids[2]
@@ -79,7 +79,7 @@ def test_first_parent_limit_2():
 
 def test_first_parent_limit_3():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     tids = lcm.item_to_tids[3]
     itemset, tids = next(lcm._inner(frozenset(), tids, 3), (None, None))
@@ -88,7 +88,7 @@ def test_first_parent_limit_3():
 
 def test_first_parent_limit_4():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     tids = lcm.item_to_tids[4]
     itemset, tids = next(lcm._inner(frozenset(), tids, 4), (None, None))
@@ -97,7 +97,7 @@ def test_first_parent_limit_4():
 
 def test_first_parent_limit_5():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     tids = lcm.item_to_tids[5]
     itemset, tids = next(lcm._inner(frozenset(), tids, 5), (None, None))
@@ -107,7 +107,7 @@ def test_first_parent_limit_5():
 
 def test_first_parent_limit_6():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm._fit(D)
 
     tids = lcm.item_to_tids[6]
     itemset, tids = next(lcm._inner(frozenset(), tids, 6), (None, None))
@@ -136,24 +136,17 @@ def test_lcm_discover():
         assert itemset == true_itemset
     pd.testing.assert_series_equal(patterns.support, true_patterns.support, check_dtype=False)
 
+
 def test_lcm_transform():
     lcm = LCM(min_supp=3)
     X = lcm.fit_transform(D)
-    supps = X.sum(axis=0)
-    np.testing.assert_equal(
-        supps.sort_values().values,
-        true_patterns['support'].sort_values().values,
+    assert X.columns.tolist() == list(range(1, 7))
+    assert X.shape == (7, 6)  # 7 transactions, 6 items
+    assert np.array_equal(
+        np.unique(X.values),
+        np.array([0, 3, 4])  # all supports of 5 have been overriden
     )
 
-def test_lcm_transform_sort():
-    lcm = LCM(min_supp=3)
-    X = lcm.fit_transform(D, sort=True)
-    assert X.columns[0] == frozenset([4])
-
-def test_lcm_transform_sort():
-    lcm = LCM(min_supp=3)
-    X = lcm.fit_transform(D, sort=False)
-    assert X.columns[0] == frozenset([2])
 
 def test_relative_support_errors():
     wrong_values = [-1, -100, 2.33, 150.55]
@@ -167,7 +160,7 @@ def test_relative_support_errors():
 
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
-    lcm.fit(D)
+    lcm._fit(D)
     np.testing.assert_almost_equal(lcm._min_supp, 2.8, 2)
 
     for item in lcm.item_to_tids.keys():
