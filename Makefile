@@ -10,6 +10,7 @@ clean: clean_doc
 	$(RM) **/*.cpp
 	$(RM) **/*.so
 	find . -name "*.pyc" -exec rm -f {} \;
+	$(RM) dist/ build/ *.egg-info
 
 
 clean_doc:
