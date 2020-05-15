@@ -58,15 +58,15 @@ class LCM():
     >>> from skmine.datasets.fimi import fetch_chess
     >>> chess = fetch_chess()
     >>> lcm = LCM(min_supp=2000)
-    >>> patterns = lcm.fit_discover(chess)
-    >>> patterns.head()
+    >>> patterns = lcm.fit_discover(chess)      # doctest: +SKIP
+    >>> patterns.head()                         # doctest: +SKIP
         itemset support
     0      (58)    3195
     1  (11, 58)    2128
     2  (15, 58)    2025
     3  (17, 58)    2499
     4  (21, 58)    2224
-    >>> patterns[patterns.itemset.map(len) > 3]  # only keeps itemsets longer than 3
+    >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
     def __init__(self, *, min_supp=0.2, n_jobs=1):
         _check_min_supp(min_supp)
@@ -126,7 +126,7 @@ class LCM():
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_discover(D)
+        >>> lcm.fit_discover(D)                 # doctest: +SKIP
             itemset  support
         0     (2, 5)        3
         1  (2, 3, 5)        2
@@ -176,7 +176,7 @@ class LCM():
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_transform(D)
+        >>> lcm.fit_transform(D)                # doctest: +SKIP
             2  3  5  # columns are single items w.r.t to the minium support
         0   2  2  2  # (2, 3, 5) has length 3 but support of 2
         1   2  2  2  # (2, 3, 5) has length 3 but support of 2

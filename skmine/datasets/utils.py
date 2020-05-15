@@ -28,7 +28,7 @@ def describe(D):
     -------
     >>> from skmine.datasets.fimi import fetch_connect
     >>> from skmine.datasets.utils import describe
-    >>> describe(fetch_connect())
+    >>> describe(fetch_connect())  # doctest: +SKIP
     {'n_items': 75, 'avg_transaction_size': 37.0, 'n_transactions': 3196, 'density': 0.4933}
     """
     avg_transaction_size = D.map(len).mean()

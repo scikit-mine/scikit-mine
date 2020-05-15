@@ -58,7 +58,7 @@ def fetch_instacart(data_home=None):
     Examples
     --------
         >>> from skmine.datasets import fetch_instacart
-        >>> D = fetch_instacart(data_home='~/scikit_mine_data/')
+        >>> D = fetch_instacart(data_home='~/scikit_mine_data/')  # doctest: +SKIP
 
     Returns
     -------

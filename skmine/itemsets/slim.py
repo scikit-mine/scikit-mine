@@ -86,19 +86,13 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     --------
     >>> import pandas as pd
     >>> from skmine.itemsets import SLIM
-    >>> D = pd.Series([
-    >>>     ['bananas', 'milk'],
-    >>>     ['milk', 'bananas', 'cookies'],
-    >>>     ['cookies', 'butter', 'tea'],
-    >>>     ['tea'],
-    >>>     ['milk', 'bananas', 'tea'],
-    >>> ])
-    >>> SLIM().fit(D)
-        (milk, cookies, bananas)       [1]
-        (butter, cookies, tea)         [2]
-        (milk, bananas)             [0, 4]
-        (tea)                       [3, 4]
-        dtype: object
+    >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    >>> D = pd.Series(D)
+    >>> SLIM().fit(D)                       # doctest: +SKIP
+    (butter, tea)         [2]
+    (milk, bananas)    [0, 1]
+    (cookies)          [1, 2]
+    dtype: object
 
     References
     ----------
@@ -193,17 +187,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         Example
         -------
-        >>> D = pd.Series([
-        >>>     ['bananas', 'milk'],
-        >>>     ['milk', 'bananas', 'cookies'],
-        >>>     ['cookies', 'butter', 'tea'],
-        >>>     ['tea'],
-        >>>     ['milk', 'bananas', 'tea'],
-        >>> ])
+        >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+        >>> D = pd.Series(D)
         >>> new_D = pd.Series([['cookies', 'butter']])
-        >>> slim = SLIM(pruning=False).fit(D)
-        >>> slim.predict_proba(new_D)
-        0    0.333333
+        >>> slim = SLIM(pruning=False).fit(D)           # doctest: +SKIP
+        >>> slim.predict_proba(new_D)                   # doctest: +SKIP
+        0    0.4
         dtype: float32
         """
         assert isinstance(D, pd.Series)
