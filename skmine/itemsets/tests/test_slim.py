@@ -1,5 +1,4 @@
 from ..slim import make_codetable
-from ..slim import cover_one
 from ..slim import cover
 from ..slim import generate_candidates
 from ..slim import SLIM
@@ -24,18 +23,6 @@ def test_make_cotetable():
         standard_codetable.map(len),
         pd.Series([7, 7, 5], index=['A', 'B', 'C'])
     )
-
-
-def test_cover_one():
-    codetable_isets = list(map(
-        frozenset,
-        ['EBC', 'AFE', 'CD', 'AG', 'DF', 'E']
-    ))
-    cand = frozenset('ABCDEFG')
-    cover = cover_one(codetable_isets, cand)
-    assert cover == list(map(frozenset, ['EBC', 'AG', 'DF']))
-    # TODO : output indices instead of elements
-
 
 def test_cover_1(D):
     isets = list(map(frozenset, [
@@ -245,14 +232,13 @@ def test_prune_empty(D):
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
-"""
-def test_predict_proba(D):
-    D = pd.Series(['ABC'] * 5 + ['AB', 'A', 'B'])
+
+def test_predict_proba():
     te = TransactionEncoder()
-    D = te.fit_transform(D)
+    D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
     slim = SLIM().fit(D)
 
-    new_D = pd.Series(['AB'] * 2 + ['ABD', 'AC', 'B'])
+    new_D = ['AB'] * 2 + ['ABD', 'AC', 'B']
     new_D = te.fit_transform(new_D)
 
     probas = slim.predict_proba(new_D)
@@ -263,7 +249,7 @@ def test_predict_proba(D):
         np.array([.44, .44, .44, .22, .22]),
         decimal=2
     )
-"""
+
 
 def test_get_codetable():  # FIXME : .get_codetable() be replace by self.codetable
     slim = SLIM()

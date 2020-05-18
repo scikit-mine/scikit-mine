@@ -25,31 +25,14 @@ def make_codetable(D: pd.Series):
             codetable[item].add(idx)
     return pd.Series(codetable)
 
-def cover_one(codetable, cand):
-    """
-    assumes codetable is already sorted in Standard Cover Order
-    """
-    cover = list()
-    stack = set()
-    pos = 0
-    while len(stack) < len(cand) and pos < len(codetable):
-        iset = codetable[pos]
-        pos += 1
-        if not iset.isdisjoint(stack):
-            continue
-        if iset.issubset(cand):
-            cover.append(iset)  # TODO add index instead of element for performance
-            stack |= iset
-    return cover
-
-
 def cover(itemsets: list, D: pd.DataFrame):
-    """
+    """ assert itemset are sorted in Standard Cover Order
+    D must be a pandas DataFrame containing boolean values
     """
     stacks = dict()
     for iset in itemsets:
         mask = RoaringBitmap()
-        for key in stacks.keys():
+        for key in stacks:
             if iset.issubset(key):
                 mask |= stacks[key]
         mask.flip_range(0, len(D))  # reverse the index
@@ -218,14 +201,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         0    0.4
         dtype: float32
         """
-        assert isinstance(D, pd.Series)
-
+        if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
         codetable = self.codetable[self.codetable.map(len) > 0]
-        seen_items = frozenset(self.standard_codetable.index)
-        D = D.map(seen_items.intersection)  # remove never seen items
-        covers = D.map(lambda t: cover_one(codetable.index, t))
+        covers = cover(codetable.index, D)
+        mat = np.zeros(shape=(len(D), len(covers)))
+        for idx, tids in enumerate(covers.values):
+            mat[tids, idx] = 1
+        mat = pd.DataFrame(mat, columns=covers.index) 
+
         ct_codes = codetable.map(len) / codetable.map(len).sum()
-        codes = covers.map(lambda c: sum((ct_codes[e] for e in c)))
+        codes = (mat * ct_codes).sum(axis=1)
         return codes.astype(np.float32)
 
     def evaluate(self, candidate, D):
