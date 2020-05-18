@@ -42,7 +42,7 @@ def cover(itemsets: list, D: pd.DataFrame):
         where = bools[bools].index
         rb = RoaringBitmap(where)
         stacks[iset] = rb
-    
+
     return pd.Series(stacks)
 
 

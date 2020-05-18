@@ -35,14 +35,9 @@ class BaseMiner(ABC):
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
 
-    def get_params(self, deep=True):
+    def get_params(self):
         """
         Get parameters for this estimator.
-        Parameters
-        ----------
-        deep : bool, default=True
-            If True, will return the parameters for this estimator and
-            contained subobjects that are estimators.
         Returns
         -------
         params : mapping of string to any
@@ -51,9 +46,6 @@ class BaseMiner(ABC):
         out = dict()
         for key in self._get_param_names():
             value = getattr(self, key)
-            if deep and hasattr(value, 'get_params'):
-                deep_items = value.get_params().items()
-                out.update((key + '__' + k, val) for k, val in deep_items)
             out[key] = value
         return out
 
@@ -73,28 +65,20 @@ class BaseMiner(ABC):
         self : object
             Estimator instance.
         """
-        if not params:
-            # Simple optimization to gain speed (inspect is slow)
-            return self
-        valid_params = self.get_params(deep=True)
+        # Simple optimization to gain speed (inspect is slow)
+        if not params: return self
 
-        nested_params = defaultdict(dict)  # grouped by prefix
+        valid_params = self.get_params()
+
         for key, value in params.items():
-            key, delim, sub_key = key.partition('__')
             if key not in valid_params:
                 raise ValueError('Invalid parameter %s for estimator %s. '
                                  'Check the list of available parameters '
                                  'with `estimator.get_params().keys()`.' %
                                  (key, self))
 
-            if delim:
-                nested_params[key][sub_key] = value
-            else:
-                setattr(self, key, value)
-                valid_params[key] = value
-
-        for key, sub_params in nested_params.items():
-            valid_params[key].set_params(**sub_params)
+            setattr(self, key, value)
+            valid_params[key] = value
 
         return self
 

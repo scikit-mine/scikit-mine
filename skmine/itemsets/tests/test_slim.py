@@ -205,6 +205,11 @@ def test_fit(D):
     self = slim.fit(D)
     assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
+def test_fit_ndarray(D):
+    slim = SLIM(pruning=True)
+    self = slim.fit(D.values)
+    assert self._codetable.index.tolist() == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
+
 def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('AB')]]

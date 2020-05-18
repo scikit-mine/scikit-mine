@@ -4,6 +4,7 @@ source = skmine
 include = */skmine/*
 parallel = True
 omit =
+    **/tests/*
     */setup.py
 
 
