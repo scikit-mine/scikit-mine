@@ -104,7 +104,7 @@ def test_cover_order_pos_1():
 
     assert pos == 0
     # empty dict because checking supports was not necessary
-    assert not slim.supports
+    assert not slim._supports
 
 
 def test_cover_order_pos_2(D):
@@ -117,7 +117,7 @@ def test_cover_order_pos_2(D):
     pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 1
-    assert cand in slim.supports.keys()
+    assert cand in slim._supports.keys()
 
 def test_cover_order_pos_support_needed(D):
     """support computation is needed to get the position in cover order"""
@@ -130,7 +130,7 @@ def test_cover_order_pos_support_needed(D):
     pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 1
-    assert cand in slim.supports.keys()
+    assert cand in slim._supports.keys()
 
 
 def test_prefit():
@@ -138,8 +138,8 @@ def test_prefit():
     D = TransactionEncoder().fit_transform(D)
     slim = SLIM()
     slim._prefit(D)
-    np.testing.assert_almost_equal(slim.model_size, 9.614, 3)
-    np.testing.assert_almost_equal(slim.data_size, 29.798, 3)
+    np.testing.assert_almost_equal(slim._model_size, 9.614, 3)
+    np.testing.assert_almost_equal(slim._data_size, 29.798, 3)
     assert len(slim.codetable) == 3
     assert slim.codetable.dtype == np.object
     assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
@@ -198,12 +198,12 @@ def test_compute_sizes_2(D):
 def test_fit_no_pruning(D):
     slim = SLIM(pruning=False)
     self = slim.fit(D)
-    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+    assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
 def test_fit(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D)
-    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+    assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
 def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
@@ -211,7 +211,7 @@ def test_prune(D):
 
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+        slim._codetable, D, prune_set, slim._model_size, slim._data_size
     )
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
@@ -227,7 +227,7 @@ def test_prune_empty(D):
     # nothing to prune so we should get the exact same codetable
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+        slim._codetable, D, prune_set, slim._model_size, slim._data_size
     )
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
@@ -250,7 +250,3 @@ def test_predict_proba():
         decimal=2
     )
 
-
-def test_get_codetable():  # FIXME : .get_codetable() be replace by self.codetable
-    slim = SLIM()
-    slim.get_codetable()

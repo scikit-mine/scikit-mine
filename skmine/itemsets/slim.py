@@ -108,42 +108,41 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     """
     def __init__(self, *, n_iter_no_change=5, pruning=True):
         self.n_iter_no_change = n_iter_no_change
-        self.standard_codetable = None
-        self.codetable = pd.Series([], dtype='object')
-        self.supports = lazydict(self._get_support)
-        self.model_size = None          # L(CT|D)
-        self.data_size = None           # L(D|CT)
+        self._standard_codetable = None
+        self._codetable = pd.Series([], dtype='object')
+        self._supports = lazydict(self._get_support)
+        self._model_size = None          # L(CT|D)
+        self._data_size = None           # L(D|CT)
         self.pruning = pruning
-        self._seen_cands = set()  # set of previously seen items  # TODO : move to fit
         # TODO : add eps parameter for smarter early stopping
 
     def _get_support(self, itemset):
-        U = reduce(RoaringBitmap.union, self.standard_codetable.loc[itemset])
+        U = reduce(RoaringBitmap.union, self._standard_codetable.loc[itemset])
         return len(U)
 
     def _get_cover_order_pos(self, codetable, cand):
         pos = 0
         while len(cand) < len(codetable[pos]):
             pos += 1
-            if self.supports[cand] >= self.supports[codetable[pos - 1]]:
+            if self._supports[cand] >= self._supports[codetable[pos - 1]]:
                 break
             # TODO : add lexicographic order
         return pos
 
-    def __repr__(self): return repr(self.get_codetable())
+    def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
 
     def _prefit(self, D):
         sct_d = {k: RoaringBitmap(np.where(D[k])[0]) for k in D.columns}
-        self.standard_codetable = pd.Series(sct_d)
-        usage = self.standard_codetable.map(len).astype(np.uint32)
+        self._standard_codetable = pd.Series(sct_d)
+        usage = self._standard_codetable.map(len).astype(np.uint32)
 
         sorted_index = sorted(usage.index, key=lambda e: (-usage[e], e))
-        self.codetable = self.standard_codetable.reindex(sorted_index, copy=True)
-        self.codetable.index = self.codetable.index.map(lambda e: frozenset([e]))
+        self._codetable = self._standard_codetable.reindex(sorted_index, copy=True)
+        self._codetable.index = self._codetable.index.map(lambda e: frozenset([e]))
 
         codes = -np.log2(usage / usage.sum())
-        self.model_size = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
-        self.data_size = (codes * usage).sum()
+        self._model_size = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+        self._data_size = (codes * usage).sum()
 
         return self
 
@@ -158,28 +157,29 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         self._prefit(D)
         n_iter_no_change = 0
         is_better = False
+        seen_cands = set()
 
         while n_iter_no_change < self.n_iter_no_change:
             is_better = False
-            candidates = generate_candidates(self.codetable, stack=self._seen_cands)
+            candidates = generate_candidates(self._codetable, stack=seen_cands)
             for cand in candidates:
                 CTc, data_size, model_size = self.evaluate(cand, D)
-                if data_size + model_size < self.data_size + self.model_size:
+                if data_size + model_size < self._data_size + self._model_size:
                     if self.pruning:
                         prune_set = CTc.drop([cand])
-                        prune_set = prune_set[prune_set.map(len) < self.codetable.map(len)]
+                        prune_set = prune_set[prune_set.map(len) < self._codetable.map(len)]
                         prune_set = prune_set[prune_set.index.map(len) > 1]
                         CTc, data_size, model_size = self._prune(
                             CTc, D, prune_set, model_size, data_size
                         )
 
-                    self.codetable = CTc
-                    self.data_size = data_size
-                    self.model_size = model_size
+                    self._codetable = CTc
+                    self._data_size = data_size
+                    self._model_size = model_size
 
                     is_better = True
 
-                self._seen_cands.add(cand)
+                seen_cands.add(cand)
 
             if not is_better:
                 n_iter_no_change += 1
@@ -202,12 +202,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         dtype: float32
         """
         if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
-        codetable = self.codetable[self.codetable.map(len) > 0]
+        codetable = self._codetable[self._codetable.map(len) > 0]
         covers = cover(codetable.index, D)
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values):
             mat[tids, idx] = 1
-        mat = pd.DataFrame(mat, columns=covers.index) 
+        mat = pd.DataFrame(mat, columns=covers.index)
 
         ct_codes = codetable.map(len) / codetable.map(len).sum()
         codes = (mat * ct_codes).sum(axis=1)
@@ -230,30 +230,30 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             updated (codetable, data size, model size
             and finally a boolean stating if compression improved
         """
-        cand_pos = self._get_cover_order_pos(self.codetable.index, candidate)
-        CTc_index = self.codetable.index.insert(cand_pos, candidate)
+        cand_pos = self._get_cover_order_pos(self._codetable.index, candidate)
+        CTc_index = self._codetable.index.insert(cand_pos, candidate)
 
         CTc = cover(CTc_index, D)
         data_size, model_size = self.compute_sizes(CTc)
 
         return CTc, data_size, model_size
 
-
-    def get_codetable(self):
+    @property
+    def codetable(self):
         """
         Returns
         -------
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        return self.codetable[self.codetable.map(len) > 0]  # FIXME : this should not be needed
+        return self._codetable[self._codetable.map(len) > 0]
 
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
         flat_items = list(chain(*index))
         items, counts = np.unique(flat_items, return_counts=True)
 
-        usages = self.standard_codetable.loc[items].map(len).astype(np.uint32)
+        usages = self._standard_codetable.loc[items].map(len).astype(np.uint32)
         usages /= usages.sum()
         codes = -np.log2(usages)
         return codes * counts
