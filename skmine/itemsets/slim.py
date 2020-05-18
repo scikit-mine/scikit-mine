@@ -43,6 +43,26 @@ def cover_one(codetable, cand):
     return cover
 
 
+def cover(itemsets: list, D: pd.DataFrame):
+    """
+    """
+    stacks = dict()
+    for iset in itemsets:
+        mask = RoaringBitmap()
+        for key in stacks.keys():
+            if iset.issubset(key):
+                mask |= stacks[key]
+        mask.flip_range(0, len(D))  # reverse the index
+        _D = D.iloc[mask]
+        bools = _D[iset].all(axis=1)
+        #where = np.where(bools)[0]
+        where = bools[bools].index
+        rb = RoaringBitmap(where)
+        stacks[iset] = rb
+    
+    return pd.Series(stacks)
+
+
 def generate_candidates(codetable, stack=None):
     """
     assumes codetable is sorted in Standard Cover Order
@@ -106,12 +126,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     def __init__(self, *, n_iter_no_change=5, pruning=True):
         self.n_iter_no_change = n_iter_no_change
         self.standard_codetable = None
-        self.codetable = pd.Series([])
+        self.codetable = pd.Series([], dtype='object')
         self.supports = lazydict(self._get_support)
         self.model_size = None          # L(CT|D)
         self.data_size = None           # L(D|CT)
         self.pruning = pruning
-        self._seen_cands = set()  # set of previously seen items
+        self._seen_cands = set()  # set of previously seen items  # TODO : move to fit
         # TODO : add eps parameter for smarter early stopping
 
     def _get_support(self, itemset):
@@ -129,8 +149,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     def __repr__(self): return repr(self.get_codetable())
 
-    def _prefit(self, D: pd.Series):
-        self.standard_codetable = make_codetable(D)
+    def _prefit(self, D):
+        sct_d = {k: RoaringBitmap(np.where(D[k])[0]) for k in D.columns}
+        self.standard_codetable = pd.Series(sct_d)
         usage = self.standard_codetable.map(len).astype(np.uint32)
 
         sorted_index = sorted(usage.index, key=lambda e: (-usage[e], e))
@@ -143,12 +164,14 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         return self
 
-    def fit(self, D):
+    def fit(self, D, y=None):
         """ fit SLIM on a transactional dataset
 
         This generate new candidate patterns and add those which improve compression,
         iteratibely refining the ``self.codetable``
         """
+        if not isinstance(D, pd.DataFrame):
+            D = pd.DataFrame(D)
         self._prefit(D)
         n_iter_no_change = 0
         is_better = False
@@ -225,14 +248,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         cand_pos = self._get_cover_order_pos(self.codetable.index, candidate)
         CTc_index = self.codetable.index.insert(cand_pos, candidate)
 
-        covers = D.map(lambda t: cover_one(CTc_index, t))
-        CTc = make_codetable(covers)
+        CTc = cover(CTc_index, D)
         data_size, model_size = self.compute_sizes(CTc)
-
-        zeros_index = self.codetable.index.difference(CTc.index)  #FIXME
-        CTc = CTc.reindex(CTc_index)
-        for itemset in zeros_index:
-            CTc[itemset] = RoaringBitmap()
 
         return CTc, data_size, model_size
 
@@ -273,7 +290,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         tuple(float, float)
             (data_size, model_size)
         """
-        #TODO : no need for tids here, only usages
+        codetable = codetable[codetable.map(len) > 0]
         usages = codetable.map(len).astype(np.uint32)
         codes = -np.log2(usages / usages.sum())
 
@@ -307,19 +324,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             cand = prune_set.map(len).idxmin()
             prune_set = prune_set.drop([cand])
             CTp_index = codetable.index.drop([cand])
-            covers = D.map(lambda t: cover_one(CTp_index, t))
-            CTp = make_codetable(covers)
+            CTp = cover(CTp_index, D)
             d_size, m_size = self.compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                zero_index = codetable.index.difference(CTp.index)
-                zero_index = zero_index[zero_index.map(len) == 1]
                 decreased = CTp.map(len) < codetable[CTp.index].map(len)
                 prune_set.update(CTp[decreased])
-
-                _u = {k: RoaringBitmap() for k in zero_index}
-                CTp = pd.Series({**CTp, **_u})  # merge series
-
                 codetable = CTp
                 data_size, model_size = d_size, m_size
 

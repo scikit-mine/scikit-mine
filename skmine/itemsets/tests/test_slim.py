@@ -1,11 +1,21 @@
 from ..slim import make_codetable
 from ..slim import cover_one
+from ..slim import cover
 from ..slim import generate_candidates
 from ..slim import SLIM
+from ...preprocessing.transaction_encoder import TransactionEncoder
 
+
+import pytest
 from roaringbitmap import RoaringBitmap
 import pandas as pd
 import numpy as np
+
+@pytest.fixture
+def D():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = TransactionEncoder().fit_transform(D)
+    return D
 
 def test_make_cotetable():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
@@ -26,6 +36,41 @@ def test_cover_one():
     assert cover == list(map(frozenset, ['EBC', 'AG', 'DF']))
     # TODO : output indices instead of elements
 
+
+def test_cover_1(D):
+    isets = list(map(frozenset, [
+        'ABC', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 2, 2, 0], index=isets),
+        covers.map(len),
+    )
+
+def test_cover_2(D):
+    isets = list(map(frozenset, [
+        'ABC', 'AB', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 1, 1, 1, 0], index=isets),
+        covers.map(len),
+    )
+
+def test_cover_3():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B', 'DE', 'CDE']
+    D = TransactionEncoder().fit_transform(D)
+    isets = list(map(frozenset, [
+        'ABC', 'DE', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 2, 2, 2, 1], index=isets),
+        covers.map(len),
+    )
 
 def test_generate_candidate_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
@@ -75,8 +120,7 @@ def test_cover_order_pos_1():
     assert not slim.supports
 
 
-def test_cover_order_pos_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+def test_cover_order_pos_2(D):
     slim = SLIM()
     slim._prefit(D)
     codetable = ['ABC', 'B', 'C']
@@ -88,9 +132,8 @@ def test_cover_order_pos_2():
     assert pos == 1
     assert cand in slim.supports.keys()
 
-def test_cover_order_pos_support_needed():
+def test_cover_order_pos_support_needed(D):
     """support computation is needed to get the position in cover order"""
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
     slim = SLIM()
     slim._prefit(D)
     codetable = ['ABC', 'B', 'C']
@@ -105,6 +148,7 @@ def test_cover_order_pos_support_needed():
 
 def test_prefit():
     D = ['ABC'] * 5 + ['BC', 'B', 'C']
+    D = TransactionEncoder().fit_transform(D)
     slim = SLIM()
     slim._prefit(D)
     np.testing.assert_almost_equal(slim.model_size, 9.614, 3)
@@ -113,8 +157,7 @@ def test_prefit():
     assert slim.codetable.dtype == np.object
     assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
 
-def test_get_standard_size_1():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ['ABC', 'AB', 'A', 'B']
@@ -125,8 +168,7 @@ def test_get_standard_size_1():
         check_less_precise=2
     )
 
-def test_get_standard_size_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ['ABC', 'A', 'B']
@@ -138,8 +180,7 @@ def test_get_standard_size_2():
     )
 
 
-def test_compute_sizes_1():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
@@ -154,8 +195,7 @@ def test_compute_sizes_1():
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
 
-def test_compute_sizes_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
@@ -168,24 +208,17 @@ def test_compute_sizes_2():
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
-def test_fit_no_pruning():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
+def test_fit_no_pruning(D):
     slim = SLIM(pruning=False)
     self = slim.fit(D)
     assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
-def test_fit():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
+def test_fit(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D)
     assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
-def test_prune():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
-
+def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('AB')]]
 
@@ -200,10 +233,7 @@ def test_prune():
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
 
-def test_prune_empty():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
-
+def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('ABC')]]
 
@@ -215,12 +245,15 @@ def test_prune_empty():
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
-
-def test_predict_proba():
+"""
+def test_predict_proba(D):
     D = pd.Series(['ABC'] * 5 + ['AB', 'A', 'B'])
+    te = TransactionEncoder()
+    D = te.fit_transform(D)
     slim = SLIM().fit(D)
 
     new_D = pd.Series(['AB'] * 2 + ['ABD', 'AC', 'B'])
+    new_D = te.fit_transform(new_D)
 
     probas = slim.predict_proba(new_D)
     assert probas.dtype == np.float32
@@ -230,6 +263,7 @@ def test_predict_proba():
         np.array([.44, .44, .44, .22, .22]),
         decimal=2
     )
+"""
 
 def test_get_codetable():  # FIXME : .get_codetable() be replace by self.codetable
     slim = SLIM()
