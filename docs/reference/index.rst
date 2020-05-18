@@ -8,4 +8,6 @@ API Reference
    * .. toctree::
         datasets
    * .. toctree::
+        preprocessing
+   * .. toctree::
         itemsets
