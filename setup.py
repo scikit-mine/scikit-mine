@@ -2,54 +2,68 @@
 # -*- coding: utf-8 -*-
 
 
-from setuptools import find_packages, dist
-import distutils.util
-from distutils.core import setup, Extension
-from distutils.command.build_ext import build_ext
-import os
-from glob import glob
-import skmine
-
+from setuptools import find_packages, setup
 import numpy
 
-release = skmine.__version__
+import skmine
+
+DISTNAME = 'skmine'
+DESCRIPTION = 'Pattern mining in Python'
+MAINTAINER = 'R. Adon'
+MAINTAINER_EMAIL = 'remi.adon@gmail.com'
+URL = 'https://github.com/scikit-mine/scikit-mine'
+LICENSE = 'new BSD'
+DOWNLOAD_URL = 'https://github.com/scikit-mine/scikit-mine'
+VERSION = skmine.__version__
+CLASSIFIERS = ['Intended Audience :: Science/Research',
+               'Intended Audience :: Developers',
+               'License :: OSI Approved',
+               'Programming Language :: Python',
+               'Topic :: Software Development',
+               'Topic :: Scientific/Engineering',
+               'Operating System :: Microsoft :: Windows',
+               'Operating System :: POSIX',
+               'Operating System :: Unix',
+               'Operating System :: MacOS',
+               'Programming Language :: Python :: 3.6',
+               'Programming Language :: Python :: 3.7']
+
+EXTRAS_REQUIRE = {
+    'tests': [
+        'pytest',
+        'pytest-cov'],
+    'docs': [
+        'sphinx',
+        'sphinx-gallery',
+        'sphinx_rtd_theme',
+        'numpydoc',
+        'matplotlib'
+    ]
+}
 
 
+# try replacing with `codecs.open('README.rst', encoding='utf-8-sig') as f:` if error
 with open('README.rst') as readme_file:
-    readme = readme_file.read()
+    LONG_DESCRIPTION = readme_file.read()
 
 with open('requirements.txt') as req_fd:
-    reqs = req_fd.read().splitlines()
+    INSTALL_REQUIRES = req_fd.read().splitlines()
 
-setup(
-    author="Scikit-network team",
-    author_email='bonald@enst.fr',
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3.6',
-    ],
-    description="Graph algorithms",
-    entry_points={
-        'console_scripts': [
-            'skmine=skmine.cli:main',
-        ],
-    },
-    install_requires=reqs,
-    license="BSD license",
-    long_description=readme,
-    long_description_content_type='text/x-rst',
-    #include_package_data=True,
-    keywords='skmine',
-    name='scikit-mine',
-    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    test_suite='tests',
-    tests_require=['pytest'],
-    url='https://github.com/scikit-mine/scikit-mine',
-    version=release,
-    zip_safe=False,
-    #ext_modules=ext_modules,
-    include_dirs=[numpy.get_include()],
+
+setup(name=DISTNAME,
+      maintainer=MAINTAINER,
+      maintainer_email=MAINTAINER_EMAIL,
+      description=DESCRIPTION,
+      license=LICENSE,
+      url=URL,
+      version=VERSION,
+      download_url=DOWNLOAD_URL,
+      long_description=LONG_DESCRIPTION,
+      long_description_content_type='text/x-rst',
+      zip_safe=False,  # the package can run out of an .egg file
+      classifiers=CLASSIFIERS,
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+      install_requires=INSTALL_REQUIRES,
+      extras_require=EXTRAS_REQUIRE,
+      include_dirs=[numpy.get_include()],
 )

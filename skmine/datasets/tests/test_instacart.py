@@ -9,11 +9,6 @@ from .. import _instacart
 from .._instacart import fetch_instacart
 from .._instacart import _get_orders
 
-def mock_urlopen(url):
-    for i in range(2):
-        transaction = ' '.join('{}'.format(i*j) for j in range(2)) + ' \n'
-        yield bytes(transaction, encoding='utf-8')
-
 def mock_read_pickle(*args, **kwargs):
     return pd.Series([[1, 2, 3], [4, 5]])
 

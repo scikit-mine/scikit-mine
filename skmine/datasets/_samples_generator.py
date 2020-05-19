@@ -39,7 +39,7 @@ def make_transactions(n_transactions=1000,
     Example
     -------
     >>> from skmine.datasets import make_transactions
-    >>> make_transactions(n_transactions=5, n_items=20, density=.25)
+    >>> make_transactions(n_transactions=5, n_items=20, density=.25)  # doctest: +SKIP
     0    [0, 6, 18, 10, 1, 12]
     1          [2, 18, 10, 14]
     2                [4, 5, 1]

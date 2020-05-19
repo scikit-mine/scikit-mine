@@ -1,11 +1,24 @@
 from ..slim import make_codetable
-from ..slim import cover_one
+from ..slim import cover
 from ..slim import generate_candidates
 from ..slim import SLIM
+from ...preprocessing.transaction_encoder import TransactionEncoder
 
+
+import pytest
 from roaringbitmap import RoaringBitmap
 import pandas as pd
 import numpy as np
+
+def dense_D():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = TransactionEncoder().fit_transform(D)
+    return D
+
+def sparse_D():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = TransactionEncoder(sparse_output=True).fit_transform(D)
+    return D
 
 def test_make_cotetable():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
@@ -15,17 +28,54 @@ def test_make_cotetable():
         pd.Series([7, 7, 5], index=['A', 'B', 'C'])
     )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_cover_1(D):
+    isets = list(map(frozenset, [
+        'ABC', 'A', 'B', 'C',
+    ]))
 
-def test_cover_one():
-    codetable_isets = list(map(
-        frozenset,
-        ['EBC', 'AFE', 'CD', 'AG', 'DF', 'E']
-    ))
-    cand = frozenset('ABCDEFG')
-    cover = cover_one(codetable_isets, cand)
-    assert cover == list(map(frozenset, ['EBC', 'AG', 'DF']))
-    # TODO : output indices instead of elements
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 2, 2, 0], index=isets),
+        covers.map(len),
+    )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_cover_2(D):
+    isets = list(map(frozenset, [
+        'ABC', 'AB', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 1, 1, 1, 0], index=isets),
+        covers.map(len),
+    )
+
+def test_cover_3():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B', 'DE', 'CDE']
+    D = TransactionEncoder().fit_transform(D)
+    isets = list(map(frozenset, [
+        'ABC', 'DE', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 2, 2, 2, 1], index=isets),
+        covers.map(len),
+    )
+
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_cover_4(D):
+    isets = list(map(frozenset, [
+        'BC', 'AB', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 1, 6, 1, 0], index=isets),
+        covers.map(len),
+    )
 
 def test_generate_candidate_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
@@ -72,11 +122,10 @@ def test_cover_order_pos_1():
 
     assert pos == 0
     # empty dict because checking supports was not necessary
-    assert not slim.supports
+    assert not slim._supports
 
-
-def test_cover_order_pos_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_cover_order_pos_2(D):
     slim = SLIM()
     slim._prefit(D)
     codetable = ['ABC', 'B', 'C']
@@ -86,11 +135,11 @@ def test_cover_order_pos_2():
     pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 1
-    assert cand in slim.supports.keys()
+    assert cand in slim._supports.keys()
 
-def test_cover_order_pos_support_needed():
-    """support computation is needed to get the position in cover order"""
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_cover_order_pos_support_needed(D):
+    "support computation is needed to get the position in cover order"
     slim = SLIM()
     slim._prefit(D)
     codetable = ['ABC', 'B', 'C']
@@ -100,21 +149,22 @@ def test_cover_order_pos_support_needed():
     pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 1
-    assert cand in slim.supports.keys()
+    assert cand in slim._supports.keys()
 
 
 def test_prefit():
     D = ['ABC'] * 5 + ['BC', 'B', 'C']
+    D = TransactionEncoder().fit_transform(D)
     slim = SLIM()
     slim._prefit(D)
-    np.testing.assert_almost_equal(slim.model_size, 9.614, 3)
-    np.testing.assert_almost_equal(slim.data_size, 29.798, 3)
+    np.testing.assert_almost_equal(slim._model_size, 9.614, 3)
+    np.testing.assert_almost_equal(slim._data_size, 29.798, 3)
     assert len(slim.codetable) == 3
     assert slim.codetable.dtype == np.object
     assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
 
-def test_get_standard_size_1():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ['ABC', 'AB', 'A', 'B']
@@ -125,8 +175,8 @@ def test_get_standard_size_1():
         check_less_precise=2
     )
 
-def test_get_standard_size_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ['ABC', 'A', 'B']
@@ -137,9 +187,8 @@ def test_get_standard_size_2():
         check_less_precise=2
     )
 
-
-def test_compute_sizes_1():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
@@ -153,9 +202,8 @@ def test_compute_sizes_1():
     np.testing.assert_almost_equal(data_size, 12.4, 2)
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
-
-def test_compute_sizes_2():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
@@ -168,30 +216,33 @@ def test_compute_sizes_2():
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
-def test_fit_no_pruning():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_fit_no_pruning(D):
     slim = SLIM(pruning=False)
     self = slim.fit(D)
-    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+    assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
-def test_fit():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_fit(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D)
-    assert self.codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+    assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
-def test_prune():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_fit_ndarray(D):
+    slim = SLIM(pruning=True)
+    self = slim.fit(D.values)
+    assert self._codetable.index.tolist() == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
+
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('AB')]]
 
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+        slim._codetable, D, prune_set, slim._model_size, slim._data_size
     )
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
@@ -200,27 +251,27 @@ def test_prune():
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
 
-def test_prune_empty():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    D = pd.Series(D)
-
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('ABC')]]
 
     # nothing to prune so we should get the exact same codetable
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable, D, prune_set, slim.model_size, slim.data_size
+        slim._codetable, D, prune_set, slim._model_size, slim._data_size
     )
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
 
 def test_predict_proba():
-    D = pd.Series(['ABC'] * 5 + ['AB', 'A', 'B'])
+    te = TransactionEncoder()
+    D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
     slim = SLIM().fit(D)
 
-    new_D = pd.Series(['AB'] * 2 + ['ABD', 'AC', 'B'])
+    new_D = ['AB'] * 2 + ['ABD', 'AC', 'B']
+    new_D = te.fit_transform(new_D)
 
     probas = slim.predict_proba(new_D)
     assert probas.dtype == np.float32
@@ -231,6 +282,3 @@ def test_predict_proba():
         decimal=2
     )
 
-def test_get_codetable():  # FIXME : .get_codetable() be replace by self.codetable
-    slim = SLIM()
-    slim.get_codetable()
