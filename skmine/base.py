@@ -1,10 +1,30 @@
 """Base classes for all miners."""
+# pylint: disable= unused-argument
 
 from abc import ABC
 from abc import abstractmethod
 
 import inspect
 
+def _get_tags(self):
+    return {
+        'non_deterministic': False,
+        'requires_positive_X': False,
+        'requires_positive_y': False,
+        'X_types': ['2darray'],
+        'poor_score': False,
+        'no_validation': False,
+        'multioutput': False,
+        'allow_nan': False,
+        'stateless': False,
+        'multilabel': False,
+        '_skip_test': False,
+        '_xfail_checks': False,
+        'multioutput_only': False,
+        'binary_only': False,
+        'requires_fit': True,
+        'requires_y': False
+    }
 
 class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
@@ -14,6 +34,7 @@ class BaseMiner(ABC):
         """Fit method to be implemented."""
         pass
 
+    _get_tags = _get_tags
 
     @classmethod
     def _get_param_names(cls):
@@ -34,7 +55,7 @@ class BaseMiner(ABC):
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
 
-    def get_params(self):
+    def get_params(self, deep=False):
         """
         Get parameters for this estimator.
         Returns
