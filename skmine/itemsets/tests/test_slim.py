@@ -10,10 +10,14 @@ from roaringbitmap import RoaringBitmap
 import pandas as pd
 import numpy as np
 
-@pytest.fixture
-def D():
+def dense_D():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     D = TransactionEncoder().fit_transform(D)
+    return D
+
+def sparse_D():
+    D = ['ABC'] * 5 + ['AB', 'A', 'B']
+    D = TransactionEncoder(sparse_output=True).fit_transform(D)
     return D
 
 def test_make_cotetable():
@@ -24,6 +28,7 @@ def test_make_cotetable():
         pd.Series([7, 7, 5], index=['A', 'B', 'C'])
     )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_1(D):
     isets = list(map(frozenset, [
         'ABC', 'A', 'B', 'C',
@@ -35,6 +40,7 @@ def test_cover_1(D):
         covers.map(len),
     )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_2(D):
     isets = list(map(frozenset, [
         'ABC', 'AB', 'A', 'B', 'C',
@@ -59,6 +65,7 @@ def test_cover_3():
         covers.map(len),
     )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_4(D):
     isets = list(map(frozenset, [
         'BC', 'AB', 'A', 'B', 'C',
@@ -117,7 +124,7 @@ def test_cover_order_pos_1():
     # empty dict because checking supports was not necessary
     assert not slim._supports
 
-
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_order_pos_2(D):
     slim = SLIM()
     slim._prefit(D)
@@ -130,8 +137,9 @@ def test_cover_order_pos_2(D):
     assert pos == 1
     assert cand in slim._supports.keys()
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_order_pos_support_needed(D):
-    """support computation is needed to get the position in cover order"""
+    "support computation is needed to get the position in cover order"
     slim = SLIM()
     slim._prefit(D)
     codetable = ['ABC', 'B', 'C']
@@ -155,6 +163,7 @@ def test_prefit():
     assert slim.codetable.dtype == np.object
     assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
@@ -166,6 +175,7 @@ def test_get_standard_size_1(D):
         check_less_precise=2
     )
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
@@ -177,7 +187,7 @@ def test_get_standard_size_2(D):
         check_less_precise=2
     )
 
-
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
@@ -192,7 +202,7 @@ def test_compute_sizes_1(D):
     np.testing.assert_almost_equal(data_size, 12.4, 2)
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
-
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
@@ -206,21 +216,26 @@ def test_compute_sizes_2(D):
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_fit_no_pruning(D):
     slim = SLIM(pruning=False)
     self = slim.fit(D)
     assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_fit(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D)
     assert self._codetable.index.tolist() == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
+
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_fit_ndarray(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D.values)
     assert self._codetable.index.tolist() == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('AB')]]
@@ -236,6 +251,7 @@ def test_prune(D):
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
 
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = slim.codetable.loc[[frozenset('ABC')]]
