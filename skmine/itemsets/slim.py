@@ -33,11 +33,12 @@ def cover(itemsets: list, D: pd.DataFrame):
     for iset in itemsets:
         mask = RoaringBitmap()
         for key in stacks:
-            if iset.issubset(key):
+            if not iset.isdisjoint(key):
                 mask |= stacks[key]
         mask.flip_range(0, len(D))  # reverse the index
         _D = D.iloc[mask]
-        bools = _D[iset].all(axis=1)
+        bools = _D[iset]
+        bools = bools.all(axis=1)
         #where = np.where(bools)[0]
         where = bools[bools].index
         rb = RoaringBitmap(where)

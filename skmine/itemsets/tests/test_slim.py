@@ -59,6 +59,17 @@ def test_cover_3():
         covers.map(len),
     )
 
+def test_cover_4(D):
+    isets = list(map(frozenset, [
+        'BC', 'AB', 'A', 'B', 'C',
+    ]))
+
+    covers = cover(isets, D)
+    pd.testing.assert_series_equal(
+        pd.Series([5, 1, 6, 1, 0], index=isets),
+        covers.map(len),
+    )
+
 def test_generate_candidate_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     codetable = make_codetable(D)
