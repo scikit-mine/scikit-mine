@@ -90,8 +90,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     --------
     >>> import pandas as pd
     >>> from skmine.itemsets import SLIM
+    >>> from skmine.preprocessing import TransactionEncoder
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> D = pd.Series(D)
+    >>> D = TransactionEncoder().fit_transform(D)
     >>> SLIM().fit(D)                       # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
@@ -188,17 +189,22 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         return self
 
     def predict_proba(self, D):
-        """make predictions on a new transactional data
+        """Make predictions on a new transactional data
 
-        This encode transactions with the current codetable.
+        This encodes transactions with the current codetable.
+
+        Setting ``pruning`` to False when creating the model
+        is recommended to make predictions.
 
         Example
         -------
+        >>> from skmine.preprocessing import TransactionEncoder
         >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> D = pd.Series(D)
-        >>> new_D = pd.Series([['cookies', 'butter']])
-        >>> slim = SLIM(pruning=False).fit(D)           # doctest: +SKIP
-        >>> slim.predict_proba(new_D)                   # doctest: +SKIP
+        >>> te = TransactionEncoder()
+        >>> D = te.fit_transform(D)
+        >>> new_D = te.transform([['cookies', 'butter']])
+        >>> slim = SLIM(pruning=False).fit(D)
+        >>> slim.predict_proba(new_D)
         0    0.4
         dtype: float32
         """

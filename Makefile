@@ -10,7 +10,8 @@ clean: clean_doc
 	$(RM) **/*.cpp
 	$(RM) **/*.so
 	find . -name "*.pyc" -exec rm -f {} \;
-	$(RM) dist/ build/ *.egg-info
+	$(RM) -rf dist/ build/ *.egg-info
+	$(RM) -rf **/__pycache__/
 
 
 clean_doc:
