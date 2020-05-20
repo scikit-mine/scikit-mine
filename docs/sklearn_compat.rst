@@ -1,5 +1,3 @@
-. highlight:: shell
-
 ===============================
 Compatibility with Scikit-Learn
 ===============================
@@ -20,7 +18,7 @@ of symbols in our learning processes.
 
 Preprocessing
 -------------
-The Preprocessing module implements a set of Transformers/Encoders
+The :ref:`preprocessing` module implements a set of Transformers/Encoders
 to get you from raw data to a more advanced, structured kind of data : 
 the kind a data that is easily manageable and prone to give you the best performance.
 
@@ -28,8 +26,9 @@ Sometimes *scikit-learn* provides us the tools we exactly need, sometimes not.
 **Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
 in a fully scikit-learn compatible way**.
 
-The *preprocessing* module is designed to take all of the burden off you, and manage ingestion
-in a smooth way : use it !!
+As an example, consider `this tutorial <tutorials/itemsets/SLIM.ipynb>`_
+in which we use a **TransactionEncoder** to easily ingest raw data,
+presented in the form of Python iterators.
 
 
 Pipelines
