@@ -39,7 +39,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
-    <link rel="prev" title="Datasets" href="datasets.html" /> 
+    <link rel="prev" title="Preprocessing" href="preprocessing.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Itemsets</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#lcm">LCM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#slim">SLIM</a></li>
@@ -106,6 +107,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 </ul>
 
             
@@ -234,38 +239,17 @@ Processes are preffered over threads.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_chess</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">chess</span> <span class="o">=</span> <span class="n">fetch_chess</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span> <span class="o">=</span> <span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span> <span class="o">=</span> <span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>      
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>                         
 <span class="go">    itemset support</span>
 <span class="go">0      (58)    3195</span>
 <span class="go">1  (11, 58)    2128</span>
 <span class="go">2  (15, 58)    2025</span>
 <span class="go">3  (17, 58)    2499</span>
 <span class="go">4  (21, 58)    2224</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span><span class="p">[</span><span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">]</span>  <span class="c1"># only keeps itemsets longer than 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span><span class="p">[</span><span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">]</span>  
 </pre></div>
 </div>
-<dl class="py method">
-<dt id="skmine.itemsets.LCM.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>fit LCM on the transactional database
-This simply iterates over transactions of D in order to keep
-track of every item and transactions ids related</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database
-Where every entry contain singular items
-Items must be both hashable and comparable</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a reference to the model itself</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.fit_discover">
 <code class="sig-name descname">fit_discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit_discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit_discover" title="Permalink to this definition">¶</a></dt>
@@ -310,7 +294,7 @@ Default to False, will return supports instead</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">LCM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>                 
 <span class="go">    itemset  support</span>
 <span class="go">0     (2, 5)        3</span>
 <span class="go">1  (2, 3, 5)        2</span>
@@ -320,23 +304,20 @@ Default to False, will return supports instead</p></li>
 
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.fit_transform">
-<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">sort</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>fit LCM on the transactional database, and return the set of
-closed itemsets in this database, with respect to the minium support.</p>
-<p>This basically calls the <code class="docutils literal notranslate"><span class="pre">fit_discover</span></code> method and one-hot-encode
-the resulting patterns. This makes LCM a possible preprocessing step
-in a <code class="docutils literal notranslate"><span class="pre">scikit-learn</span> <span class="pre">pipeline</span></code>.</p>
+<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit LCM on the transactional database, and encode the frequencies
+of the resulting patterns in a tabular format.</p>
+<p>This makes LCM a possible preprocessing step, compatible with <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code></p>
+<p class="rubric">Notes</p>
+<p>Cells in the result will contain frequencies of patterns. Note that this process
+is somehow similar to Term-Frequency encoding, but operates on co-occuring terms
+instead of singular terms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database
-Where every entry contain singular items
-Items must be both hashable and comparable</p></li>
-<li><p><strong>sort</strong> (<em>bool</em>) – if True, columns will be sorted by decreasing order of support</p></li>
-</ul>
+<dd class="field-odd"><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database. Items must be both hashable and comparable</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>One-hot-encoded itemsets</strong> – A boolean DataFrame with itemsets as columns, and transactions as rows</p>
+<dd class="field-even"><p>A DataFrame with itemsets as columns, and transactions as rows</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
@@ -346,11 +327,11 @@ Items must be both hashable and comparable</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">LCM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">   (2, 5)  (2, 3, 5)</span>
-<span class="go">0       1          1</span>
-<span class="go">1       1          1</span>
-<span class="go">2       1          0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>                
+<span class="go">    2  3  5  # columns are single items w.r.t to the minium support</span>
+<span class="go">0   2  2  2  # (2, 3, 5) has length 3 but support of 2</span>
+<span class="go">1   2  2  2  # (2, 3, 5) has length 3 but support of 2</span>
+<span class="go">2   3  0  3  # (2, 5) has length 2 but support of 3</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -389,19 +370,14 @@ to more accurate predictions on average.</p></li>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-<span class="go">    (milk, cookies, bananas)       [1]</span>
-<span class="go">    (butter, cookies, tea)         [2]</span>
-<span class="go">    (milk, bananas)             [0, 4]</span>
-<span class="go">    (tea)                       [3, 4]</span>
-<span class="go">    dtype: object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>                       
+<span class="go">(butter, tea)         [2]</span>
+<span class="go">(milk, bananas)    [0, 1]</span>
+<span class="go">(cookies)          [1, 2]</span>
+<span class="go">dtype: object</span>
 </pre></div>
 </div>
 <p class="rubric">References</p>
@@ -417,7 +393,7 @@ to more accurate predictions on average.</p></li>
 </dl>
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit SLIM on a transactional dataset</p>
 <p>This generate new candidate patterns and add those which improve compression,
 iteratibely refining the <code class="docutils literal notranslate"><span class="pre">self.codetable</span></code></p>
@@ -426,20 +402,19 @@ iteratibely refining the <code class="docutils literal notranslate"><span class=
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.predict_proba">
 <code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.predict_proba"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.predict_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>make predictions on a new transactional data</p>
-<p>This encode transactions with the current codetable.</p>
+<dd><p>Make predictions on a new transactional data</p>
+<p>This encodes transactions with the current codetable.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">pruning</span></code> to False when creating the model
+is recommended to make predictions.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">],</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">te</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">transform</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
-<span class="go">0    0.333333</span>
+<span class="go">0    0.4</span>
 <span class="go">dtype: float32</span>
 </pre></div>
 </div>
@@ -467,16 +442,10 @@ and finally a boolean stating if compression improved</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.itemsets.SLIM.get_codetable">
-<code class="sig-name descname">get_codetable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.get_codetable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.get_codetable" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>codetable containing patterns and ids of transactions in which they are used</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>pd.Series</p>
-</dd>
-</dl>
+<dt id="skmine.itemsets.SLIM.codetable">
+<em class="property">property </em><code class="sig-name descname">codetable</code><a class="headerlink" href="#skmine.itemsets.SLIM.codetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns: codetable containing patterns and ids of transactions in which they are used
+:rtype: pd.Series</p>
 </dd></dl>
 
 <dl class="py method">
@@ -506,6 +475,34 @@ and finally a boolean stating if compression improved</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">deep</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.itemsets.SLIM.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.
+:returns: <strong>params</strong> – Parameter names mapped to their values.
+:rtype: mapping of string to any</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.set_params">
+<code class="sig-name descname">set_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.itemsets.SLIM.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.
+The method works on simple estimators as well as on nested objects
+(such as pipelines). The latter have parameters of the form
+<code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s possible to update each
+component of a nested object.
+:param **params: Estimator parameters.
+:type **params: dict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -522,7 +519,7 @@ and finally a boolean stating if compression improved</p>
         <a href="../tutorials/datasets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="datasets.html" class="btn btn-neutral float-left" title="Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="preprocessing.html" class="btn btn-neutral float-left" title="Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

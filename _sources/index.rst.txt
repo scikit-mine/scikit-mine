@@ -21,3 +21,5 @@ Welcome to scikit-mine's documentation!
 .. toctree::
    :maxdepth: 1
    :caption: About
+
+   sklearn_compat.rst

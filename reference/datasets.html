@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Itemsets" href="itemsets.html" />
+    <link rel="next" title="Preprocessing" href="preprocessing.html" />
     <link rel="prev" title="API Reference" href="index.html" /> 
 </head>
 
@@ -97,6 +97,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#utils">utils</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 </ul>
 </li>
@@ -108,6 +109,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 </ul>
 
             
@@ -594,7 +599,7 @@ and <code class="docutils literal notranslate"><span class="pre">fetch_instacart
 </div>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">fetch_instacart</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">fetch_instacart</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="s1">&#39;~/scikit_mine_data/&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">fetch_instacart</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="s1">&#39;~/scikit_mine_data/&#39;</span><span class="p">)</span>  
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -637,7 +642,7 @@ for reproducible output across multiple function calls.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=.</span><span class="mi">25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=.</span><span class="mi">25</span><span class="p">)</span>  
 <span class="go">0    [0, 6, 18, 10, 1, 12]</span>
 <span class="go">1          [2, 18, 10, 14]</span>
 <span class="go">2                [4, 5, 1]</span>
@@ -703,7 +708,7 @@ for reproducible output across multiple function calls.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_connect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>  
 <span class="go">{&#39;n_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;n_transactions&#39;: 3196, &#39;density&#39;: 0.4933}</span>
 </pre></div>
 </div>
@@ -736,7 +741,7 @@ variable or programmatically by giving an explicit folder path.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="itemsets.html" class="btn btn-neutral float-right" title="Itemsets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="preprocessing.html" class="btn btn-neutral float-right" title="Preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
