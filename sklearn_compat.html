@@ -194,7 +194,6 @@
     text-align: unset;
 }
 </style>
-<p>. highlight:: shell</p>
 <div class="section" id="compatibility-with-scikit-learn">
 <h1>Compatibility with Scikit-Learn<a class="headerlink" href="#compatibility-with-scikit-learn" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> is the golden standard for general
@@ -208,14 +207,15 @@ To this purpose, we sometimes need to extend scikit-learn capabilities to tightl
 of symbols in our learning processes.</p>
 <div class="section" id="preprocessing">
 <h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>The Preprocessing module implements a set of Transformers/Encoders
+<p>The <a class="reference internal" href="reference/preprocessing.html#preprocessing"><span class="std std-ref">Preprocessing</span></a> module implements a set of Transformers/Encoders
 to get you from raw data to a more advanced, structured kind of data :
 the kind a data that is easily manageable and prone to give you the best performance.</p>
 <p>Sometimes <em>scikit-learn</em> provides us the tools we exactly need, sometimes not.
 <strong>Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
 in a fully scikit-learn compatible way</strong>.</p>
-<p>The <em>preprocessing</em> module is designed to take all of the burden off you, and manage ingestion
-in a smooth way : use it !!</p>
+<p>As an example, consider <a class="reference internal" href="tutorials/itemsets/SLIM.html"><span class="doc">this tutorial</span></a>
+in which we use a <strong>TransactionEncoder</strong> to easily ingest raw data,
+presented in the form of Python iterators.</p>
 </div>
 <div class="section" id="pipelines">
 <h2>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this headline">¶</a></h2>
