@@ -78,8 +78,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     Parameters
     ----------
-    n_iter_no_change: int, default=5
+    n_iter_no_change: int, default=3
         Number of iteration to count before stopping optimization.
+    tol: float, default=2.0
+        Tolerance for the early stopping, in bits.
+        When the compression size is not improving by at least tol for n_iter_no_change iterations,
+        the training stops.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
@@ -108,15 +112,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=5, pruning=True):
+    def __init__(self, *, n_iter_no_change=3, tol=2.0, pruning=True):
         self.n_iter_no_change = n_iter_no_change
+        self.tol = tol
         self._standard_codetable = None
         self._codetable = pd.Series([], dtype='object')
         self._supports = lazydict(self._get_support)
         self._model_size = None          # L(CT|D)
         self._data_size = None           # L(D|CT)
         self.pruning = pruning
-        # TODO : add eps parameter for smarter early stopping
+
 
     def _get_support(self, itemset):
         U = reduce(RoaringBitmap.union, self._standard_codetable.loc[itemset])
@@ -175,7 +180,10 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             candidates = generate_candidates(self._codetable, stack=seen_cands)
             for cand in candidates:
                 CTc, data_size, model_size = self.evaluate(cand, D)
-                if data_size + model_size < self._data_size + self._model_size:
+                diff = (self._model_size + self._data_size) - (data_size + model_size)
+
+                is_better = diff > self.tol
+                if diff > 0:  # early stopping in outer loop
                     if self.pruning:
                         prune_set = CTc.drop([cand])
                         prune_set = prune_set[prune_set.map(len) < self._codetable.map(len)]
@@ -187,8 +195,6 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     self._codetable = CTc
                     self._data_size = data_size
                     self._model_size = model_size
-
-                    is_better = True
 
                 seen_cands.add(cand)
 
