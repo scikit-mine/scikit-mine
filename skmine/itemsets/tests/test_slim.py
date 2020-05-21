@@ -112,8 +112,7 @@ def test_generate_candidate_stack():
 
 
 def test_cover_order_pos_1():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    slim = SLIM()
+    slim = SLIM()._prefit(dense_D())
     codetable = ['A', 'B', 'C']
     codetable = list(map(frozenset, codetable))
     cand = frozenset('ABC')
@@ -121,13 +120,11 @@ def test_cover_order_pos_1():
     pos = slim._get_cover_order_pos(codetable, cand)
 
     assert pos == 0
-    # empty dict because checking supports was not necessary
-    assert not slim._supports
+    assert cand in slim._supports.keys()
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_order_pos_2(D):
+def test_cover_order_pos_2():
     slim = SLIM()
-    slim._prefit(D)
+    slim._prefit(dense_D())
     codetable = ['ABC', 'B', 'C']
     codetable = list(map(frozenset, codetable))
     cand = frozenset('AB')
@@ -136,6 +133,25 @@ def test_cover_order_pos_2(D):
 
     assert pos == 1
     assert cand in slim._supports.keys()
+
+
+def test_cover_order_pos_3():
+    """ lower size but higher support"""
+    slim = SLIM()
+    slim._supports = {
+        'ABC': 5, 
+        'AB': 7,
+        'BC': 8,
+        'B': 10,
+    }
+    codetable = ['ABC', 'BC', 'B']
+    cand = 'AB'
+
+    pos = slim._get_cover_order_pos(codetable, cand)
+
+    assert pos == 2
+    assert cand in slim._supports.keys()
+
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_order_pos_support_needed(D):

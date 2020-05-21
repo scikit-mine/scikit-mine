@@ -6,6 +6,7 @@
 from collections import defaultdict
 from functools import reduce
 from itertools import chain
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -78,12 +79,13 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     Parameters
     ----------
-    n_iter_no_change: int, default=3
+    n_iter_no_change: int, default=5
         Number of iteration to count before stopping optimization.
-    tol: float, default=2.0
+    tol: float, default=None
         Tolerance for the early stopping, in bits.
         When the compression size is not improving by at least tol for n_iter_no_change iterations,
         the training stops.
+        Default to None, will be automatically computed considering the size of input data.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
@@ -112,7 +114,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=3, tol=2.0, pruning=True):
+    def __init__(self, *, n_iter_no_change=5, tol=None, pruning=True, verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self._standard_codetable = None
@@ -121,7 +123,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         self._model_size = None          # L(CT|D)
         self._data_size = None           # L(D|CT)
         self.pruning = pruning
-
+        self.verbose = verbose
 
     def _get_support(self, itemset):
         U = reduce(RoaringBitmap.union, self._standard_codetable.loc[itemset])
@@ -129,11 +131,18 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
     def _get_cover_order_pos(self, codetable, cand):
         pos = 0
-        while len(cand) < len(codetable[pos]):
+        while len(codetable[pos]) > len(cand):
             pos += 1
-            if self._supports[cand] >= self._supports[codetable[pos - 1]]:
+        while pos < len(codetable) and self._supports[codetable[pos]] > self._supports[cand]:
+            if len(codetable[pos]) < len(cand):
                 break
-            # TODO : add lexicographic order
+            pos += 1
+        while pos < len(codetable) and codetable[pos] < cand:
+            if len(codetable[pos]) < len(cand):
+                break
+            if self._supports[codetable[pos]] < self._supports[cand]:
+                break
+            pos += 1
         return pos
 
     def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
@@ -166,15 +175,20 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         is_better = False
         seen_cands = set()
 
+        tol = self.tol or len(D) / 10
+
         while n_iter_no_change < self.n_iter_no_change:
             is_better = False
             candidates = generate_candidates(self._codetable, stack=seen_cands)
             for cand in candidates:
+                n_iter_no_change_inner = 0
                 CTc, data_size, model_size = self.evaluate(cand, D)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
-                is_better = diff > self.tol
-                if diff > 0:  # early stopping in outer loop
+                seen_cands.add(cand)
+
+                is_better = diff > tol
+                if is_better:
                     if self.pruning:
                         prune_set = CTc.drop([cand])
                         prune_set = prune_set[prune_set.map(len) < self._codetable.map(len)]
@@ -186,8 +200,15 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     self._codetable = CTc
                     self._data_size = data_size
                     self._model_size = model_size
-
-                seen_cands.add(cand)
+                    if self.verbose:
+                        fmt = "data size : {:.2f} | model size : {:.2f}"
+                        print(fmt.format(data_size, model_size))
+                else:
+                    n_iter_no_change_inner += 1
+                    if n_iter_no_change_inner >= n_iter_no_change:
+                        if self.verbose:
+                            print('no improvement for {} iterations'.format(n_iter_no_change_inner))
+                        break
 
             if not is_better:
                 n_iter_no_change += 1
@@ -247,6 +268,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         CTc_index = self._codetable.index.insert(cand_pos, candidate)
 
         CTc = cover(CTc_index, D)
+        if self.verbose and not CTc.index.map(len).is_monotonic_decreasing:
+            warnings.warn('codetable violates Standard Cover Order')
         data_size, model_size = self.compute_sizes(CTc)
 
         return CTc, data_size, model_size
