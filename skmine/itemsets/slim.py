@@ -214,7 +214,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                         print(fmt.format(data_size, model_size))
                 else:
                     n_iter_no_change_inner += 1
-                    if n_iter_no_change_inner >= n_iter_no_change:
+                    if n_iter_no_change_inner >= self.n_iter_no_change:
                         if self.verbose:
                             print('no improvement for {} iterations'.format(n_iter_no_change_inner))
                         break
