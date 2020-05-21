@@ -264,9 +264,9 @@ def test_prune_empty(D):
 
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
-
-def test_predict_proba():
-    te = TransactionEncoder()
+@pytest.mark.parametrize('sparse', [False, True])
+def test_predict_proba(sparse):
+    te = TransactionEncoder(sparse_output=sparse)
     D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
     slim = SLIM().fit(D)
 
