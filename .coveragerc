@@ -24,5 +24,6 @@ exclude_lines =
     except ImportError
     if self.verbose
     _get_tags
+    warnings
 
 show_missing = True
