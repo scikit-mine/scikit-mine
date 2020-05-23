@@ -30,22 +30,22 @@ def cover(itemsets: list, D: pd.DataFrame):
     """ assert itemset are sorted in Standard Cover Order
     D must be a pandas DataFrame containing boolean values
     """
-    stacks = dict()
-    for iset in itemsets:
-        mask = RoaringBitmap()
-        for key in stacks:
-            if not iset.isdisjoint(key):
-                mask |= stacks[key]
-        mask.flip_range(0, len(D))  # reverse the index
-        _D = D.iloc[mask]
-        bools = _D[iset]
-        bools = bools.all(axis=1)
-        #where = np.where(bools)[0]
-        where = bools[bools].index
-        rb = RoaringBitmap(where)
-        stacks[iset] = rb
+    covers = list()
+    mat = D.values
 
-    return pd.Series(stacks)
+    _itemsets = list(map(D.columns.get_indexer, itemsets))
+
+    for iset in _itemsets:
+        parents = (v for k, v in zip(_itemsets, covers) if not set(iset).isdisjoint(k))
+        rows_left = reduce(RoaringBitmap.union, parents, RoaringBitmap())
+        rows_left.flip_range(0, len(D))
+        _mat = mat[rows_left][:, iset]
+        bools = _mat.all(axis=1)
+        rows_where = np.where(bools)[0]
+        rows_where += rows_left.min()  # pad indexes
+        covers.append(RoaringBitmap(rows_where))
+
+    return pd.Series(covers, index=itemsets)
 
 
 def generate_candidates(codetable, stack=None):
