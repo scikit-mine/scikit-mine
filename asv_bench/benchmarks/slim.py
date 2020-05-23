@@ -19,7 +19,7 @@ class SLIMBench:
         self.slim.fit(self.transactions)
 
     def mem_fit(self, *args):
-        self.slim.fit(self.transactions)
+        return self.slim.fit(self.transactions)
 
     def track_data_size(self, *args):
-        return self.slim.fit(self.transactions).data_size
+        return self.slim.fit(self.transactions)._data_size
