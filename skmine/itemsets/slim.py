@@ -52,7 +52,7 @@ def generate_candidates(codetable, stack=None):
     """
     assumes codetable is sorted in Standard Cover Order
     """
-    res = list()
+    res = dict()
     for idx, (X, X_usage) in enumerate(codetable.iteritems()):
         Y = codetable.iloc[idx + 1:]
         XY_usage = Y.apply(lambda e: e.intersection_len(X_usage)).astype(np.uint32)
@@ -62,8 +62,14 @@ def generate_candidates(codetable, stack=None):
             XY_usage = XY_usage[~XY_usage.index.isin(stack)]
         if not XY_usage.empty:
             best_XY = XY_usage.idxmax()
-            res.append(best_XY)
+            usage = XY_usage[best_XY]
+            res[best_XY] = usage
+
+    # sort on descending order of estimated gain
+    res = pd.Series(res).sort_values(ascending=False)
+
     return res
+
 
 class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     """SLIM: Directly Mining Descriptive Patterns
@@ -189,8 +195,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         while n_iter_no_change < self.n_iter_no_change:
             is_better = False
             candidates = generate_candidates(self._codetable, stack=seen_cands)
-            for cand in candidates:
-                n_iter_no_change_inner = 0
+            for cand in candidates.index:
                 CTc, data_size, model_size = self.evaluate(cand, D)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
@@ -212,15 +217,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     if self.verbose:
                         fmt = "data size : {:.2f} | model size : {:.2f}"
                         print(fmt.format(data_size, model_size))
+
                 else:
-                    n_iter_no_change_inner += 1
-                    if n_iter_no_change_inner >= self.n_iter_no_change:
-                        if self.verbose:
-                            print('no improvement for {} iterations'.format(n_iter_no_change_inner))
-                        break
+                    is_better = False
 
             if not is_better:
+                print('n_iter_no_change : {}'.format(n_iter_no_change))
                 n_iter_no_change += 1
+
+        if self.verbose:
+            print('{} candidates considered'.format(len(seen_cands)))
 
         return self
 

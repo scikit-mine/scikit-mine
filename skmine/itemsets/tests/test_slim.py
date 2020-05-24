@@ -82,20 +82,23 @@ def test_generate_candidate_1():
     codetable = make_codetable(D)
     codetable.index = codetable.index.map(lambda e: frozenset([e]))
     new_candidates = generate_candidates(codetable)
-    assert new_candidates == [frozenset('AB'), frozenset('BC')]
+    assert new_candidates.to_dict() == {
+        frozenset('AB'): 6,
+        frozenset('BC'): 5,
+    }
 
 def test_generate_candidate_2():
     usage = list(map(RoaringBitmap, [
-        range(7),
-        [7],
-        [8],
         range(6),
+        [6],
+        [7],
+        range(5),
     ]))
     index = list(map(frozenset, ['AB', 'A', 'B', 'C']))
     codetable = pd.Series(usage, index=index)
 
     new_candidates = generate_candidates(codetable)
-    assert new_candidates == [frozenset('ABC')]
+    assert new_candidates.to_dict() == {frozenset('ABC'): 5}
 
 def test_generate_candidate_stack():
     usage = list(map(RoaringBitmap, [
@@ -108,7 +111,7 @@ def test_generate_candidate_stack():
     codetable = pd.Series(usage, index=index)
 
     new_candidates = generate_candidates(codetable, stack={frozenset('AB')})
-    assert new_candidates == []
+    assert new_candidates.to_dict() == {}
 
 
 def test_cover_order_pos_1():
