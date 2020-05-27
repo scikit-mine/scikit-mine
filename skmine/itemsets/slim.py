@@ -154,7 +154,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             pos += 1
         return pos
 
-    def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
+    def _check_standard_cover_order(self, codetable):
+        index = codetable.index
+        order = zip(*(-index.map(len), -index.map(self._supports), index.tolist()))
+        order = pd.Series(order, index=index).sort_values(ascending=True)
+        return order.index.equals(codetable.index)
 
     def _prefit(self, D):
         sct_d = {k: RoaringBitmap(np.where(D[k])[0]) for k in D.columns}
@@ -279,7 +283,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         CTc = cover(CTc_index, D)
 
-        if self.verbose and not CTc.index.map(len).is_monotonic_decreasing:
+        if self.verbose and not self._check_standard_cover_order(CTc):
             warnings.warn('codetable violates Standard Cover Order')
 
         data_size, model_size = self.compute_sizes(CTc)
@@ -294,7 +298,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        return self._codetable[self._codetable.map(len) > 0]
+        codetable = self._codetable[self._codetable.index.map(len) > 1]  # pattern length g.t 1
+        codetable = codetable[codetable.map(len) > 0]   # non empty usages
+        return codetable
 
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""

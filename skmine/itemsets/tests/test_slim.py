@@ -142,7 +142,7 @@ def test_cover_order_pos_3():
     """ lower size but higher support"""
     slim = SLIM()
     slim._supports = {
-        'ABC': 5, 
+        'ABC': 5,
         'AB': 7,
         'BC': 8,
         'B': 10,
@@ -178,9 +178,9 @@ def test_prefit():
     slim._prefit(D)
     np.testing.assert_almost_equal(slim._model_size, 9.614, 3)
     np.testing.assert_almost_equal(slim._data_size, 29.798, 3)
-    assert len(slim.codetable) == 3
-    assert slim.codetable.dtype == np.object
-    assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
+    assert len(slim._codetable) == 3
+    assert slim._codetable.dtype == np.object
+    assert slim._codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_get_standard_size_1(D):
