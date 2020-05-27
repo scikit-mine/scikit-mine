@@ -77,6 +77,58 @@ def test_cover_4(D):
         covers.map(len),
     )
 
+
+def test_complex_evaluate():
+    """
+    A   B   C
+    A   B
+    A       C
+        B
+        B   C   D   E
+    A   B   C   D   E
+    """
+    slim = SLIM()
+    slim._codetable = pd.Series({
+        frozenset('ABC') : {0, 5},
+        frozenset('AB') : {1},
+        frozenset('BC') : {4},
+        frozenset('DE') : {4, 5},
+        frozenset('A') : {2},
+        frozenset('B') : {3},
+        frozenset('C') : {2},
+        frozenset('D') : {},
+        frozenset('E') : {},
+    }).map(RoaringBitmap)
+
+    slim._standard_codetable = pd.Series({
+        'A' : {0, 1, 2, 5},
+        'B' : {0, 1, 3, 4, 5},
+        'C' : {0, 2, 4, 5},
+        'D' : {4, 5},
+        'E' : {4, 5},
+    }).map(RoaringBitmap)
+
+    slim._codetable = slim.sort_standard_cover_order(slim._codetable)
+
+    cand = frozenset('CDE')
+    CTc, data_size, model_size = slim.evaluate(cand)
+
+    true_CTc = pd.Series({
+        frozenset('ABC') : {0, 5},
+        cand : {4},
+        frozenset('AB') : {1},
+        frozenset('BC') : {},
+        frozenset('DE') : {5},
+        frozenset('A') : {2},
+        frozenset('B') : {3, 4},
+        frozenset('C') : {2},
+        frozenset('D') : {},
+        frozenset('E') : {},
+    }).map(RoaringBitmap)
+
+    pd.testing.assert_series_equal(CTc, true_CTc)
+
+
 def test_generate_candidate_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     codetable = make_codetable(D)

@@ -48,6 +48,23 @@ def cover(itemsets: list, D: pd.DataFrame):
     return pd.Series(covers, index=itemsets)
 
 
+def cover_one(codetable, cand):
+    """
+    assumes codetable is already sorted in Standard Cover Order
+    """
+    cov = list()
+    stack = set()
+    for iset in codetable:
+        if not iset.isdisjoint(stack):
+            continue
+        if iset.issubset(cand):
+            cov.append(iset)  # TODO add index instead of element for performance
+            stack |= iset
+        if len(stack) >= len(cand):
+            break
+    return cov
+
+
 def generate_candidates(codetable, stack=None):
     """
     assumes codetable is sorted in Standard Cover Order
@@ -154,6 +171,19 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             pos += 1
         return pos
 
+    def _check_standard_cover_order(self, codetable):
+        index = codetable.index
+        order = zip(*(-index.map(len), -index.map(self._supports), index.tolist()))
+        order = pd.Series(order, index=index).sort_values(ascending=True)
+        return order.index.equals(codetable.index)
+
+    def sort_standard_cover_order(self, codetable):
+        index = codetable.index
+        order = zip(*(-index.map(len), -index.map(self._supports), index.tolist()))
+        order = pd.Series(order, index=index).sort_values(ascending=True)
+        codetable = codetable.reindex(order.index)
+        return codetable
+
     def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
 
     def _prefit(self, D):
@@ -199,7 +229,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             is_better = False
             candidates = generate_candidates(self._codetable, stack=seen_cands)
             for cand in candidates.index:
-                CTc, data_size, model_size = self.evaluate(cand, D)
+                CTc, data_size, model_size = self.evaluate(cand)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
                 seen_cands.add(cand)
@@ -271,7 +301,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         # positive sign on np.log2 to return negative distance : sklearn compat
         return np.log2(codes.astype(np.float32))
 
-    def evaluate(self, candidate, D):
+    def evaluate(self, candidate):
         """
         Evaluate ``candidate``, considering the current codetable and a dataset ``D``
 
@@ -279,8 +309,6 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         ----------
         candidate: frozenset
             a new candidate to be evaluated
-        D: pd.Series
-            a transactional dataset
 
         Returns
         -------
@@ -288,16 +316,43 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             updated (codetable, data size, model size
             and finally a boolean stating if compression improved
         """
-        cand_pos = self._get_cover_order_pos(self._codetable.index, candidate)
-        CTc_index = self._codetable.index.insert(cand_pos, candidate)
+        codetable = self._codetable
+        cand_pos = self._get_cover_order_pos(codetable.index, candidate)
 
-        CTc = cover(CTc_index, D)
+        prevs = codetable.iloc[:cand_pos]
+        prevs_subsets = prevs[prevs.index.map(lambda e: not e.isdisjoint(candidate))]
 
-        if self.verbose and not CTc.index.map(len).is_monotonic_decreasing:
+        # get original support from standard_codetable
+        cand_usage = reduce(RoaringBitmap.intersection, self._standard_codetable.loc[candidate])
+        # remove union of all non disjoint itemsets before it to get real usage
+        cand_usage -= reduce(RoaringBitmap.union, prevs_subsets.values, RoaringBitmap())
+
+        to_edit = codetable.iloc[cand_pos:].copy()  # we only edit elements from cand_pos to the end
+        subsets = to_edit.index[to_edit.index.map(candidate.issuperset)]
+        to_edit.loc[subsets] = to_edit.loc[subsets].map(lambda e: e - cand_usage)
+        # remove usage_list of cands from subsets
+
+        # `others` are not subsets of `candidate`, but `candidate` now cover some of theirs items,
+        # and uncovers others items
+        #others = to_edit.index[to_edit.index.map(lambda e: not e.isdisjoint(candidate))]
+
+        for idx, iset in enumerate(to_edit.index, start=1):
+            if iset.isdisjoint(candidate): continue
+            cov = cover_one(to_edit.index[idx:], iset - candidate)
+            to_edit[iset] -= cand_usage
+            for sub in cov:
+                to_edit[sub] |= cand_usage
+
+        CTc = prevs.append(pd.Series({candidate: cand_usage})).append(to_edit)
+
+        if not self._check_standard_cover_order(CTc):
             warnings.warn('codetable violates Standard Cover Order')
+            import pdb; pdb.set_trace()
 
         data_size, model_size = self.compute_sizes(CTc)
 
+        fmt = "DEBUG data size : {:.2f} | model size : {:.2f}"
+        print(fmt.format(data_size, model_size))
         return CTc, data_size, model_size
 
     @property
