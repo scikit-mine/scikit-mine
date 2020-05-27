@@ -63,7 +63,10 @@ def generate_candidates(codetable, stack=None):
         if not XY_usage.empty:
             best_XY = XY_usage.idxmax()
             usage = XY_usage[best_XY]
-            res[best_XY] = usage
+            if isinstance(usage, pd.Series):
+                res.update(usage.to_dict())
+            else:
+                res[best_XY] = usage
 
     # sort on descending order of estimated gain
     res = pd.Series(res).sort_values(ascending=False)
@@ -222,7 +225,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                     is_better = False
 
             if not is_better:
-                print('n_iter_no_change : {}'.format(n_iter_no_change))
+                if self.verbose:
+                    print('n_iter_no_change : {}'.format(n_iter_no_change))
                 n_iter_no_change += 1
 
         if self.verbose:
@@ -288,8 +292,10 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         CTc_index = self._codetable.index.insert(cand_pos, candidate)
 
         CTc = cover(CTc_index, D)
+
         if self.verbose and not CTc.index.map(len).is_monotonic_decreasing:
             warnings.warn('codetable violates Standard Cover Order')
+
         data_size, model_size = self.compute_sizes(CTc)
 
         return CTc, data_size, model_size
