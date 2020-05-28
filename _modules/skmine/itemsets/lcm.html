@@ -233,7 +233,7 @@
 <span class="sd">    4  (21, 58)    2224</span>
 <span class="sd">    &gt;&gt;&gt; patterns[patterns.itemset.map(len) &gt; 3]  # doctest: +SKIP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">min_supp</span>  <span class="c1"># provided by user</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span>
@@ -241,6 +241,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctr</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
     <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
         <span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">RoaringBitmap</span><span class="p">)</span>
@@ -291,8 +292,8 @@
 <span class="sd">        &gt;&gt;&gt; from skmine.itemsets import LCM</span>
 <span class="sd">        &gt;&gt;&gt; D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]</span>
 <span class="sd">        &gt;&gt;&gt; lcm = LCM(min_supp=2)</span>
-<span class="sd">        &gt;&gt;&gt; lcm.fit_discover(D)                 # doctest: +SKIP</span>
-<span class="sd">            itemset  support</span>
+<span class="sd">        &gt;&gt;&gt; lcm.fit_discover(D)</span>
+<span class="sd">             itemset  support</span>
 <span class="sd">        0     (2, 5)        3</span>
 <span class="sd">        1  (2, 3, 5)        2</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -364,7 +365,7 @@
     <span class="k">def</span> <span class="nf">_explore_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">):</span>
         <span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(),</span> <span class="n">tids</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">it</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;itemset&#39;</span><span class="p">,</span> <span class="s1">&#39;tids&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;LCM found </span><span class="si">{}</span><span class="s1"> new itemsets from item : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">item</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">df</span>
 
@@ -379,7 +380,8 @@
 
         <span class="k">if</span> <span class="n">max_k</span> <span class="ow">and</span> <span class="n">max_k</span> <span class="o">==</span> <span class="n">limit</span><span class="p">:</span>
             <span class="n">p_prime</span> <span class="o">=</span> <span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">}</span>  <span class="c1"># max_k has been consumed when calling next()</span>
-            <span class="k">yield</span> <span class="n">p_prime</span><span class="p">,</span> <span class="n">tids</span>
+            <span class="c1"># sorted items in ouput for better reproducibility</span>
+            <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p_prime</span><span class="p">)),</span> <span class="n">tids</span>
 
             <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span><span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>

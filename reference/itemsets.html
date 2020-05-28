@@ -208,7 +208,7 @@
 <h2>LCM<a class="headerlink" href="#lcm" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.LCM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linear time Closed item set Miner.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -294,8 +294,8 @@ Default to False, will return supports instead</p></li>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">LCM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>                 
-<span class="go">    itemset  support</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="go">     itemset  support</span>
 <span class="go">0     (2, 5)        3</span>
 <span class="go">1  (2, 3, 5)        2</span>
 </pre></div>
