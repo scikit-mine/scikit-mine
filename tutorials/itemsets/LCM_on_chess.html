@@ -484,8 +484,8 @@ Name: chess, dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 449 ms, sys: 362 ms, total: 811 ms
-Wall time: 9.98 s
+CPU times: user 493 ms, sys: 444 ms, total: 937 ms
+Wall time: 10 s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -546,29 +546,29 @@ Wall time: 9.98 s
   </thead>
   <tbody>
     <tr>
-      <th>14</th>
-      <td>(17, 25, 29, 58)</td>
-      <td>2179</td>
+      <th>12</th>
+      <td>(5, 7, 17, 58)</td>
+      <td>2204</td>
     </tr>
     <tr>
-      <th>17</th>
-      <td>(17, 29, 3, 58)</td>
-      <td>2272</td>
+      <th>14</th>
+      <td>(5, 9, 17, 58)</td>
+      <td>2088</td>
     </tr>
     <tr>
       <th>18</th>
-      <td>(25, 29, 3, 58)</td>
-      <td>2520</td>
+      <td>(5, 7, 21, 58)</td>
+      <td>2034</td>
     </tr>
     <tr>
       <th>22</th>
-      <td>(25, 29, 31, 58)</td>
-      <td>2220</td>
+      <td>(5, 7, 25, 58)</td>
+      <td>2539</td>
     </tr>
     <tr>
-      <th>23</th>
-      <td>(29, 3, 31, 58)</td>
-      <td>2360</td>
+      <th>24</th>
+      <td>(5, 9, 25, 58)</td>
+      <td>2365</td>
     </tr>
     <tr>
       <th>...</th>
@@ -576,14 +576,14 @@ Wall time: 9.98 s
       <td>...</td>
     </tr>
     <tr>
-      <th>68958</th>
-      <td>(40, 5, 52, 54)</td>
-      <td>2034</td>
+      <th>68956</th>
+      <td>(29, 40, 48, 52, 54)</td>
+      <td>2012</td>
     </tr>
     <tr>
-      <th>68959</th>
-      <td>(29, 40, 5, 52, 54)</td>
-      <td>2027</td>
+      <th>68957</th>
+      <td>(36, 40, 48, 52, 54)</td>
+      <td>2012</td>
     </tr>
     <tr>
       <th>68964</th>
@@ -652,47 +652,47 @@ Wall time: 9.98 s
       <td>3195</td>
     </tr>
     <tr>
-      <th>3749</th>
+      <th>8824</th>
       <td>(52,)</td>
       <td>3185</td>
     </tr>
     <tr>
-      <th>1118</th>
+      <th>2670</th>
       <td>(52, 58)</td>
       <td>3184</td>
     </tr>
     <tr>
-      <th>4498</th>
+      <th>10651</th>
       <td>(29,)</td>
       <td>3181</td>
     </tr>
     <tr>
-      <th>8</th>
+      <th>29</th>
       <td>(29, 58)</td>
       <td>3180</td>
     </tr>
     <tr>
-      <th>3757</th>
+      <th>8853</th>
       <td>(29, 52)</td>
       <td>3170</td>
     </tr>
     <tr>
-      <th>4506</th>
+      <th>10686</th>
       <td>(40,)</td>
       <td>3170</td>
     </tr>
     <tr>
-      <th>88</th>
+      <th>386</th>
       <td>(40, 58)</td>
       <td>3169</td>
     </tr>
     <tr>
-      <th>1126</th>
+      <th>2699</th>
       <td>(29, 52, 58)</td>
       <td>3169</td>
     </tr>
     <tr>
-      <th>3800</th>
+      <th>9036</th>
       <td>(40, 52)</td>
       <td>3159</td>
     </tr>
@@ -714,15 +714,6 @@ Wall time: 9.98 s
 <span class="n">lcm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/radon/miniconda3/envs/skmine/lib/python3.6/site-packages/joblib/externals/loky/process_executor.py:706: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
-  &#34;timeout or by a memory leak.&#34;, UserWarning
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -747,149 +738,149 @@ Wall time: 9.98 s
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>3</th>
+      <th>5</th>
+      <th>7</th>
+      <th>9</th>
       <th>11</th>
       <th>15</th>
       <th>17</th>
       <th>21</th>
       <th>25</th>
       <th>27</th>
-      <th>29</th>
-      <th>3</th>
-      <th>31</th>
-      <th>34</th>
       <th>...</th>
+      <th>54</th>
+      <th>56</th>
       <th>58</th>
       <th>60</th>
       <th>62</th>
       <th>64</th>
       <th>66</th>
-      <th>7</th>
       <th>70</th>
       <th>72</th>
       <th>74</th>
-      <th>9</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>2129</td>
+      <td>2004</td>
+      <td>2027</td>
+      <td>2050</td>
+      <td>2007</td>
+      <td>2050</td>
       <td>2026</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2035</td>
       <td>2003</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>2003</td>
-      <td>2008</td>
-      <td>2000</td>
+      <td>2134</td>
       <td>...</td>
+      <td>2012</td>
+      <td>2002</td>
       <td>2000</td>
-      <td>2005</td>
-      <td>2043</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2000</td>
-      <td>2005</td>
-      <td>2029</td>
       <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2000</td>
+      <td>2001</td>
+      <td>2007</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>2004</td>
+      <td>2027</td>
+      <td>2134</td>
+      <td>2007</td>
       <td>0</td>
       <td>2026</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2035</td>
       <td>2003</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>2003</td>
-      <td>2008</td>
-      <td>2000</td>
+      <td>2134</td>
       <td>...</td>
+      <td>2012</td>
+      <td>2002</td>
       <td>2000</td>
-      <td>2005</td>
-      <td>2043</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2000</td>
-      <td>2005</td>
-      <td>2029</td>
       <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2000</td>
+      <td>2001</td>
+      <td>2007</td>
     </tr>
     <tr>
       <th>2</th>
+      <td>2004</td>
+      <td>2027</td>
+      <td>2134</td>
+      <td>2007</td>
       <td>0</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2035</td>
       <td>2003</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>2003</td>
-      <td>2008</td>
-      <td>2000</td>
+      <td>2134</td>
       <td>...</td>
+      <td>2012</td>
+      <td>2002</td>
       <td>2000</td>
-      <td>2005</td>
-      <td>2043</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2000</td>
-      <td>2005</td>
-      <td>2029</td>
       <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2000</td>
+      <td>2001</td>
+      <td>2007</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>2129</td>
+      <td>2004</td>
+      <td>2027</td>
+      <td>2050</td>
+      <td>2007</td>
+      <td>2050</td>
       <td>2026</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2035</td>
       <td>2003</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>2003</td>
-      <td>2008</td>
-      <td>2000</td>
+      <td>2134</td>
       <td>...</td>
+      <td>2012</td>
+      <td>2002</td>
       <td>2000</td>
-      <td>2005</td>
-      <td>2043</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2000</td>
-      <td>2005</td>
-      <td>2029</td>
       <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2000</td>
+      <td>2001</td>
+      <td>2007</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>2129</td>
+      <td>2004</td>
+      <td>2027</td>
+      <td>2050</td>
+      <td>2007</td>
+      <td>2050</td>
       <td>2026</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2035</td>
       <td>2003</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>2003</td>
-      <td>2008</td>
-      <td>2000</td>
+      <td>2134</td>
       <td>...</td>
+      <td>2012</td>
+      <td>2002</td>
       <td>2000</td>
-      <td>2005</td>
-      <td>2043</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2005</td>
-      <td>2000</td>
-      <td>2005</td>
-      <td>2029</td>
       <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2001</td>
+      <td>2000</td>
+      <td>2001</td>
+      <td>2007</td>
     </tr>
     <tr>
       <th>...</th>
@@ -917,123 +908,123 @@ Wall time: 9.98 s
     </tr>
     <tr>
       <th>3191</th>
-      <td>2129</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
-      <td>0</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2000</td>
-      <td>...</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>2006</td>
+      <td>2027</td>
+      <td>2050</td>
       <td>2007</td>
+      <td>2050</td>
       <td>0</td>
-      <td>2006</td>
+      <td>2089</td>
+      <td>2035</td>
+      <td>0</td>
+      <td>2134</td>
+      <td>...</td>
+      <td>2002</td>
+      <td>2013</td>
       <td>2000</td>
       <td>0</td>
-      <td>2006</td>
-      <td>2009</td>
+      <td>2013</td>
+      <td>2036</td>
+      <td>0</td>
+      <td>2000</td>
+      <td>0</td>
+      <td>2013</td>
     </tr>
     <tr>
       <th>3192</th>
-      <td>2129</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
-      <td>0</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2000</td>
-      <td>...</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>2006</td>
+      <td>2027</td>
+      <td>2050</td>
       <td>2007</td>
+      <td>2050</td>
       <td>0</td>
-      <td>2006</td>
+      <td>2089</td>
+      <td>2035</td>
+      <td>0</td>
+      <td>2134</td>
+      <td>...</td>
+      <td>2002</td>
+      <td>2013</td>
       <td>2000</td>
       <td>0</td>
-      <td>2006</td>
-      <td>2009</td>
+      <td>2013</td>
+      <td>2036</td>
+      <td>0</td>
+      <td>2000</td>
+      <td>0</td>
+      <td>2013</td>
     </tr>
     <tr>
       <th>3193</th>
-      <td>2129</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
-      <td>0</td>
-      <td>2205</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>2001</td>
-      <td>2000</td>
-      <td>...</td>
-      <td>2000</td>
-      <td>0</td>
-      <td>2006</td>
+      <td>2027</td>
+      <td>2050</td>
       <td>2007</td>
+      <td>2050</td>
       <td>0</td>
-      <td>2006</td>
+      <td>2089</td>
+      <td>2035</td>
+      <td>0</td>
+      <td>2134</td>
+      <td>...</td>
+      <td>2002</td>
+      <td>2013</td>
       <td>2000</td>
       <td>0</td>
-      <td>2006</td>
-      <td>2009</td>
+      <td>2013</td>
+      <td>2036</td>
+      <td>0</td>
+      <td>2000</td>
+      <td>0</td>
+      <td>2013</td>
     </tr>
     <tr>
       <th>3194</th>
+      <td>0</td>
+      <td>2034</td>
+      <td>0</td>
+      <td>2007</td>
       <td>2129</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2089</td>
       <td>0</td>
       <td>2205</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
       <td>...</td>
-      <td>2025</td>
+      <td>2012</td>
+      <td>2068</td>
+      <td>2068</td>
       <td>0</td>
-      <td>2025</td>
-      <td>2112</td>
+      <td>2068</td>
+      <td>2101</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>2025</td>
-      <td>2077</td>
+      <td>2068</td>
     </tr>
     <tr>
       <th>3195</th>
+      <td>0</td>
+      <td>2034</td>
+      <td>0</td>
+      <td>2007</td>
       <td>2129</td>
       <td>0</td>
-      <td>2500</td>
-      <td>2225</td>
+      <td>2089</td>
+      <td>2089</td>
       <td>0</td>
       <td>2205</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2010</td>
-      <td>0</td>
       <td>...</td>
-      <td>2025</td>
+      <td>2012</td>
+      <td>2068</td>
+      <td>2068</td>
       <td>0</td>
-      <td>2025</td>
-      <td>2112</td>
+      <td>2068</td>
+      <td>2101</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>2025</td>
-      <td>2077</td>
+      <td>2068</td>
     </tr>
   </tbody>
 </table>

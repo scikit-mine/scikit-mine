@@ -213,6 +213,9 @@
         <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="n">s</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
+    <span class="k">try</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">l</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">pass</span>
+
     <span class="k">return</span> <span class="n">s</span></div>
 
 <div class="viewcode-block" id="fetch_chess"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_chess">[docs]</a><span class="k">def</span> <span class="nf">fetch_chess</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
