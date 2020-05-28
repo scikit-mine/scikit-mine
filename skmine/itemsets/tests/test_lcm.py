@@ -33,7 +33,7 @@ true_patterns = pd.DataFrame([  # from D with min_supp=3
         [{3}, 3],
 ], columns=['itemset', 'support'])
 
-true_patterns.loc[:, 'itemset'] = true_patterns.itemset.map(frozenset)
+true_patterns.loc[:, 'itemset'] = true_patterns.itemset.map(tuple)
 
 
 def test_lcm_fit():
@@ -52,7 +52,7 @@ def test_first_parent_limit_1():
 
     ## pattern = {4, 6} -> first parent OK
     itemset, tids = next(lcm._inner(frozenset([4, 6]), tids, limit), (None, None))
-    assert itemset == frozenset([1, 4, 6])
+    assert itemset == (1, 4, 6)
     assert len(tids) == 3
 
     # pattern = {} -> first parent fails
@@ -67,13 +67,13 @@ def test_first_parent_limit_2():
     # pattern = {} -> first parent OK
     tids = lcm.item_to_tids[2]
     itemset, tids = next(lcm._inner(frozenset(), tids, 2), (None, None))
-    assert itemset == frozenset([2])
+    assert itemset == (2,)
     assert len(tids) == 5
 
     # pattern = {4} -> first parent OK
     tids = lcm.item_to_tids[2] & lcm.item_to_tids[4]
     itemset, tids = next(lcm._inner(frozenset([4]), tids, 2), (None, None))
-    assert itemset == frozenset([2, 4])
+    assert itemset == (2, 4)
     assert len(tids) == 3
 
 
@@ -83,7 +83,7 @@ def test_first_parent_limit_3():
 
     tids = lcm.item_to_tids[3]
     itemset, tids = next(lcm._inner(frozenset(), tids, 3), (None, None))
-    assert itemset == frozenset([3])
+    assert itemset == (3,)
     assert len(tids) == 3
 
 def test_first_parent_limit_4():
@@ -92,7 +92,7 @@ def test_first_parent_limit_4():
 
     tids = lcm.item_to_tids[4]
     itemset, tids = next(lcm._inner(frozenset(), tids, 4), (None, None))
-    assert itemset == frozenset([4])
+    assert itemset == (4,)
     assert len(tids) == 5
 
 def test_first_parent_limit_5():
@@ -101,7 +101,7 @@ def test_first_parent_limit_5():
 
     tids = lcm.item_to_tids[5]
     itemset, tids = next(lcm._inner(frozenset(), tids, 5), (None, None))
-    assert itemset == frozenset([2, 5])
+    assert itemset == (2, 5)
     assert len(tids) == 4
 
 
@@ -111,7 +111,7 @@ def test_first_parent_limit_6():
 
     tids = lcm.item_to_tids[6]
     itemset, tids = next(lcm._inner(frozenset(), tids, 6), (None, None))
-    assert itemset == frozenset([4, 6])
+    assert itemset == (4, 6)
     assert len(tids) == 4
 
 def test_lcm_empty_fit():

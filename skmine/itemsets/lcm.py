@@ -68,7 +68,7 @@ class LCM():
     4  (21, 58)    2224
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
-    def __init__(self, *, min_supp=0.2, n_jobs=1):
+    def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self._min_supp = _check_min_supp(self.min_supp)
@@ -76,6 +76,7 @@ class LCM():
         self.n_transactions = 0
         self.ctr = 0
         self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def _fit(self, D):
         item_to_tids = defaultdict(RoaringBitmap)
@@ -126,8 +127,8 @@ class LCM():
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_discover(D)                 # doctest: +SKIP
-            itemset  support
+        >>> lcm.fit_discover(D)
+             itemset  support
         0     (2, 5)        3
         1  (2, 3, 5)        2
         """
@@ -199,7 +200,7 @@ class LCM():
     def _explore_item(self, item, tids):
         it = self._inner(frozenset(), tids, item)
         df = pd.DataFrame(data=it, columns=['itemset', 'tids'])
-        if not df.empty:
+        if self.verbose and not df.empty:
             print('LCM found {} new itemsets from item : {}'.format(len(df), item))
         return df
 
@@ -214,7 +215,8 @@ class LCM():
 
         if max_k and max_k == limit:
             p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
-            yield p_prime, tids
+            # sorted items in ouput for better reproducibility
+            yield tuple(sorted(p_prime)), tids
 
             candidates = self.item_to_tids.keys() - p_prime
             candidates = candidates[:candidates.bisect_left(limit)]

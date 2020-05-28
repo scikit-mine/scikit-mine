@@ -22,7 +22,7 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
     except ImportError
-    if self.verbose:
+    if self.verbose
     _get_tags
 
 show_missing = True
