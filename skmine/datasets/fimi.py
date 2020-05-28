@@ -48,6 +48,9 @@ def fetch_any(filename, data_home=None):
         s = pd.Series(it, name=name)
         s.to_pickle(filepath)
 
+    try: s = s.map(lambda l: list(map(int, l)))
+    except ValueError: pass
+
     return s
 
 def fetch_chess(data_home=None):
