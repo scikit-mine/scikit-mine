@@ -17,5 +17,5 @@ class TransactionEncoder(MultiLabelBinarizer):
             return pd.DataFrame.sparse.from_spmatrix(mat, columns=self.classes_)
         return pd.DataFrame(mat, columns=self.classes_)
 
-    def fit_transform(self, D):
+    def fit_transform(self, D, y=None):
         return self.fit(D).transform(D)

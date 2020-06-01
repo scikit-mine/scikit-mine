@@ -155,7 +155,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         iteratibely refining the ``self.codetable``
         """
         if not isinstance(D, pd.DataFrame):
+            if y is not None:  # SLIM is unsupervised, this is just for sklearn compatibility
+                mask = np.where(y.reshape(-1))[0]
+                D = D[mask]
             D = pd.DataFrame(D)
+        else:
+            if y is not None:  # SLIM is unsupervised, this is just for sklearn compatibility
+                mask = np.where(y.reshape(-1))[0]
+                D = D.iloc[mask]
+
+        D = D.reset_index(drop=True)  # positional indexing from 0
         self._prefit(D)
         n_iter_no_change = 0
         is_better = False
@@ -188,13 +197,17 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         return self
 
-    def predict_proba(self, D):
-        """Make predictions on a new transactional data
+    def decision_function(self, D):
+        """Compute covers on new data, and return code length
 
-        This encodes transactions with the current codetable.
+        This function function is named ``decision_funciton`` because code lengths
+        represent the distance between a point and the current codetable, i.e
+        the probability for this point to belong to the codetable.
+
+        The lower the better
 
         Setting ``pruning`` to False when creating the model
-        is recommended to make predictions.
+        is recommended to cover unseen data, and especially when building a classifier.
 
         Example
         -------
@@ -204,8 +217,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         >>> D = te.fit_transform(D)
         >>> new_D = te.transform([['cookies', 'butter']])
         >>> slim = SLIM(pruning=False).fit(D)
-        >>> slim.predict_proba(new_D)
-        0    0.4
+        >>> slim.decision_function(new_D)
+        0   -1.321928
         dtype: float32
         """
         if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
@@ -218,7 +231,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         ct_codes = codetable.map(len) / codetable.map(len).sum()
         codes = (mat * ct_codes).sum(axis=1)
-        return codes.astype(np.float32)
+        # positive sign on np.log2 to return negative distance : sklearn compat
+        return np.log2(codes.astype(np.float32))
 
     def evaluate(self, candidate, D):
         """

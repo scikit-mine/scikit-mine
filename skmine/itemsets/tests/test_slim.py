@@ -265,7 +265,7 @@ def test_prune_empty(D):
     assert new_codetable.index.tolist() == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
 
-def test_predict_proba():
+def test_decision_function():
     te = TransactionEncoder()
     D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
     slim = SLIM().fit(D)
@@ -273,12 +273,19 @@ def test_predict_proba():
     new_D = ['AB'] * 2 + ['ABD', 'AC', 'B']
     new_D = te.fit_transform(new_D)
 
-    probas = slim.predict_proba(new_D)
-    assert probas.dtype == np.float32
-    assert len(probas) == len(new_D)
+    dists = slim.decision_function(new_D)
+    assert dists.dtype == np.float32
+    assert len(dists) == len(new_D)
     np.testing.assert_array_almost_equal(
-        probas.values,
-        np.array([.44, .44, .44, .22, .22]),
+        dists.values,
+        np.array([-1.17, -1.17, -1.17, -2.17, -2.17]),
         decimal=2
     )
 
+def test_fit_sklearn():
+    D = dense_D()
+    y = np.array([1] * len(D))
+    slim = SLIM().fit(D, y)
+    assert slim._standard_codetable.index.tolist() == ['A', 'B', 'C']
+
+    slim = SLIM().fit(D.values, y)
