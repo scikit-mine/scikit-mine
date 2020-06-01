@@ -88,7 +88,7 @@ def test_complex_evaluate():
     A   B   C   D   E
     """
     slim = SLIM()
-    slim._codetable = pd.Series({
+    codetable = pd.Series({
         frozenset('ABC') : {0, 5},
         frozenset('AB') : {1},
         frozenset('BC') : {4},
@@ -108,10 +108,11 @@ def test_complex_evaluate():
         'E' : {4, 5},
     }).map(RoaringBitmap)
 
-    slim._codetable = slim.sort_standard_cover_order(slim._codetable)
+    codetable = slim._sort_standard_cover_order(codetable)
+    slim._codetable = codetable.copy(deep=True)  # FIXME
 
     cand = frozenset('CDE')
-    CTc, data_size, model_size = slim.evaluate(cand)
+    CTc, data_size, model_size, _ = slim.evaluate(cand)
 
     true_CTc = pd.Series({
         frozenset('ABC') : {0, 5},
@@ -119,14 +120,16 @@ def test_complex_evaluate():
         frozenset('AB') : {1},
         frozenset('BC') : {},
         frozenset('DE') : {5},
-        frozenset('A') : {2},
         frozenset('B') : {3, 4},
+        frozenset('A') : {2},
         frozenset('C') : {2},
         frozenset('D') : {},
         frozenset('E') : {},
     }).map(RoaringBitmap)
 
-    pd.testing.assert_series_equal(CTc, true_CTc)
+    pd.testing.assert_index_equal(CTc.index, true_CTc.index)
+    np.testing.assert_array_equal(CTc.values, true_CTc.values)
+    pd.testing.assert_series_equal(slim._codetable, codetable)  # assert not modified
 
 
 def test_generate_candidate_1():
