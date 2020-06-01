@@ -144,7 +144,7 @@
     {
      "data": {
       "text/plain": [
-       "(bananas, milk)    [0, 1, 4]\n",
+       "(milk, bananas)    [0, 1, 4]\n",
        "(tea)              [2, 3, 4]\n",
        "(cookies)             [1, 2]\n",
        "(butter)                 [2]\n",
@@ -158,7 +158,8 @@
    ],
    "source": [
     "slim = SLIM()\n",
-    "slim.fit(D)"
+    "slim.fit(D)\n",
+    "slim.codetable"
    ]
   },
   {
@@ -173,9 +174,9 @@
    "metadata": {},
    "source": [
     "----------\n",
-    "We define a new transactional dataset, we some unseen items inside\n",
-    "and call the ``predict_proba`` function. This basically computes the probability\n",
-    "of a given transaction to belong to the current codetable (Shannon Entropy)"
+    "### First \"predictions\" \n",
+    "\n",
+    "We define a new transactional dataset, and can call our ``decision_function`` on it. This will yield ``distances`` w.r.t the encoding scheme provided by our codetable"
    ]
   },
   {
@@ -294,25 +295,87 @@
    "cell_type": "code",
    "execution_count": 5,
    "metadata": {},
+   "outputs": [],
+   "source": [
+    "codes = slim.decision_function(new_D)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
    "outputs": [
     {
      "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>transaction</th>\n",
+       "      <th>distance</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>[bananas, milk]</td>\n",
+       "      <td>-1.58496</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>[milk, sirup, cookies]</td>\n",
+       "      <td>-2.16992</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>[butter, tea]</td>\n",
+       "      <td>-1.16992</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>[tea]</td>\n",
+       "      <td>-1.58496</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>[milk, bananas, tea]</td>\n",
+       "      <td>-0.584962</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
       "text/plain": [
-       "0    0.333333\n",
-       "1    0.222222\n",
-       "2    0.444444\n",
-       "3    0.333333\n",
-       "4    0.666667\n",
-       "dtype: float32"
+       "              transaction  distance\n",
+       "0         [bananas, milk]  -1.58496\n",
+       "1  [milk, sirup, cookies]  -2.16992\n",
+       "2           [butter, tea]  -1.16992\n",
+       "3                   [tea]  -1.58496\n",
+       "4    [milk, bananas, tea] -0.584962"
       ]
      },
-     "execution_count": 5,
+     "execution_count": 6,
      "metadata": {},
      "output_type": "execute_result"
     }
    ],
    "source": [
-    "slim.predict_proba(new_D)"
+    "pd.DataFrame([pd.Series(new_transactions), codes], index=['transaction', 'distance']).T"
    ]
   },
   {
@@ -321,12 +384,295 @@
    "source": [
     "---------------\n",
     "### Built-in interpretations\n",
+    "Now we can interpret codes for the new data, directly by **looking at the codetable inferred from training data**\n",
     "\n",
-    "* Entry 1 has the lowest probability to belong to the training data.\n",
-    "  You can see it contains `milk`, `sirup` and `cookies`. From the codetable we see `milk` and `cookies` are not    grouped together, while `sirup` and never been seen (we even get a warning from the preprocessing module)\n",
+    "First observations\n",
+    "\n",
+    "* Entry 1 has the highest distance w.r.t the encoding scheme.\n",
+    "  You can see it contains `milk`, `sirup` and `cookies`. From the codetable we see `milk` and `cookies` are not    grouped together, while `sirup` has never been seen (we even get a warning from the preprocessing module)\n",
     "  \n",
     "\n",
-    "*  Entry 4 has the highest probability. It contains `bananas` and `milk`, which are grouped together in the codetable and have high occurence in the data."
+    "*  Entry 4 has the lowest distance. It contains `bananas` and `milk`, which are grouped together in the codetable and have high occurence in the training data."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "--------------\n",
+    "### Shortest code wins !!\n",
+    "Next, we are going to use an ensemble of SLIM encoding schemes, and utilize them via a ``OneVsRest`` methodology, to perform **multi-class classification**.\n",
+    "The methodology is very simple\n",
+    "\n",
+    "1. We clone our base estimator as many time as we need (one per class)\n",
+    "2. We fit every estimator on entries corresponding to its class in the input data\n",
+    "3. When calling ``.predict``, we actually call ``.decision_function`` and get distances from our decision boundaries for every class\n",
+    "4. The shorted code wins : we choose the class with the lowest distance for a given transaction"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.multiclass import OneVsRestClassifier\n",
+    "from sklearn.pipeline import Pipeline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pipe = Pipeline([\n",
+    "    ('transaction_encoder', TransactionEncoder(sparse_output=False)),\n",
+    "    ('slim', SLIM(pruning=False)),\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "transactions = [\n",
+    "    ['milk', 'bananas'],\n",
+    "    ['tea', 'New York Times', 'El Pais'],\n",
+    "    ['New York Times'],\n",
+    "    ['El Pais', 'The Economist'],\n",
+    "    ['milk', 'tea'],\n",
+    "    ['croissant', 'tea'],\n",
+    "    ['croissant', 'chocolatine', 'milk'],\n",
+    "]\n",
+    "y = [\n",
+    "    'foodstore', \n",
+    "    'newspaper', \n",
+    "    'newspaper', \n",
+    "    'newspaper', \n",
+    "    'foodstore',\n",
+    "    'bakery',\n",
+    "    'bakery',\n",
+    "]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>El Pais</th>\n",
+       "      <th>New York Times</th>\n",
+       "      <th>The Economist</th>\n",
+       "      <th>bananas</th>\n",
+       "      <th>chocolatine</th>\n",
+       "      <th>croissant</th>\n",
+       "      <th>milk</th>\n",
+       "      <th>tea</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   El Pais  New York Times  The Economist  bananas  chocolatine  croissant  \\\n",
+       "0        0               0              0        1            0          0   \n",
+       "1        1               1              0        0            0          0   \n",
+       "2        0               1              0        0            0          0   \n",
+       "3        1               0              1        0            0          0   \n",
+       "4        0               0              0        0            0          0   \n",
+       "5        0               0              0        0            0          1   \n",
+       "6        0               0              0        0            1          1   \n",
+       "\n",
+       "   milk  tea  \n",
+       "0     1    0  \n",
+       "1     0    1  \n",
+       "2     0    0  \n",
+       "3     0    0  \n",
+       "4     1    1  \n",
+       "5     0    1  \n",
+       "6     1    0  "
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "te = TransactionEncoder()\n",
+    "D = te.fit_transform(transactions)\n",
+    "D"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ovr = OneVsRestClassifier(SLIM(pruning=False))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/radon/miniconda3/envs/skmine/lib/python3.6/site-packages/pandas/core/series.py:679: RuntimeWarning: divide by zero encountered in log2\n",
+      "  result = getattr(ufunc, method)(*inputs, **kwargs)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[(milk, chocolatine, croissant)    [1]\n",
+       " (tea, croissant)                  [0]\n",
+       " dtype: object,\n",
+       " (tea, milk)        [1]\n",
+       " (milk, bananas)    [0]\n",
+       " dtype: object,\n",
+       " (New York Times, tea, El Pais)    [0]\n",
+       " (El Pais, The Economist)          [2]\n",
+       " (New York Times)                  [1]\n",
+       " dtype: object]"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ovr.fit(D, y=y)\n",
+    "ovr.estimators_"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['foodstore', 'newspaper', 'newspaper', 'newspaper', 'foodstore',\n",
+       "       'bakery', 'bakery'], dtype='<U9')"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ovr.predict(D)"
    ]
   }
  ],

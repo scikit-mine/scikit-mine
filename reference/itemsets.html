@@ -400,12 +400,15 @@ iteratibely refining the <code class="docutils literal notranslate"><span class=
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.itemsets.SLIM.predict_proba">
-<code class="sig-name descname">predict_proba</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.predict_proba"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.predict_proba" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make predictions on a new transactional data</p>
-<p>This encodes transactions with the current codetable.</p>
+<dt id="skmine.itemsets.SLIM.decision_function">
+<code class="sig-name descname">decision_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.decision_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.decision_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute covers on new data, and return code length</p>
+<p>This function function is named <code class="docutils literal notranslate"><span class="pre">decision_funciton</span></code> because code lengths
+represent the distance between a point and the current codetable, i.e
+the probability for this point to belong to the codetable.</p>
+<p>The lower the better</p>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">pruning</span></code> to False when creating the model
-is recommended to make predictions.</p>
+is recommended to cover unseen data, and especially when building a classifier.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
@@ -413,8 +416,8 @@ is recommended to make predictions.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">transform</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
-<span class="go">0    0.4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
+<span class="go">0   -1.321928</span>
 <span class="go">dtype: float32</span>
 </pre></div>
 </div>
