@@ -1,5 +1,6 @@
 from skmine.itemsets import SLIM
 from skmine.datasets import make_transactions
+from skmine.preprocessing import TransactionEncoder
 
 class SLIMBench:
     params = ([20], [.4, .6], [False, True])
@@ -8,11 +9,12 @@ class SLIMBench:
     repeat = (1, 3, 20.0)
     processes = 1
     def setup(self, n_transactions, density, pruning):
-        self.transactions = make_transactions(
+        transactions = make_transactions(
             n_transactions=n_transactions,
             density=density,
             random_state=7,
         )
+        self.transactions = TransactionEncoder().fit_transform(transactions)
         self.slim = SLIM(pruning=pruning)
 
     def time_fit(self, *args):
