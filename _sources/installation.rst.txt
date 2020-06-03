@@ -8,20 +8,17 @@ Installation
 From sources
 ------------
 
-The sources for scikit-mine can be downloaded from the `Github repo`_.
-
-You can either clone the public repository:
+You can install **scikit-mine** via the following command
 
 .. code-block:: console
 
-    $ git clone git://github.com/scikit-mine/scikit-mine
+    $ pip install https://github.com/scikit-mine/scikit-mine.git
 
-Once you have a copy of the source, you can install it with:
 
-.. code-block:: console
+From `pypi`_
+------------
 
-    $ python setup.py install
+Coming soon
 
-Installation via pip is coming soon
 
-.. _Github repo: https://github.com/scikit-mine/scikit-mine
+.. _pypi: https://pypi.org/

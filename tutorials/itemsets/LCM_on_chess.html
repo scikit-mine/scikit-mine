@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCM &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>LCM as a preprocessing step &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">LCM</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LCM as a preprocessing step</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#load-the-chess-dataset">load the chess dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fit_discover()">fit_discover()</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fit_transform()">fit_transform()</a></li>
@@ -154,7 +154,7 @@
         
           <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
         
-      <li>LCM</li>
+      <li>LCM as a preprocessing step</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -415,8 +415,8 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="LCM">
-<h1>LCM<a class="headerlink" href="#LCM" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="LCM-as-a-preprocessing-step">
+<h1>LCM as a preprocessing step<a class="headerlink" href="#LCM-as-a-preprocessing-step" title="Permalink to this headline">¶</a></h1>
 <p>LCM looks for closed itemset with respect to an input minimum support</p>
 <div class="section" id="load-the-chess-dataset">
 <h2>load the chess dataset<a class="headerlink" href="#load-the-chess-dataset" title="Permalink to this headline">¶</a></h2>
@@ -472,7 +472,7 @@ Name: chess, dtype: object
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">LCM</span>
+<span></span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">LCM</span>
 <span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="c1"># minimum support of 2000, running on 4 processes</span>
 <span class="o">%</span><span class="k">time</span> patterns = lcm.fit_discover(chess)
@@ -484,8 +484,8 @@ Name: chess, dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 493 ms, sys: 444 ms, total: 937 ms
-Wall time: 10 s
+CPU times: user 463 ms, sys: 376 ms, total: 839 ms
+Wall time: 9.19 s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
