@@ -30,6 +30,12 @@ class LCM():
     """
     Linear time Closed item set Miner.
 
+    LCM can be used as a preprocessing step, yielding some patterns
+    that will be later submitted to a custom acceptance criterion.
+
+    It can also be used to simply discover the set of closed itemsets from
+    a transactional dataset.
+
     Parameters
     ----------
     min_supp: int or float, default=0.2
@@ -54,7 +60,7 @@ class LCM():
     Examples
     --------
 
-    >>> from skmine.itemsets import LCM
+    >>> from skmine.preprocessing import LCM
     >>> from skmine.datasets.fimi import fetch_chess
     >>> chess = fetch_chess()
     >>> lcm = LCM(min_supp=2000)
@@ -79,6 +85,7 @@ class LCM():
         self.verbose = verbose
 
     def _fit(self, D):
+        self.n_transactions = 0  # reset for safety
         item_to_tids = defaultdict(RoaringBitmap)
         for transaction in D:
             for item in transaction:
@@ -115,22 +122,31 @@ class LCM():
 
         Returns
         -------
-        pd.DataFrame:
+        pd.DataFrame
             DataFrame with the following columns
                 ==========  =================================
-                itemset     a `frozenset` of co-occured items
+                itemset     a `tuple` of co-occured items
                 support     frequence for this itemset
+                ==========  =================================
+
+            if `return_tids=True` then
+                ==========  =================================
+                itemset     a `tuple` of co-occured items
+                tids        a bitmap tracking positions
                 ==========  =================================
 
         Example
         -------
-        >>> from skmine.itemsets import LCM
+        >>> from skmine.preprocessing import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
-        >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_discover(D)
+        >>> LCM(min_supp=2).fit_discover(D)
              itemset  support
         0     (2, 5)        3
         1  (2, 3, 5)        2
+        >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
+             itemset       tids
+        0     (2, 5)  [0, 1, 2]
+        1  (2, 3, 5)     [0, 1]
         """
         self._fit(D)
 
@@ -174,7 +190,7 @@ class LCM():
 
         Example
         -------
-        >>> from skmine.itemsets import LCM
+        >>> from skmine.preprocessing import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> lcm = LCM(min_supp=2)
         >>> lcm.fit_transform(D)                # doctest: +SKIP

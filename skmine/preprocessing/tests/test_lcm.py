@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 import numpy as np
 
-from skmine.itemsets import LCM
+from ..lcm import LCM
 
 D = [
     [1, 2, 3, 4, 5, 6],
