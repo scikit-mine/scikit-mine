@@ -36,6 +36,7 @@ Synthetic data generation
 -------------------------
 
 .. autofunction:: skmine.datasets.make_transactions
+.. autofunction:: skmine.datasets.make_classification
 
 
 utils
