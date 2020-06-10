@@ -120,7 +120,3 @@ class MDLOptimizer(ABC):
         """
         pass
 
-    @abstractmethod
-    def cover(self, codetable, D):
-        """Cover the dataset D given the codetable."""
-        pass
