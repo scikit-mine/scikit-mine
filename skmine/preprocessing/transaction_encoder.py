@@ -6,8 +6,8 @@ https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLab
 but produces pd.DataFrame as output
 """
 import pandas as pd
-
 from sklearn.preprocessing import MultiLabelBinarizer
+
 
 class TransactionEncoder(MultiLabelBinarizer):
     __doc__ = __doc__

@@ -2,6 +2,7 @@
 utils functions
 """
 
+import numpy as np
 from collections import defaultdict
 
 class lazydict(defaultdict):
@@ -19,3 +20,14 @@ class lazydict(defaultdict):
             raise KeyError(key)
         res = self[key] = self.default_factory(key)
         return res
+
+
+def _check_random_state(random_state):
+    if random_state is None or isinstance(random_state, int):
+        random_state = np.random.RandomState(random_state)
+    elif isinstance(random_state, np.random.RandomState):
+        random_state = random_state
+    else:
+        raise TypeError('random_state should be an int or a RandomState instance')
+
+    return random_state

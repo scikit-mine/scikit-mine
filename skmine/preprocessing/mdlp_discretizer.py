@@ -1,16 +1,40 @@
+"""
+Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning
+"""
+
+# Author: Rémi Adon <remi.adon@gmail.com>
+#
+# License: BSD 3 clause
+
 import numpy as np
 import pandas as pd
-from scipy.stats import entropy
-from skmine.base import MDLOptimizer
 from joblib import Parallel, delayed
+from scipy.stats import entropy
+
+from skmine.base import MDLOptimizer
+from skmine.utils import _check_random_state
 
 
-def get_entropy(y):
+def get_entropy_nb_ones(y):
+    """
+    for a given vector y, returns the entropy (base 2) and the
+    number of non zeros values in the one-hot-encoded counting vector
+    associated with y
+    """
     ohe = np.bincount(y) / len(y)  # counts, one hot encoded
     return entropy(ohe, base=2), np.sum(ohe != 0)
 
 
 def generate_cut_point(y, start, end):
+    """
+    Generate a cut point given a label vector ``y``, a start position
+    ``start`` and a final position ``end``
+
+    Starts with an infinite entropy, then iteratively moves a index inside
+    ``y``, pre-evaluates entropy on both sides of this index.
+
+    It returns the index with the minimum entropy.
+    """
     length = end - start
     ent = np.inf
     k = -1
@@ -19,15 +43,15 @@ def generate_cut_point(y, start, end):
         if y[idx - 1] == y[idx]:
             continue
 
-        first_half_ent = get_entropy(y[start:idx])[0]
+        first_half_ent = get_entropy_nb_ones(y[start:idx])[0]
         first_half_ent *= (idx - start) / length
 
-        second_half_ent = get_entropy(y[idx: end])[0]
+        second_half_ent = get_entropy_nb_ones(y[idx: end])[0]
         second_half_ent *= (end - idx) / length
 
         new_ent = first_half_ent + second_half_ent
 
-        if  new_ent < ent:
+        if new_ent < ent:
             ent = new_ent
             k = idx
 
@@ -35,15 +59,22 @@ def generate_cut_point(y, start, end):
 
 
 class MDLPVectDiscretizer(MDLOptimizer):
+    """
+    Basic block for the implementation of
+    "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning".
+
+    This class operates at a column level, i.e it finds the best cut points for a given feature
+    to fit a the corresponding labels
+    """
     def __init__(self, min_depth=0):
         self.min_depth_ = min_depth
         self.entropy_ = np.inf
         self.cut_points_ = np.array([])
 
     def evaluate_gain(self, y, start, end, cut_point):
-        entropy1, k1 = get_entropy(y[start: cut_point])
-        entropy2, k2 = get_entropy(y[cut_point: end])
-        whole_entropy, k0 = get_entropy(y[start: end])
+        entropy1, k1 = get_entropy_nb_ones(y[start: cut_point])
+        entropy2, k2 = get_entropy_nb_ones(y[cut_point: end])
+        whole_entropy, k0 = get_entropy_nb_ones(y[start: end])
 
         N = end - start
 
@@ -103,6 +134,12 @@ class MDLPDiscretizer():
         slightly different cut points if a variable contains samples with the same value
         but different labels.
 
+    References
+    ----------
+    .. [1]
+        Usama M. Fayyad, Keki B. Irani
+        "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning",
+        1993
 
     Attributes
     ----------
@@ -116,15 +153,7 @@ class MDLPDiscretizer():
     """
     def __init__(self, random_state=None, n_jobs=1):
         self.cut_points_ = dict()
-
-        if random_state is None or isinstance(random_state, int):
-            self.random_state = np.random.RandomState(random_state)
-        elif isinstance(random_state, np.random.RandomState):
-            self.random_state = random_state
-        else:
-            raise TypeError('random_state should be an int or a RandomState instance')
-
-        self.random_state = random_state or np.random.RandomState()
+        self.random_state = _check_random_state(random_state)
         self.n_jobs = n_jobs
         self.discretizers_ = []
 
