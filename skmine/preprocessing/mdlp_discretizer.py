@@ -116,7 +116,6 @@ class MDLPVectDiscretizer(MDLOptimizer):
                 front = -np.inf if start == 0 else (X[start - 1] + X[start]) / 2
                 back = np.inf if end == len(X) else (X[end - 1] + X[end]) / 2
 
-                if front == back: continue
                 if front != -np.inf:
                     cut_points.add(front)
                 if back != np.inf:
@@ -189,14 +188,14 @@ class MDLPDiscretizer():
         self
         """
         permutation = self.random_state.permutation(len(y))
-        X = X[permutation]
+        _X = X.values if isinstance(X, pd.DataFrame) else X
+        _X = _X[permutation]
         y = y[permutation]
 
-        vals = X.values if isinstance(X, pd.DataFrame) else X
-        n_cols = vals.shape[1]
+        n_cols = _X.shape[1]
 
         discs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
-            delayed(MDLPVectDiscretizer().fit)(vals[:, idx], y) for idx in range(n_cols)
+            delayed(MDLPVectDiscretizer().fit)(_X[:, idx], y) for idx in range(n_cols)
         )
 
         self.discretizers_ = discs

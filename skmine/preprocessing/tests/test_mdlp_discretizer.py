@@ -4,6 +4,7 @@ from ..mdlp_discretizer import (
     generate_cut_point,
 )
 import numpy as np
+import pandas as pd
 
 def test_generate_cut_points():
     # here y follow a linear function
@@ -34,3 +35,14 @@ def test_mdlp_discretizer():
     assert len(disc.discretizers_) == 4
 
     assert len(disc.discretizers_[0].cut_points_) == 2  # 3 parts --> 2 cut points
+
+def test_mdlp_discretizer_dataframe():
+    X = np.ones((100, 5))
+    for i in range(5):
+        X[:, i] *= i
+    y = np.array([0] * 25 + [1] * 25 + [2] * 50)
+
+    X = pd.DataFrame(X, columns=['col_' + str(i) for i in range(5)])
+    disc = MDLPDiscretizer()
+    disc.fit(X, y)
+    assert list(disc.cut_points_.keys()) == X.columns.tolist()
