@@ -119,4 +119,3 @@ class MDLOptimizer(ABC):
         the size of the dataset D encoded with the codetable CT and the size of the codetable CT
         """
         pass
-

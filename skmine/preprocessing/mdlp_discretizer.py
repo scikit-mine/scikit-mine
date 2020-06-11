@@ -79,13 +79,24 @@ class MDLPVectDiscretizer(MDLOptimizer):
         N = end - start
 
         part1 = 1 / N * ((cut_point - start) * entropy1 + (end - cut_point) * entropy2)
+        delta = np.log2(pow(3, k0) - 2) - (k0 * whole_entropy - k1 * entropy1 - k2 * entropy2)
+
         gain = whole_entropy - part1
-        entropy_diff = k0 * whole_entropy - k1 * entropy1 - k2 * entropy2
-        delta = np.log2(pow(3, k0) - 2) - entropy_diff
 
         return gain > 1 / N * (np.log2(N - 1) + delta)
 
     def fit(self, X, y):
+        """
+        fit discretizer on a single feature
+
+        Parameters
+        ----------
+        X : numpy.ndarray of shape (n_samples,)
+            Input vector to fit the discretizer on
+
+        y : numpy.ndarray of shape (n_samples,)
+            Labels to fit the discretizer on
+        """
         assert len(X.shape) == 1
 
         order = np.argsort(X)
@@ -161,6 +172,22 @@ class MDLPDiscretizer():
         return repr(self.cut_points_)
 
     def fit(self, X, y):
+        """
+        fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
+
+        Parameters
+        ----------
+        X: np.ndarray or pd.DataFrame of shape (n_samples, n_features)
+            The input matrix containing features. A set of cut points
+            will be affected to each feature
+
+        y : np.ndarray of pd.Series of shape(n_samples,)
+            The label vector used to discretize ``X``
+
+        Returns
+        -------
+        self
+        """
         permutation = self.random_state.permutation(len(y))
         X = X[permutation]
         y = y[permutation]

@@ -2,8 +2,10 @@
 utils functions
 """
 
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
+
 
 class lazydict(defaultdict):
     """
@@ -25,9 +27,7 @@ class lazydict(defaultdict):
 def _check_random_state(random_state):
     if random_state is None or isinstance(random_state, int):
         random_state = np.random.RandomState(random_state)
-    elif isinstance(random_state, np.random.RandomState):
-        random_state = random_state
-    else:
+    elif not isinstance(random_state, np.random.RandomState):
         raise TypeError('random_state should be an int or a RandomState instance')
 
     return random_state
