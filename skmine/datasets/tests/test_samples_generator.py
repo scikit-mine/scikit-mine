@@ -49,26 +49,26 @@ def test_make_transactions_random_state():
     desc2 = describe(D2)
     assert desc1 == pytest.approx(desc2, abs=.1)
 
-def make_classification_wrong_value():
+def test_make_classification_wrong_value():
     with pytest.raises(ValueError):
         densities = [1.3, .2]
         make_classification(densities=densities)
 
 
-def make_classification():
+def test_make_classification():
     D, y = make_classification(
         n_classes=2,
-        n_items=100,
+        n_items_per_class=100,
         n_samples=100,
         weights=[.3, .7],
-        class_sep=1.0
-        )
+        class_sep=.2,
+    )
 
     desc = describe(D)
-    true_desc = dict(
-        n_items=100,
+    full_desc = dict(
+        n_items=120,  # = n_items_perclass * (1 + class_sep)
         avg_transaction_size=50,
         n_transactions=100,
-        density=.5,  # class_sep == 1.0
+        density=.40,  # both have .5 densities, but only 20% of it is intersecting, see class_sep
     )
-    assert desc == pytest.approx(true_desc, abs=.1)
+    assert describe(D) == pytest.approx(full_desc, abs=1)
