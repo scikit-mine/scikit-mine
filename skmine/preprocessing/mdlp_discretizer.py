@@ -146,10 +146,9 @@ class MDLPDiscretizer():
 
     References
     ----------
-    .. [1]
-        Usama M. Fayyad, Keki B. Irani
-        "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning",
-        1993
+    Usama M. Fayyad, Keki B. Irani
+    "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning",
+    1993
 
     Attributes
     ----------
