@@ -98,6 +98,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
             Labels to fit the discretizer on
         """
         assert len(X.shape) == 1
+        assert np.issubdtype(y.dtype, np.integer)
 
         order = np.argsort(X)
         X = X[order]
@@ -123,7 +124,6 @@ class MDLPVectDiscretizer(MDLOptimizer):
             else:
                 search_intervals.append((start, k, depth + 1))
                 search_intervals.append((k, end, depth + 1))
-
 
         self.cut_points_ = np.array(list(cut_points))
         return self
@@ -186,7 +186,8 @@ class MDLPDiscretizer():
         -------
         self
         """
-        permutation = self.random_state.permutation(len(y))
+        assert y is not None and np.issubdtype(y.dtype, np.integer)
+        permutation = self.random_state.permutation(len(X))
         _X = X.values if isinstance(X, pd.DataFrame) else X
         _X = _X[permutation]
         y = y[permutation]
@@ -206,3 +207,31 @@ class MDLPDiscretizer():
             self.cut_points_ = dict(enumerate(cut_points))
 
         return self
+
+
+    def transform(self, X, y=None): #pylint: disable=unused-argument
+        """
+        Discretizes the input matrix X
+
+        This applies the cutpoints their respective columns
+        """
+        if isinstance(X, pd.DataFrame) and not set(self.cut_points_) == set(X.columns):
+            raise ValueError(f'X columns should be {self.cut_points_.keys()}')
+        _X = X.values if isinstance(X, pd.DataFrame) else X
+
+        vects = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+            delayed(np.searchsorted)(cut_points, _X[:, idx])
+            for idx, cut_points in enumerate(self.cut_points_.values())
+        )
+
+        vects = [v.reshape(len(v), 1) for v in vects]
+        _X = np.concatenate(vects, axis=1)
+
+        if isinstance(X, pd.DataFrame):
+            _X = pd.DataFrame(_X, columns=X.columns)
+
+        return _X
+
+    def fit_transform(self, X, y=None):
+        "fit on X and y, then transform X"
+        return self.fit(X, y).transform(X)
