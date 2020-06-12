@@ -144,21 +144,31 @@ class MDLPDiscretizer(BaseMiner):
         slightly different cut points if a variable contains samples with the same value
         but different labels.
 
-    References
-    ----------
-    Usama M. Fayyad, Keki B. Irani
-    "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning",
-    1993
-
     Attributes
     ----------
     cut_points_: dict
         A mapping between columns and their respective cut points.
         If fitted on a pandas DataFrame, keys will be the DataFrame column names.
 
+
+    References
+    ----------
+    Usama M. Fayyad, Keki B. Irani
+    "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning",
+    1993
+
     Examples
     --------
-    # TODO
+
+    >>> from skmine.preprocessing import MDLPDiscretizer
+    >>> from sklearn.datasets import load_iris
+    >>> iris = load_iris()
+    >>> X, y = iris.data, iris.target
+    >>> disc = MDLPDiscretizer()
+    >>> disc.fit(X, y)                          # doctest: +SKIP
+    >>> disc.cut_points_                        # doctest: +SKIP
+    {0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}
+
     """
     def __init__(self, random_state=None, n_jobs=1):
         self.cut_points_ = dict()
@@ -166,12 +176,8 @@ class MDLPDiscretizer(BaseMiner):
         self.n_jobs = n_jobs
         self.discretizers_ = []
 
-    def __repr__(self):
-        return repr(self.cut_points_)
-
     def fit(self, X, y):
-        """
-        fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
+        """ fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
 
         Parameters
         ----------
@@ -181,10 +187,6 @@ class MDLPDiscretizer(BaseMiner):
 
         y : np.ndarray of pd.Series of shape(n_samples,)
             The label vector used to discretize ``X``
-
-        Returns
-        -------
-        self
         """
         assert y is not None and np.issubdtype(y.dtype, np.integer)
         permutation = self.random_state.permutation(len(X))
@@ -208,10 +210,8 @@ class MDLPDiscretizer(BaseMiner):
 
         return self
 
-
     def transform(self, X, y=None): #pylint: disable=unused-argument
-        """
-        Discretizes the input matrix X
+        """Discretizes the input matrix X
 
         This applies the cutpoints their respective columns
         """
