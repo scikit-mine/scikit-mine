@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Generate synthetic data to train on</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">A simple plot allow us to check the distrution of our transactions lenghts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Now-let’s-generate-associated-labels,-for-multiclass-classification">Now let’s generate associated labels, for multiclass classification</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
@@ -454,7 +455,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;matplotlib.axes._subplots.AxesSubplot at 0x7f5819a262b0&gt;
+&lt;matplotlib.axes._subplots.AxesSubplot at 0x7fa3216e34a8&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -489,9 +490,58 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 {&#39;n_items&#39;: 10,
- &#39;avg_transaction_size&#39;: 2.04,
+ &#39;avg_transaction_size&#39;: 2.08,
  &#39;n_transactions&#39;: 100,
- &#39;density&#39;: 0.20400000000000001}
+ &#39;density&#39;: 0.20800000000000002}
+</pre></div></div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="Now-let’s-generate-associated-labels,-for-multiclass-classification">
+<h2>Now let’s generate associated labels, for multiclass classification<a class="headerlink" href="#Now-let’s-generate-associated-labels,-for-multiclass-classification" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">D</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">densities</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">4</span><span class="p">],</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">D</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">describe</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+class
+0      n_items                 100.0000
+       avg_transaction_size     19.9500
+       n_transactions           60.0000
+       density                   0.1995
+1      n_items                 100.0000
+       avg_transaction_size     50.6500
+       n_transactions           40.0000
+       density                   0.5065
+Name: transaction, dtype: float64
 </pre></div></div>
 </div>
 </div>

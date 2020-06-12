@@ -171,11 +171,11 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-
 <div class="viewcode-block" id="make_transactions"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_transactions">[docs]</a><span class="k">def</span> <span class="nf">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                       <span class="n">n_items</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                       <span class="n">density</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span>
-                      <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                      <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">item_start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a transactional dataset with predefined properties</span>
 
@@ -226,11 +226,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="o">.</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">density</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;density should be a float value between 0 and 1&#39;</span><span class="p">)</span>
+
     <span class="n">avg_transaction_size</span> <span class="o">=</span> <span class="n">density</span> <span class="o">*</span> <span class="n">n_items</span>
 
     <span class="n">generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>  <span class="c1"># pylint: disable= no-member</span>
 
-    <span class="n">choices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_items</span><span class="p">)</span>
+    <span class="n">item_stop</span> <span class="o">=</span> <span class="n">item_start</span> <span class="o">+</span> <span class="n">n_items</span>
+    <span class="n">choices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">item_start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">item_stop</span><span class="p">)</span>
     <span class="n">t_sizes</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span>
         <span class="n">n</span><span class="o">=</span><span class="n">avg_transaction_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
         <span class="n">p</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># centered around avg_transaction_size</span>
@@ -243,6 +245,96 @@
 
     <span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="n">generator</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">t_sizes</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">D</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="make_classification"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_classification">[docs]</a><span class="k">def</span> <span class="nf">make_classification</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_items_per_class</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>  <span class="c1"># pylint: disable= too-many-locals</span>
+                        <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_sep</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">densities</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a random n-class classification problem</span>
+
+<span class="sd">    Acts like sklearn version of make_classification, but produces</span>
+<span class="sd">    transactional data instead. Transactions are drawn from a ``n_items_per_class``</span>
+<span class="sd">    number of items, respecting the ``class_sep`` parameter to ensure transactions</span>
+<span class="sd">    are drawn from different alphabets for different classes.</span>
+
+<span class="sd">    A ``class_sep`` value of 0.0 will result in transactions being drawn from the</span>
+<span class="sd">    same set of symbols.</span>
+
+<span class="sd">    Densities can be defined for each class given the ``densities``</span>
+<span class="sd">    parameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_samples: int, default=100</span>
+<span class="sd">        The number of samples</span>
+<span class="sd">    n_items_per_class: int, default=100</span>
+<span class="sd">        The number of items per class. This is similar to the ``n_features``</span>
+<span class="sd">        parameters in scikit-learn, but operates at a class level.</span>
+<span class="sd">    n_classes: int, default=2</span>
+<span class="sd">        The number of classes (or labels) of the classification problem</span>
+<span class="sd">    weigths, array-like of shape (n_classes,) default=None</span>
+<span class="sd">        The proportions of samples assigned to each class. If None, then classes are balanced</span>
+<span class="sd">    class_sep: float, default=0.2</span>
+<span class="sd">        The factor of different items in different between classes.</span>
+<span class="sd">        Setting this to 1.0 will make classification dummy.</span>
+<span class="sd">    shuffle: boolean, default=True</span>
+<span class="sd">        Shuffle the samples and the labels</span>
+<span class="sd">    random_state: int RandomState instance, default=None</span>
+<span class="sd">        Determines random number generation for dataset creation. Pass an int</span>
+<span class="sd">        for reproducible output across multiple function calls.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    D: pd.Series of shape [n_samples, ]</span>
+<span class="sd">        The generated samples</span>
+<span class="sd">    y: pd.Series of shape [n_samples]</span>
+<span class="sd">        Labels associated to D</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    make_transactions : which is used internally to generate samples</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">n_classes</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">densities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">densities</span> <span class="o">=</span> <span class="p">[</span><span class="o">.</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_classes</span>
+
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n_classes</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_classes</span>  <span class="c1"># balanced by default</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">densities</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_classes</span>
+    <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">class_sep</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_almost_equal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="n">padding</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_class</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_classes</span><span class="p">):</span>
+        <span class="n">_n_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="n">_class</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_samples</span><span class="p">)</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="n">densities</span><span class="p">[</span><span class="n">_class</span><span class="p">]</span>
+        <span class="n">transactions</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span>
+            <span class="n">n_transactions</span><span class="o">=</span><span class="n">_n_samples</span><span class="p">,</span>
+            <span class="n">n_items</span><span class="o">=</span><span class="n">n_items_per_class</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="n">item_start</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
+            <span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">_class</span><span class="p">]</span> <span class="o">=</span> <span class="n">transactions</span>
+
+        <span class="c1"># if class_sep == 1.0, then separation is strict</span>
+        <span class="n">padding</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_items_per_class</span> <span class="o">-</span> <span class="p">(</span><span class="n">n_items_per_class</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">class_sep</span><span class="p">)))</span>
+
+    <span class="n">dfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_class</span><span class="p">,</span> <span class="n">transactions</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">transactions</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;transaction&#39;</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_class</span>
+        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;transaction&#39;</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span></div>
 </pre></div>
 
            </div>

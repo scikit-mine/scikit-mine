@@ -2,16 +2,18 @@
 
 Preprocessing
 *************
-Methods to preprocess transactional datasets
 
-
-TransactionEncoder
-------------------
-
-.. autofunction:: skmine.preprocessing.TransactionEncoder
+MDLPDiscretizer
+---------------
+.. autofunction:: skmine.preprocessing.MDLPDiscretizer
 
 
 LCM
 -------
 
 .. autoclass:: skmine.preprocessing.LCM
+
+
+TransactionEncoder
+------------------
+.. autofunction:: skmine.preprocessing.TransactionEncoder

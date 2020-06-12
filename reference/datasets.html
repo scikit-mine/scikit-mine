@@ -617,7 +617,7 @@ and <code class="docutils literal notranslate"><span class="pre">fetch_instacart
 <h2>Synthetic data generation<a class="headerlink" href="#synthetic-data-generation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.make_transactions">
-<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">make_transactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_transactions</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">n_items</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/_samples_generator.html#make_transactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.make_transactions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">make_transactions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_transactions</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">n_items</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">density</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">item_start</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/_samples_generator.html#make_transactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.make_transactions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a transactional dataset with predefined properties</p>
 <p>see: <a class="reference external" href="https://liris.cnrs.fr/Documents/Liris-3716.pdf">https://liris.cnrs.fr/Documents/Liris-3716.pdf</a></p>
 <p>Transaction sizes follow a normal distribution, centered around <code class="docutils literal notranslate"><span class="pre">density</span> <span class="pre">*</span> <span class="pre">n_items</span></code>.
@@ -668,6 +668,50 @@ for reproducible output across multiple function calls.</p></li>
 <dd class="field-even"><p>a Series of shape (<code class="docutils literal notranslate"><span class="pre">n_transactions</span></code>,)</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skmine.datasets.make_classification">
+<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">make_classification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">n_items_per_class</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">n_classes</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">class_sep</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">shuffle</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">densities</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/_samples_generator.html#make_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.make_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a random n-class classification problem</p>
+<p>Acts like sklearn version of make_classification, but produces
+transactional data instead. Transactions are drawn from a <code class="docutils literal notranslate"><span class="pre">n_items_per_class</span></code>
+number of items, respecting the <code class="docutils literal notranslate"><span class="pre">class_sep</span></code> parameter to ensure transactions
+are drawn from different alphabets for different classes.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">class_sep</span></code> value of 0.0 will result in transactions being drawn from the
+same set of symbols.</p>
+<p>Densities can be defined for each class given the <code class="docutils literal notranslate"><span class="pre">densities</span></code>
+parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_samples</strong> (<em>int</em><em>, </em><em>default=100</em>) – The number of samples</p></li>
+<li><p><strong>n_items_per_class</strong> (<em>int</em><em>, </em><em>default=100</em>) – The number of items per class. This is similar to the <code class="docutils literal notranslate"><span class="pre">n_features</span></code>
+parameters in scikit-learn, but operates at a class level.</p></li>
+<li><p><strong>n_classes</strong> (<em>int</em><em>, </em><em>default=2</em>) – The number of classes (or labels) of the classification problem</p></li>
+<li><p><strong>array-like of shape</strong><strong> (</strong><strong>n_classes</strong><strong>,</strong><strong>) </strong><strong>default=None</strong> (<em>weigths</em><em>,</em>) – The proportions of samples assigned to each class. If None, then classes are balanced</p></li>
+<li><p><strong>class_sep</strong> (<em>float</em><em>, </em><em>default=0.2</em>) – The factor of different items in different between classes.
+Setting this to 1.0 will make classification dummy.</p></li>
+<li><p><strong>shuffle</strong> (<em>boolean</em><em>, </em><em>default=True</em>) – Shuffle the samples and the labels</p></li>
+<li><p><strong>random_state</strong> (<em>int RandomState instance</em><em>, </em><em>default=None</em>) – Determines random number generation for dataset creation. Pass an int
+for reproducible output across multiple function calls.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>D</strong> (<em>pd.Series of shape [n_samples, ]</em>) – The generated samples</p></li>
+<li><p><strong>y</strong> (<em>pd.Series of shape [n_samples]</em>) – Labels associated to D</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#skmine.datasets.make_transactions" title="skmine.datasets.make_transactions"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_transactions()</span></code></a></dt><dd><p>which is used internally to generate samples</p>
+</dd>
+</dl>
+</div>
 </dd></dl>
 
 </div>

@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>skmine.preprocessing.mdlp_discretizer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for skmine.preprocessing.mdlp_discretizer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: BSD 3 clause</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">entropy</span>
+
+<span class="kn">from</span> <span class="nn">skmine.base</span> <span class="kn">import</span> <span class="n">MDLOptimizer</span><span class="p">,</span> <span class="n">BaseMiner</span>
+<span class="kn">from</span> <span class="nn">skmine.utils</span> <span class="kn">import</span> <span class="n">_check_random_state</span>
+
+
+<span class="k">def</span> <span class="nf">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    for a given vector y, returns the entropy (base 2) and the</span>
+<span class="sd">    number of non zeros values in the one-hot-encoded counting vector</span>
+<span class="sd">    associated with y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ohe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>  <span class="c1"># counts, one hot encoded</span>
+    <span class="k">return</span> <span class="n">entropy</span><span class="p">(</span><span class="n">ohe</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ohe</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">generate_cut_point</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a cut point given a label vector ``y``, a start position</span>
+<span class="sd">    ``start`` and a final position ``end``</span>
+
+<span class="sd">    Starts with an infinite entropy, then iteratively moves a index inside</span>
+<span class="sd">    ``y``, pre-evaluates entropy on both sides of this index.</span>
+
+<span class="sd">    It returns the index with the minimum entropy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+    <span class="n">ent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+            <span class="k">continue</span>
+
+        <span class="n">first_half_ent</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">idx</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_half_ent</span> <span class="o">*=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span>
+
+        <span class="n">second_half_ent</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span> <span class="n">end</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">second_half_ent</span> <span class="o">*=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">idx</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span>
+
+        <span class="n">new_ent</span> <span class="o">=</span> <span class="n">first_half_ent</span> <span class="o">+</span> <span class="n">second_half_ent</span>
+
+        <span class="k">if</span> <span class="n">new_ent</span> <span class="o">&lt;</span> <span class="n">ent</span><span class="p">:</span>
+            <span class="n">ent</span> <span class="o">=</span> <span class="n">new_ent</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="k">return</span> <span class="n">k</span>
+
+
+<span class="k">class</span> <span class="nc">MDLPVectDiscretizer</span><span class="p">(</span><span class="n">MDLOptimizer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Basic block for the implementation of</span>
+<span class="sd">    &quot;Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning&quot;.</span>
+
+<span class="sd">    This class operates at a column level, i.e it finds the best cut points for a given feature</span>
+<span class="sd">    to fit a the corresponding labels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_depth_</span> <span class="o">=</span> <span class="n">min_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entropy_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="nf">evaluate_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">cut_point</span><span class="p">):</span>
+        <span class="n">entropy1</span><span class="p">,</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">cut_point</span><span class="p">])</span>
+        <span class="n">entropy2</span><span class="p">,</span> <span class="n">k2</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">cut_point</span><span class="p">:</span> <span class="n">end</span><span class="p">])</span>
+        <span class="n">whole_entropy</span><span class="p">,</span> <span class="n">k0</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">end</span><span class="p">])</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+
+        <span class="n">part1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="p">((</span><span class="n">cut_point</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="n">entropy1</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">cut_point</span><span class="p">)</span> <span class="o">*</span> <span class="n">entropy2</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">k0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">k0</span> <span class="o">*</span> <span class="n">whole_entropy</span> <span class="o">-</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">entropy1</span> <span class="o">-</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">entropy2</span><span class="p">)</span>
+
+        <span class="n">gain</span> <span class="o">=</span> <span class="n">whole_entropy</span> <span class="o">-</span> <span class="n">part1</span>
+
+        <span class="k">return</span> <span class="n">gain</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">delta</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        fit discretizer on a single feature</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : numpy.ndarray of shape (n_samples,)</span>
+<span class="sd">            Input vector to fit the discretizer on</span>
+
+<span class="sd">        y : numpy.ndarray of shape (n_samples,)</span>
+<span class="sd">            Labels to fit the discretizer on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
+        <span class="n">cut_points</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">search_intervals</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="k">while</span> <span class="n">search_intervals</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">search_intervals</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">search_intervals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># pop back</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">level</span>
+
+            <span class="n">k</span> <span class="o">=</span> <span class="n">generate_cut_point</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+            <span class="n">is_better</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_gain</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_better</span><span class="p">:</span>
+                <span class="n">front</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">start</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">back</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">end</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">end</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+
+                <span class="k">if</span> <span class="n">front</span> <span class="o">!=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                    <span class="n">cut_points</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">front</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">back</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                    <span class="n">cut_points</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">back</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">search_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">search_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cut_points</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<div class="viewcode-block" id="MDLPDiscretizer"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer">[docs]</a><span class="k">class</span> <span class="nc">MDLPDiscretizer</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of &quot;Multi-Interval Discretization of Continuous-Valued Attributes</span>
+<span class="sd">    for Classification Learning&quot;.</span>
+
+<span class="sd">    Given class labels ``y``, MDLPDIscretizer discretizes continuous variables from</span>
+<span class="sd">    ``X`` by minimizing the entropy in each interval.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    random_state : int, RandomState instance, default=None</span>
+<span class="sd">        random state to use to shuffle the data. Can affect the outcome, leading to</span>
+<span class="sd">        slightly different cut points if a variable contains samples with the same value</span>
+<span class="sd">        but different labels.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cut_points_: dict</span>
+<span class="sd">        A mapping between columns and their respective cut points.</span>
+<span class="sd">        If fitted on a pandas DataFrame, keys will be the DataFrame column names.</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Usama M. Fayyad, Keki B. Irani</span>
+<span class="sd">    &quot;Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning&quot;,</span>
+<span class="sd">    1993</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from skmine.preprocessing import MDLPDiscretizer</span>
+<span class="sd">    &gt;&gt;&gt; from sklearn.datasets import load_iris</span>
+<span class="sd">    &gt;&gt;&gt; iris = load_iris()</span>
+<span class="sd">    &gt;&gt;&gt; X, y = iris.data, iris.target</span>
+<span class="sd">    &gt;&gt;&gt; disc = MDLPDiscretizer()</span>
+<span class="sd">    &gt;&gt;&gt; disc.fit(X, y)                          # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; disc.cut_points_                        # doctest: +SKIP</span>
+<span class="sd">    {0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">_check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discretizers_</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X: np.ndarray or pd.DataFrame of shape (n_samples, n_features)</span>
+<span class="sd">            The input matrix containing features. A set of cut points</span>
+<span class="sd">            will be affected to each feature</span>
+
+<span class="sd">        y : np.ndarray of pd.Series of shape(n_samples,)</span>
+<span class="sd">            The label vector used to discretize ``X``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+        <span class="n">permutation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">_X</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+
+        <span class="n">n_cols</span> <span class="o">=</span> <span class="n">_X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">discs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;processes&#39;</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">MDLPVectDiscretizer</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">)(</span><span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">discretizers_</span> <span class="o">=</span> <span class="n">discs</span>
+        <span class="n">cut_points</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">cut_points_</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">discs</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">cut_points</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">cut_points</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#pylint: disable=unused-argument</span>
+        <span class="sd">&quot;&quot;&quot;Discretizes the input matrix X</span>
+
+<span class="sd">        This applies the cutpoints their respective columns</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;X columns should be </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
+
+        <span class="n">vects</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;threads&#39;</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">)(</span><span class="n">cut_points</span><span class="p">,</span> <span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cut_points</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="p">)</span>
+
+        <span class="n">vects</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vects</span><span class="p">]</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vects</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">_X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">_X</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_X</span>
+
+    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="s2">&quot;fit on X and y, then transform X&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
