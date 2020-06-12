@@ -11,7 +11,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from scipy.stats import entropy
 
-from skmine.base import MDLOptimizer
+from skmine.base import MDLOptimizer, BaseMiner
 from skmine.utils import _check_random_state
 
 
@@ -129,7 +129,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
         return self
 
 
-class MDLPDiscretizer():
+class MDLPDiscretizer(BaseMiner):
     """
     Implementation of "Multi-Interval Discretization of Continuous-Valued Attributes
     for Classification Learning".
