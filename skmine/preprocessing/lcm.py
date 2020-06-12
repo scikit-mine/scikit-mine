@@ -7,10 +7,10 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 # License: BSD 3 clause
 
 from collections import defaultdict
+
 import numpy as np
 import pandas as pd
-from joblib import Parallel
-from joblib import delayed
+from joblib import Parallel, delayed
 from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 

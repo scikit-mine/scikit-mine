@@ -119,8 +119,3 @@ class MDLOptimizer(ABC):
         the size of the dataset D encoded with the codetable CT and the size of the codetable CT
         """
         pass
-
-    @abstractmethod
-    def cover(self, codetable, D):
-        """Cover the dataset D given the codetable."""
-        pass

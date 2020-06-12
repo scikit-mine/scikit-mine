@@ -4,10 +4,11 @@ import sklearn
 from sklearn.utils.estimator_checks import check_estimator
 
 import skmine.itemsets
-# TODO : add other modules here
+import skmine.preprocessing
 
 MODULES = [
     skmine.itemsets,
+    skmine.preprocessing,
 ]
 
 EXCLUDED_CHECKS = [
@@ -24,7 +25,7 @@ def is_estimator(e):
 
 if __name__ == '__main__':
     for module in MODULES:
-        clsmembers = inspect.getmembers(skmine.itemsets, inspect.isclass)
+        clsmembers = inspect.getmembers(module, inspect.isclass)
         estimators = filter(is_estimator, clsmembers)
         for est_name, est in estimators:
             # from sklearn 0.23 check_estimator takes an instance as input

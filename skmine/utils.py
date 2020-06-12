@@ -4,6 +4,9 @@ utils functions
 
 from collections import defaultdict
 
+import numpy as np
+
+
 class lazydict(defaultdict):
     """
     lazydict(default_factory[, ...]) --> dict with default factory
@@ -19,3 +22,12 @@ class lazydict(defaultdict):
             raise KeyError(key)
         res = self[key] = self.default_factory(key)
         return res
+
+
+def _check_random_state(random_state):
+    if random_state is None or isinstance(random_state, int):
+        random_state = np.random.RandomState(random_state)
+    elif not isinstance(random_state, np.random.RandomState):
+        raise TypeError('random_state should be an int or a RandomState instance')
+
+    return random_state
