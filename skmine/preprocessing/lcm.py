@@ -241,3 +241,31 @@ class LCM():
                 if tids.intersection_len(ids) >= self._min_supp:
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
+
+
+class LCMMax(LCM):
+    def _inner(self, p, tids, limit):
+        # project and reduce DB w.r.t P
+        cp = (
+            item for item, ids in reversed(self.item_to_tids.items())
+            if tids.issubset(ids) if item not in p
+        )
+
+        max_k = next(cp, None)  # items are in reverse order, so the first consumed is the max
+
+        if max_k and max_k == limit:
+            p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
+
+            candidates = self.item_to_tids.keys() - p_prime
+            candidates = candidates[:candidates.bisect_left(limit)]
+
+            no_cand = True
+            for new_limit in candidates:
+                ids = self.item_to_tids[new_limit]
+                if tids.intersection_len(ids) >= self._min_supp:
+                    no_cand = False
+                    new_limit_tids = tids.intersection(ids)
+                    yield from self._inner(p_prime, new_limit_tids, new_limit)
+
+            if no_cand:  # only if no child node. This is how we check for maximality
+                yield tuple(sorted(p_prime)), tids # sorted items in ouput for better reproducibility
