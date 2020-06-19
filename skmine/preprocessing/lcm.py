@@ -243,7 +243,36 @@ class LCM():
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
 
 
+def filter_maximal(itemsets):
+    itemsets = [set(e) for e in itemsets]
+    for iset in itemsets:
+        if any(map(lambda e: e > iset, itemsets)):
+            continue
+        yield tuple(sorted(iset))
+
 class LCMMax(LCM):
+    """
+    Linear time Closed item set Miner.
+
+    Adapted to Maximal itemsets (or borders).
+    A maximal itemset is an itemset with no frequent superset.
+
+    Parameters
+    ----------
+    min_supp: int or float, default=0.2
+        The minimum support for itemsets to be rendered in the output
+        Either an int representing the absolute support, or a float for relative support
+
+        Default to 0.2 (20%)
+    n_jobs : int, default=1
+        The number of jobs to use for the computation. Each single item is attributed a job
+        to discover potential itemsets, considering this item as a root in the search space.
+        Processes are preffered over threads.
+
+    See Also
+    --------
+    LCM
+    """
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P
         cp = (
@@ -267,5 +296,10 @@ class LCMMax(LCM):
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
 
-            if no_cand:  # only if no child node. This is how we check for maximality
+            if no_cand:  # only if no child node. This is how we PRE-check for maximality
                 yield tuple(sorted(p_prime)), tids # sorted items in ouput for better reproducibility
+
+    def fit_discover(self, D, return_tids=False):
+        patterns = super().fit_discover(D, return_tids=return_tids)
+        maximums = list(filter_maximal(patterns['itemset']))
+        return patterns[patterns.itemset.isin(maximums)]

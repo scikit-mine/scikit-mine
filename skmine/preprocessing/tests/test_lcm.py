@@ -2,7 +2,9 @@ import pandas as pd
 import pytest
 import numpy as np
 
-from ..lcm import LCM, LCMMax
+from ..lcm import LCM
+from ..lcm import LCMMax
+from ..lcm import filter_maximal
 
 D = [
     [1, 2, 3, 4, 5, 6],
@@ -166,8 +168,29 @@ def test_relative_support():
     for item in lcm.item_to_tids.keys():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
 
+def test_filter_max():
+    D = [
+        {2, 3},
+        {2,},
+        {4, 1},
+        {4, 7},
+        {4, 1, 8},
+    ]
+
+    maximums = list(filter_maximal(D))
+
+    assert maximums == [
+        (2, 3),
+        (4, 7),
+        (1, 4, 8),
+    ]
 
 def test_lcm_max():
     lcm = LCMMax(min_supp=3)
     patterns = lcm.fit_discover(D)
-    import pdb; pdb.set_trace()
+    assert set(patterns.itemset) == {
+        (1, 4, 6),
+        (2, 5),
+        (2, 4),
+        (3,),
+    }
