@@ -169,21 +169,18 @@ def test_relative_support():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
 
 def test_filter_max():
-    D = [
+    D = pd.Series([
         {2, 3},
         {2,},
         {4, 1},
         {4, 7},
         {4, 1, 8},
-    ]
+    ])
 
     maximums = list(filter_maximal(D))
 
-    assert maximums == [
-        (2, 3),
-        (4, 7),
-        (1, 4, 8),
-    ]
+    assert maximums == D.iloc[[0, 3, 4]].tolist()
+
 
 def test_lcm_max():
     lcm = LCMMax(min_supp=3)

@@ -244,11 +244,21 @@ class LCM():
 
 
 def filter_maximal(itemsets):
+    """
+    check for maximality between elements of ``itemsets``
+
+    An itemset if maximal iff there it has no subset in ``ìtemsets``
+
+    Notes
+    -----
+    Complexity is currently O(len(itemsets) ^ 2)
+    """
     itemsets = [set(e) for e in itemsets]
     for iset in itemsets:
         if any(map(lambda e: e > iset, itemsets)):
             continue
-        yield tuple(sorted(iset))
+        yield iset
+
 
 class LCMMax(LCM):
     """
@@ -297,9 +307,9 @@ class LCMMax(LCM):
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
 
             if no_cand:  # only if no child node. This is how we PRE-check for maximality
-                yield tuple(sorted(p_prime)), tids # sorted items in ouput for better reproducibility
+                yield tuple(sorted(p_prime)), tids
 
     def fit_discover(self, D, return_tids=False):
         patterns = super().fit_discover(D, return_tids=return_tids)
-        maximums = list(filter_maximal(patterns['itemset']))
+        maximums = [tuple(sorted(x)) for x in filter_maximal(patterns['itemset'])]
         return patterns[patterns.itemset.isin(maximums)]

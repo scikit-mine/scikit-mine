@@ -102,6 +102,10 @@ class BaseMiner(ABC):
 
         return self
 
+class DiscovererMixin:
+    def fit_discover(self, D, y=None):
+        return self.fit(D, y=y).discover()
+
 
 class MDLOptimizer(ABC):
     """
