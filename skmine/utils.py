@@ -3,6 +3,8 @@ utils functions
 """
 
 from collections import defaultdict
+from functools import partial
+from operator import gt, lt
 
 import numpy as np
 
@@ -49,3 +51,24 @@ def _check_growth_rate(gr):
     if not gr > 1:
         raise ValueError('growth ratio should be greater than 1')
     return gr
+
+
+def filter_within(itemsets, op):
+    """
+    Filter patterns within a patternset,
+    comparing each pattern to every other patterns,
+    by applying ``op``.
+
+    Notes
+    -----
+        O(n²) complexity
+    """
+    itemsets = [set(e) for e in itemsets]
+    for iset in itemsets:
+        if any(map(lambda e: op(e, iset), itemsets)):
+            continue
+        yield iset
+
+
+filter_maximal = partial(filter_within, op=gt)
+filter_minimal = partial(filter_within, op=lt)

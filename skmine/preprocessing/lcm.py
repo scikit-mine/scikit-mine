@@ -15,6 +15,7 @@ from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
 from ..utils import _check_min_supp
+from ..utils import filter_maximal
 
 
 class LCM():
@@ -232,23 +233,6 @@ class LCM():
                 if tids.intersection_len(ids) >= self._min_supp:
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
-
-
-def filter_maximal(itemsets):
-    """
-    check for maximality between elements of ``itemsets``
-
-    An itemset if maximal iff there it has no subset in ``ìtemsets``
-
-    Notes
-    -----
-    Complexity is currently O(len(itemsets) ^ 2)
-    """
-    itemsets = [set(e) for e in itemsets]
-    for iset in itemsets:
-        if any(map(lambda e: e > iset, itemsets)):
-            continue
-        yield iset
 
 
 class LCMMax(LCM):

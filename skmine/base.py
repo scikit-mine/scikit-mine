@@ -103,7 +103,20 @@ class BaseMiner(ABC):
         return self
 
 class DiscovererMixin:
+    """Mixin for all pattern discovery models in scikit-mine"""
     def fit_discover(self, D, y=None):
+        """
+        Fit to data, the exctract patterns
+
+        Parameters
+        ----------
+        D: {array-like, sparse matrix, dataframe} of shape (n_samples, n_features)
+
+        Returns
+        -------
+        _ : pd.Series
+            patterns discovered by a mining algorithm
+        """
         return self.fit(D, y=y).discover()
 
 

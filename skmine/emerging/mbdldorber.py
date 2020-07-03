@@ -1,20 +1,17 @@
+"""
+MBD-LLBorder
+"""
 import numpy as np
 import pandas as pd
 
-from ..preprocessing.lcm import LCMMax, filter_maximal
+from ..preprocessing.lcm import LCMMax
 from ..base import BaseMiner
 from ..base import DiscovererMixin
 from ..utils import _check_growth_rate
+from ..utils import filter_minimal, filter_maximal
 
 from itertools import combinations
 
-
-def filter_minimal(itemsets):
-    itemsets = list(itemsets)
-    for iset in itemsets:
-        if any(map(lambda e: e < iset, itemsets)):
-            continue
-        yield iset
 
 def border_diff(U, S):
     """
