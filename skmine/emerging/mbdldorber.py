@@ -4,6 +4,9 @@ import pandas as pd
 from ..preprocessing.lcm import LCMMax, filter_maximal
 from ..base import BaseMiner
 from ..base import DiscovererMixin
+from ..utils import _check_growth_rate
+
+from itertools import combinations
 
 
 def filter_minimal(itemsets):
@@ -72,11 +75,27 @@ def mbdllborder(isets1, isets2):
 
     return borders
 
+def borders_to_patterns(left, right, min_size=None):
+    """
+    Parameters
+    ----------
+    left: list of set
+    right: set
+    min_size: int
+        only accepts patterns with greater or equal size
 
-def _check_growth_rate(gr):
-    if not gr > 1:
-        raise ValueError('growth ratio should be greater than 1')
-    return gr
+    Operates in a bread-first manner, outputting all
+    valid patterns of a given size for each level.
+    Bigger patterns first.
+    """
+    min_size = min_size or min(map(len, left))
+    for size in range(len(right) - 1, min_size - 1, -1):  # bigger patterns first
+        combs = combinations(right, size)
+        for pat in combs:
+            if any((e.issuperset(set(pat)) for e in left)):
+                continue
+            yield pat
+
 
 class MBDLLBorder(BaseMiner, DiscovererMixin):
     def __init__(self, min_growth_rate=2, min_supp=.1):

@@ -14,17 +14,8 @@ from joblib import Parallel, delayed
 from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
+from ..utils import _check_min_supp
 
-def _check_min_supp(min_supp):
-    if isinstance(min_supp, int):
-        if min_supp < 1:
-            raise ValueError('Minimum support must be strictly positive')
-    elif isinstance(min_supp, float):
-        if min_supp < 0 or min_supp > 1:
-            raise ValueError('Minimum support must be between 0 and 1')
-    else:
-        raise TypeError('Mimimum support must be of type int or float')
-    return min_supp
 
 class LCM():
     """

@@ -31,3 +31,21 @@ def _check_random_state(random_state):
         raise TypeError('random_state should be an int or a RandomState instance')
 
     return random_state
+
+
+def _check_min_supp(min_supp):
+    if isinstance(min_supp, int):
+        if min_supp < 1:
+            raise ValueError('Minimum support must be strictly positive')
+    elif isinstance(min_supp, float):
+        if min_supp < 0 or min_supp > 1:
+            raise ValueError('Minimum support must be between 0 and 1')
+    else:
+        raise TypeError('Mimimum support must be of type int or float')
+    return min_supp
+
+
+def _check_growth_rate(gr):
+    if not gr > 1:
+        raise ValueError('growth ratio should be greater than 1')
+    return gr

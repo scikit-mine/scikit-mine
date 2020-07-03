@@ -1,6 +1,7 @@
 from ..mbdldorber import MBDLLBorder
 from ..mbdldorber import border_diff
 from ..mbdldorber import mbdllborder
+from ..mbdldorber import borders_to_patterns
 
 import pandas as pd
 
@@ -19,40 +20,42 @@ def test_mbdllborder():
 
     borders = mbdllborder(isets1, isets2)
 
-    left_borders, right_borders = zip(*borders)
-    assert left_borders == ([{1}, {2, 3, 4}],)
-    assert right_borders == ({1, 2, 3, 4},)
+    left_border, right_border = borders[0]
+    assert left_border == [{1}, {2, 3, 4}]
+    assert right_border == {1, 2, 3, 4}
 
 
-def test_fit():
-    D = pd.Series([
-        ['banana', 'chocolate'],
-        ['sirup', 'tea'],
-        ['chocolate', 'bread'],
-        ['chocolate', 'milk'],
-        ['sirup', 'milk'],
-        ['milk', 'sirup', 'tea']
-    ])
+def test_borders_to_patterns():
+    left_border = [{1}, {2, 3, 4}]
+    right_border = {1, 2, 3, 4}
 
-    y = pd.Series([
-        'food',
-        'drink',
-        'food',
-        'drink',
-        'drink',
-        'drink'
-    ], dtype='category')
+    patterns = borders_to_patterns(left_border, right_border)
 
-    ep = MBDLLBorder(min_growth_rate=1.2)
-    ep.fit(D, y)
+    patterns = list(patterns)
 
-    # TODO : 
-    _, discriminative_patterns = zip(*ep.borders_)
-    assert discriminative_patterns == (
-        {'chocolate', 'banana'},
-        {'chocolate', 'bread'},
-    )
+    assert patterns == [
+        (1, 2, 3),
+        (1, 2, 4),
+        (1, 3, 4),
+        (1, 2),
+        (1, 3),
+        (1, 4),
+    ]
 
+
+def test_border_to_patterns_min_size():
+    left_border = [{1}, {2, 3, 4}]
+    right_border = {1, 2, 3, 4}
+
+    patterns = borders_to_patterns(left_border, right_border, min_size=3)
+
+    patterns = list(patterns)
+
+    assert patterns == [
+        (1, 2, 3),
+        (1, 2, 4),
+        (1, 3, 4),
+    ]
 
 def test_discover():
     D = pd.Series([

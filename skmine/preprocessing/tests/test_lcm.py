@@ -150,16 +150,6 @@ def test_lcm_transform():
     )
 
 
-def test_relative_support_errors():
-    wrong_values = [-1, -100, 2.33, 150.55]
-    for wrong_supp in wrong_values:
-        with pytest.raises(ValueError):
-            LCM(min_supp=wrong_supp)
-
-    with pytest.raises(TypeError):
-        LCM(min_supp='string minimum support')
-
-
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
     lcm._fit(D)
