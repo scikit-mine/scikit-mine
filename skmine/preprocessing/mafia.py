@@ -10,6 +10,10 @@ from sortedcontainers import SortedDict, SortedSet
 
 from ..base import BaseMiner, DiscovererMixin
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def dfs(item_to_tids, min_supp, head, head_tids, mfi):
     """
@@ -22,17 +26,18 @@ def dfs(item_to_tids, min_supp, head, head_tids, mfi):
     """
     p = item_to_tids.bisect_right(head[-1])
     tail = item_to_tids.keys()[p:]
-    tail = filter(
-        lambda e: head_tids.intersection_len(item_to_tids[e]) >= min_supp,
-        tail,
-    )
 
     node = None
     for cand in tail:
-        node = head | {cand} # TODO : pulling sortedkeys should be faster
-        tids = head_tids.intersection(item_to_tids[cand])
-        dfs(item_to_tids, min_supp, node, tids, mfi)
-        # TODO : else break
+        cand_tids = item_to_tids[cand]
+        if head_tids.issubset(cand_tids):
+            head.append(cand)
+        elif head_tids.intersection_len(cand_tids) >= min_supp:
+            node = head + [cand]
+            tids = head_tids.intersection(item_to_tids[cand])
+            dfs(item_to_tids, min_supp, node, tids, mfi)
+
+        else: break
 
     if node is None:
         head = frozenset(head)
@@ -49,13 +54,20 @@ class Mafia(BaseMiner, DiscovererMixin):
 
     def _prefit(self, D):
         d = defaultdict(RoaringBitmap)
-        for tid, t in enumerate(D):
+        tid = 0
+
+        for t in D:
             for e in t:
                 d[e].add(tid)
+            tid += 1
+
+        min_supp = self.min_supp_ * tid if isinstance(self.min_supp_, float) else self.min_supp_
 
         self.item_to_tids_ = SortedDict(
-            {k: v for k, v in d.items() if len(v) >= self.min_supp_}
+            {k: v for k, v in d.items() if len(v) >= min_supp}
         )
+
+        logger.info(f'keeping track of {len(self.item_to_tids_)} items')
 
         return self
 
@@ -65,8 +77,8 @@ class Mafia(BaseMiner, DiscovererMixin):
         mfi = dict()
 
         for item, tids in self.item_to_tids_.items():
-            head = SortedSet([item])
-            dfs(self.item_to_tids_, self.min_supp_, head, tids, mfi)
+            logger.info(f'eploring item {item}')
+            dfs(self.item_to_tids_, self.min_supp_, [item], tids, mfi)
 
         self.mfi_ = mfi
 
