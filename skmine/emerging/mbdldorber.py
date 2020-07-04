@@ -1,16 +1,16 @@
 """
 MBD-LLBorder
 """
+from functools import partial
+from itertools import combinations
+
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 
+from ..base import BaseMiner, DiscovererMixin
 from ..preprocessing.lcm import LCMMax
-from ..base import BaseMiner
-from ..base import DiscovererMixin
-from ..utils import _check_growth_rate
-from ..utils import filter_minimal, filter_maximal
-
-from itertools import combinations
+from ..utils import _check_growth_rate, filter_maximal, filter_minimal
 
 
 def border_diff(U, S):
@@ -95,13 +95,80 @@ def borders_to_patterns(left, right, min_size=None):
 
 
 class MBDLLBorder(BaseMiner, DiscovererMixin):
-    def __init__(self, min_growth_rate=2, min_supp=.1):
+    """
+    MBD-LLBorder
+
+    Mining Emerging Patterns, manipulating only borders of two collections
+
+    MBD-LLBorder aims at discovering patterns characterizing the difference
+    between two collections of data.
+    It first discovers two sets of maximal itemsets, one for each collection.
+    The it looks for borders of these sets, and characterizes the difference
+    by only manipulating theses borders, and not the original maximal itemsets.
+    This results in the algorithm only keeping a concise description (borders)
+    as an internal state.
+    Last but not least, it enumerates the set of emering patterns from the
+    borders.
+
+    Parameters
+    ----------
+    min_growth_rate: int or float, default=2
+        A pattern is considered as emerging iff its support in the first collection
+        is at least ``min_growth_rate`` times its support in the second collection.
+
+    min_supp: int or float, default=.1
+        Minimum support in each of the collection
+        Default to 0.1 (10%)
+
+    n_jobs : int, default=1
+        The number of jobs to use for the computation. Each single item is attributed a job
+        to discover potential itemsets, considering this item as a root in the search space.
+        Processes are preffered over threads.
+
+
+    Attributes
+    ----------
+    borders_: list of tuple[list[set], set]
+        List of pairs representing left and right borders
+        For every pair, emerging patterns will be uncovered by enumerating itemsets
+        from the right side, while checking for non membership in the left side
+
+
+    References
+    ----------
+    .. [1]
+        Guozhu Dong, Jinyan Li
+        "Efficient Mining of Emerging Patterns : Discovering Trends and Differences"
+
+    Examples
+    --------
+
+    # TODO
+    """
+    def __init__(self, min_growth_rate=2, min_supp=.1, n_jobs=1):
         self.min_supp_ = min_supp
         self.min_growth_rate_ = _check_growth_rate(min_growth_rate)
         self.borders_ = None
-
+        self.n_jobs = n_jobs
 
     def fit(self, D, y):
+        """
+        fit MBD-LLBorder
+        This is done in two steps
+            1. Discover maximal itemsets for the two disinct collections contained in D
+            2. Mine borders from these maximal itemsets
+
+        Parameters
+        ----------
+        D : pd.Series
+            The input transactional database
+            Where every entry contain singular items
+            Items must be both hashable and comparable
+
+        y : array-like of shape (n_samples,)
+            Targets on which to split D
+            Must contain only two disctinct values, i.e len(np.unique(y)) == 2
+        """
         labels = np.unique(y)
         assert len(labels) == 2
         assert isinstance(D, pd.Series)  # TODO : accept tabular data
@@ -119,7 +186,22 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
 
         return self
 
-    def discover(self):
-        # TODO : post processing on border is necessary
-        _, discriminative_patterns = zip(*self.borders_)
-        return pd.Series(discriminative_patterns)
+    def discover(self, min_size=3):
+        """
+        Enumerate emerging patterns from borders
+        Subsets are drawn from the right borders, and are accepted iff
+        they do not belong to the corresponding left border.
+
+        This implementation is parallel, we consider every couple
+        of right/left border in a separate worker and run the computation
+
+        Parameters
+        ----------
+        min_size: int
+            minimum size for an itemset to be valid
+        """
+        btp = delayed(lambda L, R: pd.Series(borders_to_patterns(L, R, min_size)))
+        series = Parallel(n_jobs=self.n_jobs, prefer='processes')(
+            btp(L, R) for L, R in self.borders_
+        )
+        return pd.concat(series) if series else pd.Series()

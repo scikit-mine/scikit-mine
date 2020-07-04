@@ -30,9 +30,9 @@ class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
 
     @abstractmethod
-    def fit(self, D, y=None):
+    def fit(self, D, y):
         """Fit method to be implemented."""
-        pass
+        return self
 
     _get_tags = _get_tags
 
