@@ -74,6 +74,10 @@ def mbdllborder(isets1, isets2):
 
 def borders_to_patterns(left, right, min_size=None):
     """
+    Operates in a bread-first manner, outputting all
+    valid patterns of a given size for each level.
+    Bigger patterns first.
+
     Parameters
     ----------
     left: list of set
@@ -81,17 +85,20 @@ def borders_to_patterns(left, right, min_size=None):
     min_size: int
         only accepts patterns with greater or equal size
 
-    Operates in a bread-first manner, outputting all
-    valid patterns of a given size for each level.
-    Bigger patterns first.
+    Returns
+    -------
+    pd.Series
     """
     min_size = min_size or min(map(len, left))
+    patterns = list()
     for size in range(len(right) - 1, min_size - 1, -1):  # bigger patterns first
         combs = combinations(right, size)
         for pat in combs:
             if any((e.issuperset(set(pat)) for e in left)):
                 continue
-            yield pat
+            patterns.append(pat)
+
+    return pd.Series(patterns)
 
 
 class MBDLLBorder(BaseMiner, DiscovererMixin):
@@ -199,7 +206,7 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         min_size: int
             minimum size for an itemset to be valid
         """
-        btp = delayed(lambda L, R: pd.Series(borders_to_patterns(L, R, min_size)))
+        btp = delayed(partial(borders_to_patterns, min_size=min_size))
         series = Parallel(n_jobs=self.n_jobs, prefer='processes')(
             btp(L, R) for L, R in self.borders_
         )
