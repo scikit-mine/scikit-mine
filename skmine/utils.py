@@ -35,8 +35,12 @@ def _check_random_state(random_state):
     return random_state
 
 
-def _check_min_supp(min_supp):
+def _check_min_supp(min_supp, accept_absolute=True):
     if isinstance(min_supp, int):
+        if not accept_absolute:
+            raise ValueError(
+                'Absolute support is prohibited, please provide a float value between 0 and 1'
+            )
         if min_supp < 1:
             raise ValueError('Minimum support must be strictly positive')
     elif isinstance(min_supp, float):

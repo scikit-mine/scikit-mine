@@ -35,6 +35,9 @@ def test_wrong_minimum_supports():
     with pytest.raises(TypeError):
         _check_min_supp('string minimum support')
 
+    with pytest.raises(ValueError):
+        _check_min_supp(12, accept_absolute=False)
+
 def test_minimum_support():
     assert _check_min_supp(.1) == .1
     assert _check_min_supp(10) == 10

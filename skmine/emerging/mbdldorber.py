@@ -10,7 +10,7 @@ from joblib import Parallel, delayed
 
 from ..base import BaseMiner, DiscovererMixin
 from ..preprocessing.lcm import LCMMax
-from ..utils import _check_growth_rate, filter_maximal, filter_minimal
+from ..utils import _check_growth_rate, _check_min_supp, filter_maximal, filter_minimal
 
 
 def border_diff(U, S):
@@ -96,34 +96,32 @@ def borders_to_patterns(left, right, min_size=None):
 
 class MBDLLBorder(BaseMiner, DiscovererMixin):
     """
-    MBD-LLBorder
-
-    Mining Emerging Patterns, manipulating only borders of two collections
-
     MBD-LLBorder aims at discovering patterns characterizing the difference
     between two collections of data.
-    It first discovers two sets of maximal itemsets, one for each collection.
-    The it looks for borders of these sets, and characterizes the difference
-    by only manipulating theses borders, and not the original maximal itemsets.
-    This results in the algorithm only keeping a concise description (borders)
+
+    It first discovers ``two sets of maximal itemsets``, one for each collection.
+    It then looks for borders of these sets, and characterizes the difference
+    by only manipulating theses borders.
+
+    This results in the algorithm only keeping a ``concise description (borders)``
     as an internal state.
-    Last but not least, it enumerates the set of emering patterns from the
+
+    Last but not least, it enumerates the set of emerging patterns from the
     borders.
 
     Parameters
     ----------
     min_growth_rate: int or float, default=2
         A pattern is considered as emerging iff its support in the first collection
-        is at least ``min_growth_rate`` times its support in the second collection.
+        is at least min_growth_rate times its support in the second collection.
 
     min_supp: int or float, default=.1
         Minimum support in each of the collection
+        Must be a relative support between 0 and 1
         Default to 0.1 (10%)
 
     n_jobs : int, default=1
-        The number of jobs to use for the computation. Each single item is attributed a job
-        to discover potential itemsets, considering this item as a root in the search space.
-        Processes are preffered over threads.
+        The number of jobs to use for the computation.
 
 
     Attributes
@@ -146,14 +144,15 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
     # TODO
     """
     def __init__(self, min_growth_rate=2, min_supp=.1, n_jobs=1):
-        self.min_supp_ = min_supp
+        self.min_supp_ = _check_min_supp(min_supp, accept_absolute=False)
         self.min_growth_rate_ = _check_growth_rate(min_growth_rate)
         self.borders_ = None
         self.n_jobs = n_jobs
 
     def fit(self, D, y):
         """
-        fit MBD-LLBorder
+        fit MBD-LLBorder on D, splitted on y
+
         This is done in two steps
             1. Discover maximal itemsets for the two disinct collections contained in D
             2. Mine borders from these maximal itemsets
@@ -162,7 +161,7 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         ----------
         D : pd.Series
             The input transactional database
-            Where every entry contain singular items
+            Where every entry contains singular items
             Items must be both hashable and comparable
 
         y : array-like of shape (n_samples,)
