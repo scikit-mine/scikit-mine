@@ -62,7 +62,7 @@ def mbdllborder(isets1, isets2):
     borders = list()
 
     for iset in isets2:
-        if any((e.issuperset(iset) for e in isets1)): continue
+        if any((e > iset for e in isets1)): continue
         inter = [iset & e for e in isets1]
         R = filter_maximal(inter)
         R = [set(e) for e in R]
@@ -143,16 +143,11 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
     ----------
     .. [1]
         Guozhu Dong, Jinyan Li
-        "Efficient Mining of Emerging Patterns : Discovering Trends and Differences"
-
-    Examples
-    --------
-
-    # TODO
+        "Efficient Mining of Emerging Patterns : Discovering Trends and Differences", 1999
     """
     def __init__(self, min_growth_rate=2, min_supp=.1, n_jobs=1):
-        self.min_supp_ = _check_min_supp(min_supp, accept_absolute=False)
-        self.min_growth_rate_ = _check_growth_rate(min_growth_rate)
+        self.min_supp = _check_min_supp(min_supp, accept_absolute=False)
+        self.min_growth_rate = _check_growth_rate(min_growth_rate)
         self.borders_ = None
         self.n_jobs = n_jobs
 
@@ -182,8 +177,8 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         D1, D2 = D[y == labels[0]], D[y == labels[1]]
 
         # TODO : replace LCMMax by some more efficient method
-        right_border_d1 = LCMMax(min_supp=self.min_supp_).fit_discover(D1)
-        right_border_d2 = LCMMax(min_supp=self.min_growth_rate_ * self.min_supp_).fit_discover(D2)
+        right_border_d1 = LCMMax(min_supp=self.min_supp).fit_discover(D1)
+        right_border_d2 = LCMMax(min_supp=self.min_growth_rate * self.min_supp).fit_discover(D2)
 
         right_border_d1 = right_border_d1.itemset.map(set).tolist()
         right_border_d2 = right_border_d2.itemset.map(set).tolist()
