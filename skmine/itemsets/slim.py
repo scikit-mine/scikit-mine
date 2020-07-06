@@ -9,17 +9,17 @@ from itertools import chain
 
 import numpy as np
 import pandas as pd
-from roaringbitmap import RoaringBitmap
 
 from ..base import BaseMiner
 from ..utils import lazydict
+from ..bitmaps import Bitmap
 
 
 def make_codetable(D: pd.Series):
     """
     Applied on an original dataset this makes up a standard codetable
     """
-    codetable = defaultdict(RoaringBitmap)
+    codetable = defaultdict(Bitmap)
     for idx, transaction in enumerate(D):
         for item in transaction:
             codetable[item].add(idx)
@@ -31,7 +31,7 @@ def cover(itemsets: list, D: pd.DataFrame):
     """
     stacks = dict()
     for iset in itemsets:
-        mask = RoaringBitmap()
+        mask = Bitmap()
         for key in stacks:
             if not iset.isdisjoint(key):
                 mask |= stacks[key]
@@ -41,7 +41,7 @@ def cover(itemsets: list, D: pd.DataFrame):
         bools = bools.all(axis=1)
         #where = np.where(bools)[0]
         where = bools[bools].index
-        rb = RoaringBitmap(where)
+        rb = Bitmap(where)
         stacks[iset] = rb
 
     return pd.Series(stacks)
@@ -119,7 +119,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         # TODO : add eps parameter for smarter early stopping
 
     def _get_support(self, itemset):
-        U = reduce(RoaringBitmap.union, self._standard_codetable.loc[itemset])
+        U = reduce(Bitmap.union, self._standard_codetable.loc[itemset])
         return len(U)
 
     def _get_cover_order_pos(self, codetable, cand):
@@ -134,7 +134,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
 
     def _prefit(self, D):
-        sct_d = {k: RoaringBitmap(np.where(D[k])[0]) for k in D.columns}
+        sct_d = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         self._standard_codetable = pd.Series(sct_d)
         usage = self._standard_codetable.map(len).astype(np.uint32)
 
