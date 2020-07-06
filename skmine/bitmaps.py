@@ -3,9 +3,10 @@ Bitmap definition for scikit-mine
 """
 import platform
 
+from sortedcontainers import SortedSet
 from roaringbitmap import RoaringBitmap as _RB
 
-from sortedcontainers import SortedSet
+
 
 class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     """
