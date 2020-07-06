@@ -16,6 +16,14 @@ class BitmapMock(set):
         """Returns length of the intersection"""
         return len(self & other)
 
+    def flip_range(self, start, stop):
+        """In-place negation for range(start, stop)"""
+        for e in range(start, stop):
+            if e in self:
+                self.discard(e)
+            else:
+                self.add(e)
+
 if platform.system() == 'Windows':
     Bitmap = BitmapMock
 else:
