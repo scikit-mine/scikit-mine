@@ -5,7 +5,9 @@ import platform
 
 from roaringbitmap import RoaringBitmap as _RB
 
-class BitmapMock(set):
+from sortedcontainers import SortedSet
+
+class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     """
     Dummy implementation of a bitmap
 
