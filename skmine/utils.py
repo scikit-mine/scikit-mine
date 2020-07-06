@@ -3,6 +3,8 @@ utils functions
 """
 
 from collections import defaultdict
+from functools import partial
+from operator import gt, lt
 
 import numpy as np
 
@@ -31,3 +33,46 @@ def _check_random_state(random_state):
         raise TypeError('random_state should be an int or a RandomState instance')
 
     return random_state
+
+
+def _check_min_supp(min_supp, accept_absolute=True):
+    if isinstance(min_supp, int):
+        if not accept_absolute:
+            raise ValueError(
+                'Absolute support is prohibited, please provide a float value between 0 and 1'
+            )
+        if min_supp < 1:
+            raise ValueError('Minimum support must be strictly positive')
+    elif isinstance(min_supp, float):
+        if min_supp < 0 or min_supp > 1:
+            raise ValueError('Minimum support must be between 0 and 1')
+    else:
+        raise TypeError('Mimimum support must be of type int or float')
+    return min_supp
+
+
+def _check_growth_rate(gr):
+    if not gr > 1:
+        raise ValueError('growth ratio should be greater than 1')
+    return gr
+
+
+def filter_within(itemsets, op):
+    """
+    Filter patterns within a patternset,
+    comparing each pattern to every other patterns,
+    by applying ``op``.
+
+    Notes
+    -----
+        O(n²) complexity
+    """
+    itemsets = [set(e) for e in itemsets]
+    for iset in itemsets:
+        if any(map(lambda e: op(e, iset), itemsets)):
+            continue
+        yield iset
+
+
+filter_maximal = partial(filter_within, op=gt)
+filter_minimal = partial(filter_within, op=lt)

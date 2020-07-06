@@ -14,17 +14,9 @@ from joblib import Parallel, delayed
 from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
+from ..utils import _check_min_supp
+from ..utils import filter_maximal
 
-def _check_min_supp(min_supp):
-    if isinstance(min_supp, int):
-        if min_supp < 1:
-            raise ValueError('Minimum support must be strictly positive')
-    elif isinstance(min_supp, float):
-        if min_supp < 0 or min_supp > 1:
-            raise ValueError('Minimum support must be between 0 and 1')
-    else:
-        raise TypeError('Mimimum support must be of type int or float')
-    return min_supp
 
 class LCM():
     """
@@ -241,3 +233,58 @@ class LCM():
                 if tids.intersection_len(ids) >= self._min_supp:
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
+
+
+class LCMMax(LCM):
+    """
+    Linear time Closed item set Miner.
+
+    Adapted to Maximal itemsets (or borders).
+    A maximal itemset is an itemset with no frequent superset.
+
+    Parameters
+    ----------
+    min_supp: int or float, default=0.2
+        The minimum support for itemsets to be rendered in the output
+        Either an int representing the absolute support, or a float for relative support
+
+        Default to 0.2 (20%)
+    n_jobs : int, default=1
+        The number of jobs to use for the computation. Each single item is attributed a job
+        to discover potential itemsets, considering this item as a root in the search space.
+        Processes are preffered over threads.
+
+    See Also
+    --------
+    LCM
+    """
+    def _inner(self, p, tids, limit):
+        # project and reduce DB w.r.t P
+        cp = (
+            item for item, ids in reversed(self.item_to_tids.items())
+            if tids.issubset(ids) if item not in p
+        )
+
+        max_k = next(cp, None)  # items are in reverse order, so the first consumed is the max
+
+        if max_k and max_k == limit:
+            p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
+
+            candidates = self.item_to_tids.keys() - p_prime
+            candidates = candidates[:candidates.bisect_left(limit)]
+
+            no_cand = True
+            for new_limit in candidates:
+                ids = self.item_to_tids[new_limit]
+                if tids.intersection_len(ids) >= self._min_supp:
+                    no_cand = False
+                    new_limit_tids = tids.intersection(ids)
+                    yield from self._inner(p_prime, new_limit_tids, new_limit)
+
+            if no_cand:  # only if no child node. This is how we PRE-check for maximality
+                yield tuple(sorted(p_prime)), tids
+
+    def fit_discover(self, D, return_tids=False):
+        patterns = super().fit_discover(D, return_tids=return_tids)
+        maximums = [tuple(sorted(x)) for x in filter_maximal(patterns['itemset'])]
+        return patterns[patterns.itemset.isin(maximums)]

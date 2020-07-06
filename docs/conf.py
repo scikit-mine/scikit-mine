@@ -51,7 +51,7 @@ extensions = [
 
 autodoc_default_options = {
     'members': True,
-    'inherited-members': True
+    'inherited-members': False
 }
 
 autosummary_generate = True

@@ -30,9 +30,9 @@ class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
 
     @abstractmethod
-    def fit(self, D, y=None):
+    def fit(self, D, y):
         """Fit method to be implemented."""
-        pass
+        return self
 
     _get_tags = _get_tags
 
@@ -101,6 +101,23 @@ class BaseMiner(ABC):
             valid_params[key] = value
 
         return self
+
+class DiscovererMixin:
+    """Mixin for all pattern discovery models in scikit-mine"""
+    def fit_discover(self, D, y=None, **kwargs):
+        """
+        Fit to data, the exctract patterns
+
+        Parameters
+        ----------
+        D: {array-like, sparse matrix, dataframe} of shape (n_samples, n_features)
+
+        Returns
+        -------
+        _ : pd.Series
+            patterns discovered by a mining algorithm
+        """
+        return self.fit(D, y=y).discover(**kwargs)
 
 
 class MDLOptimizer(ABC):
