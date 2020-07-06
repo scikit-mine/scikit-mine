@@ -3,10 +3,9 @@ from ..slim import cover
 from ..slim import generate_candidates
 from ..slim import SLIM
 from ...preprocessing.transaction_encoder import TransactionEncoder
-
+from ...bitmaps import Bitmap
 
 import pytest
-from roaringbitmap import RoaringBitmap
 import pandas as pd
 import numpy as np
 
@@ -85,7 +84,7 @@ def test_generate_candidate_1():
     assert new_candidates == [frozenset('AB'), frozenset('BC')]
 
 def test_generate_candidate_2():
-    usage = list(map(RoaringBitmap, [
+    usage = list(map(Bitmap, [
         range(7),
         [7],
         [8],
@@ -98,7 +97,7 @@ def test_generate_candidate_2():
     assert new_candidates == [frozenset('ABC')]
 
 def test_generate_candidate_stack():
-    usage = list(map(RoaringBitmap, [
+    usage = list(map(Bitmap, [
         range(6),
         [6, 7],
         [6, 8],
@@ -192,10 +191,10 @@ def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
-        frozenset('ABC'): RoaringBitmap(range(0, 5)),
-        frozenset('AB'): RoaringBitmap([5]),
-        frozenset('A'): RoaringBitmap([6]),
-        frozenset('B'): RoaringBitmap([7]),
+        frozenset('ABC'): Bitmap(range(0, 5)),
+        frozenset('AB'): Bitmap([5]),
+        frozenset('A'): Bitmap([6]),
+        frozenset('B'): Bitmap([7]),
     })
 
     data_size, model_size = slim.compute_sizes(CT)
@@ -207,9 +206,9 @@ def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = pd.Series({
-        frozenset('ABC'): RoaringBitmap(range(0, 5)),
-        frozenset('A'): RoaringBitmap([5, 6]),
-        frozenset('B'): RoaringBitmap([5, 7]),
+        frozenset('ABC'): Bitmap(range(0, 5)),
+        frozenset('A'): Bitmap([5, 6]),
+        frozenset('B'): Bitmap([5, 7]),
     })
 
     data_size, model_size = slim.compute_sizes(CT)

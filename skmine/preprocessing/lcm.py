@@ -11,11 +11,11 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from roaringbitmap import RoaringBitmap
 from sortedcontainers import SortedDict
 
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
+from ..bitmaps import Bitmap
 
 
 class LCM():
@@ -78,7 +78,7 @@ class LCM():
 
     def _fit(self, D):
         self.n_transactions = 0  # reset for safety
-        item_to_tids = defaultdict(RoaringBitmap)
+        item_to_tids = defaultdict(Bitmap)
         for transaction in D:
             for item in transaction:
                 item_to_tids[item].add(self.n_transactions)
