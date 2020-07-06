@@ -73,6 +73,6 @@ def test_discover():
     ], dtype='category')
 
     ep = MBDLLBorder(min_growth_rate=1.2)
-    patterns = ep.fit_discover(D, y)
+    patterns = ep.fit_discover(D, y, min_size=2)
 
     assert isinstance(patterns, pd.Series)

@@ -104,7 +104,7 @@ class BaseMiner(ABC):
 
 class DiscovererMixin:
     """Mixin for all pattern discovery models in scikit-mine"""
-    def fit_discover(self, D, y=None):
+    def fit_discover(self, D, y=None, **kwargs):
         """
         Fit to data, the exctract patterns
 
@@ -117,7 +117,7 @@ class DiscovererMixin:
         _ : pd.Series
             patterns discovered by a mining algorithm
         """
-        return self.fit(D, y=y).discover()
+        return self.fit(D, y=y).discover(**kwargs)
 
 
 class MDLOptimizer(ABC):
