@@ -135,7 +135,7 @@ class LCM():
              itemset  support
         0     (2, 5)        3
         1  (2, 3, 5)        2
-        >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
+        >>> LCM(min_supp=2).fit_discover(D, return_tids=True)  # doctest: +SKIP
              itemset       tids
         0     (2, 5)  [0, 1, 2]
         1  (2, 3, 5)     [0, 1]
