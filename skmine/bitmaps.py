@@ -26,6 +26,12 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
             else:
                 self.add(e)
 
+    def __repr__(self):
+        return '[{}]'.format(', '.join(map(str, self)))
+
+    __str__ = __repr__
+
+
 if platform.system() == 'Windows':
     Bitmap = BitmapMock
 else:
