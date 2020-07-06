@@ -11,7 +11,7 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     """
     Dummy implementation of a bitmap
 
-    This inherits the python ``set`` class and provide some extra functions
+    This inherits the ``SortedSet`` class and provide some extra functions
     to ensure compatibility with other -performant- bitmap implementations
     """
     def intersection_len(self, other):
