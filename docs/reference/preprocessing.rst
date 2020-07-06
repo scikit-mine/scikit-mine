@@ -3,10 +3,17 @@
 Preprocessing
 *************
 
+MDLPDiscretizer
+---------------
+.. autofunction:: skmine.preprocessing.MDLPDiscretizer
 
-Transactions
-------------
-Methods to encode transactional datasets
 
+LCM
+-------
+
+.. autoclass:: skmine.preprocessing.LCM
+
+
+TransactionEncoder
+------------------
 .. autofunction:: skmine.preprocessing.TransactionEncoder
-

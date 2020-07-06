@@ -11,3 +11,5 @@ API Reference
         preprocessing
    * .. toctree::
         itemsets
+   * .. toctree::
+        emerging

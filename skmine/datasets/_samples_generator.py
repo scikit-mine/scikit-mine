@@ -6,11 +6,11 @@ Mainly for benchmarks and experiments
 import numpy as np
 import pandas as pd
 
-
 def make_transactions(n_transactions=1000,
                       n_items=100,
                       density=.5,
-                      random_state=None):
+                      random_state=None,
+                      item_start=0):
     """
     Generate a transactional dataset with predefined properties
 
@@ -61,11 +61,13 @@ def make_transactions(n_transactions=1000,
     """
     if not .0 < density < 1.0:
         raise ValueError('density should be a float value between 0 and 1')
+
     avg_transaction_size = density * n_items
 
     generator = np.random.RandomState(random_state)  # pylint: disable= no-member
 
-    choices = np.arange(n_items)
+    item_stop = item_start + n_items
+    choices = np.arange(start=item_start, stop=item_stop)
     t_sizes = generator.binomial(
         n=avg_transaction_size * 2,
         p=.5,  # centered around avg_transaction_size
@@ -78,3 +80,93 @@ def make_transactions(n_transactions=1000,
 
     D = [generator.choice(choices, size, replace=False) for size in t_sizes]
     return pd.Series(D)
+
+def make_classification(n_samples=100, n_items_per_class=100, *,  # pylint: disable= too-many-locals
+                        n_classes=2, weights=None, class_sep=.2,
+                        shuffle=True, random_state=None, densities=None):
+    """
+    Generate a random n-class classification problem
+
+    Acts like sklearn version of make_classification, but produces
+    transactional data instead. Transactions are drawn from a ``n_items_per_class``
+    number of items, respecting the ``class_sep`` parameter to ensure transactions
+    are drawn from different alphabets for different classes.
+
+    A ``class_sep`` value of 0.0 will result in transactions being drawn from the
+    same set of symbols.
+
+    Densities can be defined for each class given the ``densities``
+    parameter.
+
+    Parameters
+    ----------
+    n_samples: int, default=100
+        The number of samples
+    n_items_per_class: int, default=100
+        The number of items per class. This is similar to the ``n_features``
+        parameters in scikit-learn, but operates at a class level.
+    n_classes: int, default=2
+        The number of classes (or labels) of the classification problem
+    weigths, array-like of shape (n_classes,) default=None
+        The proportions of samples assigned to each class. If None, then classes are balanced
+    class_sep: float, default=0.2
+        The factor of different items in different between classes.
+        Setting this to 1.0 will make classification dummy.
+    shuffle: boolean, default=True
+        Shuffle the samples and the labels
+    random_state: int RandomState instance, default=None
+        Determines random number generation for dataset creation. Pass an int
+        for reproducible output across multiple function calls.
+
+    Returns
+    -------
+    D: pd.Series of shape [n_samples, ]
+        The generated samples
+    y: pd.Series of shape [n_samples]
+        Labels associated to D
+
+    See also
+    --------
+    make_transactions : which is used internally to generate samples
+    """
+    assert n_classes > 0
+    if densities is None:
+        densities = [.5] * n_classes
+
+    if weights is None:
+        weights = [1 / n_classes] * n_classes  # balanced by default
+
+    assert len(weights) == len(densities) == n_classes
+    assert 0 <= class_sep <= 1.0
+    np.testing.assert_almost_equal(np.sum(weights), 1.0, decimal=2)
+
+    res = dict()
+
+    padding = 0
+    for _class in range(n_classes):
+        _n_samples = int(weights[_class] * n_samples)
+        density = densities[_class]
+        transactions = make_transactions(
+            n_transactions=_n_samples,
+            n_items=n_items_per_class,
+            random_state=random_state,
+            item_start=padding,
+            density=density,
+        )
+        res[_class] = transactions
+
+        # if class_sep == 1.0, then separation is strict
+        padding += int(n_items_per_class - (n_items_per_class * (1 - class_sep)))
+
+    dfs = list()
+    for _class, transactions in res.items():
+        df = transactions.to_frame(name='transaction')
+        df.loc[:, 'class'] = _class
+        dfs.append(df)
+
+    df = pd.concat(dfs, axis=0)
+
+    if shuffle:
+        df = df.sample(frac=1)
+
+    return df['transaction'], df['class']

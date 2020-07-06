@@ -30,9 +30,9 @@ class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
 
     @abstractmethod
-    def fit(self, D, y=None):
+    def fit(self, D, y):
         """Fit method to be implemented."""
-        pass
+        return self
 
     _get_tags = _get_tags
 
@@ -102,6 +102,23 @@ class BaseMiner(ABC):
 
         return self
 
+class DiscovererMixin:
+    """Mixin for all pattern discovery models in scikit-mine"""
+    def fit_discover(self, D, y=None, **kwargs):
+        """
+        Fit to data, the exctract patterns
+
+        Parameters
+        ----------
+        D: {array-like, sparse matrix, dataframe} of shape (n_samples, n_features)
+
+        Returns
+        -------
+        _ : pd.Series
+            patterns discovered by a mining algorithm
+        """
+        return self.fit(D, y=y).discover(**kwargs)
+
 
 class MDLOptimizer(ABC):
     """
@@ -118,9 +135,4 @@ class MDLOptimizer(ABC):
         L(D|CT) - L(CT|D) is the difference between
         the size of the dataset D encoded with the codetable CT and the size of the codetable CT
         """
-        pass
-
-    @abstractmethod
-    def cover(self, codetable, D):
-        """Cover the dataset D given the codetable."""
         pass

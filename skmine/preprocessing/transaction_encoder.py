@@ -7,8 +7,8 @@ but produces pd.DataFrame as output
 """
 import pandas as pd
 import numpy as np
-
 from sklearn.preprocessing import MultiLabelBinarizer
+
 
 class TransactionEncoder(MultiLabelBinarizer):
     __doc__ = __doc__

@@ -2,7 +2,9 @@ import pandas as pd
 import pytest
 import numpy as np
 
-from skmine.itemsets import LCM
+from ..lcm import LCM
+from ..lcm import LCMMax
+from ..lcm import filter_maximal
 
 D = [
     [1, 2, 3, 4, 5, 6],
@@ -148,16 +150,6 @@ def test_lcm_transform():
     )
 
 
-def test_relative_support_errors():
-    wrong_values = [-1, -100, 2.33, 150.55]
-    for wrong_supp in wrong_values:
-        with pytest.raises(ValueError):
-            LCM(min_supp=wrong_supp)
-
-    with pytest.raises(TypeError):
-        LCM(min_supp='string minimum support')
-
-
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
     lcm._fit(D)
@@ -165,3 +157,27 @@ def test_relative_support():
 
     for item in lcm.item_to_tids.keys():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
+
+def test_filter_max():
+    D = pd.Series([
+        {2, 3},
+        {2,},
+        {4, 1},
+        {4, 7},
+        {4, 1, 8},
+    ])
+
+    maximums = list(filter_maximal(D))
+
+    assert maximums == D.iloc[[0, 3, 4]].tolist()
+
+
+def test_lcm_max():
+    lcm = LCMMax(min_supp=3)
+    patterns = lcm.fit_discover(D)
+    assert set(patterns.itemset) == {
+        (1, 4, 6),
+        (2, 5),
+        (2, 4),
+        (3,),
+    }

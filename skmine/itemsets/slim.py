@@ -10,17 +10,17 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from roaringbitmap import RoaringBitmap
 
 from ..base import BaseMiner
 from ..utils import lazydict
+from ..bitmaps import Bitmap
 
 
 def make_codetable(D: pd.Series):
     """
     Applied on an original dataset this makes up a standard codetable
     """
-    codetable = defaultdict(RoaringBitmap)
+    codetable = defaultdict(Bitmap)
     for idx, transaction in enumerate(D):
         for item in transaction:
             codetable[item].add(idx)
@@ -37,13 +37,13 @@ def cover(itemsets: list, D: pd.DataFrame):
 
     for iset in _itemsets:
         parents = (v for k, v in zip(_itemsets, covers) if not set(iset).isdisjoint(k))
-        rows_left = reduce(RoaringBitmap.union, parents, RoaringBitmap())
+        rows_left = reduce(Bitmap.union, parents, Bitmap())
         rows_left.flip_range(0, len(D))
         _mat = mat[rows_left][:, iset]
         bools = _mat.all(axis=1)
         rows_where = np.where(bools)[0]
         rows_where += rows_left.min()  # pad indexes
-        covers.append(RoaringBitmap(rows_where))
+        covers.append(Bitmap(rows_where))
 
     return pd.Series(covers, index=itemsets)
 
@@ -152,7 +152,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         self.verbose = verbose
 
     def _get_support(self, itemset):
-        U = reduce(RoaringBitmap.union, self._standard_codetable.loc[itemset])
+        U = reduce(Bitmap.union, self._standard_codetable.loc[itemset])
         return len(U)
 
     def _get_cover_order_pos(self, codetable, cand):
@@ -187,7 +187,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
 
     def _prefit(self, D):
-        sct_d = {k: RoaringBitmap(np.where(D[k])[0]) for k in D.columns}
+        sct_d = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         self._standard_codetable = pd.Series(sct_d)
         usage = self._standard_codetable.map(len).astype(np.uint32)
 
@@ -320,9 +320,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         prevs_subsets = prevs[prevs.index.map(lambda e: not e.isdisjoint(candidate))]
 
         # get original support from standard_codetable
-        cand_usage = reduce(RoaringBitmap.intersection, self._standard_codetable.loc[candidate])
+        cand_usage = reduce(Bitmap.intersection, self._standard_codetable.loc[candidate])
         # remove union of all non disjoint itemsets before it to get real usage
-        cand_usage -= reduce(RoaringBitmap.union, prevs_subsets.values, RoaringBitmap())
+        cand_usage -= reduce(Bitmap.union, prevs_subsets.values, Bitmap())
 
         to_edit = self._codetable.iloc[cand_pos:]  # we only edit elements from cand_pos to the end
         decrease = to_edit[to_edit.index.map(lambda e: not e.isdisjoint(candidate))]
