@@ -1,4 +1,3 @@
-from ..slim import make_codetable
 from ..slim import cover
 from ..slim import generate_candidates
 from ..slim import SLIM
@@ -18,14 +17,6 @@ def sparse_D():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
     D = TransactionEncoder(sparse_output=True).fit_transform(D)
     return D
-
-def test_make_cotetable():
-    D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    standard_codetable = make_codetable(D)
-    pd.testing.assert_series_equal(
-        standard_codetable.map(len),
-        pd.Series([7, 7, 5], index=['A', 'B', 'C'])
-    )
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_cover_1(D):
@@ -133,7 +124,8 @@ def test_complex_evaluate():
 
 def test_generate_candidate_1():
     D = ['ABC'] * 5 + ['AB', 'A', 'B']
-    codetable = make_codetable(D)
+    codetable = pd.Series([range(0, 7), [0, 1, 2, 3, 4, 5, 7], range(0, 5)], index=['A', 'B', 'C'])
+    codetable = codetable.map(Bitmap)
     codetable.index = codetable.index.map(lambda e: frozenset([e]))
     new_candidates = generate_candidates(codetable)
     assert new_candidates.to_dict() == {
@@ -339,7 +331,7 @@ def test_prune_empty(D):
 
 
 def test_decision_function():
-    te = TransactionEncoder()
+    te = TransactionEncoder(sparse_output=False)
     D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
     slim = SLIM().fit(D)
 

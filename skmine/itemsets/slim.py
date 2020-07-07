@@ -15,16 +15,8 @@ from ..base import BaseMiner
 from ..utils import lazydict
 from ..bitmaps import Bitmap
 
+from ..preprocessing.transaction_encoder import make_vertical
 
-def make_codetable(D: pd.Series):
-    """
-    Applied on an original dataset this makes up a standard codetable
-    """
-    codetable = defaultdict(Bitmap)
-    for idx, transaction in enumerate(D):
-        for item in transaction:
-            codetable[item].add(idx)
-    return pd.Series(codetable)
 
 def cover(itemsets: list, D: pd.DataFrame):
     """ assert itemset are sorted in Standard Cover Order
@@ -42,7 +34,7 @@ def cover(itemsets: list, D: pd.DataFrame):
         _mat = mat[rows_left][:, iset]
         bools = _mat.all(axis=1)
         rows_where = np.where(bools)[0]
-        rows_where += rows_left.min()  # pad indexes
+        rows_where += min(rows_left, default=0)  # pad indexes
         covers.append(Bitmap(rows_where))
 
     return pd.Series(covers, index=itemsets)
@@ -283,7 +275,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         >>> new_D = te.transform([['cookies', 'butter']])
         >>> slim = SLIM(pruning=False).fit(D)
         >>> slim.decision_function(new_D)
-        0   -1.321928
+        0   -0.321928
         dtype: float32
         """
         if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
