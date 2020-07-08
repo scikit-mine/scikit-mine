@@ -7,6 +7,7 @@ from functools import partial
 from operator import gt, lt
 
 import numpy as np
+import pandas as pd
 
 
 class lazydict(defaultdict):
@@ -76,3 +77,31 @@ def filter_within(itemsets, op):
 
 filter_maximal = partial(filter_within, op=gt)
 filter_minimal = partial(filter_within, op=lt)
+
+
+def supervised_to_unsupervised(D, y):
+    """
+    for sklearn compatibility, eg. sklearn.multiclass.OneVSRest
+
+    Parameters
+    ----------
+    D: pd.DataFrame
+        input transactional dataset
+
+    y: np.ndarray of shape (n_samples,)
+        corresponding labels
+    """
+    mask = np.where(y.reshape(-1))[0]
+    D = D.iloc[mask]
+
+    return D
+
+def _check_D(D):
+    if isinstance(D, pd.DataFrame):
+        D = D.reset_index(drop=True)  # positional indexing
+    elif isinstance(D, np.ndarray):
+        D = pd.DataFrame(D)
+    else:
+        raise TypeError('D should be an instance of np.ndarray or pd.DataFrame')
+
+    return D

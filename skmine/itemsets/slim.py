@@ -3,20 +3,18 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from collections import defaultdict
 from functools import reduce
 from itertools import chain
-import warnings
 
 import numpy as np
 import pandas as pd
+from sortedcontainers import SortedDict
 
 from ..base import BaseMiner
-from ..utils import lazydict
 from ..bitmaps import Bitmap
-
-from ..preprocessing.transaction_encoder import make_vertical
-
+from ..utils import lazydict
+from ..utils import supervised_to_unsupervised
+from ..utils import _check_D
 
 def cover(itemsets: list, D: pd.DataFrame):
     """ assert itemset are sorted in Standard Cover Order
@@ -62,25 +60,47 @@ def generate_candidates(codetable, stack=None):
     assumes codetable is sorted in Standard Cover Order
     """
     res = dict()
-    for idx, (X, X_usage) in enumerate(codetable.iteritems()):
-        Y = codetable.iloc[idx + 1:]
-        XY_usage = Y.apply(lambda e: e.intersection_len(X_usage)).astype(np.uint32)
-        XY_usage = XY_usage[XY_usage != 0]
-        XY_usage.index = XY_usage.index.map(X.union)
-        if stack is not None:
-            XY_usage = XY_usage[~XY_usage.index.isin(stack)]
-        if not XY_usage.empty:
-            best_XY = XY_usage.idxmax()
-            usage = XY_usage[best_XY]
-            if isinstance(usage, pd.Series):
-                res.update(usage.to_dict())
-            else:
-                res[best_XY] = usage
+    for idx, (X, X_usage) in enumerate(codetable.items()):
+        Y = codetable.items()[idx + 1:]
+        _best_usage = 0
+        best_XY = None
+        for y, y_usage in Y:
+            XY = X.union(y)
+            if stack is not None and XY in stack: continue
+            inter_len = y_usage.intersection_len(X_usage)
+            if inter_len > _best_usage:
+                _best_usage = inter_len
+                best_XY = X.union(y)
 
-    # sort on descending order of estimated gain
-    res = pd.Series(res).sort_values(ascending=False)
+        if best_XY is not None:
+            res[best_XY] = _best_usage
+
+    res = sorted(res.items(), key=lambda e: e[1], reverse=True)
 
     return res
+
+
+def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
+    update_d = dict()
+    decreased = list()  # track decreasing non-singletons
+
+    cand_pos = codetable.bisect(cand)
+
+    for idx, iset in enumerate(codetable.islice(cand_pos, len(codetable))):
+        if not iset.isdisjoint(cand):
+            iset_tids = codetable[iset]
+            if not codetable[iset].isdisjoint(cand_usage):
+                update_d[iset] = iset_tids - cand_usage
+
+                if len(iset) > 1:
+                    decreased.append(iset)
+
+                    to_cov = iset - cand
+                    cov = cover_one(codetable.islice(idx + 1, len(codetable)), to_cov)
+                    for e in cov:
+                        update_d[e] = codetable[e].union(cand_usage)
+
+    return update_d, decreased
 
 
 class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
@@ -147,45 +167,22 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         U = reduce(Bitmap.union, self._standard_codetable.loc[itemset])
         return len(U)
 
-    def _get_cover_order_pos(self, codetable, cand):
-        pos = 0
-        while len(codetable[pos]) > len(cand):
-            pos += 1
-        while pos < len(codetable) and self._supports[codetable[pos]] > self._supports[cand]:
-            if len(codetable[pos]) < len(cand):
-                break
-            pos += 1
-        while pos < len(codetable) and codetable[pos] < cand:
-            if len(codetable[pos]) < len(cand):
-                break
-            if self._supports[codetable[pos]] < self._supports[cand]:
-                break
-            pos += 1
-        return pos
+    def _sct(self, itemset):
+        """
+        Returns a tuple associated with an itemset,
+        so that many itemsets can be sorted in Standard Cover Order
+        """
+        return (-len(itemset), -self._supports[itemset], tuple(itemset))
 
-    def _check_standard_cover_order(self, codetable):
-        index = codetable.index
-        order = zip(*(-index.map(len), -index.map(self._supports), index.tolist()))
-        order = pd.Series(order, index=index).sort_values(ascending=True)
-        return order.index.equals(codetable.index)
-
-    def _sort_standard_cover_order(self, codetable):
-        index = codetable.index
-        order = zip(*(-index.map(len), -index.map(self._supports), index.tolist()))
-        order = pd.Series(order, index=index).sort_values(ascending=True)
-        codetable = codetable.reindex(order.index)
-        return codetable
-
-    def __repr__(self): return repr(self.codetable)  # TODO inherit from MDLOptimizer
+    # TODO : __html_repr__
 
     def _prefit(self, D):
-        sct_d = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
-        self._standard_codetable = pd.Series(sct_d)
+        item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        self._standard_codetable = pd.Series(item_to_tids)
         usage = self._standard_codetable.map(len).astype(np.uint32)
 
-        sorted_index = sorted(usage.index, key=lambda e: (-usage[e], e))
-        self._codetable = self._standard_codetable.reindex(sorted_index, copy=True)
-        self._codetable.index = self._codetable.index.map(lambda e: frozenset([e]))
+        ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
+        self._codetable = SortedDict(self._sct, ct_it)
 
         codes = -np.log2(usage / usage.sum())
         self._model_size = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
@@ -199,17 +196,10 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         This generate new candidate patterns and add those which improve compression,
         iteratibely refining the ``self.codetable``
         """
-        if not isinstance(D, pd.DataFrame):
-            if y is not None:  # SLIM is unsupervised, this is just for sklearn compatibility
-                mask = np.where(y.reshape(-1))[0]
-                D = D[mask]
-            D = pd.DataFrame(D)
-        else:
-            if y is not None:  # SLIM is unsupervised, this is just for sklearn compatibility
-                mask = np.where(y.reshape(-1))[0]
-                D = D.iloc[mask]
+        D = _check_D(D)
+        if y is not None:
+            D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
 
-        D = D.reset_index(drop=True)  # positional indexing from 0
         self._prefit(D)
         n_iter_no_change = 0
         is_better = False
@@ -220,7 +210,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         while n_iter_no_change < self.n_iter_no_change:
             is_better = False
             candidates = generate_candidates(self._codetable, stack=seen_cands)
-            for cand in candidates.index:
+            for cand, _ in candidates:
                 CTc, data_size, model_size, prune_set = self.evaluate(cand)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
@@ -229,7 +219,6 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                 is_better = diff > tol
                 if is_better:
                     if self.pruning:
-                        prune_set = prune_set[prune_set.index.map(len) > 1]
                         CTc, data_size, model_size = self._prune(
                             CTc, D, prune_set, model_size, data_size
                         )
@@ -279,14 +268,13 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         dtype: float32
         """
         if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
-        codetable = self._codetable[self._codetable.map(len) > 0]
-        covers = cover(codetable.index, D)
+        covers = cover(self.codetable.index, D)
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values):
             mat[tids, idx] = 1
         mat = pd.DataFrame(mat, columns=covers.index)
 
-        ct_codes = codetable.map(len) / codetable.map(len).sum()
+        ct_codes = self.codetable.map(len) / self.codetable.map(len).sum()
         codes = (mat * ct_codes).sum(axis=1)
         # positive sign on np.log2 to return negative distance : sklearn compat
         return np.log2(codes.astype(np.float32))
@@ -306,38 +294,26 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             updated (codetable, data size, model size
             and finally a boolean stating if compression improved
         """
-        cand_pos = self._get_cover_order_pos(self._codetable.index, candidate)
-
-        prevs = self._codetable.iloc[:cand_pos]
-        prevs_subsets = prevs[prevs.index.map(lambda e: not e.isdisjoint(candidate))]
+        ct = self._codetable
+        cand_pos = ct.bisect(candidate)
 
         # get original support from standard_codetable
         cand_usage = reduce(Bitmap.intersection, self._standard_codetable.loc[candidate])
         # remove union of all non disjoint itemsets before it to get real usage
-        cand_usage -= reduce(Bitmap.union, prevs_subsets.values, Bitmap())
+        cand_usage -= reduce(
+            Bitmap.union,
+            (ct[k] for k in ct.islice(0, cand_pos) if not k.isdisjoint(candidate)),
+            Bitmap()
+        )
 
-        to_edit = self._codetable.iloc[cand_pos:]  # we only edit elements from cand_pos to the end
-        decrease = to_edit[to_edit.index.map(lambda e: not e.isdisjoint(candidate))]
-        decrease = decrease[decrease.map(cand_usage.intersection_len) != 0]
+        update_d, decreased = _update_usages(ct, candidate, cand_usage)
 
-        update_d = {k: tid - cand_usage for k, tid in decrease.iteritems()}
-        # init update dict with decreasing usages
-
-        for iset in decrease.index:
-            cov = cover_one(to_edit[iset:].index, iset - candidate)
-            for sub in cov:
-                update_d[sub] = self._codetable[sub].union(cand_usage)
-
-        to_edit = pd.Series({**to_edit, **update_d})
-        to_edit = self._sort_standard_cover_order(to_edit)
-        CTc = prevs.append(pd.Series({candidate: cand_usage})).append(to_edit)
-
-        if not self._check_standard_cover_order(CTc):
-            warnings.warn('codetable violates Standard Cover Order')
-
+        CTc = ct.copy()
+        CTc.update(update_d)
+        CTc[candidate] = cand_usage
         data_size, model_size = self.compute_sizes(CTc)
 
-        return CTc, data_size, model_size, decrease
+        return CTc, data_size, model_size, decreased
 
     @property
     def codetable(self):
@@ -347,7 +323,8 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        return self._codetable[self._codetable.map(len) > 0]
+        l = {k: v for k, v in self._codetable.items() if len(v) > 0}
+        return pd.Series(l)
 
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
@@ -368,7 +345,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         Parameters
         ----------
-        codetable : pd.Series
+        codetable : Mapping
             A series mapping itemsets to their usage tids
 
         Returns
@@ -376,11 +353,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         tuple(float, float)
             (data_size, model_size)
         """
-        codetable = codetable[codetable.map(len) > 0]
-        usages = codetable.map(len).astype(np.uint32)
+        usages = np.array([len(e) for e in codetable.values()], dtype=np.uint32)
+        usages = usages[usages > 0]
         codes = -np.log2(usages / usages.sum())
 
-        stand_codes = self.get_standard_codes(codetable.index)
+        stand_codes = self.get_standard_codes([k for k in codetable if len(codetable[k]) > 0])
 
         model_size = stand_codes.sum() + codes.sum() # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
@@ -406,16 +383,20 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             a tuple containing the pruned codetable, and new model size and data size
             w.r.t this new codetable
         """
-        while not prune_set.empty:
-            cand = prune_set.map(len).idxmin()
-            prune_set = prune_set.drop([cand])
-            CTp_index = codetable.index.drop([cand])
-            CTp = cover(CTp_index, D)
+        prune_set = set(prune_set)
+        while prune_set:
+            cand = min(prune_set, key=lambda e: len(codetable[e]))
+            prune_set.discard(cand)
+            CTp_index = codetable.keys() - {cand}
+            CTp_index = sorted(CTp_index, key=codetable.bisect)  # FIXME
+
+            CTp = cover(CTp_index, D).to_dict()
             d_size, m_size = self.compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                decreased = CTp.map(len) < codetable[CTp.index].map(len)
-                prune_set.update(CTp[decreased])
+                CTp = SortedDict(lambda iset: (-len(iset), -self._supports[iset], tuple(iset)), CTp)
+                decreased = [k for k in CTp if len(CTp[k]) < len(codetable[k])]
+                prune_set.update(decreased)
                 codetable = CTp
                 data_size, model_size = d_size, m_size
 
