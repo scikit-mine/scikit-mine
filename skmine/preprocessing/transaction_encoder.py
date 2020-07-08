@@ -10,14 +10,15 @@ but differs in many ways:
     some input and make new input fit this definition.
     - input is possible out of core : works on generators.
 """
-import pandas as pd
-import numpy as np
-from ..bitmaps import Bitmap
-from sortedcontainers import SortedSet
 from collections import defaultdict
+from collections.abc import Iterable
 
-from scipy.sparse import csc_matrix
+import numpy as np
+import pandas as pd
 from scipy.sparse import lil_matrix
+
+from ..bitmaps import Bitmap
+
 
 def make_vertical(D: pd.Series):
     """
@@ -35,7 +36,10 @@ class TransactionEncoder():
     def __init__(self, sparse_output=True):
         self.sparse_output = sparse_output
 
-    def fit(self, D): return self  # just for compat and usage  pylint: disable=missing-function-docstring
+    def fit(self, D): # pylint: disable=missing-function-docstring
+        if not isinstance(D, Iterable):
+            raise TypeError('D should be a list of list, or at least an iterator of iterator')
+        return self
 
     def transform(self, D):
         """
@@ -75,8 +79,9 @@ class TransactionEncoder():
 
         if self.sparse_output:
             return pd.DataFrame.sparse.from_spmatrix(mat, columns=cols)
-        else:
-            return pd.DataFrame(mat, columns=cols)
+
+        return pd.DataFrame(mat, columns=cols)
 
     def fit_transform(self, D):
+        """Fit then transform on transactional data"""
         return self.fit(D).transform(D)
