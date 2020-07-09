@@ -209,7 +209,7 @@ def test_get_standard_size_2(D):
         check_less_precise=2
     )
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+@pytest.mark.parametrize("D", [dense_D()])
 def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
@@ -224,7 +224,7 @@ def test_compute_sizes_1(D):
     np.testing.assert_almost_equal(data_size, 12.4, 2)
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+@pytest.mark.parametrize("D", [dense_D()])
 def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
@@ -232,6 +232,7 @@ def test_compute_sizes_2(D):
         frozenset('ABC'): Bitmap(range(0, 5)),
         frozenset('A'): Bitmap([5, 6]),
         frozenset('B'): Bitmap([5, 7]),
+        frozenset('C'): Bitmap(),
     }
 
     data_size, model_size = slim.compute_sizes(CT)

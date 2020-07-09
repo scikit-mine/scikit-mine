@@ -262,17 +262,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             candidates = generate_candidates(ct, stack=seen_cands)
 
             for cand, _ in candidates:
-                CTc, data_size, model_size, prune_set = self.evaluate(cand)
+                update_d, data_size, model_size, prune_set = self.evaluate(cand)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
-                if diff > 0:
-                    CTc = SortedDict(self._standard_cover_order, CTc)
+                if diff > 0.1:  # 0.1 because python does not handle underflow correctly ...
+                    self._codetable.update(update_d)
                     if self.pruning:
-                        CTc, data_size, model_size = self._prune(
-                            CTc, D, prune_set, model_size, data_size
+                        self._codetable, data_size, model_size = self._prune(
+                            self._codetable, D, prune_set, model_size, data_size
                         )
 
-                    self._codetable = CTc
                     self._data_size = data_size
                     self._model_size = model_size
                     if self.verbose:
@@ -341,9 +340,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         Returns
         -------
-        (dict, float, float, bool)
-            updated (codetable, data size, model size
-            and finally a boolean stating if compression improved
+        (dict, float, float, set)
+            updated (codetable, data size, model size)
+            and finally the set of itemsets for which usage decreased
         """
         ct = self._codetable
         cand_pos = ct.bisect(candidate)
@@ -359,13 +358,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         update_d, decreased = _update_usages(ct, candidate, cand_usage)
 
-        CTc = ct.copy()  # TODO avoid copy, use dict merging
-        CTc.update(update_d)
+        update_d[candidate] = cand_usage
+        CTc = {**ct, **update_d}
 
-        CTc[candidate] = cand_usage
         data_size, model_size = self.compute_sizes(CTc)
 
-        return CTc, data_size, model_size, decreased
+        return update_d, data_size, model_size, decreased
 
     @property
     def codetable(self):
@@ -405,11 +403,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         tuple(float, float)
             (data_size, model_size)
         """
-        usages = np.array([len(e) for e in codetable.values()], dtype=np.uint32)
-        usages = usages[usages > 0]
+        isets, usages = zip(*((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0))
+        usages = np.array(usages, dtype=np.uint32)
         codes = -np.log2(usages / usages.sum())
 
-        stand_codes = self.get_standard_codes([k for k in codetable if len(codetable[k]) > 0])
+        stand_codes = self.get_standard_codes(isets)
 
         model_size = stand_codes.sum() + codes.sum() # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
