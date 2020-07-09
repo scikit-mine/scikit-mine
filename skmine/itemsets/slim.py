@@ -38,13 +38,13 @@ def cover(itemsets: list, D: pd.DataFrame):
     return pd.Series(covers, index=itemsets)
 
 
-def cover_one(codetable, cand):
+def cover_one(itemsets, cand):
     """
-    assumes codetable is already sorted in Standard Cover Order
+    assumes itemsets is already sorted in Standard Cover Order
     """
     cov = list()
     stack = set()
-    for iset in codetable:
+    for iset in itemsets:
         if not iset.isdisjoint(stack):
             continue
         if iset.issubset(cand):
@@ -54,33 +54,78 @@ def cover_one(codetable, cand):
             break
     return cov
 
+def generate_candidates_big(codetable, stack=None):
+    """
+    Generate candidates, but does not sort output by estimated gain
 
-def generate_candidates(codetable, stack=None):
+    The result is a python generator, not an in-memory list
+
+    This results in slightly less accurate candidate generation,
+    but avoids computing candidates that will never be evaluated,
+    if coupled with an early stopping strategy.
+
+    Parameters
+    ----------
+    codetable: SortedDict[frozenset, Bitmap]
+        A codetable, sorted in Standard Candidate Order
+
+    stack: set[frozenset], defaut=None
+        A stack of already seen itemsets, which will not be considered in output
+        Note that this function updates the stack, passed as a reference
+
+    See Also
+    --------
+    generate_candidates
     """
-    assumes codetable is sorted in Standard Cover Order
-    """
-    res = dict()
     for idx, (X, X_usage) in enumerate(codetable.items()):
         Y = codetable.items()[idx + 1:]
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
-            if stack is not None and XY in stack: continue
+            if stack is not None:
+                if XY in stack: continue
+                stack.add(XY)
             inter_len = y_usage.intersection_len(X_usage)
             if inter_len > _best_usage:
                 _best_usage = inter_len
                 best_XY = X.union(y)
 
         if best_XY is not None:
-            res[best_XY] = _best_usage
+            yield best_XY, _best_usage
 
-    res = sorted(res.items(), key=lambda e: e[1], reverse=True)
-
-    return res
+def generate_candidates(codetable, stack=None):
+    """
+    assumes codetable is sorted in Standard Candidate Order
+    """
+    return sorted(
+        generate_candidates_big(codetable, stack=stack),
+        key=lambda e: e[1],
+        reverse=True
+    )
 
 
 def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
+    """
+    Given a codetable and a new candidate
+        - iteratively consider every element in the codetable,
+            starting from insertion position in Standard Cover Order
+        - decrease usages when element is non disjoint with the candidate
+        - identify usages that will increase due to freed intermediate covering,
+            and increase them
+
+    We also output the set of itemsets for which usage decreased, for later pruning.
+
+    Notes
+    -----
+    In practice most usages will stay steady, but identifying those wich need to be
+    modified makes updating the codetable easier in case of acceptance.
+
+    On average this method is many orders of magnitude faster than covering the database
+    entirely every time we need to evaluate a candidate.
+    It's also very cheap in memory, as we only instantiate new Bitmaps for a restricted
+    part of the codetable : the part that would need an update
+    """
     update_d = dict()
     decreased = list()  # track decreasing non-singletons
 
@@ -167,12 +212,17 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         U = reduce(Bitmap.union, self._standard_codetable.loc[itemset])
         return len(U)
 
-    def _sct(self, itemset):
+    def _standard_cover_order(self, itemset):
         """
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
+        # TODO : try returning a hash, sortedcontainers might prefer
+        # handling integers when bisecting.
         return (-len(itemset), -self._supports[itemset], tuple(itemset))
+
+    def _standard_candidate_order(self, itemset):
+        return (-self._supports[itemset], -len(itemset), tuple(itemset))
 
     # TODO : __html_repr__
 
@@ -182,7 +232,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         usage = self._standard_codetable.map(len).astype(np.uint32)
 
         ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
-        self._codetable = SortedDict(self._sct, ct_it)
+        self._codetable = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -np.log2(usage / usage.sum())
         self._model_size = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
@@ -194,7 +244,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         """ fit SLIM on a transactional dataset
 
         This generate new candidate patterns and add those which improve compression,
-        iteratibely refining the ``self.codetable``
+        iteratibely refining ``self.codetable``
         """
         D = _check_D(D)
         if y is not None:
@@ -202,22 +252,21 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         self._prefit(D)
         n_iter_no_change = 0
-        is_better = False
         seen_cands = set()
 
-        tol = self.tol or len(D) / 10
+        tol = self.tol or (D.shape[0] / np.log2(D.shape[1]))
 
         while n_iter_no_change < self.n_iter_no_change:
-            is_better = False
-            candidates = generate_candidates(self._codetable, stack=seen_cands)
+            ct = SortedDict(self._standard_candidate_order, self.codetable)
+
+            candidates = generate_candidates(ct, stack=seen_cands)
+
             for cand, _ in candidates:
                 CTc, data_size, model_size, prune_set = self.evaluate(cand)
                 diff = (self._model_size + self._data_size) - (data_size + model_size)
 
-                seen_cands.add(cand)
-
-                is_better = diff > tol
-                if is_better:
+                if diff > 0:
+                    CTc = SortedDict(self._standard_cover_order, CTc)
                     if self.pruning:
                         CTc, data_size, model_size = self._prune(
                             CTc, D, prune_set, model_size, data_size
@@ -230,13 +279,15 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
                         print("data size : {:.2f} | model size : {:.2f}".format(
                             data_size, model_size))
 
-                else:
-                    is_better = False
+                if diff < tol:
+                    n_iter_no_change += 1
+                    if self.verbose:
+                        print('n_iter_no_change : {}'.format(n_iter_no_change))
+                    if n_iter_no_change > self.n_iter_no_change:
+                        break  # inner break
 
-            if not is_better:
-                if self.verbose:
-                    print('n_iter_no_change : {}'.format(n_iter_no_change))
-                n_iter_no_change += 1
+            if not candidates:  # if empty candidate generation
+                n_iter_no_change += self.n_iter_no_change  # force while loop to break
 
         if self.verbose:
             print('{} candidates considered'.format(len(seen_cands)))
@@ -267,7 +318,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         0   -0.321928
         dtype: float32
         """
-        if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)
+        if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)  # TODO : _check_D
         covers = cover(self.codetable.index, D)
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values):
@@ -290,7 +341,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         Returns
         -------
-        (pd.Series, float, float, bool)
+        (dict, float, float, bool)
             updated (codetable, data size, model size
             and finally a boolean stating if compression improved
         """
@@ -308,8 +359,9 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         update_d, decreased = _update_usages(ct, candidate, cand_usage)
 
-        CTc = ct.copy()
+        CTc = ct.copy()  # TODO avoid copy, use dict merging
         CTc.update(update_d)
+
         CTc[candidate] = cand_usage
         data_size, model_size = self.compute_sizes(CTc)
 
@@ -323,7 +375,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        l = {k: v for k, v in self._codetable.items() if len(v) > 0}
+        l = {iset: tids.copy() for iset, tids in self._codetable.items() if len(tids) > 0}
         return pd.Series(l)
 
     def get_standard_codes(self, index):
@@ -379,7 +431,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         Returns
         -------
-        new_codetable, new_data_size, new_model_size: pd.Series, float, float
+        new_codetable, new_data_size, new_model_size: SortedDict, float, float
             a tuple containing the pruned codetable, and new model size and data size
             w.r.t this new codetable
         """
@@ -387,14 +439,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         while prune_set:
             cand = min(prune_set, key=lambda e: len(codetable[e]))
             prune_set.discard(cand)
+
             CTp_index = codetable.keys() - {cand}
             CTp_index = sorted(CTp_index, key=codetable.bisect)  # FIXME
 
             CTp = cover(CTp_index, D).to_dict()
+
             d_size, m_size = self.compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                CTp = SortedDict(lambda iset: (-len(iset), -self._supports[iset], tuple(iset)), CTp)
+                CTp = SortedDict(self._standard_cover_order, CTp)
                 decreased = [k for k in CTp if len(CTp[k]) < len(codetable[k])]
                 prune_set.update(decreased)
                 codetable = CTp

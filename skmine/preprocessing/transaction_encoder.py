@@ -6,9 +6,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLab
 but differs in many ways:
     - it produces a pandas.DataFrame as output, either dense or sparse,
     depending on the ``sparse_output`` argument
-    - the number of "columns" can vary. Unlike in scikit-learn, there is no need to freeze fit
-    some input and make new input fit this definition.
-    - input is possible out of core : works on generators.
+    - the number of "columns" can vary. Unlike in scikit-learn, there is no need
+    to freeze schema onto some input to make any new input fit this schema.
+    - input is possibly out of core : works on generators.
 """
 from collections import defaultdict
 from collections.abc import Iterable
