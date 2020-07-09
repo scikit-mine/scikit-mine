@@ -169,7 +169,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         When the compression size is not improving by at least tol for n_iter_no_change iterations,
         the training stops.
         Default to None, will be automatically computed considering the size of input data.
-    pruning: bool, default=True
+    pruning: bool, default=False
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
         to build a classifier. The model will be less concise, but will lead
@@ -197,7 +197,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=5, tol=None, pruning=True, verbose=False):
+    def __init__(self, *, n_iter_no_change=5, tol=None, pruning=False, verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self._standard_codetable = None

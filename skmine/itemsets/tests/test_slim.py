@@ -290,7 +290,7 @@ def test_prune_empty(D):
 def test_decision_function():
     te = TransactionEncoder(sparse_output=False)
     D = te.fit_transform(['ABC'] * 5 + ['AB', 'A', 'B'])
-    slim = SLIM().fit(D)
+    slim = SLIM(pruning=True).fit(D)
 
     new_D = ['AB'] * 2 + ['ABD', 'AC', 'B']
     new_D = te.fit_transform(new_D)
