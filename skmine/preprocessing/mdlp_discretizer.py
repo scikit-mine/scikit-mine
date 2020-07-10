@@ -71,7 +71,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
         self.entropy_ = np.inf
         self.cut_points_ = np.array([])
 
-    def evaluate_gain(self, y, start, end, cut_point):
+    def evaluate(self, y, start, end, cut_point):
         entropy1, k1 = get_entropy_nb_ones(y[start: cut_point])
         entropy2, k2 = get_entropy_nb_ones(y[cut_point: end])
         whole_entropy, k0 = get_entropy_nb_ones(y[start: end])
@@ -112,7 +112,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
 
             k = generate_cut_point(y, start, end)
 
-            is_better = self.evaluate_gain(y, start, end, k)
+            is_better = self.evaluate(y, start, end, k)
             if k == -1 or not is_better:
                 front = -np.inf if start == 0 else (X[start - 1] + X[start]) / 2
                 back = np.inf if end == len(X) else (X[end - 1] + X[end]) / 2
@@ -209,6 +209,11 @@ class MDLPDiscretizer(BaseMiner):
             self.cut_points_ = dict(enumerate(cut_points))
 
         return self
+
+    @property
+    def codetable(self):  # FIXME : this should be inherited from MDL
+        """user-friendly view on cut points"""
+        return pd.Series(self.cut_points_)
 
     def transform(self, X, y=None): #pylint: disable=unused-argument
         """Discretizes the input matrix X

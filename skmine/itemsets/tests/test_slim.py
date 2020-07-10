@@ -96,7 +96,7 @@ def test_complex_evaluate():
 
     u = {k: Bitmap(v) for k, v in u.items()}
 
-    slim._codetable.update(u)
+    slim.codetable_.update(u)
 
     cand = frozenset('CDE')
     CTc, data_size, model_size, decreased = slim.evaluate(cand)
@@ -180,8 +180,8 @@ def test_prefit():
     D = TransactionEncoder().fit_transform(D)
     slim = SLIM()
     slim._prefit(D)
-    np.testing.assert_almost_equal(slim._model_size, 9.614, 3)
-    np.testing.assert_almost_equal(slim._data_size, 29.798, 3)
+    np.testing.assert_almost_equal(slim.model_size_, 9.614, 3)
+    np.testing.assert_almost_equal(slim.data_size_, 29.798, 3)
     assert len(slim.codetable) == 3
     assert slim.codetable.index.tolist() == list(map(frozenset, ['B', 'C', 'A']))
 
@@ -243,20 +243,20 @@ def test_compute_sizes_2(D):
 def test_fit_no_pruning(D):
     slim = SLIM(pruning=False)
     self = slim.fit(D)
-    assert list(self._codetable) == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
+    assert list(self.codetable_) == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_fit(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D)
-    assert list(self._codetable) == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
+    assert list(self.codetable_) == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
 
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_fit_ndarray(D):
     slim = SLIM(pruning=True)
     self = slim.fit(D.values)
-    assert list(self._codetable) == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
+    assert list(self.codetable_) == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
 
 @pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_prune(D):
@@ -264,7 +264,7 @@ def test_prune(D):
     prune_set = [frozenset('AB')]
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim._codetable, D, prune_set, slim._model_size, slim._data_size
+        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ['ABC', 'A', 'B', 'C']))
@@ -281,7 +281,7 @@ def test_prune_empty(D):
     # nothing to prune so we should get the exact same codetable
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim._codetable, D, prune_set, slim._model_size, slim._data_size
+        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ['ABC', 'AB', 'A', 'B', 'C']))
@@ -308,6 +308,6 @@ def test_fit_sklearn():
     D = dense_D()
     y = np.array([1] * len(D))
     slim = SLIM().fit(D, y)
-    assert slim._standard_codetable.index.tolist() == ['A', 'B', 'C']
+    assert slim.standard_codetable_.index.tolist() == ['A', 'B', 'C']
 
     slim = SLIM().fit(D.values, y)

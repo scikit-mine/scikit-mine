@@ -25,5 +25,6 @@ exclude_lines =
     if self.verbose
     _get_tags
     warnings
+    return self
 
 show_missing = True

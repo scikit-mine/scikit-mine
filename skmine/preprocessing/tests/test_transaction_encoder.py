@@ -12,6 +12,10 @@ def test_make_vertical():
         pd.Series([7, 7, 5], index=['A', 'B', 'C'])
     )
 
+def test_fit_wrong():
+    with pytest.raises(TypeError):
+        TransactionEncoder().fit(2)
+
 @pytest.mark.parametrize('sparse_output', [True, False])
 def test_transform(sparse_output):
     D = [[1, 9, 2], [2, 3]]

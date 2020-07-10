@@ -1,6 +1,8 @@
+import pandas as pd
 import pytest
 
-from ..base import BaseMiner
+from ..base import BaseMiner, MDLOptimizer
+
 
 def test_inst_params():
     class MyMiner(BaseMiner):
@@ -30,3 +32,18 @@ def test_inst_params_no_init():
 
     miner = MyMiner()
     assert miner.get_params() == dict()
+
+
+def test_mdl_repr():
+    class A(MDLOptimizer):
+        def __init__(self):
+            self.codetable_ = {1 : [0, 1], 2: [1]}
+
+        def fit(self): return self
+        def evaluate(self): return True
+
+    a = A()
+
+    assert isinstance(a._repr_html_(), str)
+
+    assert isinstance(a.fit()._repr_html_(), str)

@@ -10,14 +10,15 @@ import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
 
-from ..base import BaseMiner
+from ..base import BaseMiner, MDLOptimizer
 from ..bitmaps import Bitmap
 from ..utils import lazydict
 from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
 
 def cover(itemsets: list, D: pd.DataFrame):
-    """ assert itemset are sorted in Standard Cover Order
+    """
+    assert itemsets are sorted in Standard Cover Order
     D must be a pandas DataFrame containing boolean values
     """
     covers = list()
@@ -148,7 +149,7 @@ def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
     return update_d, decreased
 
 
-class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
+class SLIM(BaseMiner, MDLOptimizer):
     """SLIM: Directly Mining Descriptive Patterns
 
     SLIM looks for a compressed representation of transactional data.
@@ -200,16 +201,16 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
     def __init__(self, *, n_iter_no_change=5, tol=None, pruning=False, verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
-        self._standard_codetable = None
-        self._codetable = pd.Series([], dtype='object')
-        self._supports = lazydict(self._get_support)
-        self._model_size = None          # L(CT|D)
-        self._data_size = None           # L(D|CT)
+        self.standard_codetable_ = None
+        self.codetable_ = pd.Series([], dtype='object')
+        self.supports_ = lazydict(self._get_support)
+        self.model_size_ = None          # L(CT|D)
+        self.data_size_ = None           # L(D|CT)
         self.pruning = pruning
         self.verbose = verbose
 
     def _get_support(self, itemset):
-        U = reduce(Bitmap.union, self._standard_codetable.loc[itemset])
+        U = reduce(Bitmap.union, self.standard_codetable_.loc[itemset])
         return len(U)
 
     def _standard_cover_order(self, itemset):
@@ -219,24 +220,24 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         """
         # TODO : try returning a hash, sortedcontainers might prefer
         # handling integers when bisecting.
-        return (-len(itemset), -self._supports[itemset], tuple(itemset))
+        return (-len(itemset), -self.supports_[itemset], tuple(itemset))
 
     def _standard_candidate_order(self, itemset):
-        return (-self._supports[itemset], -len(itemset), tuple(itemset))
+        return (-self.supports_[itemset], -len(itemset), tuple(itemset))
 
     # TODO : __html_repr__
 
     def _prefit(self, D):
         item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
-        self._standard_codetable = pd.Series(item_to_tids)
-        usage = self._standard_codetable.map(len).astype(np.uint32)
+        self.standard_codetable_ = pd.Series(item_to_tids)
+        usage = self.standard_codetable_.map(len).astype(np.uint32)
 
         ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
-        self._codetable = SortedDict(self._standard_cover_order, ct_it)
+        self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -np.log2(usage / usage.sum())
-        self._model_size = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
-        self._data_size = (codes * usage).sum()
+        self.model_size_ = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+        self.data_size_ = (codes * usage).sum()
 
         return self
 
@@ -263,17 +264,17 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
             for cand, _ in candidates:
                 update_d, data_size, model_size, prune_set = self.evaluate(cand)
-                diff = (self._model_size + self._data_size) - (data_size + model_size)
+                diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
 
-                if diff > 0.1:  # 0.1 because python does not handle underflow correctly ...
-                    self._codetable.update(update_d)
+                if diff > 0.01:  # 0.01 because python does not handle underflow correctly ...
+                    self.codetable_.update(update_d)
                     if self.pruning:
-                        self._codetable, data_size, model_size = self._prune(
-                            self._codetable, D, prune_set, model_size, data_size
+                        self.codetable_, data_size, model_size = self._prune(
+                            self.codetable_, D, prune_set, model_size, data_size
                         )
 
-                    self._data_size = data_size
-                    self._model_size = model_size
+                    self.data_size_ = data_size
+                    self.model_size_ = model_size
                     if self.verbose:
                         print("data size : {:.2f} | model size : {:.2f}".format(
                             data_size, model_size))
@@ -317,7 +318,7 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
         0   -0.321928
         dtype: float32
         """
-        if not isinstance(D, pd.DataFrame): D = pd.DataFrame(D)  # TODO : _check_D
+        D = _check_D(D)
         covers = cover(self.codetable.index, D)
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values):
@@ -344,11 +345,11 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
             updated (codetable, data size, model size)
             and finally the set of itemsets for which usage decreased
         """
-        ct = self._codetable
+        ct = self.codetable_
         cand_pos = ct.bisect(candidate)
 
         # get original support from standard_codetable
-        cand_usage = reduce(Bitmap.intersection, self._standard_codetable.loc[candidate])
+        cand_usage = reduce(Bitmap.intersection, self.standard_codetable_.loc[candidate])
         # remove union of all non disjoint itemsets before it to get real usage
         cand_usage -= reduce(
             Bitmap.union,
@@ -365,23 +366,12 @@ class SLIM(BaseMiner): # TODO : inherit MDLOptimizer
 
         return update_d, data_size, model_size, decreased
 
-    @property
-    def codetable(self):
-        """
-        Returns
-        -------
-        pd.Series
-            codetable containing patterns and ids of transactions in which they are used
-        """
-        l = {iset: tids.copy() for iset, tids in self._codetable.items() if len(tids) > 0}
-        return pd.Series(l)
-
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
         flat_items = list(chain(*index))
         items, counts = np.unique(flat_items, return_counts=True)
 
-        usages = self._standard_codetable.loc[items].map(len).astype(np.uint32)
+        usages = self.standard_codetable_.loc[items].map(len).astype(np.uint32)
         usages /= usages.sum()
         codes = -np.log2(usages)
         return codes * counts
