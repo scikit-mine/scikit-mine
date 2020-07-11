@@ -163,8 +163,8 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     Parameters
     ----------
-    n_iter_no_change: int, default=5
-        Number of iteration to count before stopping optimization.
+    n_iter_no_change: int, default=100
+        Number of candidate evaluation with no improvement to count before stopping optimization.
     tol: float, default=None
         Tolerance for the early stopping, in bits.
         When the compression size is not improving by at least tol for n_iter_no_change iterations,
@@ -198,7 +198,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=5, tol=None, pruning=False, verbose=False):
+    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=False, verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
@@ -241,7 +241,7 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         return self
 
-    def fit(self, D, y=None):
+    def fit(self, D, y=None):   # pylint:disable = too-many-locals
         """ fit SLIM on a transactional dataset
 
         This generate new candidate patterns and add those which improve compression,
@@ -255,12 +255,14 @@ class SLIM(BaseMiner, MDLOptimizer):
         n_iter_no_change = 0
         seen_cands = set()
 
-        tol = self.tol or (D.shape[0] / np.log2(D.shape[1]))
+        tol = self.tol or self.standard_codetable_.map(len).median()
 
         while n_iter_no_change < self.n_iter_no_change:
             ct = SortedDict(self._standard_candidate_order, self.codetable)
 
-            candidates = generate_candidates(ct, stack=seen_cands)
+            # if big number of elements in codetable, just take a generator, do not sort output
+            gen_cands = generate_candidates if len(ct) < int(1e3) else generate_candidates_big
+            candidates = gen_cands(ct, stack=seen_cands)
 
             for cand, _ in candidates:
                 update_d, data_size, model_size, prune_set = self.evaluate(cand)
