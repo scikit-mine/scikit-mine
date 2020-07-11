@@ -3,3 +3,4 @@ pytest-cov
 pylint
 asv
 line-profiler
+jupyter

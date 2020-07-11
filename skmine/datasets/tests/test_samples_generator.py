@@ -71,4 +71,4 @@ def test_make_classification():
         n_transactions=100,
         density=.40,  # both have .5 densities, but only 20% of it is intersecting, see class_sep
     )
-    assert describe(D) == pytest.approx(full_desc, abs=1)
+    assert describe(D) == pytest.approx(full_desc, abs=2)

@@ -1,10 +1,11 @@
 """Base classes for all miners."""
 # pylint: disable= unused-argument
 
-from abc import ABC
-from abc import abstractmethod
-
 import inspect
+from abc import ABC, abstractmethod
+
+import pandas as pd
+
 
 def _get_tags(self):
     return {
@@ -128,11 +129,44 @@ class MDLOptimizer(ABC):
     """
 
     @abstractmethod
-    def evaluate_gain(self, *args, **kwargs):
+    def evaluate(self, candidate, *args, **kwargs):
         """
         Evaluate the gain, i.e compute L(D|CT) - L(CT|D).
 
         L(D|CT) - L(CT|D) is the difference between
         the size of the dataset D encoded with the codetable CT and the size of the codetable CT
+
+        Parameters
+        ----------
+        candidate: object
+            A candidate to evaluate
+
+        Returns
+        -------
+        bool or tuple(bool, ...)
+            A single boolean value or a tuple, with a boolean value in first position
+            This boolean value states if the input candidate is to be accepted or not.
         """
         pass
+
+    @property
+    def codetable(self):
+        """
+        Get a user-friendly copy of the self.codetable_
+
+        Returns
+        -------
+        pd.Series
+            codetable containing patterns and ids of transactions in which they are used
+        """
+        l = {iset: tids.copy() for iset, tids in self.codetable_.items() if len(tids) > 0}
+        return pd.Series(l, dtype='object')
+
+    def _repr_html_(self):
+        if hasattr(self, 'codetable'):
+            ct = self.codetable
+            if isinstance(ct, pd.Series):
+                df = ct.to_frame(name='usage')
+                return df._repr_html_()   #pylint: disable=protected-access
+            return repr(ct)
+        return repr(self)

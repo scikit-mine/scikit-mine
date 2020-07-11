@@ -205,4 +205,4 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         series = Parallel(n_jobs=self.n_jobs, prefer='processes')(
             btp(L, R) for L, R in self.borders_
         )
-        return pd.concat(series) if series else pd.Series()
+        return pd.concat(series) if series else pd.Series(dtype='object')

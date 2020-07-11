@@ -13,4 +13,4 @@ disable=invalid-name,
         multiple-statements,
         anomalous-backslash-in-string,
         too-many-instance-attributes,
-
+        no-member,
