@@ -161,10 +161,10 @@ class MDLPDiscretizer(BaseMiner):
     --------
 
     >>> from skmine.preprocessing import MDLPDiscretizer
-    >>> from sklearn.datasets import load_iris
-    >>> iris = load_iris()
-    >>> X, y = iris.data, iris.target
-    >>> disc = MDLPDiscretizer()
+    >>> from sklearn.datasets import load_iris  # doctest: +SKIP
+    >>> iris = load_iris()                      # doctest: +SKIP
+    >>> X, y = iris.data, iris.target           # doctest: +SKIP
+    >>> disc = MDLPDiscretizer()                # doctest: +SKIP
     >>> disc.fit(X, y)                          # doctest: +SKIP
     >>> disc.cut_points_                        # doctest: +SKIP
     {0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}
