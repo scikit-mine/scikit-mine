@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,12 +11,18 @@
   
 
   
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -26,16 +31,12 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Itemsets" href="itemsets.html" />
@@ -79,6 +80,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -98,6 +100,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="emerging.html">Emerging</a></li>
 </ul>
 </li>
 </ul>
@@ -117,6 +120,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -155,7 +159,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API Reference</a> &raquo;</li>
         
@@ -230,10 +234,10 @@ If fitted on a pandas DataFrame, keys will be the DataFrame column names.</p>
 1993</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">MDLPDiscretizer</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_iris</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">iris</span> <span class="o">=</span> <span class="n">load_iris</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">iris</span><span class="o">.</span><span class="n">target</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">disc</span> <span class="o">=</span> <span class="n">MDLPDiscretizer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_iris</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iris</span> <span class="o">=</span> <span class="n">load_iris</span><span class="p">()</span>                      
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">iris</span><span class="o">.</span><span class="n">target</span>           
+<span class="gp">&gt;&gt;&gt; </span><span class="n">disc</span> <span class="o">=</span> <span class="n">MDLPDiscretizer</span><span class="p">()</span>                
 <span class="gp">&gt;&gt;&gt; </span><span class="n">disc</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>                          
 <span class="gp">&gt;&gt;&gt; </span><span class="n">disc</span><span class="o">.</span><span class="n">cut_points_</span>                        
 <span class="go">{0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}</span>
@@ -354,7 +358,7 @@ Default to False, will return supports instead</p></li>
 <span class="go">     itemset  support</span>
 <span class="go">0     (2, 5)        3</span>
 <span class="go">1  (2, 3, 5)        2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
 <span class="go">     itemset       tids</span>
 <span class="go">0     (2, 5)  [0, 1, 2]</span>
 <span class="go">1  (2, 3, 5)     [0, 1]</span>
@@ -403,11 +407,20 @@ instead of singular terms.</p>
 <h2>TransactionEncoder<a class="headerlink" href="#transactionencoder" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.preprocessing.TransactionEncoder">
-<code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">TransactionEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">classes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sparse_output</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">TransactionEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sparse_output</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transaction encoder</p>
 <p>This acts like
 <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer</a>,
-but produces pd.DataFrame as output</p>
+but differs in many ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>it produces a pandas.DataFrame as output, either dense or sparse,</p></li>
+</ul>
+<p>depending on the <code class="docutils literal notranslate"><span class="pre">sparse_output</span></code> argument
+- the number of “columns” can vary. Unlike in scikit-learn, there is no need
+to freeze schema onto some input to make any new input fit this schema.
+- input is possibly out of core : works on generators.</p>
+</div></blockquote>
 </dd></dl>
 
 </div>
@@ -433,11 +446,19 @@ but produces pd.DataFrame as output</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Rémi Adon
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -448,7 +469,6 @@ but produces pd.DataFrame as output</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,0 +1,425 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>skmine.emerging.mbdldorber</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for skmine.emerging.mbdldorber</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MBD-LLBorder</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span>
+<span class="kn">from</span> <span class="nn">..preprocessing.lcm</span> <span class="kn">import</span> <span class="n">LCMMax</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_growth_rate</span><span class="p">,</span> <span class="n">_check_min_supp</span><span class="p">,</span> <span class="n">filter_maximal</span><span class="p">,</span> <span class="n">filter_minimal</span>
+
+
+<span class="k">def</span> <span class="nf">border_diff</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a pair of borders &lt;{∅}, {U}&gt; and &lt;{∅}, {S}&gt;,</span>
+<span class="sd">    ``border_diff`` derives another border &lt;L2, {U}&gt;</span>
+<span class="sd">    such that [L2, {U}] = [{∅}, {U}] - [{∅}, {S}]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U : set</span>
+<span class="sd">        non empty part from the border to differentiate</span>
+
+<span class="sd">    S : list of set</span>
+<span class="sd">        non-empty part of a border.</span>
+<span class="sd">        Noted as ``R1`` in the original paper</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]</span>
+<span class="sd">        Dong, Li</span>
+<span class="sd">        Efficient Mining of Emerging Patterns Discovering</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    See ``BORDER-DIFF`` in section 4.1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#assert len(R1) &lt; len(U)  # assert we iterate on the smallest ensemble</span>
+    <span class="n">L2</span> <span class="o">=</span> <span class="p">[{</span><span class="n">x</span><span class="p">}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">U</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)):</span>
+        <span class="n">_L2</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span> <span class="o">|</span> <span class="p">{</span><span class="n">x</span><span class="p">}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">U</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="n">L2</span><span class="p">]</span>
+        <span class="n">L2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">filter_minimal</span><span class="p">(</span><span class="n">_L2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">L2</span><span class="p">,</span> <span class="n">U</span>
+
+
+<span class="k">def</span> <span class="nf">mbdllborder</span><span class="p">(</span><span class="n">isets1</span><span class="p">,</span> <span class="n">isets2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]</span>
+<span class="sd">        Dong, Li</span>
+<span class="sd">        Efficient Mining of Emerging Patterns Discovering</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    main algorithm, as explained in section 4.2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">borders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">iset</span> <span class="ow">in</span> <span class="n">isets2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">e</span> <span class="o">&gt;</span> <span class="n">iset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)):</span> <span class="k">continue</span>
+        <span class="n">inter</span> <span class="o">=</span> <span class="p">[</span><span class="n">iset</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">]</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">filter_maximal</span><span class="p">(</span><span class="n">inter</span><span class="p">)</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R</span><span class="p">]</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">border_diff</span><span class="p">(</span><span class="n">iset</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+        <span class="n">borders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">borders</span>
+
+<span class="k">def</span> <span class="nf">borders_to_patterns</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Operates in a bread-first manner, outputting all</span>
+<span class="sd">    valid patterns of a given size for each level.</span>
+<span class="sd">    Bigger patterns first.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left: list of set</span>
+<span class="sd">    right: set</span>
+<span class="sd">    min_size: int</span>
+<span class="sd">        only accepts patterns with greater or equal size</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_size</span> <span class="o">=</span> <span class="n">min_size</span> <span class="ow">or</span> <span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">left</span><span class="p">))</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">right</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># bigger patterns first</span>
+        <span class="n">combs</span> <span class="o">=</span> <span class="n">combinations</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">combs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">e</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">pat</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">left</span><span class="p">)):</span>
+                <span class="k">continue</span>
+            <span class="n">patterns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pat</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">patterns</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MBDLLBorder"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder">[docs]</a><span class="k">class</span> <span class="nc">MBDLLBorder</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MBD-LLBorder aims at discovering patterns characterizing the difference</span>
+<span class="sd">    between two collections of data.</span>
+
+<span class="sd">    It first discovers ``two sets of maximal itemsets``, one for each collection.</span>
+<span class="sd">    It then looks for borders of these sets, and characterizes the difference</span>
+<span class="sd">    by only manipulating theses borders.</span>
+
+<span class="sd">    This results in the algorithm only keeping a ``concise description (borders)``</span>
+<span class="sd">    as an internal state.</span>
+
+<span class="sd">    Last but not least, it enumerates the set of emerging patterns from the</span>
+<span class="sd">    borders.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_growth_rate: int or float, default=2</span>
+<span class="sd">        A pattern is considered as emerging iff its support in the first collection</span>
+<span class="sd">        is at least min_growth_rate times its support in the second collection.</span>
+
+<span class="sd">    min_supp: int or float, default=.1</span>
+<span class="sd">        Minimum support in each of the collection</span>
+<span class="sd">        Must be a relative support between 0 and 1</span>
+<span class="sd">        Default to 0.1 (10%)</span>
+
+<span class="sd">    n_jobs : int, default=1</span>
+<span class="sd">        The number of jobs to use for the computation.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    borders_: list of tuple[list[set], set]</span>
+<span class="sd">        List of pairs representing left and right borders</span>
+<span class="sd">        For every pair, emerging patterns will be uncovered by enumerating itemsets</span>
+<span class="sd">        from the right side, while checking for non membership in the left side</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]</span>
+<span class="sd">        Guozhu Dong, Jinyan Li</span>
+<span class="sd">        &quot;Efficient Mining of Emerging Patterns : Discovering Trends and Differences&quot;, 1999</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_growth_rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="n">accept_absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">=</span> <span class="n">_check_growth_rate</span><span class="p">(</span><span class="n">min_growth_rate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+
+<div class="viewcode-block" id="MBDLLBorder.fit"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        fit MBD-LLBorder on D, splitted on y</span>
+
+<span class="sd">        This is done in two steps</span>
+<span class="sd">            1. Discover maximal itemsets for the two disinct collections contained in D</span>
+<span class="sd">            2. Mine borders from these maximal itemsets</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        D : pd.Series</span>
+<span class="sd">            The input transactional database</span>
+<span class="sd">            Where every entry contains singular items</span>
+<span class="sd">            Items must be both hashable and comparable</span>
+
+<span class="sd">        y : array-like of shape (n_samples,)</span>
+<span class="sd">            Targets on which to split D</span>
+<span class="sd">            Must contain only two disctinct values, i.e len(np.unique(y)) == 2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>  <span class="c1"># TODO : accept tabular data</span>
+
+        <span class="n">D1</span><span class="p">,</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span> <span class="o">==</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span> <span class="o">==</span> <span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="c1"># TODO : replace LCMMax by some more efficient method</span>
+        <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D1</span><span class="p">)</span>
+        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
+
+        <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">right_border_d1</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">right_border_d2</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span> <span class="o">=</span> <span class="n">mbdllborder</span><span class="p">(</span><span class="n">right_border_d1</span><span class="p">,</span> <span class="n">right_border_d2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="MBDLLBorder.discover"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enumerate emerging patterns from borders</span>
+<span class="sd">        Subsets are drawn from the right borders, and are accepted iff</span>
+<span class="sd">        they do not belong to the corresponding left border.</span>
+
+<span class="sd">        This implementation is parallel, we consider every couple</span>
+<span class="sd">        of right/left border in a separate worker and run the computation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min_size: int</span>
+<span class="sd">            minimum size for an itemset to be valid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">btp</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">borders_to_patterns</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="n">min_size</span><span class="p">))</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;processes&#39;</span><span class="p">)(</span>
+            <span class="n">btp</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span> <span class="k">for</span> <span class="n">L</span><span class="p">,</span> <span class="n">R</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="k">if</span> <span class="n">series</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

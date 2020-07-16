@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Emerging &mdash; scikit-mine 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
+    <link rel="prev" title="Itemsets" href="itemsets.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Emerging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mbd-llborder">MBD-LLBorder</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+        
+      <li>Emerging</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/emerging.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="emerging">
+<span id="id1"></span><h1>Emerging<a class="headerlink" href="#emerging" title="Permalink to this headline">¶</a></h1>
+<p>Module dedicated to emerging patterns</p>
+<p>The EPM problem was defined by Dong &amp; Li as the task of finding patterns
+whose support increases significantly from one dataset to another</p>
+<div class="section" id="mbd-llborder">
+<h2>MBD-LLBorder<a class="headerlink" href="#mbd-llborder" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.emerging.MBDLLBorder">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.emerging.</code><code class="sig-name descname">MBDLLBorder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_growth_rate</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/emerging/mbdldorber.html#MBDLLBorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.emerging.MBDLLBorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>MBD-LLBorder aims at discovering patterns characterizing the difference
+between two collections of data.</p>
+<p>It first discovers <code class="docutils literal notranslate"><span class="pre">two</span> <span class="pre">sets</span> <span class="pre">of</span> <span class="pre">maximal</span> <span class="pre">itemsets</span></code>, one for each collection.
+It then looks for borders of these sets, and characterizes the difference
+by only manipulating theses borders.</p>
+<p>This results in the algorithm only keeping a <code class="docutils literal notranslate"><span class="pre">concise</span> <span class="pre">description</span> <span class="pre">(borders)</span></code>
+as an internal state.</p>
+<p>Last but not least, it enumerates the set of emerging patterns from the
+borders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_growth_rate</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=2</em>) – A pattern is considered as emerging iff its support in the first collection
+is at least min_growth_rate times its support in the second collection.</p></li>
+<li><p><strong>min_supp</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=.1</em>) – Minimum support in each of the collection
+Must be a relative support between 0 and 1
+Default to 0.1 (10%)</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of jobs to use for the computation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><p><strong>borders_</strong> (<em>list of tuple</em><em>[</em><em>list</em><em>[</em><em>set</em><em>]</em><em>, </em><em>set</em><em>]</em>) – List of pairs representing left and right borders
+For every pair, emerging patterns will be uncovered by enumerating itemsets
+from the right side, while checking for non membership in the left side</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="simple">
+<dt>.. [1]</dt><dd><p>Guozhu Dong, Jinyan Li
+“Efficient Mining of Emerging Patterns : Discovering Trends and Differences”, 1999</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="skmine.emerging.MBDLLBorder.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/emerging/mbdldorber.html#MBDLLBorder.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.emerging.MBDLLBorder.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit MBD-LLBorder on D, splitted on y</p>
+<dl class="simple">
+<dt>This is done in two steps</dt><dd><ol class="arabic simple">
+<li><p>Discover maximal itemsets for the two disinct collections contained in D</p></li>
+<li><p>Mine borders from these maximal itemsets</p></li>
+</ol>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> (<em>pd.Series</em>) – The input transactional database
+Where every entry contains singular items
+Items must be both hashable and comparable</p></li>
+<li><p><strong>y</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>,</em><em>)</em>) – Targets on which to split D
+Must contain only two disctinct values, i.e len(np.unique(y)) == 2</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.emerging.MBDLLBorder.discover">
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_size</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/emerging/mbdldorber.html#MBDLLBorder.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.emerging.MBDLLBorder.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enumerate emerging patterns from borders
+Subsets are drawn from the right borders, and are accepted iff
+they do not belong to the corresponding left border.</p>
+<p>This implementation is parallel, we consider every couple
+of right/left border in a separate worker and run the computation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>min_size</strong> (<em>int</em>) – minimum size for an itemset to be valid</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutorials/datasets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="itemsets.html" class="btn btn-neutral float-left" title="Itemsets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,12 +11,18 @@
   
 
   
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -26,19 +31,15 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
+    <link rel="next" title="Emerging" href="emerging.html" />
     <link rel="prev" title="Preprocessing" href="preprocessing.html" /> 
 </head>
 
@@ -79,6 +80,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -96,6 +98,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#slim">SLIM</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="emerging.html">Emerging</a></li>
 </ul>
 </li>
 </ul>
@@ -115,6 +118,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -153,7 +157,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API Reference</a> &raquo;</li>
         
@@ -207,7 +211,7 @@
 <h2>SLIM<a class="headerlink" href="#slim" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.SLIM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">n_iter_no_change</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">n_iter_no_change</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>SLIM: Directly Mining Descriptive Patterns</p>
 <p>SLIM looks for a compressed representation of transactional data.
 This compressed representation if a set of descriptive patterns,
@@ -223,8 +227,12 @@ and can be used to:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n_iter_no_change</strong> (<em>int</em><em>, </em><em>default=5</em>) – Number of iteration to count before stopping optimization.</p></li>
-<li><p><strong>pruning</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either to activate pruning or not. Pruned itemsets may be useful at
+<li><p><strong>n_iter_no_change</strong> (<em>int</em><em>, </em><em>default=100</em>) – Number of candidate evaluation with no improvement to count before stopping optimization.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default=None</em>) – Tolerance for the early stopping, in bits.
+When the compression size is not improving by at least tol for n_iter_no_change iterations,
+the training stops.
+Default to None, will be automatically computed considering the size of input data.</p></li>
+<li><p><strong>pruning</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to activate pruning or not. Pruned itemsets may be useful at
 prediction time, so it is usually recommended to set it to False
 to build a classifier. The model will be less concise, but will lead
 to more accurate predictions on average.</p></li>
@@ -260,7 +268,7 @@ to more accurate predictions on average.</p></li>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit SLIM on a transactional dataset</p>
 <p>This generate new candidate patterns and add those which improve compression,
-iteratibely refining the <code class="docutils literal notranslate"><span class="pre">self.codetable</span></code></p>
+iteratibely refining <code class="docutils literal notranslate"><span class="pre">self.codetable</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -281,7 +289,7 @@ is recommended to cover unseen data, and especially when building a classifier.<
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">transform</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
-<span class="go">0   -1.321928</span>
+<span class="go">0   -0.321928</span>
 <span class="go">dtype: float32</span>
 </pre></div>
 </div>
@@ -289,30 +297,20 @@ is recommended to cover unseen data, and especially when building a classifier.<
 
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.evaluate">
-<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span></em>, <em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate <code class="docutils literal notranslate"><span class="pre">candidate</span></code>, considering the current codetable and a dataset <code class="docutils literal notranslate"><span class="pre">D</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>candidate</strong> (<em>frozenset</em>) – a new candidate to be evaluated</p></li>
-<li><p><strong>D</strong> (<em>pd.Series</em>) – a transactional dataset</p></li>
-</ul>
+<dd class="field-odd"><p><strong>candidate</strong> (<em>frozenset</em>) – a new candidate to be evaluated</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>updated (codetable, data size, model size
-and finally a boolean stating if compression improved</p>
+<dd class="field-even"><p>updated (codetable, data size, model size)
+and finally the set of itemsets for which usage decreased</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(pd.Series, float, float, bool)</p>
+<dd class="field-odd"><p>(dict, float, float, set)</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="skmine.itemsets.SLIM.codetable">
-<em class="property">property </em><code class="sig-name descname">codetable</code><a class="headerlink" href="#skmine.itemsets.SLIM.codetable" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns: codetable containing patterns and ids of transactions in which they are used
-:rtype: pd.Series</p>
 </dd></dl>
 
 <dl class="py method">
@@ -331,41 +329,13 @@ and finally a boolean stating if compression improved</p>
 \[L(CT|D)\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>codetable</strong> (<em>pd.Series</em>) – A series mapping itemsets to their usage tids</p>
+<dd class="field-odd"><p><strong>codetable</strong> (<em>Mapping</em>) – A series mapping itemsets to their usage tids</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>(data_size, model_size)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tuple(float, float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="skmine.itemsets.SLIM.get_params">
-<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">deep</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.itemsets.SLIM.get_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get parameters for this estimator.
-:returns: <strong>params</strong> – Parameter names mapped to their values.
-:rtype: mapping of string to any</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="skmine.itemsets.SLIM.set_params">
-<code class="sig-name descname">set_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.itemsets.SLIM.set_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the parameters of this estimator.
-The method works on simple estimators as well as on nested objects
-(such as pipelines). The latter have parameters of the form
-<code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s possible to update each
-component of a nested object.
-:param **params: Estimator parameters.
-:type **params: dict</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>self</strong> – Estimator instance.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -383,7 +353,7 @@ component of a nested object.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../tutorials/datasets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="emerging.html" class="btn btn-neutral float-right" title="Emerging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="preprocessing.html" class="btn btn-neutral float-left" title="Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -395,11 +365,19 @@ component of a nested object.
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Rémi Adon
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -410,7 +388,6 @@ component of a nested object.
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
