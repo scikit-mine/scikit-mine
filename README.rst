@@ -4,8 +4,18 @@
 .. image:: http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]
         :target: https://asv.readthedocs.io/en/stable
 
+
 Scikit-mine : pattern mining in Python
 
+* **Descriptive analysis**, leading to **interpretable**, concise descriptions using the `Minimum Description Length Principle <https://en.wikipedia.org/wiki/Minimum_description_length>`_
+* **Fast** Algorithms
+* **Simple, extendable API**, inspired by scikit-learn_
+
+.. _scikit-learn: https://scikit-learn.org/
+
+
+Resources
+---------
 
 * Free software: BSD license
 * GitHub: https://github.com/scikit-mine/scikit-mine
@@ -30,14 +40,11 @@ See examples in the tutorials; the notebooks are available here_.
 Dependencies
 ------------
 
-scikit-mine requires:
+scikit-mine requires Python>=3.6,
+and some extra dependencies:
 
-- Python (>= 3.6)
-- Pandas (>= 1.0.0)
-- joblib (>= 0.11)
-- roaringbitmap (==0.7)
-- sortedcontainers(==2.1.0)
-
+.. include:: ../requirements.txt
+  :literal:
 
 
 Development
@@ -45,3 +52,12 @@ Development
 
 We welcome new contributors of all experience levels. 
 
+
+Contributors
+------------
+
+- Rémi Adon (https://github.com/remiadon)
+- Peggy Cellier (https://github.com/PeggyCellier)
+- Alexandre Termier (https://github.com/alexandre-termier)
+- Luis Galárraga (https://github.com/lgalarra)
+- Josie Signe (https://github.com/Darlysia)

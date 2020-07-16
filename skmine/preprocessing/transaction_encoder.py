@@ -1,15 +1,4 @@
-"""
-Transaction encoder
-
-This acts like
-https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer,
-but differs in many ways:
-    - it produces a pandas.DataFrame as output, either dense or sparse,
-    depending on the ``sparse_output`` argument
-    - the number of "columns" can vary. Unlike in scikit-learn, there is no need
-    to freeze schema onto some input to make any new input fit this schema.
-    - input is possibly out of core : works on generators.
-"""
+""" Transaction Encoder"""
 from collections import defaultdict
 from collections.abc import Iterable
 
@@ -32,7 +21,21 @@ def make_vertical(D: pd.Series):
 
 
 class TransactionEncoder():
-    __doc__ = __doc__
+    """`TransactionEncoder` acts like `sklearn's MultiLabelBinarizer
+    <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer>`_,
+    but differs in many ways:
+
+    - it produces a pandas.DataFrame as output, either dense or sparse,
+      depending on the ``sparse_output`` argument.
+    - the number of "columns" can vary from one call to ``.transform`` to another.
+    - input is possibly out of core : works on generators.
+
+
+    Parameters
+    ----------
+    sparse_output: bool
+        True if a sparse output is to be produced.
+    """
     def __init__(self, sparse_output=True):
         self.sparse_output = sparse_output
 
@@ -42,8 +45,7 @@ class TransactionEncoder():
         return self
 
     def transform(self, D):
-        """
-        Apply transformation on the transactional input
+        """Apply transformation on the transactional input
 
         Parameters
         ----------
@@ -55,8 +57,18 @@ class TransactionEncoder():
         pandas.DataFrame
             a DataFrame of boolean values. A cell contains a boolean values stating if the item
             corresponding to the column was present in the transaction corresponding to the row.
-
             if sparse_output is True, each column will be stored as a pandas.arrays.SparseArray
+
+        Examples
+        --------
+        >>> from skmine.preprocessing import TransactionEncoder
+        >>> transactions = [['banana', 'milk'], ['milk', 'cookies', 'banana']]
+        >>> te = TransactionEncoder()
+        >>> te.fit_transform(transactions)
+           banana  cookies  milk
+        0    True    False  True
+        1    True     True  True
+
         """
         vert = defaultdict(Bitmap)
         n_transactions = 0

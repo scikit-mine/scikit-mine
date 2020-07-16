@@ -1,24 +1,25 @@
 .. highlight:: shell
 
-============
-Installation
-============
-
-
-From sources
-------------
+=========================
+Installation from `pypi`_
+=========================
 
 You can install **scikit-mine** via the following command
 
 .. code-block:: console
 
-    $ pip install https://github.com/scikit-mine/scikit-mine.git
-
-
-From `pypi`_
-------------
-
-Coming soon
+    $ pip install -U scikit-mine
 
 
 .. _pypi: https://pypi.org/
+
+
+=========================
+Installation from sources
+=========================
+
+You can also get the latest, non-stable version directly from sources
+
+.. code-block:: console
+
+    $ pip install https://github.com/scikit-mine/scikit-mine.git
