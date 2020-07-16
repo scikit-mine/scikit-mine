@@ -1,0 +1,17 @@
+name: linting
+on: [push, pull_request]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.7
+      - name: Install dependencies for linting
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint
+      - name: linting
+        run: pylint --rcfile=.pylintrc --extension-pkg-whitelist=numpy skmine/
