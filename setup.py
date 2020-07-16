@@ -7,7 +7,7 @@ import numpy
 
 import skmine
 
-DISTNAME = 'skmine'
+DISTNAME = 'scikit-mine'
 DESCRIPTION = 'Pattern mining in Python'
 MAINTAINER = 'R. Adon'
 MAINTAINER_EMAIL = 'remi.adon@gmail.com'
