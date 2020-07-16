@@ -40,15 +40,11 @@ See examples in the tutorials; the notebooks are available here_.
 Dependencies
 ------------
 
-scikit-mine requires:
+scikit-mine requires Python>=3.6,
+and some extra dependencies:
 
-- Python (>= 3.6)
-- `scipy <https://www.scipy.org/>`_ (>=1.2.1)
-- `Pandas <https://pandas.pydata.org/>`_ (>= 1.0.0)
-- `joblib <https://joblib.readthedocs.io/en/latest/index.html>`_ (>= 0.11)
-- `roaringbitmap <https://roaringbitmap.readthedocs.io/en/latest/#>`_ (==0.7)
-- `sortedcontainers <http://www.grantjenks.com/docs/sortedcontainers/>`_ (==2.1.0)
-
+.. include:: requirements.txt
+  :literal:
 
 
 Development
