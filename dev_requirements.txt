@@ -4,3 +4,8 @@ pylint
 asv
 line-profiler
 jupyter
+pandoc
+sphinx
+nbsphinx
+sphinx_rtd_theme
+

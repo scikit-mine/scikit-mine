@@ -43,7 +43,7 @@ Dependencies
 scikit-mine requires Python>=3.6,
 and some extra dependencies:
 
-.. include:: requirements.txt
+.. include:: ../requirements.txt
   :literal:
 
 

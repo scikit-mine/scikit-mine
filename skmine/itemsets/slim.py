@@ -108,12 +108,13 @@ def generate_candidates(codetable, stack=None):
 
 def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
     """
-    Given a codetable and a new candidate
-        - iteratively consider every element in the codetable,
-            starting from insertion position in Standard Cover Order
-        - decrease usages when element is non disjoint with the candidate
-        - identify usages that will increase due to freed intermediate covering,
-            and increase them
+    Given a codetable and a new candidate:
+
+    - iteratively consider every element in the codetable,
+      starting from insertion position in Standard Cover Order
+    - decrease usages when element is non disjoint with the candidate
+    - identify usages that will increase due to freed intermediate covering,
+      and increase them
 
     We also output the set of itemsets for which usage decreased, for later pruning.
 
@@ -155,11 +156,13 @@ class SLIM(BaseMiner, MDLOptimizer):
     SLIM looks for a compressed representation of transactional data.
     This compressed representation if a set of descriptive patterns,
     and can be used to:
-        - provide a natively interpretable modeling of this data
-        - make predictions on new data, using this condensed representation as an encoding scheme
+
+    - provide a natively interpretable modeling of this data
+    - make predictions on new data, using this condensed representation as an encoding scheme
 
     Idea of early stopping is inspired from
     http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf
+
 
     Parameters
     ----------

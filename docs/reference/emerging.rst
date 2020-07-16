@@ -1,7 +1,7 @@
 .. _emerging:
 
 Emerging
-**********
+********
 
 Module dedicated to emerging patterns
 

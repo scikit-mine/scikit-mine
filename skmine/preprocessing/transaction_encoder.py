@@ -1,15 +1,4 @@
-"""
-Transaction encoder
-
-This acts like
-https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer,
-but differs in many ways:
-    - it produces a pandas.DataFrame as output, either dense or sparse,
-    depending on the ``sparse_output`` argument
-    - the number of "columns" can vary. Unlike in scikit-learn, there is no need
-    to freeze schema onto some input to make any new input fit this schema.
-    - input is possibly out of core : works on generators.
-"""
+""" Transaction Encoder"""
 from collections import defaultdict
 from collections.abc import Iterable
 
@@ -32,7 +21,22 @@ def make_vertical(D: pd.Series):
 
 
 class TransactionEncoder():
-    __doc__ = __doc__
+    """
+    `TransactionEncoder` acts like `sklearn's MultiLabelBinarizer
+    <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer>`_,
+    but differs in many ways:
+
+    - it produces a pandas.DataFrame as output, either dense or sparse,
+      depending on the ``sparse_output`` argument
+    - the number of "columns" can vary. Unlike in scikit-learn, there is no need
+      to freeze schema onto some input to make any new input fit this schema.
+    - input is possibly out of core : works on generators.
+
+    Parameters
+    ----------
+    sparse_output: bool
+        True if a sparse output is to be produced.
+    """
     def __init__(self, sparse_output=True):
         self.sparse_output = sparse_output
 

@@ -5,10 +5,18 @@ Welcome to scikit-mine's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Installation & API
+   :caption: Installation
 
    installation
-   reference/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   reference/datasets
+   reference/preprocessing
+   reference/itemsets
+   reference/emerging
 
 .. toctree::
    :maxdepth: 2
