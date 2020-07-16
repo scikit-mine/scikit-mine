@@ -1,7 +1,7 @@
 .. _itemsets:
 
 Itemsets
-**********
+********
 
 Models and functions to mine mere itemsets
 

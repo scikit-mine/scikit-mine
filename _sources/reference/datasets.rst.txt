@@ -1,7 +1,7 @@
 .. _datasets:
 
 Datasets
-**********
+********
 
 Methods to fetch, generate, and describe datasets.
 

@@ -86,10 +86,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+              <p class="caption"><span class="caption-text">Installation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -183,6 +190,10 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.codetable">codetable() (skmine.preprocessing.MDLPDiscretizer property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.compute_sizes">compute_sizes() (skmine.itemsets.SLIM method)</a>
 </li>
   </ul></td>
@@ -227,10 +238,10 @@
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">fetch_mushroom() (in module skmine.datasets.fimi)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb">fetch_pumsb() (in module skmine.datasets.fimi)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb_star">fetch_pumsb_star() (in module skmine.datasets.fimi)</a>
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_retail">fetch_retail() (in module skmine.datasets.fimi)</a>
@@ -240,11 +251,19 @@
       <ul>
         <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.fit">(skmine.itemsets.SLIM method)</a>
 </li>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit">(skmine.preprocessing.MDLPDiscretizer method)</a>
+</li>
       </ul></li>
       <li><a href="reference/preprocessing.html#skmine.preprocessing.LCM.fit_discover">fit_discover() (skmine.preprocessing.LCM method)</a>
 </li>
       <li><a href="reference/preprocessing.html#skmine.preprocessing.LCM.fit_transform">fit_transform() (skmine.preprocessing.LCM method)</a>
+
+      <ul>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit_transform">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.TransactionEncoder.fit_transform">(skmine.preprocessing.TransactionEncoder method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -279,7 +298,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder">MBDLLBorder (class in skmine.emerging)</a>
 </li>
-      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer">MDLPDiscretizer() (in module skmine.preprocessing)</a>
+      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer">MDLPDiscretizer (class in skmine.preprocessing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -295,8 +314,16 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/preprocessing.html#skmine.preprocessing.TransactionEncoder">TransactionEncoder() (in module skmine.preprocessing)</a>
+      <li><a href="reference/preprocessing.html#skmine.preprocessing.TransactionEncoder">TransactionEncoder (class in skmine.preprocessing)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.transform">transform() (skmine.preprocessing.MDLPDiscretizer method)</a>
+
+      <ul>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.TransactionEncoder.transform">(skmine.preprocessing.TransactionEncoder method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

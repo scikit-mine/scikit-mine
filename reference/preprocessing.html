@@ -88,21 +88,22 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="datasets.html">Datasets</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Preprocessing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#mdlpdiscretizer">MDLPDiscretizer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lcm">LCM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#transactionencoder">TransactionEncoder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#transactionencoder">TransactionEncoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mdlpdiscretizer">MDLPDiscretizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lcm">LCM</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="emerging.html">Emerging</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -161,8 +162,6 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html">API Reference</a> &raquo;</li>
-        
       <li>Preprocessing</li>
     
     
@@ -208,11 +207,58 @@
 </style>
 <div class="section" id="preprocessing">
 <span id="id1"></span><h1>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="transactionencoder">
+<h2>TransactionEncoder<a class="headerlink" href="#transactionencoder" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.preprocessing.TransactionEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">TransactionEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sparse_output</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transaction encoder</p>
+<p>This acts like
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer</a>,
+but differs in many ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>it produces a pandas.DataFrame as output, either dense or sparse,</p></li>
+</ul>
+<p>depending on the <code class="docutils literal notranslate"><span class="pre">sparse_output</span></code> argument
+- the number of “columns” can vary. Unlike in scikit-learn, there is no need
+to freeze schema onto some input to make any new input fit this schema.
+- input is possibly out of core : works on generators.</p>
+</div></blockquote>
+<dl class="py method">
+<dt id="skmine.preprocessing.TransactionEncoder.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply transformation on the transactional input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>D</strong> (<em>iterable of iterable</em>) – A transactional dataset, in the form of a list of list, or a generator</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a DataFrame of boolean values. A cell contains a boolean values stating if the item
+corresponding to the column was present in the transaction corresponding to the row.</p>
+<p>if sparse_output is True, each column will be stored as a pandas.arrays.SparseArray</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.preprocessing.TransactionEncoder.fit_transform">
+<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit then transform on transactional data</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="mdlpdiscretizer">
 <h2>MDLPDiscretizer<a class="headerlink" href="#mdlpdiscretizer" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
+<dl class="py class">
 <dt id="skmine.preprocessing.MDLPDiscretizer">
-<code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">MDLPDiscretizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/mdlp_discretizer.html#MDLPDiscretizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">MDLPDiscretizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/mdlp_discretizer.html#MDLPDiscretizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implementation of “Multi-Interval Discretization of Continuous-Valued Attributes
 for Classification Learning”.</p>
 <p>Given class labels <code class="docutils literal notranslate"><span class="pre">y</span></code>, MDLPDIscretizer discretizes continuous variables from
@@ -243,6 +289,40 @@ If fitted on a pandas DataFrame, keys will be the DataFrame column names.</p>
 <span class="go">{0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt id="skmine.preprocessing.MDLPDiscretizer.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/mdlp_discretizer.html#MDLPDiscretizer.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit the MLDP discretizer on an input matrix <code class="docutils literal notranslate"><span class="pre">X</span></code>, given a label vector <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em><em> or </em><em>pd.DataFrame of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – The input matrix containing features. A set of cut points
+will be affected to each feature</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray of pd.Series of shape</em><em>(</em><em>n_samples</em><em>,</em><em>)</em>) – The label vector used to discretize <code class="docutils literal notranslate"><span class="pre">X</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.preprocessing.MDLPDiscretizer.codetable">
+<em class="property">property </em><code class="sig-name descname">codetable</code><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer.codetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>user-friendly view on cut points</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.preprocessing.MDLPDiscretizer.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/mdlp_discretizer.html#MDLPDiscretizer.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discretizes the input matrix X</p>
+<p>This applies the cutpoints their respective columns</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.preprocessing.MDLPDiscretizer.fit_transform">
+<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/mdlp_discretizer.html#MDLPDiscretizer.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.MDLPDiscretizer.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit on X and y, then transform X</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -400,27 +480,6 @@ instead of singular terms.</p>
 </div>
 </dd></dl>
 
-</dd></dl>
-
-</div>
-<div class="section" id="transactionencoder">
-<h2>TransactionEncoder<a class="headerlink" href="#transactionencoder" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="skmine.preprocessing.TransactionEncoder">
-<code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">TransactionEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sparse_output</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transaction encoder</p>
-<p>This acts like
-<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer</a>,
-but differs in many ways:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>it produces a pandas.DataFrame as output, either dense or sparse,</p></li>
-</ul>
-<p>depending on the <code class="docutils literal notranslate"><span class="pre">sparse_output</span></code> argument
-- the number of “columns” can vary. Unlike in scikit-learn, there is no need
-to freeze schema onto some input to make any new input fit this schema.
-- input is possibly out of core : works on generators.</p>
-</div></blockquote>
 </dd></dl>
 
 </div>
