@@ -105,7 +105,7 @@ html_theme = 'alabaster'
 
 
 html_theme = 'sphinx_rtd_theme'
-html_logo = '../skmine_logo.png'
+html_logo = 'skmine_logo.png'
 html_theme_options = {
     'logo_only': True
 }
