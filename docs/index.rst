@@ -30,4 +30,5 @@ Welcome to scikit-mine's documentation!
    :maxdepth: 1
    :caption: About
 
-   sklearn_compat.rst
+   sklearn_compat
+   HISTORY

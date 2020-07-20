@@ -1,5 +1,10 @@
+
+.. image:: https://badge.fury.io/py/scikit-mine.svg
+    :target: https://badge.fury.io/py/scikit-mine
+
+
 .. image:: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
-        :target: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/remiadon/scikit-mine
 
 .. image:: http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]
         :target: https://asv.readthedocs.io/en/stable
@@ -49,6 +54,8 @@ and some extra dependencies:
 
 Development
 -----------
+
+This project is funded by the `INRIA center in Rennes, Brittany, France <https://www.inria.fr/fr/centre-inria-rennes-bretagne-atlantique>`_.
 
 We welcome new contributors of all experience levels. 
 
