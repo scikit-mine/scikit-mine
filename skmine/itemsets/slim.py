@@ -244,6 +244,12 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         return self
 
+    def generate_candidates(self, stack=None):
+        ct = SortedDict(self._standard_candidate_order, self.codetable)
+        # if big number of elements in codetable, just take a generator, do not sort output
+        gen = generate_candidates if len(ct) < 1e3 else generate_candidates_big
+        return gen(ct, stack=stack)
+
     def fit(self, D, y=None):   # pylint:disable = too-many-locals
         """ fit SLIM on a transactional dataset
 
@@ -261,14 +267,9 @@ class SLIM(BaseMiner, MDLOptimizer):
         tol = self.tol or self.standard_codetable_.map(len).median()
 
         while n_iter_no_change < self.n_iter_no_change:
-            ct = SortedDict(self._standard_candidate_order, self.codetable)
-
-            # if big number of elements in codetable, just take a generator, do not sort output
-            gen_cands = generate_candidates if len(ct) < int(1e3) else generate_candidates_big
-            candidates = gen_cands(ct, stack=seen_cands)
-
+            candidates = self.generate_candidates(stack=seen_cands)
             for cand, _ in candidates:
-                update_d, data_size, model_size, prune_set = self.evaluate(cand)
+                data_size, model_size, update_d, prune_set = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
 
                 if diff > 0.01:  # 0.01 because python does not handle underflow correctly ...
@@ -346,8 +347,8 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         Returns
         -------
-        (dict, float, float, set)
-            updated (codetable, data size, model size)
+        (float, float, dict, set)
+            updated (data size, model size, codetable)
             and finally the set of itemsets for which usage decreased
         """
         ct = self.codetable_
@@ -369,7 +370,7 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         data_size, model_size = self.compute_sizes(CTc)
 
-        return update_d, data_size, model_size, decreased
+        return data_size, model_size, update_d, decreased
 
     def get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""

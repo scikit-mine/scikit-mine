@@ -59,6 +59,7 @@ class BaseMiner(ABC):
     def get_params(self, deep=False):
         """
         Get parameters for this estimator.
+
         Returns
         -------
         params : mapping of string to any
@@ -77,6 +78,7 @@ class BaseMiner(ABC):
         (such as pipelines). The latter have parameters of the form
         ``<component>__<parameter>`` so that it's possible to update each
         component of a nested object.
+
         Parameters
         ----------
         **params : dict
@@ -115,7 +117,7 @@ class DiscovererMixin:
 
         Returns
         -------
-        _ : pd.Series
+        pd.Series
             patterns discovered by a mining algorithm
         """
         return self.fit(D, y=y).discover(**kwargs)
@@ -123,18 +125,30 @@ class DiscovererMixin:
 
 class MDLOptimizer(ABC):
     """
-    Base interface for all models applying the Minimum Description Length principle.
-
-    see: https://en.wikipedia.org/wiki/Minimum_description_length
+    Base interface for all models applying the `Minimum Description Length principle
+    <https://en.wikipedia.org/wiki/Minimum_description_length>`_.
     """
+
+    @abstractmethod
+    def generate_candidates(self, *args, **kwargs):
+        """
+        Generate new candidates, to be sent for later evaluation.
+
+        Calling this function is equivalent to sending a new message given an encoding scheme,
+        while calling ``.evaluate`` is equivalent to receiving this message, and evaluating the gain
+        of information it provides.
+
+        Returns
+        -------
+        object or Iterable[object]
+            A set of new candidates
+        """
+        return list()
 
     @abstractmethod
     def evaluate(self, candidate, *args, **kwargs):
         """
-        Evaluate the gain, i.e compute L(D|CT) - L(CT|D).
-
-        L(D|CT) - L(CT|D) is the difference between
-        the size of the dataset D encoded with the codetable CT and the size of the codetable CT
+        Evaluate the gain, i.e the gain of information when accepting the candidate.
 
         Parameters
         ----------
@@ -143,28 +157,33 @@ class MDLOptimizer(ABC):
 
         Returns
         -------
-        bool or tuple(bool, ...)
-            A single boolean value or a tuple, with a boolean value in first position
-            This boolean value states if the input candidate is to be accepted or not.
+        tuple (data_size, model_size, ...)
+            Should return a tuple, with first two values corresponding to new data size
+            and model size in the case of accepting the candidate.
+
+            Data size and model size should be returned separately as we encourage
+            usage of (two-part) crude MDL.
         """
-        pass
+        return (0, 0, )
 
     @property
     def codetable(self):
-        """
-        Get a user-friendly copy of the self.codetable_
+        """ Get a user-friendly copy of the codetable
 
         Returns
         -------
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        l = {iset: tids.copy() for iset, tids in self.codetable_.items() if len(tids) > 0}
-        return pd.Series(l, dtype='object')
+        ct = getattr(self, 'codetable_', None)
+        if ct is not None:
+            l = {iset: tids.copy() for iset, tids in self.codetable_.items() if len(tids) > 0}
+            return pd.Series(l, dtype='object')
+        raise NotImplementedError()
 
     def _repr_html_(self):
-        if hasattr(self, 'codetable'):
-            ct = self.codetable
+        ct = getattr(self, 'codetable', None)
+        if ct is not None:
             if isinstance(ct, pd.Series):
                 df = ct.to_frame(name='usage')
                 return df._repr_html_()   #pylint: disable=protected-access

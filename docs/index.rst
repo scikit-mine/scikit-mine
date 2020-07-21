@@ -17,6 +17,7 @@ Welcome to scikit-mine's documentation!
    reference/preprocessing
    reference/itemsets
    reference/emerging
+   reference/base
 
 .. toctree::
    :maxdepth: 2

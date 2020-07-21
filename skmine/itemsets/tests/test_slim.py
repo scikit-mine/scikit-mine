@@ -99,14 +99,15 @@ def test_complex_evaluate():
     slim.codetable_.update(u)
 
     cand = frozenset('CDE')
-    CTc, data_size, model_size, decreased = slim.evaluate(cand)
+    data_size, model_size, updated, decreased = slim.evaluate(cand)
 
     assert decreased == [frozenset('BC'), frozenset('DE')]
 
-    assert len(CTc[cand]) == 1             # {4}
-    assert len(CTc[frozenset('BC')]) == 0  # {4} -> {}
-    assert len(CTc[frozenset('B')]) == 2   # {3} -> {3, 4}
-    assert len(CTc[frozenset('DE')]) == 1   # {4, 5} -> {5}
+    assert len(updated) == 4
+    assert len(updated[cand]) == 1             # {4}
+    assert len(updated[frozenset('BC')]) == 0  # {4} -> {}
+    assert len(updated[frozenset('B')]) == 2   # {3} -> {3, 4}
+    assert len(updated[frozenset('DE')]) == 1   # {4, 5} -> {5}
 
 
 def test_generate_candidate_1():

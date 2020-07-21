@@ -41,6 +41,7 @@ def test_mdl_repr():
 
         def fit(self): return self
         def evaluate(self): return True
+        def generate_candidates(self): return list()
 
     a = A()
 

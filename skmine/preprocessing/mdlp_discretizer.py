@@ -71,7 +71,13 @@ class MDLPVectDiscretizer(MDLOptimizer):
         self.entropy_ = np.inf
         self.cut_points_ = np.array([])
 
+    generate_candidates = generate_cut_point
+
     def evaluate(self, y, start, end, cut_point):
+        """
+        Evaluate vector y of size ``end`` - ``start``,
+        given a ``cutpoint``
+        """
         entropy1, k1 = get_entropy_nb_ones(y[start: cut_point])
         entropy2, k2 = get_entropy_nb_ones(y[cut_point: end])
         whole_entropy, k0 = get_entropy_nb_ones(y[start: end])
@@ -107,7 +113,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
         cut_points = set()
         search_intervals = [(0, len(X), 0)]
         while search_intervals:
-            level = search_intervals.pop(len(search_intervals) - 1)  # pop back
+            level = search_intervals.pop(-1)  # pop back
             start, end, depth = level
 
             k = generate_cut_point(y, start, end)
