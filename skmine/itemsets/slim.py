@@ -3,7 +3,7 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from functools import reduce
+from functools import reduce, lru_cache
 from itertools import chain
 
 import numpy as np
@@ -12,7 +12,6 @@ from sortedcontainers import SortedDict
 
 from ..base import BaseMiner, MDLOptimizer
 from ..bitmaps import Bitmap
-from ..utils import lazydict
 from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
 
@@ -206,13 +205,14 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.tol = tol
         self.standard_codetable_ = None
         self.codetable_ = pd.Series([], dtype='object')
-        self.supports_ = lazydict(self._get_support)
         self.model_size_ = None          # L(CT|D)
         self.data_size_ = None           # L(D|CT)
         self.pruning = pruning
         self.verbose = verbose
 
-    def _get_support(self, itemset):
+    @lru_cache(maxsize=1024)
+    def get_support(self, itemset):
+        """Get support from an itemset"""
         U = reduce(Bitmap.union, self.standard_codetable_.loc[itemset])
         return len(U)
 
@@ -223,12 +223,11 @@ class SLIM(BaseMiner, MDLOptimizer):
         """
         # TODO : try returning a hash, sortedcontainers might prefer
         # handling integers when bisecting.
-        return (-len(itemset), -self.supports_[itemset], tuple(itemset))
+        return (-len(itemset), -self.get_support(itemset), tuple(itemset))
 
     def _standard_candidate_order(self, itemset):
-        return (-self.supports_[itemset], -len(itemset), tuple(itemset))
+        return (-self.get_support(itemset), -len(itemset), tuple(itemset))
 
-    # TODO : __html_repr__
 
     def _prefit(self, D):
         item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}

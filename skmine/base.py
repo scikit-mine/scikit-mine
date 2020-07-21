@@ -14,7 +14,7 @@ def _get_tags(self):
         'requires_positive_y': False,
         'X_types': ['2darray'],
         'poor_score': False,
-        'no_validation': False,
+        'no_validation': True,
         'multioutput': False,
         'allow_nan': False,
         'stateless': False,

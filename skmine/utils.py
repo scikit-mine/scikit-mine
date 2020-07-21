@@ -96,6 +96,19 @@ def supervised_to_unsupervised(D, y):
 
     return D
 
+
+def _check_D_sklearn(D):
+    if object in D.dtypes.values:   # SKLEARN : check_dtype_object
+        raise TypeError("argument must be a string or a number")
+
+    if D.shape[1] == 0:     # SKLEARN : check_empty_data_messages
+        raise ValueError('Empty data')
+
+    pd.options.mode.use_inf_as_na = True
+    if D.isnull().values.any():
+        raise ValueError('esimator does not check for NaN and inf')
+    pd.options.mode.use_inf_as_na = False
+
 def _check_D(D):
     if isinstance(D, pd.DataFrame):
         D = D.reset_index(drop=True)  # positional indexing
@@ -104,4 +117,19 @@ def _check_D(D):
     else:
         raise TypeError('D should be an instance of np.ndarray or pd.DataFrame')
 
+    _check_D_sklearn(D)
+
     return D
+
+def _check_y(y):
+    if not isinstance(y, (pd.Series, np.ndarray)):
+        raise TypeError('y should be an instance of np.ndarray or pd.Series')
+
+    # TODO : pd.Categorical
+    return y
+
+def _check_D_y(D, y=None):
+    D = _check_D(D)
+    if y is not None:
+        y = _check_y(y)
+    return D, y
