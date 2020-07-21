@@ -32,4 +32,5 @@ Welcome to scikit-mine's documentation!
    :caption: About
 
    sklearn_compat
+   CONTRIBUTING
    HISTORY
