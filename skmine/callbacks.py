@@ -2,7 +2,7 @@
 Callback API for scikit-mine
 """
 from inspect import signature
-from collections import Iterable
+from collections.abc import Iterable
 
 def _get_params(fn):
     assert callable(fn)
