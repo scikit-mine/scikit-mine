@@ -12,21 +12,19 @@ def _get_params(fn):
         params = set()
     return params
 
-def post(obj, func_name, callback):
+def post(self, func_name, callback):
     """decorator, call callback on returned values, after main function"""
-    func = getattr(obj, func_name)
+    func = getattr(self, func_name)
     assert callable(func)
     callback_params = _get_params(callback)
-    def _(self, *args, **kwargs):
-        res = func(self, *args, **kwargs)
-
-        #import pdb; pdb.set_trace()
+    def _(*args, **kwargs):
+        res = func(*args, **kwargs)
         if 'self' in callback_params and len(callback_params) > 1:
-            callback(obj, res)
+            callback(self, res)     # eg. def f(self, x): print(self.b, x)
         elif callback_params == {'self'}:
-            callback(obj)
+            callback(self)           # eg. list.append
         else:
-            callback(res)
+            callback(res)            # eg. list.append
         return res
     return _
 
