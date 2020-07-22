@@ -23,7 +23,10 @@ def post(self, func_name, callback):
         res_ = res if isinstance(res, Iterable) else (res, )
         if 'self' in callback_params and len(callback_params) > 1:
             # eg. def f(self, x): print(self.b, x)
-            callback(self, res_)
+            try:
+                callback(self, res_)
+            except TypeError:
+                callback(self, *res_)
         elif callback_params == {'self'}:
             callback(self)
         elif callback_params:
@@ -40,6 +43,11 @@ class CallBacks(dict):
     A collection of callbacks
 
     Works by defining functions to be called after the execution of the function they target
+
+    Parameters
+    ----------
+    key-value pairs
+        Keys must be string
 
     Examples
     --------
@@ -63,7 +71,9 @@ class CallBacks(dict):
 
     def _check(self):
         # TODO : inspect source code from callbacks and check no assigment on inner self
-        assert all(map(callable, self.values()))
+        for v in self.values():
+            if not callable(v):
+                raise TypeError(f"values must be callables, found {type(v)}")
 
     def _frozen(self, *args, **kwargs):
         raise NotImplementedError(f"{type(self)} is immutable")
@@ -86,3 +96,29 @@ class CallBacks(dict):
             setattr(miner, callback_name, new_meth)
 
         return miner
+
+
+def _print_positive_gain(self, data_size, model_size, *_):
+    if getattr(self, 'verbose', None):
+        diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
+        if diff > .01:
+            print("data size : {:.2f} | model size : {:.2f}".format(data_size, model_size))
+
+
+def _print_candidates_size(self, candidates):
+    if getattr(self, 'verbose', None):
+        print('{} new candidates considered'.format(len(candidates)))
+
+mdl_prints = CallBacks(evaluate=_print_positive_gain, generate_candidates=_print_candidates_size)
+mdl_prints.__doc__ = """
+Base callback for miners which inherit the :class:`skmine.base.MDLOptimizer`
+
+Prints data size and model size when compression has improved
+
+Examples
+--------
+>>> from skmine.itemsets import SLIM
+>>> from skmine.callbacks import mdl_prints
+>>> slim = SLIM(callbacks=mdl_prints)
+>>> slim.fit(D)
+"""

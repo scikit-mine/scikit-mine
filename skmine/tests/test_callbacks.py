@@ -1,4 +1,7 @@
-from ..callbacks import CallBacks, post
+from ..callbacks import CallBacks, post, _print_candidates_size, _print_positive_gain
+
+from io import StringIO
+import sys
 
 import pytest
 
@@ -95,3 +98,37 @@ def test_multiargs(obj):
     callbacks(obj)
     assert obj.method_b(10) == (10, 13)
     assert stack == [(10, 13)]
+
+def test_wrong_args(obj):
+    with pytest.raises(TypeError):
+        CallBacks({2: lambda: 3})
+
+    with pytest.raises(TypeError):
+        CallBacks(f=3)
+
+    callbacks = CallBacks(method_c=lambda e: 3)
+    with pytest.raises(ValueError):
+        callbacks(obj)    # no method_c for obj
+
+
+class MDLObj():
+    verbose = True
+    data_size_ = 3
+    model_size_ = 4
+
+def test_mdl_cand_size():
+    o = StringIO()
+    sys.stdout = o
+    obj = MDLObj()
+    _print_candidates_size(obj, [2])
+    sys.stdout = sys.__stdout__
+    assert '1' in o.getvalue()
+
+def test_mdl_cand_size():
+    o = StringIO()
+    sys.stdout = o
+    obj = MDLObj()
+    _print_positive_gain(obj, 1, 2)
+    sys.stdout = sys.__stdout__
+    assert 'data' in o.getvalue()
+    assert 'model' in o.getvalue()
