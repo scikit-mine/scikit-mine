@@ -77,3 +77,21 @@ def test_test():
     _ = callbacks(a)
     assert a.f() == 10
     assert stack == [10]
+
+def test_lambda(obj):
+    stack = list()
+    callbacks = CallBacks(method_a=lambda res: stack.append(res))
+    callbacks(obj)
+    assert obj.method_a(10) == 11
+    assert obj.x == 10
+    assert stack == [11]
+
+def test_multiargs(obj):
+    stack = list()
+    def cb(data_size, model_size, *args):
+        stack.append((data_size, model_size))
+
+    callbacks = CallBacks(method_b=cb)
+    callbacks(obj)
+    assert obj.method_b(10) == (10, 13)
+    assert stack == [(10, 13)]

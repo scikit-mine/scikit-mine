@@ -2,6 +2,7 @@
 Callback API for scikit-mine
 """
 from inspect import signature
+from collections import Iterable
 
 def _get_params(fn):
     assert callable(fn)
@@ -19,12 +20,17 @@ def post(self, func_name, callback):
     callback_params = _get_params(callback)
     def _(*args, **kwargs):
         res = func(*args, **kwargs)
+        res_ = res if isinstance(res, Iterable) else (res, )
         if 'self' in callback_params and len(callback_params) > 1:
-            callback(self, res)     # eg. def f(self, x): print(self.b, x)
+            # eg. def f(self, x): print(self.b, x)
+            callback(self, res_)
         elif callback_params == {'self'}:
-            callback(self)           # eg. list.append
+            callback(self)
+        elif callback_params:
+            callback(*res_)
         else:
-            callback(res)            # eg. list.append
+            # eg. list.append
+            callback(res)
         return res
     return _
 
@@ -56,6 +62,7 @@ class CallBacks(dict):
         self._check()
 
     def _check(self):
+        # TODO : inspect source code from callbacks and check no assigment on inner self
         assert all(map(callable, self.values()))
 
     def _frozen(self, *args, **kwargs):
@@ -74,7 +81,8 @@ class CallBacks(dict):
 
         for callback_name, callback in self.items():
             new_meth = post(miner, callback_name, callback)
+            # TODO : lock assignement to "once for all"
+            # re-executing a cell in a notebook can lead to callbacks being called many times
             setattr(miner, callback_name, new_meth)
 
         return miner
-    
