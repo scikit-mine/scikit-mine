@@ -31,7 +31,7 @@ def post(self, func_name, callback):
             callback(self)
         elif callback_params:
             try:
-                callback(res_)
+                callback(*res_)
             except TypeError:
                 callback(*res)
         else:
