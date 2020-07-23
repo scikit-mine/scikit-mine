@@ -4,7 +4,6 @@ import numpy as np
 
 from ..lcm import LCM
 from ..lcm import LCMMax
-from ..lcm import filter_maximal
 
 D = [
     [1, 2, 3, 4, 5, 6],
@@ -157,19 +156,6 @@ def test_relative_support():
 
     for item in lcm.item_to_tids.keys():
         assert set(lcm.item_to_tids[item]) == true_item_to_tids[item]
-
-def test_filter_max():
-    D = pd.Series([
-        {2, 3},
-        {2,},
-        {4, 1},
-        {4, 7},
-        {4, 1, 8},
-    ])
-
-    maximums = list(filter_maximal(D))
-
-    assert maximums == D.iloc[[0, 3, 4]].tolist()
 
 
 def test_lcm_max():

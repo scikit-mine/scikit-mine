@@ -2,11 +2,9 @@
 utils functions
 """
 
-from functools import partial
-from operator import gt, lt
-
 import numpy as np
 import pandas as pd
+from sortedcontainers import SortedList
 
 
 def _check_random_state(random_state):
@@ -40,25 +38,50 @@ def _check_growth_rate(gr):
     return gr
 
 
-def filter_within(itemsets, op):
-    """
-    Filter patterns within a patternset,
-    comparing each pattern to every other patterns,
-    by applying ``op``.
+def filter_maximal(itemsets):
+    """filter maximal itemsets from a set of itemsets
 
-    Notes
-    -----
-        O(n²) complexity
+    Parameters
+    ----------
+    itemsets: Iterator[frozenset]
+        a set of itemsets
+
+    Returns
+    -------
+    SortedList
     """
-    itemsets = [set(e) for e in itemsets]
+    maximals = SortedList(key=len)
+    itemsets = sorted(itemsets, key=len, reverse=True)
     for iset in itemsets:
-        if any(map(lambda e: op(e, iset), itemsets)):
-            continue
-        yield iset
+        gts = maximals.irange(iset)
+        # is there a superset amongst bigger itemsets ?
+        if not any(map(lambda e: e > iset, gts)):
+            maximals.add(iset)  # O(log(len(maximals)))
+
+    return maximals
 
 
-filter_maximal = partial(filter_within, op=gt)
-filter_minimal = partial(filter_within, op=lt)
+def filter_minimal(itemsets):
+    """filter minimal itemsets from a set of itemsets
+
+    Parameters
+    ----------
+    itemsets: Iterator[frozenset]
+        a set of itemsets
+
+    Returns
+    -------
+    SortedList
+    """
+    minimals = SortedList(key=len)
+    itemsets = sorted(itemsets, key=len)
+    for iset in itemsets:
+        lts = minimals.irange(None, iset)
+        # is there a subset amongst the smaller itemsets ?
+        if not any(map(lambda e: e < iset, lts)):
+            minimals.add(iset)
+
+    return minimals
 
 
 def supervised_to_unsupervised(D, y):

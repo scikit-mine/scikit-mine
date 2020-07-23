@@ -63,9 +63,8 @@ def mbdllborder(isets1, isets2):
 
     for iset in isets2:
         if any((e > iset for e in isets1)): continue
-        inter = [iset & e for e in isets1]
+        inter = (iset & e for e in isets1)
         R = filter_maximal(inter)
-        R = [set(e) for e in R]
 
         diff = border_diff(iset, R)
         borders.append(diff)

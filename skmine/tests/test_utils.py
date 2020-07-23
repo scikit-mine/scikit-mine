@@ -1,8 +1,11 @@
 import pytest
 import numpy as np
+import pandas as pd
 from ..utils import _check_random_state
 from ..utils import _check_min_supp
 from ..utils import _check_growth_rate
+from ..utils import filter_maximal
+from ..utils import filter_minimal
 
 def test_check_random_state():
     random_state = np.random.RandomState(18)
@@ -40,3 +43,29 @@ def test_wrong_growth_rate():
 
 def test_growth_rate():
     assert _check_growth_rate(1.5) == 1.5
+
+
+def test_filter_max():
+    D = pd.Series([
+        {2, 3},
+        {2,},
+        {4, 1},
+        {4, 7},
+        {4, 1, 8},
+    ])
+    maximums = list(filter_maximal(D))
+
+    assert maximums == D.iloc[[0, 3, 4]].tolist()
+
+
+def test_filter_min():
+    D = pd.Series([
+        {2, 3},
+        {2,},
+        {4, 1},
+        {4, 7},
+        {4, 1, 8},
+    ])
+    maximums = list(filter_minimal(D))
+
+    assert maximums == D.iloc[[1, 2, 3]].tolist()
