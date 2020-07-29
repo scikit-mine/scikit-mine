@@ -103,7 +103,7 @@ def fetch_connect(data_home=None):
     return fetch_any('connect.dat', data_home=data_home)
 
 
-def fetch_mushroom(data_home=None):
+def fetch_mushroom(data_home=None, return_D_y=False):
     """Fetch and return the mushroom dataset (Frequent Itemset Mining)
 
     The Mushroom data set includes descriptions of hypothetical samples corresponding
@@ -113,13 +113,13 @@ def fetch_mushroom(data_home=None):
     4208 (51.8%) are edible and 3916 (48.2%) are poisonous.
 
     The data contains 22 nomoinal features plus the class attribure (edible or not).
-    These features were translated into 114 items.
+    These features were translated into 117 items.
 
     ====================   ==============
-    Nb of items                       119
+    Nb of items                       117
     Nb of transactions               8124
-    Avg transaction size             23.0
-    Density                         0.193
+    Avg transaction size             22.0
+    Density                         0.188
     ====================   ==============
 
     Parameters
@@ -128,13 +128,39 @@ def fetch_mushroom(data_home=None):
         Specify another download and cache folder for the datasets. By default
         all scikit-mine data is stored in `scikit-mine_data`.
 
+    return_D_y: bool, default=False.
+        If True, returns a tuple for both the data and the associated labels
+        (0 for edible, 1 for poisonous)
+
     Returns
     -------
-    pd.Series
+    D: pd.Series
         Transactions from the mushroom dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
+
+    (D, y) : tuple
+        if ``return_D_y`` is True
+
+    Examples
+    --------
+    >>> from skmine.datasets.fimi import fetch_mushroom
+    >>> from skmine.datasets.utils import describe
+    >>> D, y = fetch_mushroom(return_D_y=True)
+    >>> describe(D)['n_items']
+    117
+    >>> y.value_counts()
+    0    4208
+    1    3916
+    Name: mushroom, dtype: int64
     """
-    return fetch_any('mushroom.dat', data_home=data_home)
+    mush = fetch_any('mushroom.dat', data_home=data_home)
+    D = mush.str[1:]
+    if return_D_y:
+        y = mush.str[0]
+        y = y.replace(2, 0)  # 2 is edible, 1 is poisonous
+        return D, y
+
+    return D
 
 
 def fetch_pumsb(data_home=None):
