@@ -1,4 +1,5 @@
 from ..callbacks import CallBacks, post, _print_candidates_size, _print_positive_gain
+from ..callbacks import has_self_assigment
 
 from io import StringIO
 import sys
@@ -132,3 +133,24 @@ def test_mdl_cand_size():
     sys.stdout = sys.__stdout__
     assert 'data' in o.getvalue()
     assert 'model' in o.getvalue()
+
+
+def test_check_no_self():
+    def f(self, a):
+        self.a_b = a
+        return a
+
+    assert has_self_assigment(f)
+
+    def f(self, a):
+        return a
+    assert not has_self_assigment(f)
+
+    def f(self, a):
+        self = None
+        return a
+
+    assert has_self_assigment(f)
+
+    with pytest.raises(ValueError):
+        CallBacks(f=f)

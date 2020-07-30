@@ -1,8 +1,24 @@
 """
 Callback API for scikit-mine
 """
-from inspect import signature
+from inspect import signature, getsource
 from collections.abc import Iterable
+
+import re
+
+def has_self_assigment(f):
+    """
+    Parameters
+    ----------
+    f: callable
+
+    check if no assignement is made on the ``self`` keyword
+    """
+    try:
+        p = r'self(\.\w+)?\s*=.*'
+        return any(re.finditer(p, getsource(f)))
+    except TypeError:
+        return False
 
 def _get_params(fn):
     assert callable(fn)
@@ -77,6 +93,8 @@ class CallBacks(dict):
         for v in self.values():
             if not callable(v):
                 raise TypeError(f"values must be callables, found {type(v)}")
+            if has_self_assigment(v):  # TODO : only allow lambdas or builtins ?
+                raise ValueError('callbacks should not modify `self` attributes')
 
     def _frozen(self, *args, **kwargs):
         raise NotImplementedError(f"{type(self)} is immutable")
