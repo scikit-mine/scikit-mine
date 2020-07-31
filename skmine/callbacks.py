@@ -57,7 +57,7 @@ class CallBacks(dict):
     Parameters
     ----------
     key-value pairs
-        Keys must be string
+        Keys must be string, values must be callables
 
     Examples
     --------

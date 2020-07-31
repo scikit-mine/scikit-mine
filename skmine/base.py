@@ -162,7 +162,8 @@ class MDLOptimizer(ABC):
             and model size in the case of accepting the candidate.
 
             Data size and model size should be returned separately as we encourage
-            usage of (two-part) crude MDL.
+            usage of `(two-part) crude MDL
+            <https://en.wikipedia.org/wiki/Minimum_description_length#Two-Part_Codes>`_.
         """
         return (0, 0, )
 
