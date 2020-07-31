@@ -82,6 +82,22 @@ def test_test():
     assert a.f() == 10
     assert stack == [10]
 
+def test_multiple_return():
+    class A():
+        def f(self, a):
+            return (2, 10, 3)
+
+    stack = list()
+    def cb(self, a, b, *_):
+        stack.append(b)
+
+    callbacks = CallBacks(f=cb)
+    a = A()
+    callbacks(a)
+    assert a.f(None) == (2, 10, 3)
+    assert stack == [10]
+
+
 def test_lambda(obj):
     stack = list()
     callbacks = CallBacks(method_a=lambda res: stack.append(res))

@@ -24,9 +24,9 @@ def _get_params(fn):
     assert callable(fn)
     try:
         sig = signature(fn)
-        params = set(sig.parameters.keys())
+        params = list(sig.parameters)
     except ValueError:
-        params = set()
+        params = list()
     return params
 
 def post(self, func_name, callback):
@@ -36,20 +36,16 @@ def post(self, func_name, callback):
     callback_params = _get_params(callback)
     def _(*args, **kwargs):
         res = func(*args, **kwargs)
-        res_ = res if isinstance(res, Iterable) else (res, )
-        if 'self' in callback_params and len(callback_params) > 1:
-            # eg. def f(self, x): print(self.b, x)
-            try:
-                callback(self, res_)
-            except TypeError:
-                callback(self, *res_)
-        elif callback_params == {'self'}:
-            callback(self)
-        elif callback_params:
-            callback(*res_)
+        #import pdb; pdb.set_trace()
+        if 'self' in callback_params:
+            _w = (res, ) if len(callback_params) == 2 else res
+            args_ = (self, ) + (_w if len(callback_params) > 1 else tuple())
         else:
-            # eg. list.append
-            callback(res)
+            args_ = res
+        try:
+            callback(*args_)
+        except TypeError:
+            callback(args_)
         return res
     return _
 
