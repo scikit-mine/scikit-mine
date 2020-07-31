@@ -49,7 +49,7 @@ def test_callbacks(obj):
     callbacks = CallBacks(method_a=stack1.append, method_b=stack2.extend)
 
     obj2 = callbacks(obj)
-    assert obj2 is obj
+    assert obj2 is None
 
     obj.method_a(10)
     obj.method_a(2)

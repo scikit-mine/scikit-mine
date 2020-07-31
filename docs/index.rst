@@ -26,6 +26,7 @@ Welcome to scikit-mine's documentation!
 
    tutorials/datasets/index
    tutorials/itemsets/index
+   tutorials/callbacks/index
 
 
 .. toctree::

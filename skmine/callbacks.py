@@ -107,8 +107,6 @@ class CallBacks(dict):
             # re-executing a cell in a notebook can lead to callbacks being called many times
             setattr(miner, callback_name, new_meth)
 
-        return miner
-
 
 def _print_positive_gain(self, data_size, model_size, *_):
     if getattr(self, 'verbose', None):
