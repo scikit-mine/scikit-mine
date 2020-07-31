@@ -2,7 +2,6 @@
 Callback API for scikit-mine
 """
 from inspect import signature, getsource
-from collections.abc import Iterable
 
 import re
 
@@ -36,7 +35,6 @@ def post(self, func_name, callback):
     callback_params = _get_params(callback)
     def _(*args, **kwargs):
         res = func(*args, **kwargs)
-        #import pdb; pdb.set_trace()
         if 'self' in callback_params:
             _w = (res, ) if len(callback_params) == 2 else res
             args_ = (self, ) + (_w if len(callback_params) > 1 else tuple())
@@ -45,7 +43,7 @@ def post(self, func_name, callback):
         try:
             callback(*args_)
         except TypeError:
-            callback(args_)
+            callback(args_)  # list.extend
         return res
     return _
 
