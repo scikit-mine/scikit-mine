@@ -97,6 +97,8 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -105,10 +107,13 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
 <p class="caption"><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 
@@ -177,7 +182,8 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#C"><strong>C</strong></a>
+ <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
@@ -188,11 +194,23 @@
  | <a href="#T"><strong>T</strong></a>
  
 </div>
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/base.html#skmine.base.BaseMiner">BaseMiner (class in skmine.base)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.codetable">codetable() (skmine.preprocessing.MDLPDiscretizer property)</a>
+      <li><a href="reference/base.html#skmine.base.MDLOptimizer.codetable">codetable() (skmine.base.MDLOptimizer property)</a>
+
+      <ul>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.codetable">(skmine.preprocessing.MDLPDiscretizer property)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.compute_sizes">compute_sizes() (skmine.itemsets.SLIM method)</a>
@@ -205,11 +223,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.decision_function">decision_function() (skmine.itemsets.SLIM method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.utils.describe">describe() (in module skmine.datasets.utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder.discover">discover() (skmine.emerging.MBDLLBorder method)</a>
+</li>
+      <li><a href="reference/base.html#skmine.base.DiscovererMixin">DiscovererMixin (class in skmine.base)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -217,8 +237,12 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.evaluate">evaluate() (skmine.itemsets.SLIM method)</a>
+      <li><a href="reference/base.html#skmine.base.MDLOptimizer.evaluate">evaluate() (skmine.base.MDLOptimizer method)</a>
+
+      <ul>
+        <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.evaluate">(skmine.itemsets.SLIM method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -241,22 +265,28 @@
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb">fetch_pumsb() (in module skmine.datasets.fimi)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb_star">fetch_pumsb_star() (in module skmine.datasets.fimi)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_retail">fetch_retail() (in module skmine.datasets.fimi)</a>
 </li>
-      <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder.fit">fit() (skmine.emerging.MBDLLBorder method)</a>
+      <li><a href="reference/base.html#skmine.base.BaseMiner.fit">fit() (skmine.base.BaseMiner method)</a>
 
       <ul>
+        <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder.fit">(skmine.emerging.MBDLLBorder method)</a>
+</li>
         <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.fit">(skmine.itemsets.SLIM method)</a>
 </li>
         <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/preprocessing.html#skmine.preprocessing.LCM.fit_discover">fit_discover() (skmine.preprocessing.LCM method)</a>
+      <li><a href="reference/base.html#skmine.base.DiscovererMixin.fit_discover">fit_discover() (skmine.base.DiscovererMixin method)</a>
+
+      <ul>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.LCM.fit_discover">(skmine.preprocessing.LCM method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/preprocessing.html#skmine.preprocessing.LCM.fit_transform">fit_transform() (skmine.preprocessing.LCM method)</a>
 
       <ul>
@@ -275,6 +305,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/base.html#skmine.base.BaseMiner.get_params">get_params() (skmine.base.BaseMiner method)</a>
+</li>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.get_standard_codes">get_standard_codes() (skmine.itemsets.SLIM method)</a>
 </li>
   </ul></td>
@@ -299,6 +331,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder">MBDLLBorder (class in skmine.emerging)</a>
 </li>
+      <li><a href="reference/base.html#skmine.base.MDLOptimizer">MDLOptimizer (class in skmine.base)</a>
+</li>
       <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer">MDLPDiscretizer (class in skmine.preprocessing)</a>
 </li>
   </ul></td>
@@ -306,6 +340,10 @@
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/base.html#skmine.base.BaseMiner.set_params">set_params() (skmine.base.BaseMiner method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM">SLIM (class in skmine.itemsets)</a>
 </li>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Generate synthetic data to train on &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="&lt;no title&gt;" href="../itemsets/index.html" />
-    <link rel="prev" title="fetch FIMI datasets" href="fetch_fimi_datasets.html" /> 
+    <link rel="next" title="Compatibility with Scikit-Learn" href="../../sklearn_compat.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -104,16 +104,18 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Generate synthetic data to train on</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">A simple plot allow us to check the distrution of our transactions lenghts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Now-let’s-generate-associated-labels,-for-multiclass-classification">Now let’s generate associated labels, for multiclass classification</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Callback API demo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Define-your-own-callbacks">Define your own callbacks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Inner-view-of-MDL-learning">Inner view of MDL learning</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">About</span></p>
 <ul>
@@ -169,13 +171,13 @@
         
           <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
         
-      <li>Generate synthetic data to train on</li>
+      <li>Callback API demo</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/tutorials/datasets/synthetic_transactions.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/tutorials/callbacks/callbacks.ipynb.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -443,15 +445,22 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Generate-synthetic-data-to-train-on">
-<h1>Generate synthetic data to train on<a class="headerlink" href="#Generate-synthetic-data-to-train-on" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Callback-API-demo">
+<h1>Callback API demo<a class="headerlink" href="#Callback-API-demo" title="Permalink to this headline">¶</a></h1>
+<p>In this demo we are going to use the callback API to <strong>track some useful information while training</strong> a SLIM miner</p>
+<p>We simply define custom python functions, and submit them to create an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">%</span><span class="k">matplotlib</span> inline
-<span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">skmine.callbacks</span> <span class="kn">import</span> <span class="n">CallBacks</span>
+<span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
+<span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_mushroom</span>
 </pre></div>
 </div>
 </div>
@@ -460,118 +469,325 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                     <span class="n">n_items</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                     <span class="n">density</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
+<span></span><span class="n">mushroom</span> <span class="o">=</span> <span class="n">fetch_mushroom</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">
-<h2>A simple plot allow us to check the distrution of our transactions lenghts<a class="headerlink" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts" title="Permalink to this headline">¶</a></h2>
-<p><strong>Transaction lengths should be centered</strong> around 2 as density has been set to 20% and there are 10 items in total</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
+<span></span><span class="n">te</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">mushroom</span><span class="p">)</span>
+<span class="n">D</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="mi">5</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;matplotlib.axes._subplots.AxesSubplot at 0x7fa3216e34a8&gt;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../../_images/tutorials_datasets_synthetic_transactions_4_1.png" src="../../_images/tutorials_datasets_synthetic_transactions_4_1.png" />
-</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
+<span></span><span class="c1"># set n_iter_no_change to a high value so learning takes longer</span>
+<span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
+<hr class="docutils" />
+<div class="section" id="Define-your-own-callbacks">
+<h2>Define your own callbacks<a class="headerlink" href="#Define-your-own-callbacks" title="Permalink to this headline">¶</a></h2>
+<p>We define custom functions, that will take the result of the function they target as input. Those results will be ingested for later reuse</p>
+<p>Here we define two methods:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">post_evaluate</span></code> is executed after <code class="docutils literal notranslate"><span class="pre">SLIM.evaluate</span></code>. It tracks sizes for both the data and the model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">post_gen</span></code> is executed after <code class="docutils literal notranslate"><span class="pre">SLIM.generate_candidates</span></code>, and just records the size of the current batch of candidates</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">describe</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span></span><span class="n">sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">candidate_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">post_evaluate</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">post_gen</span><span class="p">(</span><span class="n">candidates</span><span class="p">):</span>
+    <span class="n">candidate_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-{&#39;n_items&#39;: 10,
- &#39;avg_transaction_size&#39;: 2.08,
- &#39;n_transactions&#39;: 100,
- &#39;density&#39;: 0.20800000000000002}
-</pre></div></div>
-</div>
-</div>
-<hr class="docutils" />
-<div class="section" id="Now-let’s-generate-associated-labels,-for-multiclass-classification">
-<h2>Now let’s generate associated labels, for multiclass classification<a class="headerlink" href="#Now-let’s-generate-associated-labels,-for-multiclass-classification" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is a collection of callbacks.</p>
+<p>It’s a mapping between function names and their dedicated callbacks. When an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is called (<code class="docutils literal notranslate"><span class="pre">()</span> <span class="pre">operator</span></code>) on an object, it looks for internal methods and tries to attach the callbacks.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">densities</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">4</span><span class="p">],</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">CallBacks</span><span class="p">(</span><span class="n">evaluate</span><span class="o">=</span><span class="n">post_evaluate</span><span class="p">,</span> <span class="n">generate_candidates</span><span class="o">=</span><span class="n">post_gen</span><span class="p">)</span>
+
+<span class="n">callbacks</span><span class="p">(</span><span class="n">slim</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">time</span> slim.fit(D)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 2.02 s, sys: 8.66 ms, total: 2.03 s
+Wall time: 2.03 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>usage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>(3, 67, 76, 18, 85, 86, 24, 90, 93, 30, 34, 37, 38, 107, 116, 52, 56, 59, 63)</th>
+      <td>[2210, 2482, 2540, 2860, 3026, 3162, 3270, 329...</td>
+    </tr>
+    <tr>
+      <th>(3, 67, 76, 18, 85, 86, 24, 90, 93, 30, 34, 37, 38, 110, 52, 116, 56, 59, 63)</th>
+      <td>[2285, 2841, 3047, 3174, 3262, 3282, 3327, 337...</td>
+    </tr>
+    <tr>
+      <th>(34, 67, 36, 58, 102, 66, 38, 76, 13, 110, 48, 116, 85, 86, 53, 24, 90, 59, 94)</th>
+      <td>[5105, 5432, 5989, 6104, 6137, 6247, 6514, 660...</td>
+    </tr>
+    <tr>
+      <th>(35, 36, 90, 39, 88, 73, 9, 104, 13, 50, 83, 52, 85, 24, 58, 59, 28, 93, 63)</th>
+      <td>[6994, 6999, 7658, 7782, 7939, 7956, 8115, 8123]</td>
+    </tr>
+    <tr>
+      <th>(67, 4, 76, 85, 86, 23, 91, 28, 93, 34, 36, 103, 39, 110, 115, 52, 56, 59, 63)</th>
+      <td>[4106, 4843, 4882, 5255, 5317, 5376, 5423, 552...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>(62)</th>
+      <td>[6967, 6970, 6984, 7195, 7292, 7449, 7533, 757...</td>
+    </tr>
+    <tr>
+      <th>(82)</th>
+      <td>[4494, 5131, 5154, 5162, 5239, 5241, 5259, 526...</td>
+    </tr>
+    <tr>
+      <th>(22)</th>
+      <td>[4326, 4898, 5284, 5302, 5351, 5430, 5497, 552...</td>
+    </tr>
+    <tr>
+      <th>(8)</th>
+      <td>[5126, 5508, 7401, 7706]</td>
+    </tr>
+    <tr>
+      <th>(12)</th>
+      <td>[5107, 5126, 5128, 5717]</td>
+    </tr>
+  </tbody>
+</table>
+<p>250 rows × 1 columns</p>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">D</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">describe</span><span class="p">)</span>
+<span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data_size&#39;</span><span class="p">,</span> <span class="s1">&#39;model_size&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Inner-view-of-MDL-learning">
+<h3>Inner view of MDL learning<a class="headerlink" href="#Inner-view-of-MDL-learning" title="Permalink to this headline">¶</a></h3>
+<p>The above plot clearly shows <strong>how SLIM performs compression</strong>.</p>
+<p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
+<p><strong>We can clearly dinstinguish the beginning of a batch of candidates, where the learning curve is quite abrupt, from the end of a batch, where it reaches a plateau</strong>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">data_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">candidate_sizes</span><span class="p">):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_callbacks_callbacks_12_0.png" src="../../_images/tutorials_callbacks_callbacks_12_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">df</span><span class="o">.</span><span class="n">model_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-class
-0      n_items                 100.0000
-       avg_transaction_size     19.9500
-       n_transactions           60.0000
-       density                   0.1995
-1      n_items                 100.0000
-       avg_transaction_size     50.6500
-       n_transactions           40.0000
-       density                   0.5065
-Name: transaction, dtype: float64
+&lt;AxesSubplot:&gt;
 </pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_callbacks_callbacks_13_1.png" src="../../_images/tutorials_callbacks_callbacks_13_1.png" />
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -584,10 +800,10 @@ Name: transaction, dtype: float64
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../itemsets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../../sklearn_compat.html" class="btn btn-neutral float-right" title="Compatibility with Scikit-Learn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="fetch_fimi_datasets.html" class="btn btn-neutral float-left" title="fetch FIMI datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compatibility with Scikit-Learn &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Contributing &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Contributing" href="CONTRIBUTING.html" />
-    <link rel="prev" title="Callback API demo" href="tutorials/callbacks/callbacks.html" /> 
+    <link rel="next" title="History" href="HISTORY.html" />
+    <link rel="prev" title="Compatibility with Scikit-Learn" href="sklearn_compat.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -113,14 +113,15 @@
 </ul>
 <p class="caption"><span class="caption-text">About</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Compatibility with Scikit-Learn</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pipelines">Pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other-implementation-details">Other implementation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#report-bugs">Report Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-notebooks">Write Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implement-features">Implement Features</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#inclusion-criteria">Inclusion criteria</a></li>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 
@@ -168,13 +169,13 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Compatibility with Scikit-Learn</li>
+      <li>Contributing</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/sklearn_compat.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/CONTRIBUTING.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -211,42 +212,51 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="compatibility-with-scikit-learn">
-<h1>Compatibility with Scikit-Learn<a class="headerlink" href="#compatibility-with-scikit-learn" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> is the golden standard for general
-puprose machine learning. As a rule of thumb, we follow scikit-learn functional definitions.</p>
-<hr class="docutils" />
-<p><em>scikit-learn</em> is a library for statistical learning, or <strong>machine-learning</strong>.</p>
-<p><em>scikit-mine</em>, on its side, is a library for (yet statistical) <strong>pattern mining</strong>.</p>
-<p>So what does this change ?
-<em>scikit-mine</em> gives more attention to discrete values, because <strong>it looks for co-occuring symbols in the data</strong>.
-To this purpose, we sometimes need to extend scikit-learn capabilities to tightly integrate the notion
-of symbols in our learning processes.</p>
-<div class="section" id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="reference/preprocessing.html#preprocessing"><span class="std std-ref">Preprocessing</span></a> module implements a set of Transformers/Encoders
-to get you from raw data to a more advanced, structured kind of data :
-the kind a data that is easily manageable and prone to give you the best performance.</p>
-<p>Sometimes <em>scikit-learn</em> provides us the tools we exactly need, sometimes not.
-<strong>Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
-in a fully scikit-learn compatible way</strong>.</p>
-<p>As an example, consider <a class="reference internal" href="tutorials/itemsets/SLIM.html"><span class="doc">this tutorial</span></a>
-in which we use a <strong>TransactionEncoder</strong> to easily ingest raw data,
-presented in the form of Python iterators.</p>
+<div class="section" id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>Contributions are welcome, and greatly appreciated !
+You can contribute in many ways:</p>
+<div class="section" id="report-bugs">
+<h2>Report Bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h2>
+<p>Report bugs at <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/issues">https://github.com/scikit-mine/scikit-mine/issues</a>.</p>
+<p>Please use the issue templates when submitting new issues.</p>
 </div>
-<div class="section" id="pipelines">
-<h2>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this headline">¶</a></h2>
-<p>scikit-mine models are designed for possible integration in <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html">scikit-learn pipelines</a>.
-This makes possible to build “symbolic classifiers”, using scikit-mine pattern encoding schemes
-to serve predictions. See the tutorials sections.</p>
+<div class="section" id="write-notebooks">
+<h2>Write Notebooks<a class="headerlink" href="#write-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>scikit-mine could always include more showcase notebooks. We often concentrate
+on implementation details and lack of materials to show how useful our algorithms
+can be in real-life situations.
+Don’t hesitate to bring a little more story telling to scikit-mine !!</p>
 </div>
-<div class="section" id="other-implementation-details">
-<h2>Other implementation details<a class="headerlink" href="#other-implementation-details" title="Permalink to this headline">¶</a></h2>
-<p>We use <a class="reference external" href="https://joblib.readthedocs.io/en/latest/">joblib</a> as default to parallelise our code.
-We also set the <em>prefer</em> parameter when instantiating <a class="reference external" href="https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html">joblib.Parallel</a>,
-so users don’t have to manually choose between threads and processes for optimal execution.</p>
-<p>Finally, we also leverage <a class="reference external" href="https://cython.org/">Cython</a> code where performance matters.</p>
+<div class="section" id="fix-bugs">
+<h2>Fix Bugs<a class="headerlink" href="#fix-bugs" title="Permalink to this headline">¶</a></h2>
+<p>Look through the GitHub issues for bugs. Anything tagged with “bug” and “help
+wanted” is open to whoever wants to implement it.</p>
 </div>
+<div class="section" id="implement-features">
+<h2>Implement Features<a class="headerlink" href="#implement-features" title="Permalink to this headline">¶</a></h2>
+<p>Look through the GitHub projects. Anything listed in the projects is a feature
+to be implemented.</p>
+<p>You can also look through GitHub issues for features. Anything tagged with “enhancement”
+and “help wanted” is open to whoever wants to implement it.</p>
+<p>For more details check the “Inclusion criteria” section below</p>
+</div>
+</div>
+<div class="section" id="inclusion-criteria">
+<h1>Inclusion criteria<a class="headerlink" href="#inclusion-criteria" title="Permalink to this headline">¶</a></h1>
+<p>Scikit-mine is a library for descriptive analysis, and implements pattern mining algorithms.
+Only algorithms belonging to this family of algorithms will be accepted.</p>
+<p>Now inclusion of new algorithms into scikit-mine follows a certain number of rules</p>
+<dl class="simple">
+<dt>From most to least important:</dt><dd><ul class="simple">
+<li><p>200+ citations for the main algorithms.</p></li>
+<li><p>The number of patterns used to describe a set of data should be low. For this we promote algorithms based on <a class="reference external" href="https://en.wikipedia.org/wiki/Minimum_description_length">MDL</a> .</p></li>
+<li><p>A low number of parameters (usually one or two). This is to encourage reproducible experiments.</p></li>
+</ul>
+</dd>
+</dl>
+<p>A technique that provides a clear improvement (enhanced datastructures, etc …) on a widely-used method will
+also be condidered for inclusion.</p>
 </div>
 
 
@@ -257,10 +267,10 @@ so users don’t have to manually choose between threads and processes for optim
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="CONTRIBUTING.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="HISTORY.html" class="btn btn-neutral float-right" title="History" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="tutorials/callbacks/callbacks.html" class="btn btn-neutral float-left" title="Callback API demo" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="sklearn_compat.html" class="btn btn-neutral float-left" title="Compatibility with Scikit-Learn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

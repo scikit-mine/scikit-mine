@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overview: module code &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Callback API &mdash; scikit-mine 0.0.1 documentation</title>
   
 
   
@@ -38,7 +38,9 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
+    <link rel="prev" title="Base" href="base.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,13 +94,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../reference/datasets.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/itemsets.html">Itemsets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/emerging.html">Emerging</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/base.html">Base</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../reference/callbacks.html">Callback API</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Callback API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -161,10 +163,14 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Overview: module code</li>
+      <li>Callback API</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/callbacks.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -176,24 +182,55 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="skmine/base.html">skmine.base</a></li>
-<li><a href="skmine/datasets/_base.html">skmine.datasets._base</a></li>
-<li><a href="skmine/datasets/_instacart.html">skmine.datasets._instacart</a></li>
-<li><a href="skmine/datasets/_samples_generator.html">skmine.datasets._samples_generator</a></li>
-<li><a href="skmine/datasets/fimi.html">skmine.datasets.fimi</a></li>
-<li><a href="skmine/datasets/utils.html">skmine.datasets.utils</a></li>
-<li><a href="skmine/emerging/mbdldorber.html">skmine.emerging.mbdldorber</a></li>
-<li><a href="skmine/itemsets/slim.html">skmine.itemsets.slim</a></li>
-<li><a href="skmine/preprocessing/lcm.html">skmine.preprocessing.lcm</a></li>
-<li><a href="skmine/preprocessing/mdlp_discretizer.html">skmine.preprocessing.mdlp_discretizer</a></li>
-<li><a href="skmine/preprocessing/transaction_encoder.html">skmine.preprocessing.transaction_encoder</a></li>
-</ul>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="callback-api">
+<span id="callbacks"></span><h1>Callback API<a class="headerlink" href="#callback-api" title="Permalink to this headline">¶</a></h1>
+<p>scikit-mine allows to define custom callbacks to <strong>track metrics and artifacts
+during exploration</strong>.
+The definition of callbacks is volontarily very permissive so that
+it will work in most cases.</p>
+<p>Simply put, a callback is a method to be called after the execution of a method it targets.
+<strong>This allows tracking models attributes (accesing the model directly via the ``self`` keyword),
+or function results</strong>.</p>
+</div>
+
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutorials/datasets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="base.html" class="btn btn-neutral float-left" title="Base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
