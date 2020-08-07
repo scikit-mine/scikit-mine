@@ -14,6 +14,7 @@ from ..base import BaseMiner, MDLOptimizer
 from ..bitmaps import Bitmap
 from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
+from ..callbacks import mdl_prints
 
 def cover(itemsets: list, D: pd.DataFrame):
     """
@@ -177,10 +178,14 @@ class SLIM(BaseMiner, MDLOptimizer):
         prediction time, so it is usually recommended to set it to False
         to build a classifier. The model will be less concise, but will lead
         to more accurate predictions on average.
+    verbose: integer
+        Controls the verbosity: the higher, the more messages.
+    callbacks: skmine.callbacks.CallBacks, default=None
+        Callbacks to use, :class:`skmine.callbacks.mdl_prints` is attached by default
+
 
     Examples
     --------
-    >>> import pandas as pd
     >>> from skmine.itemsets import SLIM
     >>> from skmine.preprocessing import TransactionEncoder
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
@@ -200,7 +205,12 @@ class SLIM(BaseMiner, MDLOptimizer):
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=False, verbose=False):
+    def __init__(self, *,
+                 n_iter_no_change=100,
+                 tol=None,
+                 pruning=False,
+                 verbose=False,
+                 callbacks=mdl_prints):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
@@ -209,6 +219,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.data_size_ = None           # L(D|CT)
         self.pruning = pruning
         self.verbose = verbose
+        if callbacks:
+            callbacks(self)
 
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):
@@ -280,9 +292,6 @@ class SLIM(BaseMiner, MDLOptimizer):
 
                     self.data_size_ = data_size
                     self.model_size_ = model_size
-                    if self.verbose:
-                        print("data size : {:.2f} | model size : {:.2f}".format(
-                            data_size, model_size))
 
                 if diff < tol:
                     n_iter_no_change += 1
@@ -293,9 +302,6 @@ class SLIM(BaseMiner, MDLOptimizer):
 
             if not candidates:  # if empty candidate generation
                 n_iter_no_change += self.n_iter_no_change  # force while loop to break
-
-        if self.verbose:
-            print('{} candidates considered'.format(len(seen_cands)))
 
         return self
 
