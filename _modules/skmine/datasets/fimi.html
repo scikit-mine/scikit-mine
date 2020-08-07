@@ -284,7 +284,7 @@
     <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;connect.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="fetch_mushroom"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">[docs]</a><span class="k">def</span> <span class="nf">fetch_mushroom</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_mushroom"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">[docs]</a><span class="k">def</span> <span class="nf">fetch_mushroom</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_D_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Fetch and return the mushroom dataset (Frequent Itemset Mining)</span>
 
 <span class="sd">    The Mushroom data set includes descriptions of hypothetical samples corresponding</span>
@@ -294,13 +294,13 @@
 <span class="sd">    4208 (51.8%) are edible and 3916 (48.2%) are poisonous.</span>
 
 <span class="sd">    The data contains 22 nomoinal features plus the class attribure (edible or not).</span>
-<span class="sd">    These features were translated into 114 items.</span>
+<span class="sd">    These features were translated into 117 items.</span>
 
 <span class="sd">    ====================   ==============</span>
-<span class="sd">    Nb of items                       119</span>
+<span class="sd">    Nb of items                       117</span>
 <span class="sd">    Nb of transactions               8124</span>
-<span class="sd">    Avg transaction size             23.0</span>
-<span class="sd">    Density                         0.193</span>
+<span class="sd">    Avg transaction size             22.0</span>
+<span class="sd">    Density                         0.188</span>
 <span class="sd">    ====================   ==============</span>
 
 <span class="sd">    Parameters</span>
@@ -309,13 +309,39 @@
 <span class="sd">        Specify another download and cache folder for the datasets. By default</span>
 <span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
 
+<span class="sd">    return_D_y: bool, default=False.</span>
+<span class="sd">        If True, returns a tuple for both the data and the associated labels</span>
+<span class="sd">        (0 for edible, 1 for poisonous)</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    pd.Series</span>
+<span class="sd">    D: pd.Series</span>
 <span class="sd">        Transactions from the mushroom dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
+
+<span class="sd">    (D, y) : tuple</span>
+<span class="sd">        if ``return_D_y`` is True</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.datasets.fimi import fetch_mushroom</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe</span>
+<span class="sd">    &gt;&gt;&gt; D, y = fetch_mushroom(return_D_y=True)</span>
+<span class="sd">    &gt;&gt;&gt; describe(D)[&#39;n_items&#39;]</span>
+<span class="sd">    117</span>
+<span class="sd">    &gt;&gt;&gt; y.value_counts()</span>
+<span class="sd">    0    4208</span>
+<span class="sd">    1    3916</span>
+<span class="sd">    Name: mushroom, dtype: int64</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;mushroom.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="n">mush</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;mushroom.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">return_D_y</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># 2 is edible, 1 is poisonous</span>
+        <span class="k">return</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span>
+
+    <span class="k">return</span> <span class="n">D</span></div>
 
 
 <div class="viewcode-block" id="fetch_pumsb"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_pumsb">[docs]</a><span class="k">def</span> <span class="nf">fetch_pumsb</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

@@ -321,14 +321,14 @@ Each unique transaction is represented as a Python list.</p>
 
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_mushroom">
-<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_mushroom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_mushroom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_mushroom" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_mushroom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_D_y</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_mushroom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_mushroom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch and return the mushroom dataset (Frequent Itemset Mining)</p>
 <p>The Mushroom data set includes descriptions of hypothetical samples corresponding
 to 23 species of gilled mushrooms in the Agaricus and Lepiota Family.</p>
 <p>It contains information about 8124 mushrooms (transactions).
 4208 (51.8%) are edible and 3916 (48.2%) are poisonous.</p>
 <p>The data contains 22 nomoinal features plus the class attribure (edible or not).
-These features were translated into 114 items.</p>
+These features were translated into 117 items.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 59%" />
@@ -336,32 +336,49 @@ These features were translated into 114 items.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Nb of items</p></td>
-<td><p>119</p></td>
+<td><p>117</p></td>
 </tr>
 <tr class="row-even"><td><p>Nb of transactions</p></td>
 <td><p>8124</p></td>
 </tr>
 <tr class="row-odd"><td><p>Avg transaction size</p></td>
-<td><p>23.0</p></td>
+<td><p>22.0</p></td>
 </tr>
 <tr class="row-even"><td><p>Density</p></td>
-<td><p>0.193</p></td>
+<td><p>0.188</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
+all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
+<li><p><strong>return_D_y</strong> (<em>bool</em><em>, </em><em>default=False.</em>) – If True, returns a tuple for both the data and the associated labels
+(0 for edible, 1 for poisonous)</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Transactions from the mushroom dataset, as an in-memory pandas Series.
-Each unique transaction is represented as a Python list.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pd.Series</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>D</strong> (<em>pd.Series</em>) – Transactions from the mushroom dataset, as an in-memory pandas Series.
+Each unique transaction is represented as a Python list.</p></li>
+<li><p><strong>(D, y)</strong> (<em>tuple</em>) – if <code class="docutils literal notranslate"><span class="pre">return_D_y</span></code> is True</p></li>
+</ul>
+</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_mushroom</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_mushroom</span><span class="p">(</span><span class="n">return_D_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">D</span><span class="p">)[</span><span class="s1">&#39;n_items&#39;</span><span class="p">]</span>
+<span class="go">117</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<span class="go">0    4208</span>
+<span class="go">1    3916</span>
+<span class="go">Name: mushroom, dtype: int64</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

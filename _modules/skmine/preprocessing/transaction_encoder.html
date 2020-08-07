@@ -179,18 +179,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for skmine.preprocessing.transaction_encoder</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Transaction encoder</span>
-
-<span class="sd">This acts like</span>
-<span class="sd">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer,</span>
-<span class="sd">but differs in many ways:</span>
-<span class="sd">    - it produces a pandas.DataFrame as output, either dense or sparse,</span>
-<span class="sd">    depending on the ``sparse_output`` argument</span>
-<span class="sd">    - the number of &quot;columns&quot; can vary. Unlike in scikit-learn, there is no need</span>
-<span class="sd">    to freeze schema onto some input to make any new input fit this schema.</span>
-<span class="sd">    - input is possibly out of core : works on generators.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot; Transaction Encoder&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
 
@@ -213,7 +202,21 @@
 
 
 <div class="viewcode-block" id="TransactionEncoder"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.TransactionEncoder">[docs]</a><span class="k">class</span> <span class="nc">TransactionEncoder</span><span class="p">():</span>
-    <span class="vm">__doc__</span> <span class="o">=</span> <span class="vm">__doc__</span>
+    <span class="sd">&quot;&quot;&quot;`TransactionEncoder` acts like `sklearn&#39;s MultiLabelBinarizer</span>
+<span class="sd">    &lt;https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer&gt;`_,</span>
+<span class="sd">    but differs in many ways:</span>
+
+<span class="sd">    - it produces a pandas.DataFrame as output, either dense or sparse,</span>
+<span class="sd">      depending on the ``sparse_output`` argument.</span>
+<span class="sd">    - the number of &quot;columns&quot; can vary from one call to ``.transform`` to another.</span>
+<span class="sd">    - input is possibly out of core : works on generators.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sparse_output: bool</span>
+<span class="sd">        True if a sparse output is to be produced.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparse_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sparse_output</span> <span class="o">=</span> <span class="n">sparse_output</span>
 
@@ -223,8 +226,7 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 <div class="viewcode-block" id="TransactionEncoder.transform"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.TransactionEncoder.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Apply transformation on the transactional input</span>
+        <span class="sd">&quot;&quot;&quot;Apply transformation on the transactional input</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -236,8 +238,18 @@
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            a DataFrame of boolean values. A cell contains a boolean values stating if the item</span>
 <span class="sd">            corresponding to the column was present in the transaction corresponding to the row.</span>
-
 <span class="sd">            if sparse_output is True, each column will be stored as a pandas.arrays.SparseArray</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from skmine.preprocessing import TransactionEncoder</span>
+<span class="sd">        &gt;&gt;&gt; transactions = [[&#39;banana&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;cookies&#39;, &#39;banana&#39;]]</span>
+<span class="sd">        &gt;&gt;&gt; te = TransactionEncoder()</span>
+<span class="sd">        &gt;&gt;&gt; te.fit_transform(transactions)</span>
+<span class="sd">           banana  cookies  milk</span>
+<span class="sd">        0    True    False  True</span>
+<span class="sd">        1    True     True  True</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vert</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Bitmap</span><span class="p">)</span>
         <span class="n">n_transactions</span> <span class="o">=</span> <span class="mi">0</span>

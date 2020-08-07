@@ -110,10 +110,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Callback API demo</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Define-your-own-callbacks">Define your own callbacks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Inner-view-of-MDL-learning">Inner view of MDL learning</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#Define-your-own-callbacks">Define your own callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Inner-view-of-MDL-learning">Inner view of MDL learning</a></li>
 </ul>
 </li>
 </ul>
@@ -650,7 +648,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 2.02 s, sys: 8.66 ms, total: 2.03 s
+CPU times: user 2.02 s, sys: 11.1 ms, total: 2.03 s
 Wall time: 2.03 s
 </pre></div></div>
 </div>
@@ -730,27 +728,19 @@ Wall time: 2.03 s
 <p>250 rows × 1 columns</p>
 </div></div>
 </div>
-<div class="nbinput nblast docutils container">
+</div>
+<div class="section" id="Inner-view-of-MDL-learning">
+<h2>Inner view of MDL learning<a class="headerlink" href="#Inner-view-of-MDL-learning" title="Permalink to this headline">¶</a></h2>
+<p>The plot below clearly shows <strong>how SLIM performs compression</strong>.</p>
+<p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
+<p><strong>We can clearly dinstinguish the beginning of a batch of candidates, where the learning curve is quite abrupt, from the end of a batch, where it reaches a plateau</strong>.</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data_size&#39;</span><span class="p">,</span> <span class="s1">&#39;model_size&#39;</span><span class="p">])</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="Inner-view-of-MDL-learning">
-<h3>Inner view of MDL learning<a class="headerlink" href="#Inner-view-of-MDL-learning" title="Permalink to this headline">¶</a></h3>
-<p>The above plot clearly shows <strong>how SLIM performs compression</strong>.</p>
-<p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
-<p><strong>We can clearly dinstinguish the beginning of a batch of candidates, where the learning curve is quite abrupt, from the end of a batch, where it reaches a plateau</strong>.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">data_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-
+<span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">data_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">candidate_sizes</span><span class="p">):</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
 </pre></div>
@@ -760,11 +750,13 @@ Wall time: 2.03 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_12_0.png" src="../../_images/tutorials_callbacks_callbacks_12_0.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_11_0.png" src="../../_images/tutorials_callbacks_callbacks_11_0.png" />
 </div>
 </div>
+<hr class="docutils" />
+<p>And here is how the model size goes up</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -773,7 +765,7 @@ Wall time: 2.03 s
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -786,7 +778,6 @@ Wall time: 2.03 s
 </div>
 <div class="output_area docutils container">
 <img alt="../../_images/tutorials_callbacks_callbacks_13_1.png" src="../../_images/tutorials_callbacks_callbacks_13_1.png" />
-</div>
 </div>
 </div>
 </div>

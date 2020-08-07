@@ -216,17 +216,15 @@
 <h2>SLIM<a class="headerlink" href="#slim" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.SLIM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">n_iter_no_change</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">n_iter_no_change=100</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">pruning=False</em>, <em class="sig-param">verbose=False</em>, <em class="sig-param">callbacks={'evaluate': &lt;function _print_positive_gain&gt;</em>, <em class="sig-param">'generate_candidates': &lt;function _print_candidates_size&gt;}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>SLIM: Directly Mining Descriptive Patterns</p>
 <p>SLIM looks for a compressed representation of transactional data.
 This compressed representation if a set of descriptive patterns,
 and can be used to:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p>provide a natively interpretable modeling of this data</p></li>
 <li><p>make predictions on new data, using this condensed representation as an encoding scheme</p></li>
 </ul>
-</div></blockquote>
 <p>Idea of early stopping is inspired from
 <a class="reference external" href="http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf">http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf</a></p>
 <dl class="field-list simple">
@@ -241,12 +239,13 @@ Default to None, will be automatically computed considering the size of input da
 prediction time, so it is usually recommended to set it to False
 to build a classifier. The model will be less concise, but will lead
 to more accurate predictions on average.</p></li>
+<li><p><strong>verbose</strong> (<em>integer</em>) – Controls the verbosity: the higher, the more messages.</p></li>
+<li><p><strong>callbacks</strong> (<a class="reference internal" href="callbacks.html#skmine.callbacks.CallBacks" title="skmine.callbacks.CallBacks"><em>skmine.callbacks.CallBacks</em></a><em>, </em><em>default=None</em>) – Callbacks to use, <a class="reference internal" href="callbacks.html#skmine.callbacks.mdl_prints" title="skmine.callbacks.mdl_prints"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmine.callbacks.mdl_prints</span></code></a> is attached by default</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
@@ -268,6 +267,29 @@ to more accurate predictions on average.</p></li>
 “Slimmer, outsmarting Slim”, 2014</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.get_support">
+<code class="sig-name descname">get_support</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">itemset</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.get_support"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.get_support" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get support from an itemset</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.generate_candidates">
+<code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stack</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.generate_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate new candidates, to be sent for later evaluation.</p>
+<p>Calling this function is equivalent to sending a new message given an encoding scheme,
+while calling <code class="docutils literal notranslate"><span class="pre">.evaluate</span></code> is equivalent to receiving this message, and evaluating the gain
+of information it provides.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A set of new candidates</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>object or Iterable[object]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.fit">
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
@@ -309,11 +331,11 @@ is recommended to cover unseen data, and especially when building a classifier.<
 <dd class="field-odd"><p><strong>candidate</strong> (<em>frozenset</em>) – a new candidate to be evaluated</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>updated (codetable, data size, model size)
+<dd class="field-even"><p>updated (data size, model size, codetable)
 and finally the set of itemsets for which usage decreased</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(dict, float, float, set)</p>
+<dd class="field-odd"><p>(float, float, dict, set)</p>
 </dd>
 </dl>
 </dd></dl>

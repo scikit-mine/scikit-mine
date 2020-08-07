@@ -195,7 +195,7 @@
         <span class="s1">&#39;requires_positive_y&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="s1">&#39;X_types&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2darray&#39;</span><span class="p">],</span>
         <span class="s1">&#39;poor_score&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="s1">&#39;no_validation&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s1">&#39;no_validation&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s1">&#39;multioutput&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="s1">&#39;allow_nan&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
         <span class="s1">&#39;stateless&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -240,6 +240,7 @@
 <div class="viewcode-block" id="BaseMiner.get_params"><a class="viewcode-back" href="../../reference/base.html#skmine.base.BaseMiner.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get parameters for this estimator.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        params : mapping of string to any</span>
@@ -258,6 +259,7 @@
 <span class="sd">        (such as pipelines). The latter have parameters of the form</span>
 <span class="sd">        ``&lt;component&gt;__&lt;parameter&gt;`` so that it&#39;s possible to update each</span>
 <span class="sd">        component of a nested object.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        **params : dict</span>
@@ -296,7 +298,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        _ : pd.Series</span>
+<span class="sd">        pd.Series</span>
 <span class="sd">            patterns discovered by a mining algorithm</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
@@ -304,18 +306,30 @@
 
 <div class="viewcode-block" id="MDLOptimizer"><a class="viewcode-back" href="../../reference/base.html#skmine.base.MDLOptimizer">[docs]</a><span class="k">class</span> <span class="nc">MDLOptimizer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base interface for all models applying the Minimum Description Length principle.</span>
-
-<span class="sd">    see: https://en.wikipedia.org/wiki/Minimum_description_length</span>
+<span class="sd">    Base interface for all models applying the `Minimum Description Length principle</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Minimum_description_length&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MDLOptimizer.generate_candidates"><a class="viewcode-back" href="../../reference/base.html#skmine.base.MDLOptimizer.generate_candidates">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate new candidates, to be sent for later evaluation.</span>
+
+<span class="sd">        Calling this function is equivalent to sending a new message given an encoding scheme,</span>
+<span class="sd">        while calling ``.evaluate`` is equivalent to receiving this message, and evaluating the gain</span>
+<span class="sd">        of information it provides.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        object or Iterable[object]</span>
+<span class="sd">            A set of new candidates</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="MDLOptimizer.evaluate"><a class="viewcode-back" href="../../reference/base.html#skmine.base.MDLOptimizer.evaluate">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluate the gain, i.e compute L(D|CT) - L(CT|D).</span>
-
-<span class="sd">        L(D|CT) - L(CT|D) is the difference between</span>
-<span class="sd">        the size of the dataset D encoded with the codetable CT and the size of the codetable CT</span>
+<span class="sd">        Evaluate the gain, i.e the gain of information when accepting the candidate.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -324,28 +338,34 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        bool or tuple(bool, ...)</span>
-<span class="sd">            A single boolean value or a tuple, with a boolean value in first position</span>
-<span class="sd">            This boolean value states if the input candidate is to be accepted or not.</span>
+<span class="sd">        tuple (data_size, model_size, ...)</span>
+<span class="sd">            Should return a tuple, with first two values corresponding to new data size</span>
+<span class="sd">            and model size in the case of accepting the candidate.</span>
+
+<span class="sd">            Data size and model size should be returned separately as we encourage</span>
+<span class="sd">            usage of `(two-part) crude MDL</span>
+<span class="sd">            &lt;https://en.wikipedia.org/wiki/Minimum_description_length#Two-Part_Codes&gt;`_.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">codetable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a user-friendly copy of the self.codetable_</span>
+        <span class="sd">&quot;&quot;&quot; Get a user-friendly copy of the codetable</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pd.Series</span>
 <span class="sd">            codetable containing patterns and ids of transactions in which they are used</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">l</span> <span class="o">=</span> <span class="p">{</span><span class="n">iset</span><span class="p">:</span> <span class="n">tids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">iset</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;codetable_&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="p">{</span><span class="n">iset</span><span class="p">:</span> <span class="n">tids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">iset</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;codetable&#39;</span><span class="p">):</span>
-            <span class="n">ct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;codetable&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
                 <span class="n">df</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;usage&#39;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">_repr_html_</span><span class="p">()</span>   <span class="c1">#pylint: disable=protected-access</span>

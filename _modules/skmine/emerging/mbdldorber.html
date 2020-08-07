@@ -244,9 +244,8 @@
 
     <span class="k">for</span> <span class="n">iset</span> <span class="ow">in</span> <span class="n">isets2</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">e</span> <span class="o">&gt;</span> <span class="n">iset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)):</span> <span class="k">continue</span>
-        <span class="n">inter</span> <span class="o">=</span> <span class="p">[</span><span class="n">iset</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">]</span>
+        <span class="n">inter</span> <span class="o">=</span> <span class="p">(</span><span class="n">iset</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">filter_maximal</span><span class="p">(</span><span class="n">inter</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R</span><span class="p">]</span>
 
         <span class="n">diff</span> <span class="o">=</span> <span class="n">border_diff</span><span class="p">(</span><span class="n">iset</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
         <span class="n">borders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>

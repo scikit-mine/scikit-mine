@@ -184,7 +184,7 @@
 <span class="c1"># Authors: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
 <span class="c1"># License: BSD 3 clause</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span><span class="p">,</span> <span class="n">lru_cache</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -193,9 +193,9 @@
 
 <span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
 <span class="kn">from</span> <span class="nn">..bitmaps</span> <span class="kn">import</span> <span class="n">Bitmap</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">lazydict</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">supervised_to_unsupervised</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_D</span>
+<span class="kn">from</span> <span class="nn">..callbacks</span> <span class="kn">import</span> <span class="n">mdl_prints</span>
 
 <span class="k">def</span> <span class="nf">cover</span><span class="p">(</span><span class="n">itemsets</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -289,12 +289,13 @@
 
 <span class="k">def</span> <span class="nf">_update_usages</span><span class="p">(</span><span class="n">codetable</span><span class="p">:</span> <span class="n">SortedDict</span><span class="p">,</span> <span class="n">cand</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">,</span> <span class="n">cand_usage</span><span class="p">:</span> <span class="n">Bitmap</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Given a codetable and a new candidate</span>
-<span class="sd">        - iteratively consider every element in the codetable,</span>
-<span class="sd">            starting from insertion position in Standard Cover Order</span>
-<span class="sd">        - decrease usages when element is non disjoint with the candidate</span>
-<span class="sd">        - identify usages that will increase due to freed intermediate covering,</span>
-<span class="sd">            and increase them</span>
+<span class="sd">    Given a codetable and a new candidate:</span>
+
+<span class="sd">    - iteratively consider every element in the codetable,</span>
+<span class="sd">      starting from insertion position in Standard Cover Order</span>
+<span class="sd">    - decrease usages when element is non disjoint with the candidate</span>
+<span class="sd">    - identify usages that will increase due to freed intermediate covering,</span>
+<span class="sd">      and increase them</span>
 
 <span class="sd">    We also output the set of itemsets for which usage decreased, for later pruning.</span>
 
@@ -336,11 +337,13 @@
 <span class="sd">    SLIM looks for a compressed representation of transactional data.</span>
 <span class="sd">    This compressed representation if a set of descriptive patterns,</span>
 <span class="sd">    and can be used to:</span>
-<span class="sd">        - provide a natively interpretable modeling of this data</span>
-<span class="sd">        - make predictions on new data, using this condensed representation as an encoding scheme</span>
+
+<span class="sd">    - provide a natively interpretable modeling of this data</span>
+<span class="sd">    - make predictions on new data, using this condensed representation as an encoding scheme</span>
 
 <span class="sd">    Idea of early stopping is inspired from</span>
 <span class="sd">    http://eda.mmci.uni-saarland.de/pres/ida14-slimmer-poster.pdf</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -356,10 +359,14 @@
 <span class="sd">        prediction time, so it is usually recommended to set it to False</span>
 <span class="sd">        to build a classifier. The model will be less concise, but will lead</span>
 <span class="sd">        to more accurate predictions on average.</span>
+<span class="sd">    verbose: integer</span>
+<span class="sd">        Controls the verbosity: the higher, the more messages.</span>
+<span class="sd">    callbacks: skmine.callbacks.CallBacks, default=None</span>
+<span class="sd">        Callbacks to use, :class:`skmine.callbacks.mdl_prints` is attached by default</span>
+
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.preprocessing import TransactionEncoder</span>
 <span class="sd">    &gt;&gt;&gt; D = [[&#39;bananas&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;], [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;]]</span>
@@ -379,20 +386,28 @@
 <span class="sd">    .. [2] Gandhi, M &amp; Vreeken, J</span>
 <span class="sd">        &quot;Slimmer, outsmarting Slim&quot;, 2014</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                 <span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">callbacks</span><span class="o">=</span><span class="n">mdl_prints</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span> <span class="o">=</span> <span class="n">n_iter_no_change</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">supports_</span> <span class="o">=</span> <span class="n">lazydict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_support</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">=</span> <span class="kc">None</span>          <span class="c1"># L(CT|D)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span> <span class="o">=</span> <span class="kc">None</span>           <span class="c1"># L(D|CT)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span> <span class="o">=</span> <span class="n">pruning</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">if</span> <span class="n">callbacks</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_support</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
+<div class="viewcode-block" id="SLIM.get_support"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.get_support">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_support</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get support from an itemset&quot;&quot;&quot;</span>
         <span class="n">U</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">Bitmap</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable_</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">itemset</span><span class="p">])</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_standard_cover_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -401,12 +416,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO : try returning a hash, sortedcontainers might prefer</span>
         <span class="c1"># handling integers when bisecting.</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">supports_</span><span class="p">[</span><span class="n">itemset</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_standard_candidate_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">supports_</span><span class="p">[</span><span class="n">itemset</span><span class="p">],</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
 
-    <span class="c1"># TODO : __html_repr__</span>
 
     <span class="k">def</span> <span class="nf">_prefit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
         <span class="n">item_to_tids</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">Bitmap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="n">k</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">D</span><span class="o">.</span><span class="n">columns</span><span class="p">}</span>
@@ -421,6 +435,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span> <span class="o">=</span> <span class="p">(</span><span class="n">codes</span> <span class="o">*</span> <span class="n">usage</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="SLIM.generate_candidates"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.generate_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_standard_candidate_order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">)</span>
+        <span class="c1"># if big number of elements in codetable, just take a generator, do not sort output</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="n">generate_candidates</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e3</span> <span class="k">else</span> <span class="n">generate_candidates_big</span>
+        <span class="k">return</span> <span class="n">gen</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="n">stack</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SLIM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>   <span class="c1"># pylint:disable = too-many-locals</span>
         <span class="sd">&quot;&quot;&quot; fit SLIM on a transactional dataset</span>
@@ -439,14 +459,9 @@
         <span class="n">tol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_codetable_</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
 
         <span class="k">while</span> <span class="n">n_iter_no_change</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span><span class="p">:</span>
-            <span class="n">ct</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_standard_candidate_order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">)</span>
-
-            <span class="c1"># if big number of elements in codetable, just take a generator, do not sort output</span>
-            <span class="n">gen_cands</span> <span class="o">=</span> <span class="n">generate_candidates</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e3</span><span class="p">)</span> <span class="k">else</span> <span class="n">generate_candidates_big</span>
-            <span class="n">candidates</span> <span class="o">=</span> <span class="n">gen_cands</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">stack</span><span class="o">=</span><span class="n">seen_cands</span><span class="p">)</span>
-
+            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_candidates</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">seen_cands</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">cand</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
-                <span class="n">update_d</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">prune_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
+                <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">update_d</span><span class="p">,</span> <span class="n">prune_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>  <span class="c1"># 0.01 because python does not handle underflow correctly ...</span>
@@ -458,9 +473,6 @@
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span> <span class="o">=</span> <span class="n">data_size</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">=</span> <span class="n">model_size</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">))</span>
 
                 <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
                     <span class="n">n_iter_no_change</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -471,9 +483,6 @@
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>  <span class="c1"># if empty candidate generation</span>
                 <span class="n">n_iter_no_change</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_no_change</span>  <span class="c1"># force while loop to break</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> candidates considered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seen_cands</span><span class="p">)))</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -524,8 +533,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        (dict, float, float, set)</span>
-<span class="sd">            updated (codetable, data size, model size)</span>
+<span class="sd">        (float, float, dict, set)</span>
+<span class="sd">            updated (data size, model size, codetable)</span>
 <span class="sd">            and finally the set of itemsets for which usage decreased</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span>
@@ -547,7 +556,7 @@
 
         <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sizes</span><span class="p">(</span><span class="n">CTc</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">update_d</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">decreased</span></div>
+        <span class="k">return</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="n">update_d</span><span class="p">,</span> <span class="n">decreased</span></div>
 
 <div class="viewcode-block" id="SLIM.get_standard_codes"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.get_standard_codes">[docs]</a>    <span class="k">def</span> <span class="nf">get_standard_codes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;compute the size of a codetable index given the standard codetable&quot;&quot;&quot;</span>

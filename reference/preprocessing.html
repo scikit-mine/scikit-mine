@@ -218,19 +218,19 @@
 <dl class="py class">
 <dt id="skmine.preprocessing.TransactionEncoder">
 <em class="property">class </em><code class="sig-prename descclassname">skmine.preprocessing.</code><code class="sig-name descname">TransactionEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sparse_output</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transaction encoder</p>
-<p>This acts like
-<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer">https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer</a>,
+<dd><p><cite>TransactionEncoder</cite> acts like <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer">sklearn’s MultiLabelBinarizer</a>,
 but differs in many ways:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>it produces a pandas.DataFrame as output, either dense or sparse,</p></li>
+<ul class="simple">
+<li><p>it produces a pandas.DataFrame as output, either dense or sparse,
+depending on the <code class="docutils literal notranslate"><span class="pre">sparse_output</span></code> argument.</p></li>
+<li><p>the number of “columns” can vary from one call to <code class="docutils literal notranslate"><span class="pre">.transform</span></code> to another.</p></li>
+<li><p>input is possibly out of core : works on generators.</p></li>
 </ul>
-<p>depending on the <code class="docutils literal notranslate"><span class="pre">sparse_output</span></code> argument
-- the number of “columns” can vary. Unlike in scikit-learn, there is no need
-to freeze schema onto some input to make any new input fit this schema.
-- input is possibly out of core : works on generators.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sparse_output</strong> (<em>bool</em>) – True if a sparse output is to be produced.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="skmine.preprocessing.TransactionEncoder.transform">
 <code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/preprocessing/transaction_encoder.html#TransactionEncoder.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.preprocessing.TransactionEncoder.transform" title="Permalink to this definition">¶</a></dt>
@@ -240,15 +240,24 @@ to freeze schema onto some input to make any new input fit this schema.
 <dd class="field-odd"><p><strong>D</strong> (<em>iterable of iterable</em>) – A transactional dataset, in the form of a list of list, or a generator</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>a DataFrame of boolean values. A cell contains a boolean values stating if the item
-corresponding to the column was present in the transaction corresponding to the row.</p>
-<p>if sparse_output is True, each column will be stored as a pandas.arrays.SparseArray</p>
-</p>
+<dd class="field-even"><p>a DataFrame of boolean values. A cell contains a boolean values stating if the item
+corresponding to the column was present in the transaction corresponding to the row.
+if sparse_output is True, each column will be stored as a pandas.arrays.SparseArray</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transactions</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;banana&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;banana&#39;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">te</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">te</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">transactions</span><span class="p">)</span>
+<span class="go">   banana  cookies  milk</span>
+<span class="go">0    True    False  True</span>
+<span class="go">1    True     True  True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
