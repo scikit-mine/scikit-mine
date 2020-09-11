@@ -180,8 +180,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         to more accurate predictions on average.
     verbose: integer
         Controls the verbosity: the higher, the more messages.
-    callbacks: skmine.callbacks.CallBacks, default=None
-        Callbacks to use, :class:`skmine.callbacks.mdl_prints` is attached by default
 
 
     Examples
@@ -209,8 +207,7 @@ class SLIM(BaseMiner, MDLOptimizer):
                  n_iter_no_change=100,
                  tol=None,
                  pruning=False,
-                 verbose=False,
-                 callbacks=mdl_prints):
+                 verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
@@ -219,8 +216,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.data_size_ = None           # L(D|CT)
         self.pruning = pruning
         self.verbose = verbose
-        if callbacks:
-            callbacks(self)
+
+        mdl_prints(self)  # attach mdl_prints <-- output if self.verbose set
 
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):

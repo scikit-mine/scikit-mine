@@ -69,7 +69,7 @@ class CallBacks(dict):
     >>> stack = list()
     >>> callbacks = CallBacks(f=stack.append)
     >>> a = A()
-    >>> _ = callbacks(a)
+    >>> callbacks(a)
     >>> a.f()
     10
     >>> stack
@@ -123,12 +123,24 @@ mdl_prints = CallBacks(evaluate=_print_positive_gain, generate_candidates=_print
 mdl_prints.__doc__ = """
 Base callback for miners which inherit the :class:`skmine.base.MDLOptimizer`
 
-Prints data size and model size when compression has improved
+Prints data size and model size when compression has improved,
+only if ``verbose`` is set to True for the miner to attach.
 
 Examples
 --------
->>> from skmine.itemsets import SLIM
 >>> from skmine.callbacks import mdl_prints
->>> slim = SLIM(callbacks=mdl_prints)
->>> slim.fit(D)
+>>> from skmine.base import MDLOptimizer
+>>> class MyMDLMiner(MDLOptimizer):
+>>>    def __init__(self):
+...        self.codetable_ = dict()
+...        self.verbose = True
+...    def generate_candidates(self):
+...        return [(2,), (2, 3), (2, 4)]
+...    def evaluate(self): pass
+
+>>> miner = MyMDLMiner()
+>>> mdl_prints(miner)
+>>> miner.generate_candidates()
+3 new candidates considered
+[(2,), (2, 3), (2, 4)]
 """
