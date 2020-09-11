@@ -138,17 +138,6 @@ def test_lcm_discover():
     pd.testing.assert_series_equal(patterns.support, true_patterns.support, check_dtype=False)
 
 
-def test_lcm_transform():
-    lcm = LCM(min_supp=3)
-    X = lcm.fit_transform(D)
-    assert X.columns.tolist() == list(range(1, 7))
-    assert X.shape == (7, 6)  # 7 transactions, 6 items
-    assert np.array_equal(
-        np.unique(X.values),
-        np.array([0, 3, 4])  # all supports of 5 have been overriden
-    )
-
-
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
     lcm._fit(D)

@@ -52,7 +52,7 @@ class LCM():
     Examples
     --------
 
-    >>> from skmine.preprocessing import LCM
+    >>> from skmine.itemsets import LCM
     >>> from skmine.datasets.fimi import fetch_chess
     >>> chess = fetch_chess()
     >>> lcm = LCM(min_supp=2000)
@@ -129,7 +129,7 @@ class LCM():
 
         Example
         -------
-        >>> from skmine.preprocessing import LCM
+        >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> LCM(min_supp=2).fit_discover(D)
              itemset  support
@@ -156,52 +156,6 @@ class LCM():
         if not return_tids:
             df.loc[:, 'support'] = df['tids'].map(len).astype(np.uint32)
             df.drop('tids', axis=1, inplace=True)
-        return df
-
-    def fit_transform(self, D):
-        """fit LCM on the transactional database, and encode the frequencies
-        of the resulting patterns in a tabular format.
-
-        This makes LCM a possible preprocessing step, compatible with ``scikit-learn``
-
-        Notes
-        -----
-        Cells in the result will contain frequencies of patterns. Note that this process
-        is somehow similar to Term-Frequency encoding, but operates on co-occuring terms
-        instead of singular terms.
-
-        Parameters
-        ----------
-        D : pd.Series or Iterable
-            The input transactional database. Items must be both hashable and comparable
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame with itemsets as columns, and transactions as rows
-
-        Example
-        -------
-        >>> from skmine.preprocessing import LCM
-        >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
-        >>> lcm = LCM(min_supp=2)
-        >>> lcm.fit_transform(D)                # doctest: +SKIP
-            2  3  5  # columns are single items w.r.t to the minium support
-        0   2  2  2  # (2, 3, 5) has length 3 but support of 2
-        1   2  2  2  # (2, 3, 5) has length 3 but support of 2
-        2   3  0  3  # (2, 5) has length 2 but support of 3
-        """
-        patterns = self.fit_discover(D, return_tids=True)
-        tid_s = patterns.set_index('itemset').tids
-        by_supp = tid_s.map(len).sort_values(ascending=False)
-        patterns = tid_s.reindex(by_supp.index)
-
-        shape = (self.n_transactions, len(self.item_to_tids))
-        mat = np.zeros(shape, dtype=np.uint32)
-
-        df = pd.DataFrame(mat, columns=self.item_to_tids.keys())
-        for pattern, tids in tid_s.iteritems():
-            df.loc[tids, pattern] = len(tids)  # fill with support
         return df
 
 

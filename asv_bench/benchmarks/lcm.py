@@ -1,4 +1,4 @@
-from skmine.preprocessing import LCM
+from skmine.itemsets import LCM
 from skmine.datasets import make_transactions
 
 class LCMBench:

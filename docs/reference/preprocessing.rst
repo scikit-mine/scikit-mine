@@ -11,9 +11,3 @@ TransactionEncoder
 MDLPDiscretizer
 ---------------
 .. autoclass:: skmine.preprocessing.MDLPDiscretizer
-
-
-LCM
--------
-
-.. autoclass:: skmine.preprocessing.LCM

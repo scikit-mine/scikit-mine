@@ -9,7 +9,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 from ..base import BaseMiner, DiscovererMixin
-from ..preprocessing.lcm import LCMMax
+from ..itemsets.lcm import LCMMax
 from ..utils import _check_growth_rate, _check_min_supp, filter_maximal, filter_minimal
 
 
