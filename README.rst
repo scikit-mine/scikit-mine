@@ -5,9 +5,9 @@
 
 .. image:: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/remiadon/scikit-mine
-
-.. image:: http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]
-        :target: https://asv.readthedocs.io/en/stable
+        
+.. image:: https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&colorA=384257&colorB=E23324
+  :target: https://www.inria.fr/en
 
 
 Scikit-mine : pattern mining in Python
