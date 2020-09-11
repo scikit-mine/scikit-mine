@@ -44,6 +44,8 @@ class TransactionEncoder():
             raise TypeError('D should be a list of list, or at least an iterator of iterator')
         return self
 
+    partial_fit = fit
+
     def transform(self, D):
         """Apply transformation on the transactional input
 
