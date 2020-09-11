@@ -26,7 +26,7 @@ EXCLUDED_CHECKS = [
     'check_dtype_object',
     'check_estimators_empty_data_messages',
     'check_fit1d',
-    'check_estimators_pickle',  # FIXME
+    'check_estimators_pickle',  # FIXME : broken because of callbacks ...
 ]
 
 OK = '\x1b[42m[ OK ]\x1b[0m'
