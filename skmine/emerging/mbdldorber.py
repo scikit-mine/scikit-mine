@@ -38,7 +38,7 @@ def border_diff(U, S):
     -----
     See ``BORDER-DIFF`` in section 4.1
     """
-    #assert len(R1) < len(U)  # assert we iterate on the smallest ensemble
+    # assert len(R1) < len(U)  # assert we iterate on the smallest ensemble
     L2 = [{x} for x in U - S[0]]
     for i in range(1, len(S)):
         _L2 = [X | {x} for x in U - S[i] for X in L2]
@@ -62,7 +62,8 @@ def mbdllborder(isets1, isets2):
     borders = list()
 
     for iset in isets2:
-        if any((e > iset for e in isets1)): continue
+        if any((e > iset for e in isets1)):
+            continue
         inter = (iset & e for e in isets1)
         R = filter_maximal(inter)
 
@@ -70,6 +71,7 @@ def mbdllborder(isets1, isets2):
         borders.append(diff)
 
     return borders
+
 
 def borders_to_patterns(left, right, min_size=None):
     """
@@ -144,7 +146,8 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         Guozhu Dong, Jinyan Li
         "Efficient Mining of Emerging Patterns : Discovering Trends and Differences", 1999
     """
-    def __init__(self, min_growth_rate=2, min_supp=.1, n_jobs=1):
+
+    def __init__(self, min_growth_rate=2, min_supp=0.1, n_jobs=1):
         self.min_supp = _check_min_supp(min_supp, accept_absolute=False)
         self.min_growth_rate = _check_growth_rate(min_growth_rate)
         self.borders_ = None
@@ -177,7 +180,9 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
 
         # TODO : replace LCMMax by some more efficient method
         right_border_d1 = LCMMax(min_supp=self.min_supp).fit_discover(D1)
-        right_border_d2 = LCMMax(min_supp=self.min_growth_rate * self.min_supp).fit_discover(D2)
+        right_border_d2 = LCMMax(
+            min_supp=self.min_growth_rate * self.min_supp
+        ).fit_discover(D2)
 
         right_border_d1 = right_border_d1.itemset.map(set).tolist()
         right_border_d2 = right_border_d2.itemset.map(set).tolist()
@@ -201,7 +206,7 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
             minimum size for an itemset to be valid
         """
         btp = delayed(partial(borders_to_patterns, min_size=min_size))
-        series = Parallel(n_jobs=self.n_jobs, prefer='processes')(
+        series = Parallel(n_jobs=self.n_jobs, prefer="processes")(
             btp(L, R) for L, R in self.borders_
         )
-        return pd.concat(series) if series else pd.Series(dtype='object')
+        return pd.concat(series) if series else pd.Series(dtype="object")

@@ -5,6 +5,7 @@ from inspect import signature, getsource
 
 import re
 
+
 def has_self_assigment(f):
     """
     Parameters
@@ -14,10 +15,11 @@ def has_self_assigment(f):
     check if no assignement is made on the ``self`` keyword
     """
     try:
-        p = r'self(\.\w+)?\s*=.*'
+        p = r"self(\.\w+)?\s*=.*"
         return any(re.finditer(p, getsource(f)))
     except TypeError:
         return False
+
 
 def _get_params(fn):
     assert callable(fn)
@@ -28,16 +30,18 @@ def _get_params(fn):
         params = list()
     return params
 
+
 def post(self, func_name, callback):
     """decorator, call callback on returned values, after main function"""
     func = getattr(self, func_name)
     assert callable(func)
     callback_params = _get_params(callback)
+
     def _(*args, **kwargs):
         res = func(*args, **kwargs)
-        if 'self' in callback_params:
-            _w = (res, ) if len(callback_params) == 2 else res
-            args_ = (self, ) + (_w if len(callback_params) > 1 else tuple())
+        if "self" in callback_params:
+            _w = (res,) if len(callback_params) == 2 else res
+            args_ = (self,) + (_w if len(callback_params) > 1 else tuple())
         else:
             args_ = res
         try:
@@ -45,6 +49,7 @@ def post(self, func_name, callback):
         except TypeError:
             callback(args_)  # list.extend
         return res
+
     return _
 
 
@@ -75,6 +80,7 @@ class CallBacks(dict):
     >>> stack
     [10]
     """
+
     def __init__(self, **kwargs):
         dict.__init__(self, **kwargs)
         self._check()
@@ -85,7 +91,7 @@ class CallBacks(dict):
             if not callable(v):
                 raise TypeError(f"values must be callables, found {type(v)}")
             if has_self_assigment(v):  # TODO : only allow lambdas or builtins ?
-                raise ValueError('callbacks should not modify `self` attributes')
+                raise ValueError("callbacks should not modify `self` attributes")
 
     def _frozen(self, *args, **kwargs):
         raise NotImplementedError(f"{type(self)} is immutable")
@@ -94,7 +100,9 @@ class CallBacks(dict):
     update = _frozen
 
     def __call__(self, miner):
-        miner_methods = [f_name for f_name in dir(miner) if callable(getattr(miner, f_name))]
+        miner_methods = [
+            f_name for f_name in dir(miner) if callable(getattr(miner, f_name))
+        ]
         for f_name in self.keys():
             if not f_name in miner_methods:
                 raise ValueError(
@@ -109,17 +117,22 @@ class CallBacks(dict):
 
 
 def _print_positive_gain(self, data_size, model_size, *_):
-    if getattr(self, 'verbose', None):
+    if getattr(self, "verbose", None):
         diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-        if diff > .01:
-            print("data size : {:.2f} | model size : {:.2f}".format(data_size, model_size))
+        if diff > 0.01:
+            print(
+                "data size : {:.2f} | model size : {:.2f}".format(data_size, model_size)
+            )
 
 
 def _print_candidates_size(self, candidates):
-    if getattr(self, 'verbose', None):
-        print('{} new candidates considered'.format(len(candidates)))
+    if getattr(self, "verbose", None):
+        print("{} new candidates considered".format(len(candidates)))
 
-mdl_prints = CallBacks(evaluate=_print_positive_gain, generate_candidates=_print_candidates_size)
+
+mdl_prints = CallBacks(
+    evaluate=_print_positive_gain, generate_candidates=_print_candidates_size
+)
 mdl_prints.__doc__ = """
 Base callback for miners which inherit the :class:`skmine.base.MDLOptimizer`
 

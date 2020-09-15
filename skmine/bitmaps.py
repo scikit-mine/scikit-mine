@@ -7,7 +7,6 @@ from sortedcontainers import SortedSet
 from roaringbitmap import RoaringBitmap as _RB
 
 
-
 class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     """
     Dummy implementation of a bitmap
@@ -15,6 +14,7 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     This inherits the ``SortedSet`` class and provide some extra functions
     to ensure compatibility with other -performant- bitmap implementations
     """
+
     def intersection_len(self, other):
         """Returns length of the intersection"""
         return len(self & other)
@@ -28,12 +28,12 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
                 self.add(e)
 
     def __repr__(self):
-        return '[{}]'.format(', '.join(map(str, self)))
+        return "[{}]".format(", ".join(map(str, self)))
 
     __str__ = __repr__
 
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     Bitmap = BitmapMock
 else:
     Bitmap = _RB

@@ -5,6 +5,7 @@ from ..mbdldorber import borders_to_patterns
 
 import pandas as pd
 
+
 def test_borders_diff():
     U = {1, 2, 3, 4}
     S = [{3, 4}, {2, 4}, {2, 3}]
@@ -57,20 +58,26 @@ def test_border_to_patterns_min_size():
         (1, 3, 4),
     ]
 
+
 def test_discover():
-    D = pd.Series([
-        ['banana', 'chocolate'],
-        ['sirup', 'tea'],
-        ['chocolate', 'banana'],
-        ['chocolate', 'milk', 'banana'],
-    ])
-    
-    y = pd.Series([
-        'food',
-        'drink',
-        'food',
-        'drink',
-    ], dtype='category')
+    D = pd.Series(
+        [
+            ["banana", "chocolate"],
+            ["sirup", "tea"],
+            ["chocolate", "banana"],
+            ["chocolate", "milk", "banana"],
+        ]
+    )
+
+    y = pd.Series(
+        [
+            "food",
+            "drink",
+            "food",
+            "drink",
+        ],
+        dtype="category",
+    )
 
     ep = MBDLLBorder(min_growth_rate=1.2)
     patterns = ep.fit_discover(D, y, min_size=2)

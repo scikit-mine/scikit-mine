@@ -20,7 +20,7 @@ def make_vertical(D: pd.Series):
     return pd.Series(codetable)
 
 
-class TransactionEncoder():
+class TransactionEncoder:
     """`TransactionEncoder` acts like `sklearn's MultiLabelBinarizer
     <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer>`_,
     but differs in many ways:
@@ -36,12 +36,15 @@ class TransactionEncoder():
     sparse_output: bool
         True if a sparse output is to be produced.
     """
+
     def __init__(self, sparse_output=True):
         self.sparse_output = sparse_output
 
-    def fit(self, D): # pylint: disable=missing-function-docstring
+    def fit(self, D):  # pylint: disable=missing-function-docstring
         if not isinstance(D, Iterable):
-            raise TypeError('D should be a list of list, or at least an iterator of iterator')
+            raise TypeError(
+                "D should be a list of list, or at least an iterator of iterator"
+            )
         return self
 
     partial_fit = fit
@@ -89,7 +92,6 @@ class TransactionEncoder():
         for col_idx, col in enumerate(cols):
             tids = vert[col]
             mat[tids, col_idx] = True
-
 
         if self.sparse_output:
             return pd.DataFrame.sparse.from_spmatrix(mat, columns=cols)
