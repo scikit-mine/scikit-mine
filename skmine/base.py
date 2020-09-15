@@ -109,7 +109,7 @@ class DiscovererMixin:
     """Mixin for all pattern discovery models in scikit-mine"""
     def fit_discover(self, D, y=None, **kwargs):
         """
-        Fit to data, the exctract patterns
+        Fit to data, the extract patterns
 
         Parameters
         ----------

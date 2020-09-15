@@ -17,12 +17,14 @@ from ..utils import _check_min_supp
 from ..utils import filter_maximal
 from ..bitmaps import Bitmap
 
+from ..base import BaseMiner, DiscovererMixin
 
-class LCM():
+
+class LCM(BaseMiner, DiscovererMixin):
     """
     Linear time Closed item set Miner.
 
-    LCM can be used as a preprocessing step, yielding some patterns
+    LCM can be used as a generic purpose miner, yielding some patterns
     that will be later submitted to a custom acceptance criterion.
 
     It can also be used to simply discover the set of closed itemsets from
@@ -70,36 +72,37 @@ class LCM():
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self._min_supp = _check_min_supp(self.min_supp)
-        self.item_to_tids = None
-        self.n_transactions = 0
+        self.item_to_tids_ = SortedDict()
+        self.n_transactions_ = 0
         self.ctr = 0
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _fit(self, D):
-        self.n_transactions = 0  # reset for safety
+    def fit(self, D, y=None):
+        """
+        fit LCM on the transactional database, by keeping records of singular items
+        and their transaction ids.
+        """
+        self.n_transactions_ = 0  # reset for safety
         item_to_tids = defaultdict(Bitmap)
         for transaction in D:
             for item in transaction:
-                item_to_tids[item].add(self.n_transactions)
-            self.n_transactions += 1
+                item_to_tids[item].add(self.n_transactions_)
+            self.n_transactions_ += 1
 
         if isinstance(self.min_supp, float):
             # make support absolute if needed
-            self._min_supp = self.min_supp * self.n_transactions
+            self._min_supp = self.min_supp * self.n_transactions_
 
         low_supp_items = [k for k, v in item_to_tids.items() if len(v) < self._min_supp]
         for item in low_supp_items:
             del item_to_tids[item]
 
-        self.item_to_tids = SortedDict(item_to_tids)
+        self.item_to_tids_ = SortedDict(item_to_tids)
         return self
 
-    def fit_discover(self, D, return_tids=False):
-        """fit LCM on the transactional database, and return the set of
-        closed itemsets in this database, with respect to the minium support
-
-        Different from ``fit_transform``, see the `Returns` section below.
+    def discover(self, return_tids=False):
+        """Return the set of closed itemsets, with respect to the minium support
 
         Parameters
         ----------
@@ -140,12 +143,12 @@ class LCM():
         0     (2, 5)  [0, 1, 2]
         1  (2, 3, 5)     [0, 1]
         """
-        self._fit(D)
-
         empty_df = pd.DataFrame(columns=['itemset', 'tids'])
 
         # reverse order of support
-        supp_sorted_items = sorted(self.item_to_tids.items(), key=lambda e: len(e[1]), reverse=True)
+        supp_sorted_items = sorted(
+            self.item_to_tids_.items(), key=lambda e: len(e[1]), reverse=True
+        )
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
             delayed(self._explore_item)(item, tids) for item, tids in supp_sorted_items
@@ -169,7 +172,7 @@ class LCM():
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P
         cp = (
-            item for item, ids in reversed(self.item_to_tids.items())
+            item for item, ids in reversed(self.item_to_tids_.items())
             if tids.issubset(ids) if item not in p
         )
 
@@ -180,10 +183,10 @@ class LCM():
             # sorted items in ouput for better reproducibility
             yield tuple(sorted(p_prime)), tids
 
-            candidates = self.item_to_tids.keys() - p_prime
+            candidates = self.item_to_tids_.keys() - p_prime
             candidates = candidates[:candidates.bisect_left(limit)]
             for new_limit in candidates:
-                ids = self.item_to_tids[new_limit]
+                ids = self.item_to_tids_[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
@@ -215,7 +218,7 @@ class LCMMax(LCM):
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P
         cp = (
-            item for item, ids in reversed(self.item_to_tids.items())
+            item for item, ids in reversed(self.item_to_tids_.items())
             if tids.issubset(ids) if item not in p
         )
 
@@ -224,12 +227,12 @@ class LCMMax(LCM):
         if max_k and max_k == limit:
             p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
 
-            candidates = self.item_to_tids.keys() - p_prime
+            candidates = self.item_to_tids_.keys() - p_prime
             candidates = candidates[:candidates.bisect_left(limit)]
 
             no_cand = True
             for new_limit in candidates:
-                ids = self.item_to_tids[new_limit]
+                ids = self.item_to_tids_[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
                     no_cand = False
                     new_limit_tids = tids.intersection(ids)
