@@ -16,6 +16,7 @@ from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
 from ..callbacks import mdl_prints
 
+
 def cover(itemsets: list, D: pd.DataFrame):
     """
     assert itemsets are sorted in Standard Cover Order
@@ -55,6 +56,7 @@ def cover_one(itemsets, cand):
             break
     return cov
 
+
 def generate_candidates_big(codetable, stack=None):
     """
     Generate candidates, but does not sort output by estimated gain
@@ -79,13 +81,14 @@ def generate_candidates_big(codetable, stack=None):
     generate_candidates
     """
     for idx, (X, X_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1:]
+        Y = codetable.items()[idx + 1 :]
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
             if stack is not None:
-                if XY in stack: continue
+                if XY in stack:
+                    continue
                 stack.add(XY)
             inter_len = y_usage.intersection_len(X_usage)
             if inter_len > _best_usage:
@@ -95,6 +98,7 @@ def generate_candidates_big(codetable, stack=None):
         if best_XY is not None:
             yield best_XY, _best_usage
 
+
 def generate_candidates(codetable, stack=None):
     """
     assumes codetable is sorted in Standard Candidate Order
@@ -102,7 +106,7 @@ def generate_candidates(codetable, stack=None):
     return sorted(
         generate_candidates_big(codetable, stack=stack),
         key=lambda e: e[1],
-        reverse=True
+        reverse=True,
     )
 
 
@@ -203,17 +207,14 @@ class SLIM(BaseMiner, MDLOptimizer):
     .. [2] Gandhi, M & Vreeken, J
         "Slimmer, outsmarting Slim", 2014
     """
-    def __init__(self, *,
-                 n_iter_no_change=100,
-                 tol=None,
-                 pruning=False,
-                 verbose=False):
+
+    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=False, verbose=False):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
-        self.codetable_ = pd.Series([], dtype='object')
-        self.model_size_ = None          # L(CT|D)
-        self.data_size_ = None           # L(D|CT)
+        self.codetable_ = pd.Series([], dtype="object")
+        self.model_size_ = None  # L(CT|D)
+        self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
         self.verbose = verbose
 
@@ -237,7 +238,6 @@ class SLIM(BaseMiner, MDLOptimizer):
     def _standard_candidate_order(self, itemset):
         return (-self.get_support(itemset), -len(itemset), tuple(itemset))
 
-
     def _prefit(self, D):
         item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         self.standard_codetable_ = pd.Series(item_to_tids)
@@ -247,7 +247,9 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -np.log2(usage / usage.sum())
-        self.model_size_ = 2 * codes.sum()      # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+        self.model_size_ = (
+            2 * codes.sum()
+        )  # L(code_ST(X)) = L(code_CT(X)), because CT=ST
         self.data_size_ = (codes * usage).sum()
 
         return self
@@ -258,8 +260,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         gen = generate_candidates if len(ct) < 1e3 else generate_candidates_big
         return gen(ct, stack=stack)
 
-    def fit(self, D, y=None):   # pylint:disable = too-many-locals
-        """ fit SLIM on a transactional dataset
+    def fit(self, D, y=None):  # pylint:disable = too-many-locals
+        """fit SLIM on a transactional dataset
 
         This generate new candidate patterns and add those which improve compression,
         iteratibely refining ``self.codetable``
@@ -280,7 +282,7 @@ class SLIM(BaseMiner, MDLOptimizer):
                 data_size, model_size, update_d, prune_set = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
 
-                if diff > 0.01:  # 0.01 because python does not handle underflow correctly ...
+                if diff > 0.01:  # underflow
                     self.codetable_.update(update_d)
                     if self.pruning:
                         self.codetable_, data_size, model_size = self._prune(
@@ -293,7 +295,7 @@ class SLIM(BaseMiner, MDLOptimizer):
                 if diff < tol:
                     n_iter_no_change += 1
                     if self.verbose:
-                        print('n_iter_no_change : {}'.format(n_iter_no_change))
+                        print("n_iter_no_change : {}".format(n_iter_no_change))
                     if n_iter_no_change > self.n_iter_no_change:
                         break  # inner break
 
@@ -357,12 +359,14 @@ class SLIM(BaseMiner, MDLOptimizer):
         cand_pos = ct.bisect(candidate)
 
         # get original support from standard_codetable
-        cand_usage = reduce(Bitmap.intersection, self.standard_codetable_.loc[candidate])
+        cand_usage = reduce(
+            Bitmap.intersection, self.standard_codetable_.loc[candidate]
+        )
         # remove union of all non disjoint itemsets before it to get real usage
         cand_usage -= reduce(
             Bitmap.union,
             (ct[k] for k in ct.islice(0, cand_pos) if not k.isdisjoint(candidate)),
-            Bitmap()
+            Bitmap(),
         )
 
         update_d, decreased = _update_usages(ct, candidate, cand_usage)
@@ -401,18 +405,22 @@ class SLIM(BaseMiner, MDLOptimizer):
         tuple(float, float)
             (data_size, model_size)
         """
-        isets, usages = zip(*((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0))
+        isets, usages = zip(
+            *((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0)
+        )
         usages = np.array(usages, dtype=np.uint32)
         codes = -np.log2(usages / usages.sum())
 
         stand_codes = self.get_standard_codes(isets)
 
-        model_size = stand_codes.sum() + codes.sum() # L(CTc|D) = L(X|ST) + L(X|CTc)
+        model_size = stand_codes.sum() + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
         return data_size, model_size
 
-    def _prune(self, codetable, D, prune_set, model_size, data_size): # pylint: disable= too-many-arguments
-        """ post prune a codetable considering itemsets for which usage has decreased
+    def _prune(
+        self, codetable, D, prune_set, model_size, data_size
+    ):  # pylint: disable= too-many-arguments
+        """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
         ----------
