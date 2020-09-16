@@ -80,6 +80,7 @@ def generate_candidates_big(codetable, stack=None):
     --------
     generate_candidates
     """
+    assert isinstance(codetable, SortedDict)
     for idx, (X, X_usage) in enumerate(codetable.items()):
         Y = codetable.items()[idx + 1 :]
         _best_usage = 0
@@ -223,7 +224,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):
         """Get support from an itemset"""
-        U = reduce(Bitmap.union, self.standard_codetable_.loc[itemset])
+        U = reduce(Bitmap.intersection, self.standard_codetable_.loc[itemset])
         return len(U)
 
     def _standard_cover_order(self, itemset):
@@ -231,8 +232,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
-        # TODO : try returning a hash, sortedcontainers might prefer
-        # handling integers when bisecting.
         return (-len(itemset), -self.get_support(itemset), tuple(itemset))
 
     def _standard_candidate_order(self, itemset):
@@ -256,7 +255,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         return self
 
     def generate_candidates(self, stack=None):
-        ct = SortedDict(self._standard_candidate_order, self.codetable)
+        ct = SortedDict(self._standard_candidate_order, self.codetable.items())
         # if big number of elements in codetable, just take a generator, do not sort output
         gen = generate_candidates if len(ct) < 1e3 else generate_candidates_big
         return gen(ct, stack=stack)

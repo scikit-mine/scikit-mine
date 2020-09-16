@@ -68,7 +68,7 @@ class TransactionEncoder:
         --------
         >>> from skmine.preprocessing import TransactionEncoder
         >>> transactions = [['banana', 'milk'], ['milk', 'cookies', 'banana']]
-        >>> te = TransactionEncoder()
+        >>> te = TransactionEncoder(sparse_output=False)
         >>> te.fit_transform(transactions)
            banana  cookies  milk
         0    True    False  True

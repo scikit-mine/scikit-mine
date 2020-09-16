@@ -148,30 +148,6 @@ def test_generate_candidate_stack():
     assert new_candidates == []
 
 
-def test_cover_order_pos():
-    """ lower size but higher support"""
-    supports = {
-        "ABC": 5,
-        "AB": 7,
-        "BC": 8,
-        "B": 10,
-    }
-
-    codetable = SortedDict(
-        lambda e: (-len(e), -supports[e], e),
-        {
-            "ABC": 2,
-            "BC": 11,
-            "B": 10,
-        },  # Note: values have no imporante here
-    )
-    cand = "AB"
-
-    pos = codetable.bisect(cand)
-
-    assert pos == 2
-
-
 def test_prefit():
     D = ["ABC"] * 5 + ["BC", "B", "C"]
     D = TransactionEncoder().fit_transform(D)
@@ -203,6 +179,13 @@ def test_get_standard_size_2(D):
     pd.testing.assert_series_equal(
         codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), check_less_precise=2
     )
+
+
+@pytest.mark.parametrize("D", [dense_D()])
+def test_get_support(D):
+    slim = SLIM()._prefit(D)
+    assert slim.get_support(frozenset("ABC")) == 5
+    assert slim.get_support(frozenset("C")) == 5
 
 
 @pytest.mark.parametrize("D", [dense_D()])
