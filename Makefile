@@ -26,10 +26,3 @@ docs: setup clean_doc
 
 sort_python:
 	isort -sl -rc -y   # single line imports for cleaner versionning via git
-
-pypi:
-	pip install --user twine wheel
-	python setup.py check
-	python setup.py sdist
-	python setup.py bdist_wheel
-	twine upload dist/*
