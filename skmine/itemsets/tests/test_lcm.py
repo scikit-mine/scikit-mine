@@ -16,15 +16,16 @@ D = [
 ]
 
 true_item_to_tids = {
-    1 : {0, 3, 5},
+    1: {0, 3, 5},
     2: {0, 1, 2, 3, 4},
-    3 : {0, 1, 6},
-    4 : {0, 3, 4, 5, 6},
-    5 : {0, 1, 2, 3},
-    6 : {0, 3, 5, 6},
+    3: {0, 1, 6},
+    4: {0, 3, 4, 5, 6},
+    5: {0, 1, 2, 3},
+    6: {0, 3, 5, 6},
 }
 
-true_patterns = pd.DataFrame([  # from D with min_supp=3
+true_patterns = pd.DataFrame(
+    [  # from D with min_supp=3
         [{2}, 5],
         [{4}, 5],
         [{2, 4}, 3],
@@ -32,9 +33,11 @@ true_patterns = pd.DataFrame([  # from D with min_supp=3
         [{4, 6}, 4],
         [{1, 4, 6}, 3],
         [{3}, 3],
-], columns=['itemset', 'support'])
+    ],
+    columns=["itemset", "support"],
+)
 
-true_patterns.loc[:, 'itemset'] = true_patterns.itemset.map(tuple)
+true_patterns.loc[:, "itemset"] = true_patterns.itemset.map(tuple)
 
 
 def test_lcm_fit():
@@ -43,6 +46,7 @@ def test_lcm_fit():
 
     for item in lcm.item_to_tids_.keys():
         assert set(lcm.item_to_tids_[item]) == true_item_to_tids[item]
+
 
 def test_first_parent_limit_1():
     lcm = LCM(min_supp=3)
@@ -87,6 +91,7 @@ def test_first_parent_limit_3():
     assert itemset == (3,)
     assert len(tids) == 3
 
+
 def test_first_parent_limit_4():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
@@ -95,6 +100,7 @@ def test_first_parent_limit_4():
     itemset, tids = next(lcm._inner(frozenset(), tids, 4), (None, None))
     assert itemset == (4,)
     assert len(tids) == 5
+
 
 def test_first_parent_limit_5():
     lcm = LCM(min_supp=3)
@@ -114,6 +120,7 @@ def test_first_parent_limit_6():
     itemset, tids = next(lcm._inner(frozenset(), tids, 6), (None, None))
     assert itemset == (4, 6)
     assert len(tids) == 4
+
 
 def test_lcm_empty_fit():
     # 1. test with a min_supp high above the maximum supp
@@ -135,7 +142,9 @@ def test_lcm_discover():
 
     for itemset, true_itemset in zip(patterns.itemset, true_patterns.itemset):
         assert itemset == true_itemset
-    pd.testing.assert_series_equal(patterns.support, true_patterns.support, check_dtype=False)
+    pd.testing.assert_series_equal(
+        patterns.support, true_patterns.support, check_dtype=False
+    )
 
 
 def test_relative_support():

@@ -46,7 +46,7 @@ def generate_cut_point(y, start, end):
         first_half_ent = get_entropy_nb_ones(y[start:idx])[0]
         first_half_ent *= (idx - start) / length
 
-        second_half_ent = get_entropy_nb_ones(y[idx: end])[0]
+        second_half_ent = get_entropy_nb_ones(y[idx:end])[0]
         second_half_ent *= (end - idx) / length
 
         new_ent = first_half_ent + second_half_ent
@@ -66,6 +66,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
     This class operates at a column level, i.e it finds the best cut points for a given feature
     to fit a the corresponding labels
     """
+
     def __init__(self, min_depth=0):
         self.min_depth_ = min_depth
         self.entropy_ = np.inf
@@ -78,14 +79,16 @@ class MDLPVectDiscretizer(MDLOptimizer):
         Evaluate vector y of size ``end`` - ``start``,
         given a ``cutpoint``
         """
-        entropy1, k1 = get_entropy_nb_ones(y[start: cut_point])
-        entropy2, k2 = get_entropy_nb_ones(y[cut_point: end])
-        whole_entropy, k0 = get_entropy_nb_ones(y[start: end])
+        entropy1, k1 = get_entropy_nb_ones(y[start:cut_point])
+        entropy2, k2 = get_entropy_nb_ones(y[cut_point:end])
+        whole_entropy, k0 = get_entropy_nb_ones(y[start:end])
 
         N = end - start
 
         part1 = 1 / N * ((cut_point - start) * entropy1 + (end - cut_point) * entropy2)
-        delta = np.log2(pow(3, k0) - 2) - (k0 * whole_entropy - k1 * entropy1 - k2 * entropy2)
+        delta = np.log2(pow(3, k0) - 2) - (
+            k0 * whole_entropy - k1 * entropy1 - k2 * entropy2
+        )
 
         gain = whole_entropy - part1
 
@@ -176,6 +179,7 @@ class MDLPDiscretizer(BaseMiner):
     {0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}
 
     """
+
     def __init__(self, random_state=None, n_jobs=1):
         self.cut_points_ = dict()
         self.random_state = _check_random_state(random_state)
@@ -183,7 +187,7 @@ class MDLPDiscretizer(BaseMiner):
         self.discretizers_ = []
 
     def fit(self, X, y):
-        """ fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
+        """fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
 
         Parameters
         ----------
@@ -202,7 +206,7 @@ class MDLPDiscretizer(BaseMiner):
 
         n_cols = _X.shape[1]
 
-        discs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
+        discs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
             delayed(MDLPVectDiscretizer().fit)(_X[:, idx], y) for idx in range(n_cols)
         )
 
@@ -221,16 +225,16 @@ class MDLPDiscretizer(BaseMiner):
         """user-friendly view on cut points"""
         return pd.Series(self.cut_points_)
 
-    def transform(self, X, y=None): #pylint: disable=unused-argument
+    def transform(self, X, y=None):  # pylint: disable=unused-argument
         """Discretizes the input matrix X
 
         This applies the cutpoints their respective columns
         """
         if isinstance(X, pd.DataFrame) and not set(self.cut_points_) == set(X.columns):
-            raise ValueError(f'X columns should be {self.cut_points_.keys()}')
+            raise ValueError(f"X columns should be {self.cut_points_.keys()}")
         _X = X.values if isinstance(X, pd.DataFrame) else X
 
-        vects = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+        vects = Parallel(n_jobs=self.n_jobs, prefer="threads")(
             delayed(np.searchsorted)(cut_points, _X[:, idx])
             for idx, cut_points in enumerate(self.cut_points_.values())
         )

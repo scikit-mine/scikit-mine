@@ -68,6 +68,7 @@ class LCM(BaseMiner, DiscovererMixin):
     4  (21, 58)    2224
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
+
     def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
@@ -143,48 +144,53 @@ class LCM(BaseMiner, DiscovererMixin):
         0     (2, 5)  [0, 1, 2]
         1  (2, 3, 5)     [0, 1]
         """
-        empty_df = pd.DataFrame(columns=['itemset', 'tids'])
+        empty_df = pd.DataFrame(columns=["itemset", "tids"])
 
         # reverse order of support
         supp_sorted_items = sorted(
             self.item_to_tids_.items(), key=lambda e: len(e[1]), reverse=True
         )
 
-        dfs = Parallel(n_jobs=self.n_jobs, prefer='processes')(
+        dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
             delayed(self._explore_item)(item, tids) for item, tids in supp_sorted_items
         )
 
-        dfs.append(empty_df) # make sure we have something to concat
+        dfs.append(empty_df)  # make sure we have something to concat
         df = pd.concat(dfs, axis=0, ignore_index=True)
         if not return_tids:
-            df.loc[:, 'support'] = df['tids'].map(len).astype(np.uint32)
-            df.drop('tids', axis=1, inplace=True)
+            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
+            df.drop("tids", axis=1, inplace=True)
         return df
-
 
     def _explore_item(self, item, tids):
         it = self._inner(frozenset(), tids, item)
-        df = pd.DataFrame(data=it, columns=['itemset', 'tids'])
+        df = pd.DataFrame(data=it, columns=["itemset", "tids"])
         if self.verbose and not df.empty:
-            print('LCM found {} new itemsets from item : {}'.format(len(df), item))
+            print("LCM found {} new itemsets from item : {}".format(len(df), item))
         return df
 
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P
         cp = (
-            item for item, ids in reversed(self.item_to_tids_.items())
-            if tids.issubset(ids) if item not in p
+            item
+            for item, ids in reversed(self.item_to_tids_.items())
+            if tids.issubset(ids)
+            if item not in p
         )
 
-        max_k = next(cp, None)  # items are in reverse order, so the first consumed is the max
+        max_k = next(
+            cp, None
+        )  # items are in reverse order, so the first consumed is the max
 
         if max_k and max_k == limit:
-            p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
+            p_prime = (
+                p | set(cp) | {max_k}
+            )  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
             yield tuple(sorted(p_prime)), tids
 
             candidates = self.item_to_tids_.keys() - p_prime
-            candidates = candidates[:candidates.bisect_left(limit)]
+            candidates = candidates[: candidates.bisect_left(limit)]
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
@@ -215,20 +221,27 @@ class LCMMax(LCM):
     --------
     LCM
     """
+
     def _inner(self, p, tids, limit):
         # project and reduce DB w.r.t P
         cp = (
-            item for item, ids in reversed(self.item_to_tids_.items())
-            if tids.issubset(ids) if item not in p
+            item
+            for item, ids in reversed(self.item_to_tids_.items())
+            if tids.issubset(ids)
+            if item not in p
         )
 
-        max_k = next(cp, None)  # items are in reverse order, so the first consumed is the max
+        max_k = next(
+            cp, None
+        )  # items are in reverse order, so the first consumed is the max
 
         if max_k and max_k == limit:
-            p_prime = p | set(cp) | {max_k}  # max_k has been consumed when calling next()
+            p_prime = (
+                p | set(cp) | {max_k}
+            )  # max_k has been consumed when calling next()
 
             candidates = self.item_to_tids_.keys() - p_prime
-            candidates = candidates[:candidates.bisect_left(limit)]
+            candidates = candidates[: candidates.bisect_left(limit)]
 
             no_cand = True
             for new_limit in candidates:
@@ -238,10 +251,12 @@ class LCMMax(LCM):
                     new_limit_tids = tids.intersection(ids)
                     yield from self._inner(p_prime, new_limit_tids, new_limit)
 
-            if no_cand:  # only if no child node. This is how we PRE-check for maximality
+            if (
+                no_cand
+            ):  # only if no child node. This is how we PRE-check for maximality
                 yield tuple(sorted(p_prime)), tids
 
     def fit_discover(self, D, return_tids=False):
         patterns = super().fit_discover(D, return_tids=return_tids)
-        maximums = [tuple(sorted(x)) for x in filter_maximal(patterns['itemset'])]
+        maximums = [tuple(sorted(x)) for x in filter_maximal(patterns["itemset"])]
         return patterns[patterns.itemset.isin(maximums)]

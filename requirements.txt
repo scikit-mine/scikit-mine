@@ -1,5 +1,5 @@
 scipy>=1.2.1
-pandas>=1.0.0,!=1.1.0
+pandas>=1.0.0
 roaringbitmap==0.7
 joblib>=0.11.1
 sortedcontainers>=2.1.0

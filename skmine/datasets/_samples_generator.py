@@ -6,11 +6,10 @@ Mainly for benchmarks and experiments
 import numpy as np
 import pandas as pd
 
-def make_transactions(n_transactions=1000,
-                      n_items=100,
-                      density=.5,
-                      random_state=None,
-                      item_start=0):
+
+def make_transactions(
+    n_transactions=1000, n_items=100, density=0.5, random_state=None, item_start=0
+):
     """
     Generate a transactional dataset with predefined properties
 
@@ -59,8 +58,8 @@ def make_transactions(n_transactions=1000,
     pd.Series: a Series of shape (``n_transactions``,)
         Earch entry is a list of integer values
     """
-    if not .0 < density < 1.0:
-        raise ValueError('density should be a float value between 0 and 1')
+    if not 0.0 < density < 1.0:
+        raise ValueError("density should be a float value between 0 and 1")
 
     avg_transaction_size = density * n_items
 
@@ -70,8 +69,8 @@ def make_transactions(n_transactions=1000,
     choices = np.arange(start=item_start, stop=item_stop)
     t_sizes = generator.binomial(
         n=avg_transaction_size * 2,
-        p=.5,  # centered around avg_transaction_size
-        size=n_transactions
+        p=0.5,  # centered around avg_transaction_size
+        size=n_transactions,
     )
     max_size = t_sizes.max()
     if max_size > n_items:
@@ -81,9 +80,18 @@ def make_transactions(n_transactions=1000,
     D = [generator.choice(choices, size, replace=False) for size in t_sizes]
     return pd.Series(D)
 
-def make_classification(n_samples=100, n_items_per_class=100, *,  # pylint: disable= too-many-locals
-                        n_classes=2, weights=None, class_sep=.2,
-                        shuffle=True, random_state=None, densities=None):
+
+def make_classification(
+    n_samples=100,
+    n_items_per_class=100,
+    *,  # pylint: disable= too-many-locals
+    n_classes=2,
+    weights=None,
+    class_sep=0.2,
+    shuffle=True,
+    random_state=None,
+    densities=None
+):
     """
     Generate a random n-class classification problem
 
@@ -131,7 +139,7 @@ def make_classification(n_samples=100, n_items_per_class=100, *,  # pylint: disa
     """
     assert n_classes > 0
     if densities is None:
-        densities = [.5] * n_classes
+        densities = [0.5] * n_classes
 
     if weights is None:
         weights = [1 / n_classes] * n_classes  # balanced by default
@@ -160,8 +168,8 @@ def make_classification(n_samples=100, n_items_per_class=100, *,  # pylint: disa
 
     dfs = list()
     for _class, transactions in res.items():
-        df = transactions.to_frame(name='transaction')
-        df.loc[:, 'class'] = _class
+        df = transactions.to_frame(name="transaction")
+        df.loc[:, "class"] = _class
         dfs.append(df)
 
     df = pd.concat(dfs, axis=0)
@@ -169,4 +177,4 @@ def make_classification(n_samples=100, n_items_per_class=100, *,  # pylint: disa
     if shuffle:
         df = df.sample(frac=1)
 
-    return df['transaction'], df['class']
+    return df["transaction"], df["class"]

@@ -26,9 +26,11 @@ def test_inst_params():
     with pytest.raises(ValueError):
         miner.set_params(random_key=2)
 
+
 def test_inst_params_no_init():
     class MyMiner(BaseMiner):
-        def fit(self, D, y=None): return self
+        def fit(self, D, y=None):
+            return self
 
     miner = MyMiner()
     assert miner.get_params() == dict()
@@ -37,11 +39,16 @@ def test_inst_params_no_init():
 def test_mdl_repr():
     class A(MDLOptimizer):
         def __init__(self):
-            self.codetable_ = {1 : [0, 1], 2: [1]}
+            self.codetable_ = {1: [0, 1], 2: [1]}
 
-        def fit(self): return self
-        def evaluate(self): return True
-        def generate_candidates(self): return list()
+        def fit(self):
+            return self
+
+        def evaluate(self):
+            return True
+
+        def generate_candidates(self):
+            return list()
 
     a = A()
 

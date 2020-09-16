@@ -9,11 +9,13 @@ import pandas as pd
 from .conf import urlopen
 from ._base import get_data_home
 
-BASE_URL = 'http://fimi.uantwerpen.be/data/'
+BASE_URL = "http://fimi.uantwerpen.be/data/"
+
 
 def _preprocess(transaction):
     s = bytes.decode(transaction[:-2])
-    return s.split(' ')
+    return s.split(" ")
+
 
 def fetch_any(filename, data_home=None):
     """Base loader for all datasets from the FIMI repository
@@ -40,7 +42,7 @@ def fetch_any(filename, data_home=None):
     filepath = os.path.join(data_home, filename)
     if filename in os.listdir(data_home):  # already fetched
         s = pd.read_pickle(filepath)
-    else:                                  # not fetched yet
+    else:  # not fetched yet
         url = BASE_URL + filename
         resp = urlopen(url)
         it = (_preprocess(transaction) for transaction in resp)
@@ -48,10 +50,13 @@ def fetch_any(filename, data_home=None):
         s = pd.Series(it, name=name)
         s.to_pickle(filepath)
 
-    try: s = s.map(lambda l: list(map(int, l)))
-    except ValueError: pass
+    try:
+        s = s.map(lambda l: list(map(int, l)))
+    except ValueError:
+        pass
 
     return s
+
 
 def fetch_chess(data_home=None):
     """Fetch and return the chess dataset (Frequent Itemset Mining)
@@ -75,7 +80,7 @@ def fetch_chess(data_home=None):
         Transactions from the chess dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('chess.dat', data_home=data_home)
+    return fetch_any("chess.dat", data_home=data_home)
 
 
 def fetch_connect(data_home=None):
@@ -100,7 +105,7 @@ def fetch_connect(data_home=None):
         Transactions from the connect dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('connect.dat', data_home=data_home)
+    return fetch_any("connect.dat", data_home=data_home)
 
 
 def fetch_mushroom(data_home=None, return_D_y=False):
@@ -153,7 +158,7 @@ def fetch_mushroom(data_home=None, return_D_y=False):
     1    3916
     Name: mushroom, dtype: int64
     """
-    mush = fetch_any('mushroom.dat', data_home=data_home)
+    mush = fetch_any("mushroom.dat", data_home=data_home)
     D = mush.str[1:]
     if return_D_y:
         y = mush.str[0]
@@ -187,7 +192,7 @@ def fetch_pumsb(data_home=None):
         Transactions from the pumsb dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('pumsb.dat', data_home=data_home)
+    return fetch_any("pumsb.dat", data_home=data_home)
 
 
 def fetch_pumsb_star(data_home=None):
@@ -212,7 +217,7 @@ def fetch_pumsb_star(data_home=None):
         Transactions from the pumsb_star dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('pumsb_star.dat', data_home=data_home)
+    return fetch_any("pumsb_star.dat", data_home=data_home)
 
 
 def fetch_kosarak(data_home=None):
@@ -239,7 +244,7 @@ def fetch_kosarak(data_home=None):
         Transactions from the kosarak dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('kosarak.dat', data_home=data_home)
+    return fetch_any("kosarak.dat", data_home=data_home)
 
 
 def fetch_retail(data_home=None):
@@ -275,7 +280,8 @@ def fetch_retail(data_home=None):
         Transactions from the retail dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any('retail.dat', data_home=data_home)
+    return fetch_any("retail.dat", data_home=data_home)
+
 
 def fetch_accidents(data_home=None):
     """Fetch and return the accidents dataset (Frequent Itemset Mining)
@@ -304,4 +310,4 @@ def fetch_accidents(data_home=None):
         Each unique transaction is represented as a Python list.
 
     """
-    return fetch_any('accidents.dat', data_home=data_home)
+    return fetch_any("accidents.dat", data_home=data_home)
