@@ -247,9 +247,10 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -np.log2(usage / usage.sum())
-        self.model_size_ = (
-            2 * codes.sum()
-        )  # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+
+        # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+        self.model_size_ = 2 * codes.sum()
+
         self.data_size_ = (codes * usage).sum()
 
         return self
