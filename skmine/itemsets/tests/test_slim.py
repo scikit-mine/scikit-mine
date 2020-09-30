@@ -1,6 +1,8 @@
-from ..slim import cover
-from ..slim import generate_candidates
-from ..slim import SLIM
+from ..slim import (
+    SLIM,
+    cover,
+    generate_candidates,
+)
 from ...preprocessing.transaction_encoder import TransactionEncoder
 from ...bitmaps import Bitmap
 
@@ -86,8 +88,8 @@ def test_complex_evaluate():
         frozenset("AB"): {1},
         frozenset("BC"): {4},
         frozenset("DE"): {4, 5},
-        frozenset("A"): {2},
         frozenset("B"): {3},
+        frozenset("A"): {2},
         frozenset("C"): {2},
         frozenset("D"): {},
         frozenset("E"): {},
@@ -100,13 +102,55 @@ def test_complex_evaluate():
     cand = frozenset("CDE")
     data_size, model_size, updated, decreased = slim.evaluate(cand)
 
-    assert decreased == [frozenset("BC"), frozenset("DE")]
+    assert decreased == {frozenset("BC"), frozenset("DE")}
 
     assert len(updated) == 4
     assert len(updated[cand]) == 1  # {4}
     assert len(updated[frozenset("BC")]) == 0  # {4} -> {}
     assert len(updated[frozenset("B")]) == 2  # {3} -> {3, 4}
     assert len(updated[frozenset("DE")]) == 1  # {4, 5} -> {5}
+
+
+def test_complex_evaluate_2():
+    """
+    A   B   C
+    A   B
+    A       C
+        B
+        B   C   D   E
+    A   B   C   D   E
+    """
+    slim = SLIM()
+    D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
+    slim._prefit(TransactionEncoder().fit_transform(D))
+
+    u = {
+        frozenset("CDE"): {4, 5},
+        frozenset("AB"): {0, 1, 5},
+        frozenset("BC"): {},
+        frozenset("DE"): {},
+        frozenset("B"): {3, 4},
+        frozenset("A"): {2},
+        frozenset("C"): {0, 2},
+        frozenset("D"): {},
+        frozenset("E"): {},
+    }
+
+    u = {k: Bitmap(v) for k, v in u.items()}
+
+    slim.codetable_.update(u)
+
+    cand = frozenset("ABC")
+    data_size, model_size, updated, decreased = slim.evaluate(cand)
+
+    assert decreased == {frozenset("CDE"), frozenset("AB"), frozenset("C")}
+
+    assert len(updated) == 5
+    assert len(updated[cand]) == 2
+    assert len(updated[frozenset("CDE")]) == 1  # {4, 5} -> {4}
+    assert len(updated[frozenset("DE")]) == 1  # {} -> {5}
+    assert len(updated[frozenset("AB")]) == 1  # {0, 1, 5} -> {1}
+    assert len(updated[frozenset("C")]) == 1  # {0, 2} -> {2}
 
 
 def test_generate_candidate_1():
@@ -247,7 +291,7 @@ def test_prune(D):
     prune_set = [frozenset("AB")]
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
@@ -265,7 +309,7 @@ def test_prune_empty(D):
     # nothing to prune so we should get the exact same codetable
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))

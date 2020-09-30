@@ -57,6 +57,44 @@ def cover_one(itemsets, cand):
     return cov
 
 
+def update_usages(sct, ct, candidate, delete=False):
+    """
+    Parameters
+    ----------
+    codetable: SortedDict[frozenset, Bitmap]
+        A codetable, sorted in Standard Candidate Order
+
+    """
+    new_isets = list(ct.keys())
+
+    if delete:
+        new_isets.remove(candidate)
+    else:
+        cand_pos = ct.bisect(candidate)
+        new_isets.insert(cand_pos, candidate)
+
+    _sct = {k: tids.copy() for k, tids in sct.items()}
+    update_d = dict()
+    for iset in new_isets:
+        it = (_sct[i] for i in iset)
+        usage = reduce(Bitmap.intersection, it)
+        if iset == candidate:  # candidate should never be a singleton
+            update_d[iset] = usage
+        elif usage != ct[iset]:
+            usage = usage.copy()
+            update_d[iset] = usage
+        if usage:
+            for k in iset:
+                _sct[k] -= usage
+
+    # assert not _sct
+    decreased = {
+        k for k, v in update_d.items() if k != candidate and len(v) < len(ct[k])
+    }
+
+    return update_d, decreased
+
+
 def generate_candidates_big(codetable, stack=None):
     """
     Generate candidates, but does not sort output by estimated gain
@@ -109,50 +147,6 @@ def generate_candidates(codetable, stack=None):
         key=lambda e: e[1],
         reverse=True,
     )
-
-
-def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
-    """
-    Given a codetable and a new candidate:
-
-    - iteratively consider every element in the codetable,
-      starting from insertion position in Standard Cover Order
-    - decrease usages when element is non disjoint with the candidate
-    - identify usages that will increase due to freed intermediate covering,
-      and increase them
-
-    We also output the set of itemsets for which usage decreased, for later pruning.
-
-    Notes
-    -----
-    In practice most usages will stay steady, but identifying those wich need to be
-    modified makes updating the codetable easier in case of acceptance.
-
-    On average this method is many orders of magnitude faster than covering the database
-    entirely every time we need to evaluate a candidate.
-    It's also very cheap in memory, as we only instantiate new Bitmaps for a restricted
-    part of the codetable : the part that would need an update
-    """
-    update_d = dict()
-    decreased = list()  # track decreasing non-singletons
-
-    cand_pos = codetable.bisect(cand)
-
-    for idx, iset in enumerate(codetable.islice(cand_pos, len(codetable))):
-        if not iset.isdisjoint(cand):
-            iset_tids = codetable[iset]
-            if not codetable[iset].isdisjoint(cand_usage):
-                update_d[iset] = iset_tids - cand_usage
-
-                if len(iset) > 1:
-                    decreased.append(iset)
-
-                    to_cov = iset - cand
-                    cov = cover_one(codetable.islice(idx + 1, len(codetable)), to_cov)
-                    for e in cov:
-                        update_d[e] = codetable[e].union(cand_usage)
-
-    return update_d, decreased
 
 
 class SLIM(BaseMiner, MDLOptimizer):
@@ -286,7 +280,7 @@ class SLIM(BaseMiner, MDLOptimizer):
                     self.codetable_.update(update_d)
                     if self.pruning:
                         self.codetable_, data_size, model_size = self._prune(
-                            self.codetable_, D, prune_set, model_size, data_size
+                            self.codetable_, prune_set, model_size, data_size
                         )
 
                     self.data_size_ = data_size
@@ -355,24 +349,11 @@ class SLIM(BaseMiner, MDLOptimizer):
             updated (data size, model size, codetable)
             and finally the set of itemsets for which usage decreased
         """
-        ct = self.codetable_
-        cand_pos = ct.bisect(candidate)
-
-        # get original support from standard_codetable
-        cand_usage = reduce(
-            Bitmap.intersection, self.standard_codetable_.loc[candidate]
-        )
-        # remove union of all non disjoint itemsets before it to get real usage
-        cand_usage -= reduce(
-            Bitmap.union,
-            (ct[k] for k in ct.islice(0, cand_pos) if not k.isdisjoint(candidate)),
-            Bitmap(),
+        update_d, decreased = update_usages(
+            self.standard_codetable_, self.codetable_, candidate
         )
 
-        update_d, decreased = _update_usages(ct, candidate, cand_usage)
-
-        update_d[candidate] = cand_usage
-        CTc = {**ct, **update_d}
+        CTc = {**self.codetable_, **update_d}
 
         data_size, model_size = self.compute_sizes(CTc)
 
@@ -417,9 +398,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         data_size = (codes * usages).sum()
         return data_size, model_size
 
-    def _prune(
-        self, codetable, D, prune_set, model_size, data_size
-    ):  # pylint: disable= too-many-arguments
+    def _prune(self, codetable, prune_set, model_size, data_size):
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
@@ -428,7 +407,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         D: pd.Series
         prune_set: pd.Series
             subset of ``codetable`` for which usage has decreased
-        models_size: float
+        model_size: float
             current model_size for ``codetable``
         data_size: float
             current data size when encoding ``D`` with ``codetable``
@@ -439,23 +418,24 @@ class SLIM(BaseMiner, MDLOptimizer):
             a tuple containing the pruned codetable, and new model size and data size
             w.r.t this new codetable
         """
-        prune_set = set(prune_set)
+        prune_set = {k for k in prune_set if len(k) > 1}  # remove singletons
         while prune_set:
             cand = min(prune_set, key=lambda e: len(codetable[e]))
             prune_set.discard(cand)
 
-            CTp_index = codetable.keys() - {cand}
-            CTp_index = sorted(CTp_index, key=codetable.bisect)  # FIXME
+            update_d, decreased = update_usages(
+                self.standard_codetable_, codetable, cand, delete=True
+            )
 
-            CTp = cover(CTp_index, D).to_dict()
+            CTp = {**codetable, **update_d}
+            del CTp[cand]
 
             d_size, m_size = self.compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                CTp = SortedDict(self._standard_cover_order, CTp)
-                decreased = [k for k in CTp if len(CTp[k]) < len(codetable[k])]
+                codetable.update(update_d)
+                del codetable[cand]
                 prune_set.update(decreased)
-                codetable = CTp
                 data_size, model_size = d_size, m_size
 
         return codetable, data_size, model_size
