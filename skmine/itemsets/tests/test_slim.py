@@ -208,7 +208,7 @@ def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ["ABC", "AB", "A", "B"]
-    codes = slim.get_standard_codes(CT_index)
+    codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
         codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), check_less_precise=2
     )
@@ -219,7 +219,7 @@ def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ["ABC", "A", "B"]
-    codes = slim.get_standard_codes(CT_index)
+    codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
         codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), check_less_precise=2
     )
@@ -233,7 +233,7 @@ def test_get_support(D):
 
 
 @pytest.mark.parametrize("D", [dense_D()])
-def test_compute_sizes_1(D):
+def test__compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -243,13 +243,13 @@ def test_compute_sizes_1(D):
         frozenset("B"): Bitmap([7]),
     }
 
-    data_size, model_size = slim.compute_sizes(CT)
+    data_size, model_size = slim._compute_sizes(CT)
     np.testing.assert_almost_equal(data_size, 12.4, 2)
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
 
 @pytest.mark.parametrize("D", [dense_D()])
-def test_compute_sizes_2(D):
+def test__compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -259,7 +259,7 @@ def test_compute_sizes_2(D):
         frozenset("C"): Bitmap(),
     }
 
-    data_size, model_size = slim.compute_sizes(CT)
+    data_size, model_size = slim._compute_sizes(CT)
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
