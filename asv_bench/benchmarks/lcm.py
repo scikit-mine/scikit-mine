@@ -1,12 +1,14 @@
 from skmine.itemsets import LCM
 from skmine.datasets import make_transactions
 
+
 class LCMBench:
-    params = ([.1, .3], [20], [.4, .6])
-    param_names = ['min_supp', 'n_transactions', 'density']
-    #timeout = 20  # timeout for a single run, in seconds
+    params = ([0.1, 0.3], [20], [0.4, 0.6])
+    param_names = ["min_supp", "n_transactions", "density"]
+    # timeout = 20  # timeout for a single run, in seconds
     repeat = (1, 3, 20.0)
     processes = 1
+
     def setup(self, min_supp, n_transactions, density):
         self.transactions = make_transactions(
             n_transactions=n_transactions,
@@ -17,6 +19,3 @@ class LCMBench:
 
     def time_fit_discover(self, *args):
         self.lcm.fit_discover(self.transactions)
-
-    def time_fit_transform(self, *args):
-        self.lcm.fit_transform(self.transactions)
