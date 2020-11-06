@@ -24,52 +24,6 @@ def sparse_D():
     return D
 
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_1(D):
-    isets = [frozenset(_) for _ in ("ABC", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 2, 2, 0], index=isets),
-        covers.map(len),
-    )
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_2(D):
-    isets = [frozenset(_) for _ in ("ABC", "AB", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 1, 1, 1, 0], index=isets),
-        covers.map(len),
-    )
-
-
-def test_cover_3():
-    D = ["ABC"] * 5 + ["AB", "A", "B", "DE", "CDE"]
-    D = TransactionEncoder().fit_transform(D)
-
-    isets = [frozenset(_) for _ in ("ABC", "DE", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 2, 2, 2, 1], index=isets),
-        covers.map(len),
-    )
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_4(D):
-    isets = [frozenset(_) for _ in ("BC", "AB", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 1, 6, 1, 0], index=isets),
-        covers.map(len),
-    )
-
-
 def test_complex_evaluate():
     """
     A   B   C

@@ -16,11 +16,17 @@ class SLIMBench:
             density=density,
             random_state=7,
         )
-        self.transactions = TransactionEncoder().fit_transform(transactions)
+        te = TransactionEncoder()
+        self.transactions = te.fit_transform(transactions)
+        self.new_transactions = te.transform(transactions.sample(len(transactions)))
         self.slim = SLIM()
+        self.fitted_slim = SLIM().fit(self.transactions)
 
     def time_fit(self, *args):
         self.slim.fit(self.transactions)
 
+    def time_decision_function(self, *args):
+        self.fitted_slim.decision_function(self.new_transactions)
+
     def track_data_size(self, *args):
-        return self.slim.fit(self.transactions).data_size_
+        return self.slim.data_size_

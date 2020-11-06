@@ -17,53 +17,63 @@ from ..utils import _check_D
 from ..callbacks import mdl_prints
 
 
-def cover(itemsets: list, D: pd.DataFrame):
+def _log2(values):
+    res_index = values.index if isinstance(values, pd.Series) else None
+    res = np.zeros(len(values), dtype=np.float32)
+    res[values != 0] = np.log2(values[values != 0]).astype(np.float32)
+    return pd.Series(res, index=res_index)
+
+
+def cover(sct: SortedDict, itemsets: list):
     """
-    assert itemsets are sorted in Standard Cover Order
-    D must be a pandas DataFrame containing boolean values
+    cover a standard codetable sct given itemsets
+
+    Parameters
+    ----------
+    sct: SortedDict[object, Bitmap]
+        a standard codetable, i.e the vertical representation of a dataset
+    itemsets: list
+        itemsets from a given codetable
+
+    Notes
+    -----
+        sct is modified inplace
     """
-    covers = list()
-    mat = D.values
-
-    _itemsets = list(map(D.columns.get_indexer, itemsets))
-
-    for iset in _itemsets:
-        parents = (v for k, v in zip(_itemsets, covers) if not set(iset).isdisjoint(k))
-        rows_left = reduce(Bitmap.union, parents, Bitmap())
-        rows_left.flip_range(0, len(D))
-        _mat = mat[rows_left][:, iset]
-        bools = _mat.all(axis=1)
-        rows_where = np.where(bools)[0]
-        rows_where += min(rows_left, default=0)  # pad indexes
-        covers.append(Bitmap(rows_where))
-
-    return pd.Series(covers, index=itemsets)
-
-
-def cover_one(itemsets, cand):
-    """
-    assumes itemsets is already sorted in Standard Cover Order
-    """
-    cov = list()
-    stack = set()
+    covers = dict()
     for iset in itemsets:
-        if not iset.isdisjoint(stack):
-            continue
-        if iset.issubset(cand):
-            cov.append(iset)  # TODO add index instead of element for performance
-            stack |= iset
-        if len(stack) >= len(cand):
-            break
-    return cov
+        _iset = frozenset(iset & sct.keys())
+        if _iset != iset:
+            usage = Bitmap()
+        else:
+            it = [sct[i] for i in _iset]
+            usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
+        covers[iset] = usage
+        for k in _iset:
+            sct[k] -= usage
+    return covers
 
 
 def update_usages(sct, ct, candidate, delete=False):
     """
     Parameters
     ----------
-    codetable: SortedDict[frozenset, Bitmap]
+    sct: SortedDict[frozenset, Bitmap]
+        a standard codetable, i.e the vertical representation of a dataset
+
+    ct: SortedDict[frozenset, Bitmap]
         A codetable, sorted in Standard Candidate Order
 
+    candidate: object
+        candidate to consider for update
+
+    delete: bool, default=False
+        either to delete or add `candidate` in ct
+
+    Returns
+    -------
+    dict, dict
+        a tuple, first dict is containing the updated usage,
+        seconde dict contains decreased usages (for later pruning)
     """
     new_isets = list(ct.keys())
 
@@ -280,22 +290,26 @@ class SLIM(BaseMiner, MDLOptimizer):
         >>> te = TransactionEncoder()
         >>> D = te.fit_transform(D)
         >>> new_D = te.transform([['cookies', 'butter']])
-        >>> slim = SLIM(pruning=False).fit(D)
+        >>> slim = SLIM().fit(D)
         >>> slim.decision_function(new_D)
-        0   -0.321928
+        0   -1.321928
         dtype: float32
         """
         D = _check_D(D)
-        covers = cover(self.codetable.index, D)
-        mat = np.zeros(shape=(len(D), len(covers)))
-        for idx, tids in enumerate(covers.values):
-            mat[tids, idx] = 1
-        mat = pd.DataFrame(mat, columns=covers.index)
+        codetable = self.codetable  # this is a function call, beware
+        D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        covers = cover(D_sct, codetable.index)
 
-        ct_codes = self.codetable.map(len) / self.codetable.map(len).sum()
-        codes = (mat * ct_codes).sum(axis=1)
-        # positive sign on np.log2 to return negative distance : sklearn compat
-        return np.log2(codes.astype(np.float32))
+        mat = np.zeros(shape=(len(D), len(covers)))
+        for idx, tids in enumerate(covers.values()):
+            mat[tids, idx] = 1
+        mat = pd.DataFrame(mat, columns=covers.keys())
+
+        code_lengths = codetable.map(len)
+        ct_codes = code_lengths / code_lengths.sum()
+        codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
+        # positive sign on log2 to return negative distance : sklearn
+        return _log2(codes)
 
     def generate_candidates(self, stack=None, thresh=1e3):
         """
@@ -381,7 +395,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
-        codes = -np.log2(usage / usage.sum())
+        codes = -_log2(usage / usage.sum())
 
         # L(code_ST(X)) = L(code_CT(X)), because CT=ST
         self.model_size_ = 2 * codes.sum()
@@ -397,7 +411,7 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         usages = self.standard_codetable_.loc[items].map(len).astype(np.uint32)
         usages /= usages.sum()
-        codes = -np.log2(usages)
+        codes = -_log2(usages)
         return codes * counts
 
     def _compute_sizes(self, codetable):
@@ -421,7 +435,7 @@ class SLIM(BaseMiner, MDLOptimizer):
             *((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0)
         )
         usages = np.array(usages, dtype=np.uint32)
-        codes = -np.log2(usages / usages.sum())
+        codes = -_log2(usages / usages.sum())
 
         stand_codes = self._get_standard_codes(isets)
 
