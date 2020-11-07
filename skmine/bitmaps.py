@@ -4,10 +4,10 @@ Bitmap definition for scikit-mine
 import platform
 
 from sortedcontainers import SortedSet
-from roaringbitmap import RoaringBitmap as _RB
+from pyroaring import BitMap as _RB
 
 
-class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
+class _SortedSet(SortedSet):  # pylint: disable=too-many-ancestors
     """
     Dummy implementation of a bitmap
 
@@ -33,7 +33,12 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     __str__ = __repr__
 
 
+class _BitMap(_RB):
+    def intersection_len(self, other):
+        return len(self & other)
+
+
 if platform.system() == "Windows":
-    Bitmap = BitmapMock
+    Bitmap = _SortedSet
 else:
-    Bitmap = _RB
+    Bitmap = _BitMap

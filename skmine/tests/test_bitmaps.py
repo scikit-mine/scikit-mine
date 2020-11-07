@@ -1,11 +1,11 @@
-from ..bitmaps import BitmapMock
+from ..bitmaps import _SortedSet
 
-# test BitmapMock in any case
+# test _SortedSet in any case
 
 
-def test_bitmapmock():
-    bm = BitmapMock([1, 2, 2])
-    bm2 = BitmapMock([1, 3])
+def test__SortedSet():
+    bm = _SortedSet([1, 2, 2])
+    bm2 = _SortedSet([1, 3])
 
     assert bm.intersection_len(bm2) == 1
     bm.flip_range(1, 5)
