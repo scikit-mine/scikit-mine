@@ -285,10 +285,18 @@ def test_decision_function():
     )
 
 
-def test_fit_sklearn():
-    D = dense_D()
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_fit_sklearn(D):
     y = np.array([1] * len(D))
     slim = SLIM().fit(D, y)
     assert slim.standard_codetable_.index.tolist() == ["A", "B", "C"]
 
     slim = SLIM().fit(D.values, y)
+
+
+def test_reconstruct():
+    D = dense_D()
+    slim = SLIM().fit(D)
+    s = slim.reconstruct().map("".join)  # originally a string so we have to join
+    true_s = pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
+    pd.testing.assert_series_equal(s, true_s)
