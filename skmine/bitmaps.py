@@ -4,7 +4,6 @@ Bitmap definition for scikit-mine
 import platform
 
 from sortedcontainers import SortedSet
-from roaringbitmap import RoaringBitmap as _RB
 
 
 class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
@@ -39,4 +38,4 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
 if platform.system() == "Windows":
     Bitmap = BitmapMock
 else:
-    Bitmap = _RB
+    from roaringbitmap import RoaringBitmap as Bitmap  # pylint: disable= unused-import
