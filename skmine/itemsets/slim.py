@@ -17,44 +17,92 @@ from ..utils import _check_D
 from ..callbacks import mdl_prints
 
 
-def cover(itemsets: list, D: pd.DataFrame):
+def _log2(values):
+    res_index = values.index if isinstance(values, pd.Series) else None
+    res = np.zeros(len(values), dtype=np.float32)
+    res[values != 0] = np.log2(values[values != 0]).astype(np.float32)
+    return pd.Series(res, index=res_index)
+
+
+def cover(sct: SortedDict, itemsets: list):
     """
-    assert itemsets are sorted in Standard Cover Order
-    D must be a pandas DataFrame containing boolean values
+    cover a standard codetable sct given itemsets
+
+    Parameters
+    ----------
+    sct: SortedDict[object, Bitmap]
+        a standard codetable, i.e the vertical representation of a dataset
+    itemsets: list
+        itemsets from a given codetable
+
+    Notes
+    -----
+        sct is modified inplace
     """
-    covers = list()
-    mat = D.values
-
-    _itemsets = list(map(D.columns.get_indexer, itemsets))
-
-    for iset in _itemsets:
-        parents = (v for k, v in zip(_itemsets, covers) if not set(iset).isdisjoint(k))
-        rows_left = reduce(Bitmap.union, parents, Bitmap())
-        rows_left.flip_range(0, len(D))
-        _mat = mat[rows_left][:, iset]
-        bools = _mat.all(axis=1)
-        rows_where = np.where(bools)[0]
-        rows_where += min(rows_left, default=0)  # pad indexes
-        covers.append(Bitmap(rows_where))
-
-    return pd.Series(covers, index=itemsets)
-
-
-def cover_one(itemsets, cand):
-    """
-    assumes itemsets is already sorted in Standard Cover Order
-    """
-    cov = list()
-    stack = set()
+    covers = dict()
     for iset in itemsets:
-        if not iset.isdisjoint(stack):
-            continue
-        if iset.issubset(cand):
-            cov.append(iset)  # TODO add index instead of element for performance
-            stack |= iset
-        if len(stack) >= len(cand):
-            break
-    return cov
+        _iset = frozenset(iset & sct.keys())
+        if _iset != iset:
+            usage = Bitmap()
+        else:
+            it = [sct[i] for i in _iset]
+            usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
+        covers[iset] = usage
+        for k in _iset:
+            sct[k] -= usage
+    return covers
+
+
+def update_usages(sct, ct, candidate, delete=False):
+    """
+    Parameters
+    ----------
+    sct: SortedDict[frozenset, Bitmap]
+        a standard codetable, i.e the vertical representation of a dataset
+
+    ct: SortedDict[frozenset, Bitmap]
+        A codetable, sorted in Standard Candidate Order
+
+    candidate: object
+        candidate to consider for update
+
+    delete: bool, default=False
+        either to delete or add `candidate` in ct
+
+    Returns
+    -------
+    dict, dict
+        a tuple, first dict is containing the updated usage,
+        seconde dict contains decreased usages (for later pruning)
+    """
+    new_isets = list(ct.keys())
+
+    if delete:
+        new_isets.remove(candidate)
+    else:
+        cand_pos = ct.bisect(candidate)
+        new_isets.insert(cand_pos, candidate)
+
+    _sct = {k: tids.copy() for k, tids in sct.items()}
+    update_d = dict()
+    for iset in new_isets:
+        it = (_sct[i] for i in iset)
+        usage = reduce(Bitmap.intersection, it)
+        if iset == candidate:  # candidate should never be a singleton
+            update_d[iset] = usage
+        elif usage != ct[iset]:
+            usage = usage.copy()
+            update_d[iset] = usage
+        if usage:
+            for k in iset:
+                _sct[k] -= usage
+
+    # assert not _sct
+    decreased = {
+        k for k, v in update_d.items() if k != candidate and len(v) < len(ct[k])
+    }
+
+    return update_d, decreased
 
 
 def generate_candidates_big(codetable, stack=None):
@@ -109,50 +157,6 @@ def generate_candidates(codetable, stack=None):
         key=lambda e: e[1],
         reverse=True,
     )
-
-
-def _update_usages(codetable: SortedDict, cand: frozenset, cand_usage: Bitmap):
-    """
-    Given a codetable and a new candidate:
-
-    - iteratively consider every element in the codetable,
-      starting from insertion position in Standard Cover Order
-    - decrease usages when element is non disjoint with the candidate
-    - identify usages that will increase due to freed intermediate covering,
-      and increase them
-
-    We also output the set of itemsets for which usage decreased, for later pruning.
-
-    Notes
-    -----
-    In practice most usages will stay steady, but identifying those wich need to be
-    modified makes updating the codetable easier in case of acceptance.
-
-    On average this method is many orders of magnitude faster than covering the database
-    entirely every time we need to evaluate a candidate.
-    It's also very cheap in memory, as we only instantiate new Bitmaps for a restricted
-    part of the codetable : the part that would need an update
-    """
-    update_d = dict()
-    decreased = list()  # track decreasing non-singletons
-
-    cand_pos = codetable.bisect(cand)
-
-    for idx, iset in enumerate(codetable.islice(cand_pos, len(codetable))):
-        if not iset.isdisjoint(cand):
-            iset_tids = codetable[iset]
-            if not codetable[iset].isdisjoint(cand_usage):
-                update_d[iset] = iset_tids - cand_usage
-
-                if len(iset) > 1:
-                    decreased.append(iset)
-
-                    to_cov = iset - cand
-                    cov = cover_one(codetable.islice(idx + 1, len(codetable)), to_cov)
-                    for e in cov:
-                        update_d[e] = codetable[e].union(cand_usage)
-
-    return update_d, decreased
 
 
 class SLIM(BaseMiner, MDLOptimizer):
@@ -221,6 +225,152 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         mdl_prints(self)  # attach mdl_prints <-- output if self.verbose set
 
+    def fit(self, D, y=None):  # pylint:disable = too-many-locals
+        """fit SLIM on a transactional dataset
+
+        This generate new candidate patterns and add those which improve compression,
+        iteratibely refining ``self.codetable``
+
+        Parameters
+        -------
+        D: pd.DataFrame
+            Transactional dataset, encoded as tabular binary data
+        """
+        D = _check_D(D)
+        if y is not None:
+            D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
+
+        self._prefit(D)
+        n_iter_no_change = 0
+        seen_cands = set()
+
+        tol = self.tol or self.standard_codetable_.map(len).median()
+
+        while n_iter_no_change < self.n_iter_no_change:
+            candidates = self.generate_candidates(stack=seen_cands)
+            for cand, _ in candidates:
+                data_size, model_size, update_d, prune_set = self.evaluate(cand)
+                diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
+
+                if diff > 0.01:  # underflow
+                    self.codetable_.update(update_d)
+                    if self.pruning:
+                        self.codetable_, data_size, model_size = self._prune(
+                            self.codetable_, prune_set, model_size, data_size
+                        )
+
+                    self.data_size_ = data_size
+                    self.model_size_ = model_size
+
+                if diff < tol:
+                    n_iter_no_change += 1
+                    if self.verbose:
+                        print("n_iter_no_change : {}".format(n_iter_no_change))
+                    if n_iter_no_change > self.n_iter_no_change:
+                        break  # inner break
+
+            if not candidates:  # if empty candidate generation
+                n_iter_no_change += self.n_iter_no_change  # force while loop to break
+
+        return self
+
+    def decision_function(self, D):
+        """Compute covers on new data, and return code length
+
+        This function function is named ``decision_funciton`` because code lengths
+        represent the distance between a point and the current codetable.
+
+        Setting ``pruning`` to False when creating the model
+        is recommended to cover unseen data, and especially when building a classifier.
+
+        Example
+        -------
+        >>> from skmine.preprocessing import TransactionEncoder
+        >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+        >>> te = TransactionEncoder()
+        >>> D = te.fit_transform(D)
+        >>> new_D = te.transform([['cookies', 'butter']])
+        >>> slim = SLIM().fit(D)
+        >>> slim.decision_function(new_D)
+        0   -1.321928
+        dtype: float32
+        """
+        D = _check_D(D)
+        codetable = self.codetable  # this is a function call, beware
+        D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        covers = cover(D_sct, codetable.index)
+
+        mat = np.zeros(shape=(len(D), len(covers)))
+        for idx, tids in enumerate(covers.values()):
+            mat[tids, idx] = 1
+        mat = pd.DataFrame(mat, columns=covers.keys())
+
+        code_lengths = codetable.map(len)
+        ct_codes = code_lengths / code_lengths.sum()
+        codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
+        # positive sign on log2 to return negative distance : sklearn
+        return _log2(codes)
+
+    def generate_candidates(self, stack=None, thresh=1e3):
+        """
+        Generate candidates from the current codetable (SLIM is any-time)
+
+        Note that `stack` is updated during the execution of this method.
+
+        Parameters
+        ----------
+        stack: set[frozenset], default=None
+            a stack of already-seen candidates to be excluded
+        thresh: int, default=1_000
+            if the size of the current codetable is higher than `thresh`,
+            candidate are generated on-the-fly, and remain unsorted. If not,
+            they are returned in a list, sorted by decreasing order of estimated gain
+
+        Returns
+        -------
+        iterator[tuple(frozenset, Bitmap)]
+        """
+        ct = SortedDict(self._standard_candidate_order, self.codetable.items())
+        # if big number of elements in codetable, just take a generator, do not sort output
+        gen = generate_candidates if len(ct) < thresh else generate_candidates_big
+        return gen(ct, stack=stack)
+
+    def evaluate(self, candidate):
+        """
+        Evaluate ``candidate``, considering the current codetable and a dataset ``D``
+
+        Parameters
+        ----------
+        candidate: frozenset
+            a new candidate to be evaluated
+
+        Returns
+        -------
+        (float, float, dict, set)
+            updated (data size, model size, codetable)
+            and finally the set of itemsets for which usage decreased
+        """
+        update_d, decreased = update_usages(
+            self.standard_codetable_, self.codetable_, candidate
+        )
+
+        CTc = {**self.codetable_, **update_d}
+
+        data_size, model_size = self._compute_sizes(CTc)
+
+        return data_size, model_size, update_d, decreased
+
+    def reconstruct(self):
+        """reconstruct the original data from the current codetable"""
+        ct = self.codetable
+        n_transactions = ct.map(Bitmap.max).max() + 1
+
+        D = pd.Series([set()] * n_transactions)
+
+        for itemset, tids in ct.iteritems():
+            D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
+        return D.map(sorted)
+
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):
         """Get support from an itemset"""
@@ -245,7 +395,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
-        codes = -np.log2(usage / usage.sum())
+        codes = -_log2(usage / usage.sum())
 
         # L(code_ST(X)) = L(code_CT(X)), because CT=ST
         self.model_size_ = 2 * codes.sum()
@@ -254,141 +404,17 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         return self
 
-    def generate_candidates(self, stack=None):
-        ct = SortedDict(self._standard_candidate_order, self.codetable.items())
-        # if big number of elements in codetable, just take a generator, do not sort output
-        gen = generate_candidates if len(ct) < 1e3 else generate_candidates_big
-        return gen(ct, stack=stack)
-
-    def fit(self, D, y=None):  # pylint:disable = too-many-locals
-        """fit SLIM on a transactional dataset
-
-        This generate new candidate patterns and add those which improve compression,
-        iteratibely refining ``self.codetable``
-        """
-        D = _check_D(D)
-        if y is not None:
-            D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
-
-        self._prefit(D)
-        n_iter_no_change = 0
-        seen_cands = set()
-
-        tol = self.tol or self.standard_codetable_.map(len).median()
-
-        while n_iter_no_change < self.n_iter_no_change:
-            candidates = self.generate_candidates(stack=seen_cands)
-            for cand, _ in candidates:
-                data_size, model_size, update_d, prune_set = self.evaluate(cand)
-                diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-
-                if diff > 0.01:  # underflow
-                    self.codetable_.update(update_d)
-                    if self.pruning:
-                        self.codetable_, data_size, model_size = self._prune(
-                            self.codetable_, D, prune_set, model_size, data_size
-                        )
-
-                    self.data_size_ = data_size
-                    self.model_size_ = model_size
-
-                if diff < tol:
-                    n_iter_no_change += 1
-                    if self.verbose:
-                        print("n_iter_no_change : {}".format(n_iter_no_change))
-                    if n_iter_no_change > self.n_iter_no_change:
-                        break  # inner break
-
-            if not candidates:  # if empty candidate generation
-                n_iter_no_change += self.n_iter_no_change  # force while loop to break
-
-        return self
-
-    def decision_function(self, D):
-        """Compute covers on new data, and return code length
-
-        This function function is named ``decision_funciton`` because code lengths
-        represent the distance between a point and the current codetable, i.e
-        the probability for this point to belong to the codetable.
-
-        The lower the better
-
-        Setting ``pruning`` to False when creating the model
-        is recommended to cover unseen data, and especially when building a classifier.
-
-        Example
-        -------
-        >>> from skmine.preprocessing import TransactionEncoder
-        >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> te = TransactionEncoder()
-        >>> D = te.fit_transform(D)
-        >>> new_D = te.transform([['cookies', 'butter']])
-        >>> slim = SLIM(pruning=False).fit(D)
-        >>> slim.decision_function(new_D)
-        0   -0.321928
-        dtype: float32
-        """
-        D = _check_D(D)
-        covers = cover(self.codetable.index, D)
-        mat = np.zeros(shape=(len(D), len(covers)))
-        for idx, tids in enumerate(covers.values):
-            mat[tids, idx] = 1
-        mat = pd.DataFrame(mat, columns=covers.index)
-
-        ct_codes = self.codetable.map(len) / self.codetable.map(len).sum()
-        codes = (mat * ct_codes).sum(axis=1)
-        # positive sign on np.log2 to return negative distance : sklearn compat
-        return np.log2(codes.astype(np.float32))
-
-    def evaluate(self, candidate):
-        """
-        Evaluate ``candidate``, considering the current codetable and a dataset ``D``
-
-        Parameters
-        ----------
-        candidate: frozenset
-            a new candidate to be evaluated
-
-        Returns
-        -------
-        (float, float, dict, set)
-            updated (data size, model size, codetable)
-            and finally the set of itemsets for which usage decreased
-        """
-        ct = self.codetable_
-        cand_pos = ct.bisect(candidate)
-
-        # get original support from standard_codetable
-        cand_usage = reduce(
-            Bitmap.intersection, self.standard_codetable_.loc[candidate]
-        )
-        # remove union of all non disjoint itemsets before it to get real usage
-        cand_usage -= reduce(
-            Bitmap.union,
-            (ct[k] for k in ct.islice(0, cand_pos) if not k.isdisjoint(candidate)),
-            Bitmap(),
-        )
-
-        update_d, decreased = _update_usages(ct, candidate, cand_usage)
-
-        update_d[candidate] = cand_usage
-        CTc = {**ct, **update_d}
-
-        data_size, model_size = self.compute_sizes(CTc)
-
-        return data_size, model_size, update_d, decreased
-
-    def get_standard_codes(self, index):
+    def _get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
         flat_items = list(chain(*index))
         items, counts = np.unique(flat_items, return_counts=True)
 
         usages = self.standard_codetable_.loc[items].map(len).astype(np.uint32)
         usages /= usages.sum()
-        codes = -np.log2(usages)
+        codes = -_log2(usages)
         return codes * counts
 
-    def compute_sizes(self, codetable):
+    def _compute_sizes(self, codetable):
         """
         Compute sizes for both the data and the model
 
@@ -409,17 +435,15 @@ class SLIM(BaseMiner, MDLOptimizer):
             *((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0)
         )
         usages = np.array(usages, dtype=np.uint32)
-        codes = -np.log2(usages / usages.sum())
+        codes = -_log2(usages / usages.sum())
 
-        stand_codes = self.get_standard_codes(isets)
+        stand_codes = self._get_standard_codes(isets)
 
         model_size = stand_codes.sum() + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
         return data_size, model_size
 
-    def _prune(
-        self, codetable, D, prune_set, model_size, data_size
-    ):  # pylint: disable= too-many-arguments
+    def _prune(self, codetable, prune_set, model_size, data_size):
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
@@ -428,7 +452,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         D: pd.Series
         prune_set: pd.Series
             subset of ``codetable`` for which usage has decreased
-        models_size: float
+        model_size: float
             current model_size for ``codetable``
         data_size: float
             current data size when encoding ``D`` with ``codetable``
@@ -439,23 +463,24 @@ class SLIM(BaseMiner, MDLOptimizer):
             a tuple containing the pruned codetable, and new model size and data size
             w.r.t this new codetable
         """
-        prune_set = set(prune_set)
+        prune_set = {k for k in prune_set if len(k) > 1}  # remove singletons
         while prune_set:
             cand = min(prune_set, key=lambda e: len(codetable[e]))
             prune_set.discard(cand)
 
-            CTp_index = codetable.keys() - {cand}
-            CTp_index = sorted(CTp_index, key=codetable.bisect)  # FIXME
+            update_d, decreased = update_usages(
+                self.standard_codetable_, codetable, cand, delete=True
+            )
 
-            CTp = cover(CTp_index, D).to_dict()
+            CTp = {**codetable, **update_d}
+            del CTp[cand]
 
-            d_size, m_size = self.compute_sizes(CTp)
+            d_size, m_size = self._compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                CTp = SortedDict(self._standard_cover_order, CTp)
-                decreased = [k for k in CTp if len(CTp[k]) < len(codetable[k])]
+                codetable.update(update_d)
+                del codetable[cand]
                 prune_set.update(decreased)
-                codetable = CTp
                 data_size, model_size = d_size, m_size
 
         return codetable, data_size, model_size

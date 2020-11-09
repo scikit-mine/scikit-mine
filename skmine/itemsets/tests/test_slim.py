@@ -1,6 +1,8 @@
-from ..slim import cover
-from ..slim import generate_candidates
-from ..slim import SLIM
+from ..slim import (
+    SLIM,
+    cover,
+    generate_candidates,
+)
 from ...preprocessing.transaction_encoder import TransactionEncoder
 from ...bitmaps import Bitmap
 
@@ -22,52 +24,6 @@ def sparse_D():
     return D
 
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_1(D):
-    isets = [frozenset(_) for _ in ("ABC", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 2, 2, 0], index=isets),
-        covers.map(len),
-    )
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_2(D):
-    isets = [frozenset(_) for _ in ("ABC", "AB", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 1, 1, 1, 0], index=isets),
-        covers.map(len),
-    )
-
-
-def test_cover_3():
-    D = ["ABC"] * 5 + ["AB", "A", "B", "DE", "CDE"]
-    D = TransactionEncoder().fit_transform(D)
-
-    isets = [frozenset(_) for _ in ("ABC", "DE", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 2, 2, 2, 1], index=isets),
-        covers.map(len),
-    )
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_cover_4(D):
-    isets = [frozenset(_) for _ in ("BC", "AB", "A", "B", "C")]
-
-    covers = cover(isets, D)
-    pd.testing.assert_series_equal(
-        pd.Series([5, 1, 6, 1, 0], index=isets),
-        covers.map(len),
-    )
-
-
 def test_complex_evaluate():
     """
     A   B   C
@@ -86,8 +42,8 @@ def test_complex_evaluate():
         frozenset("AB"): {1},
         frozenset("BC"): {4},
         frozenset("DE"): {4, 5},
-        frozenset("A"): {2},
         frozenset("B"): {3},
+        frozenset("A"): {2},
         frozenset("C"): {2},
         frozenset("D"): {},
         frozenset("E"): {},
@@ -100,13 +56,55 @@ def test_complex_evaluate():
     cand = frozenset("CDE")
     data_size, model_size, updated, decreased = slim.evaluate(cand)
 
-    assert decreased == [frozenset("BC"), frozenset("DE")]
+    assert decreased == {frozenset("BC"), frozenset("DE")}
 
     assert len(updated) == 4
     assert len(updated[cand]) == 1  # {4}
     assert len(updated[frozenset("BC")]) == 0  # {4} -> {}
     assert len(updated[frozenset("B")]) == 2  # {3} -> {3, 4}
     assert len(updated[frozenset("DE")]) == 1  # {4, 5} -> {5}
+
+
+def test_complex_evaluate_2():
+    """
+    A   B   C
+    A   B
+    A       C
+        B
+        B   C   D   E
+    A   B   C   D   E
+    """
+    slim = SLIM()
+    D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
+    slim._prefit(TransactionEncoder().fit_transform(D))
+
+    u = {
+        frozenset("CDE"): {4, 5},
+        frozenset("AB"): {0, 1, 5},
+        frozenset("BC"): {},
+        frozenset("DE"): {},
+        frozenset("B"): {3, 4},
+        frozenset("A"): {2},
+        frozenset("C"): {0, 2},
+        frozenset("D"): {},
+        frozenset("E"): {},
+    }
+
+    u = {k: Bitmap(v) for k, v in u.items()}
+
+    slim.codetable_.update(u)
+
+    cand = frozenset("ABC")
+    data_size, model_size, updated, decreased = slim.evaluate(cand)
+
+    assert decreased == {frozenset("CDE"), frozenset("AB"), frozenset("C")}
+
+    assert len(updated) == 5
+    assert len(updated[cand]) == 2
+    assert len(updated[frozenset("CDE")]) == 1  # {4, 5} -> {4}
+    assert len(updated[frozenset("DE")]) == 1  # {} -> {5}
+    assert len(updated[frozenset("AB")]) == 1  # {0, 1, 5} -> {1}
+    assert len(updated[frozenset("C")]) == 1  # {0, 2} -> {2}
 
 
 def test_generate_candidate_1():
@@ -164,7 +162,7 @@ def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ["ABC", "AB", "A", "B"]
-    codes = slim.get_standard_codes(CT_index)
+    codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
         codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), check_less_precise=2
     )
@@ -175,7 +173,7 @@ def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT_index = ["ABC", "A", "B"]
-    codes = slim.get_standard_codes(CT_index)
+    codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
         codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), check_less_precise=2
     )
@@ -189,7 +187,7 @@ def test_get_support(D):
 
 
 @pytest.mark.parametrize("D", [dense_D()])
-def test_compute_sizes_1(D):
+def test__compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -199,13 +197,13 @@ def test_compute_sizes_1(D):
         frozenset("B"): Bitmap([7]),
     }
 
-    data_size, model_size = slim.compute_sizes(CT)
+    data_size, model_size = slim._compute_sizes(CT)
     np.testing.assert_almost_equal(data_size, 12.4, 2)
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
 
 @pytest.mark.parametrize("D", [dense_D()])
-def test_compute_sizes_2(D):
+def test__compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -215,7 +213,7 @@ def test_compute_sizes_2(D):
         frozenset("C"): Bitmap(),
     }
 
-    data_size, model_size = slim.compute_sizes(CT)
+    data_size, model_size = slim._compute_sizes(CT)
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
@@ -247,7 +245,7 @@ def test_prune(D):
     prune_set = [frozenset("AB")]
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
@@ -265,7 +263,7 @@ def test_prune_empty(D):
     # nothing to prune so we should get the exact same codetable
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, D, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
     assert list(new_codetable) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
@@ -287,10 +285,18 @@ def test_decision_function():
     )
 
 
-def test_fit_sklearn():
-    D = dense_D()
+@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
+def test_fit_sklearn(D):
     y = np.array([1] * len(D))
     slim = SLIM().fit(D, y)
     assert slim.standard_codetable_.index.tolist() == ["A", "B", "C"]
 
     slim = SLIM().fit(D.values, y)
+
+
+def test_reconstruct():
+    D = dense_D()
+    slim = SLIM().fit(D)
+    s = slim.reconstruct().map("".join)  # originally a string so we have to join
+    true_s = pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
+    pd.testing.assert_series_equal(s, true_s)
