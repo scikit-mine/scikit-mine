@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API demo &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Callback API demo</a><ul>
@@ -120,6 +120,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../HISTORY.html">History</a></li>
 </ul>
 
@@ -518,69 +519,69 @@ div.rendered_html tbody tr:hover {
   <tbody>
     <tr>
       <th>0</th>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>True</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>False</td>
-      <td>True</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
     </tr>
   </tbody>
 </table>
@@ -648,8 +649,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 2.02 s, sys: 11.1 ms, total: 2.03 s
-Wall time: 2.03 s
+CPU times: user 2.46 s, sys: 9.85 ms, total: 2.47 s
+Wall time: 2.47 s
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -680,32 +681,32 @@ Wall time: 2.03 s
   </thead>
   <tbody>
     <tr>
-      <th>(3, 67, 76, 18, 85, 86, 24, 90, 93, 30, 34, 37, 38, 107, 116, 52, 56, 59, 63)</th>
-      <td>[2210, 2482, 2540, 2860, 3026, 3162, 3270, 329...</td>
+      <th>(3, 10, 85, 86, 23, 90, 28, 93, 34, 99, 36, 39, 111, 116, 53, 56, 59, 63)</th>
+      <td>[917, 939, 1250, 1269, 1470, 1526, 1688, 1830,...</td>
     </tr>
     <tr>
-      <th>(3, 67, 76, 18, 85, 86, 24, 90, 93, 30, 34, 37, 38, 110, 52, 116, 56, 59, 63)</th>
-      <td>[2285, 2841, 3047, 3174, 3262, 3282, 3327, 337...</td>
+      <th>(3, 10, 85, 86, 23, 90, 28, 93, 98, 34, 36, 39, 111, 116, 53, 56, 59, 63)</th>
+      <td>[1229, 1545, 1600, 1808, 1838, 2021, 2039, 209...</td>
     </tr>
     <tr>
-      <th>(34, 67, 36, 58, 102, 66, 38, 76, 13, 110, 48, 116, 85, 86, 53, 24, 90, 59, 94)</th>
-      <td>[5105, 5432, 5989, 6104, 6137, 6247, 6514, 660...</td>
+      <th>(66, 3, 11, 16, 85, 86, 24, 90, 29, 34, 36, 101, 39, 110, 52, 117, 56, 61)</th>
+      <td>[2594, 2605, 2937, 3062, 3069, 3073, 3082, 316...</td>
     </tr>
     <tr>
-      <th>(35, 36, 90, 39, 88, 73, 9, 104, 13, 50, 83, 52, 85, 24, 58, 59, 28, 93, 63)</th>
-      <td>[6994, 6999, 7658, 7782, 7939, 7956, 8115, 8123]</td>
+      <th>(66, 3, 11, 16, 85, 86, 24, 90, 29, 34, 36, 101, 39, 110, 116, 52, 56, 61)</th>
+      <td>[2536, 2766, 2990, 3187, 3239, 3277, 3284, 332...</td>
     </tr>
     <tr>
-      <th>(67, 4, 76, 85, 86, 23, 91, 28, 93, 34, 36, 103, 39, 110, 115, 52, 56, 59, 63)</th>
-      <td>[4106, 4843, 4882, 5255, 5317, 5376, 5423, 552...</td>
+      <th>(6, 10, 85, 86, 23, 90, 28, 93, 34, 36, 39, 111, 116, 53, 56, 59, 63)</th>
+      <td>[2033, 2077, 2121, 2185, 2208, 2242, 2256, 228...</td>
     </tr>
     <tr>
       <th>...</th>
       <td>...</td>
     </tr>
     <tr>
-      <th>(62)</th>
-      <td>[6967, 6970, 6984, 7195, 7292, 7449, 7533, 757...</td>
+      <th>(49)</th>
+      <td>[5153, 5376, 5477, 5526, 5548, 5571, 5593, 560...</td>
     </tr>
     <tr>
       <th>(82)</th>
@@ -725,7 +726,7 @@ Wall time: 2.03 s
     </tr>
   </tbody>
 </table>
-<p>250 rows × 1 columns</p>
+<p>300 rows × 1 columns</p>
 </div></div>
 </div>
 </div>

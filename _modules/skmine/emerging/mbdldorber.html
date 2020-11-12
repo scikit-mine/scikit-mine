@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
@@ -190,7 +191,7 @@
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 
 <span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span>
-<span class="kn">from</span> <span class="nn">..preprocessing.lcm</span> <span class="kn">import</span> <span class="n">LCMMax</span>
+<span class="kn">from</span> <span class="nn">..itemsets.lcm</span> <span class="kn">import</span> <span class="n">LCMMax</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_growth_rate</span><span class="p">,</span> <span class="n">_check_min_supp</span><span class="p">,</span> <span class="n">filter_maximal</span><span class="p">,</span> <span class="n">filter_minimal</span>
 
 
@@ -219,7 +220,7 @@
 <span class="sd">    -----</span>
 <span class="sd">    See ``BORDER-DIFF`` in section 4.1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1">#assert len(R1) &lt; len(U)  # assert we iterate on the smallest ensemble</span>
+    <span class="c1"># assert len(R1) &lt; len(U)  # assert we iterate on the smallest ensemble</span>
     <span class="n">L2</span> <span class="o">=</span> <span class="p">[{</span><span class="n">x</span><span class="p">}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">U</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)):</span>
         <span class="n">_L2</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span> <span class="o">|</span> <span class="p">{</span><span class="n">x</span><span class="p">}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">U</span> <span class="o">-</span> <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="n">L2</span><span class="p">]</span>
@@ -243,7 +244,8 @@
     <span class="n">borders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">iset</span> <span class="ow">in</span> <span class="n">isets2</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">e</span> <span class="o">&gt;</span> <span class="n">iset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)):</span> <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">e</span> <span class="o">&gt;</span> <span class="n">iset</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)):</span>
+            <span class="k">continue</span>
         <span class="n">inter</span> <span class="o">=</span> <span class="p">(</span><span class="n">iset</span> <span class="o">&amp;</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">isets1</span><span class="p">)</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">filter_maximal</span><span class="p">(</span><span class="n">inter</span><span class="p">)</span>
 
@@ -251,6 +253,7 @@
         <span class="n">borders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">borders</span>
+
 
 <span class="k">def</span> <span class="nf">borders_to_patterns</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -325,7 +328,8 @@
 <span class="sd">        Guozhu Dong, Jinyan Li</span>
 <span class="sd">        &quot;Efficient Mining of Emerging Patterns : Discovering Trends and Differences&quot;, 1999</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_growth_rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_growth_rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="n">accept_absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">=</span> <span class="n">_check_growth_rate</span><span class="p">(</span><span class="n">min_growth_rate</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span> <span class="o">=</span> <span class="kc">None</span>
@@ -358,7 +362,9 @@
 
         <span class="c1"># TODO : replace LCMMax by some more efficient method</span>
         <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D1</span><span class="p">)</span>
-        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
+        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span>
+            <span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
 
         <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">right_border_d1</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">right_border_d2</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -382,10 +388,10 @@
 <span class="sd">            minimum size for an itemset to be valid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">btp</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">borders_to_patterns</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="n">min_size</span><span class="p">))</span>
-        <span class="n">series</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;processes&#39;</span><span class="p">)(</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
             <span class="n">btp</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span> <span class="k">for</span> <span class="n">L</span><span class="p">,</span> <span class="n">R</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="k">if</span> <span class="n">series</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="k">if</span> <span class="n">series</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;object&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

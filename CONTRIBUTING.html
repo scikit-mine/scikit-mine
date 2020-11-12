@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributing &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Contributing &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -122,6 +122,15 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#development-process">Development process</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#test-coverage">Test coverage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-a-benchmark">Writing a benchmark</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#testing-the-benchmarks-locally">Testing the benchmarks locally</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comparing-results-to-master">Comparing results to master</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 
@@ -215,7 +224,7 @@
 <div class="section" id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
 <p>Contributions are welcome, and greatly appreciated !
-You can contribute in many ways:</p>
+You can contribute in many ways</p>
 <div class="section" id="report-bugs">
 <h2>Report Bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h2>
 <p>Report bugs at <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/issues">https://github.com/scikit-mine/scikit-mine/issues</a>.</p>
@@ -257,6 +266,186 @@ Only algorithms belonging to this family of algorithms will be accepted.</p>
 </dl>
 <p>A technique that provides a clear improvement (enhanced datastructures, etc …) on a widely-used method will
 also be condidered for inclusion.</p>
+</div>
+<div class="section" id="development-process">
+<h1>Development process<a class="headerlink" href="#development-process" title="Permalink to this headline">¶</a></h1>
+<ol class="arabic">
+<li><p>If you are a first-time contributor:</p>
+<ul>
+<li><p>Go to <a class="reference external" href="https://github.com/scikit-mine/scikit-mine">https://github.com/scikit-mine/scikit-mine</a> and click the
+“fork” button to create your own copy of the project.</p></li>
+<li><p>Clone the project to your local computer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">scikit</span><span class="o">-</span><span class="n">mine</span><span class="o">/</span><span class="n">scikit</span><span class="o">-</span><span class="n">mine</span>
+</pre></div>
+</div>
+</li>
+<li><p>Change the directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">scikit</span><span class="o">-</span><span class="n">mine</span>
+</pre></div>
+</div>
+</li>
+<li><p>Add the official repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="n">official</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">scikit</span><span class="o">-</span><span class="n">mine</span><span class="o">/</span><span class="n">scikit</span><span class="o">-</span><span class="n">mine</span>
+</pre></div>
+</div>
+</li>
+<li><p>Now, you have remote repositories named:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">official</span></code>, which refers to the <code class="docutils literal notranslate"><span class="pre">scikit-mine</span></code> repository</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>, which refers to your personal fork</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Setup up developer tools</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>create a local environment, using pip or conda</p></li>
+<li><p>run <cite>pip install -r requirements.txt &amp;&amp; pip install -r dev_requirements.txt</cite></p></li>
+<li><p>make sure test are passing by running <cite>make coverage</cite></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Develop your contribution</p>
+<ul>
+<li><p>Pull the latest changes from official:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">master</span>
+<span class="n">git</span> <span class="n">pull</span> <span class="n">official</span> <span class="n">master</span>
+</pre></div>
+</div>
+</li>
+<li><p>Create a branch for the feature you want to work on. Since the
+branch name will appear in the merge message, use a sensible name
+such as ‘periodic-patterns-MDL-v0’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">periodic</span><span class="o">-</span><span class="n">patterns</span><span class="o">-</span><span class="n">MDL</span><span class="o">-</span><span class="n">V0</span>
+</pre></div>
+</div>
+</li>
+<li><p>Don’t forget to update the documentation by editing .rst files inside <cite>docs</cite>.
+and running <cite>make docs</cite> and opening <cite>docs/_build/html/index.html</cite> with your favourite browser</p></li>
+<li><p>Commit locally as you progress (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>)
+We trigger <a class="reference external" href="https://github.com/psf/black">black</a> automatically before any commit
+(see <cite>.pre-commit-config.yaml</cite>).</p></li>
+</ul>
+</li>
+<li><p>To submit your contribution:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Push your changes back to your fork on GitHub::
+<cite>git push origin periodic-patterns-MDL-V0</cite></p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>Go to GitHub. The new branch will show up with a green Pull Request
+button - click it.</p></li>
+<li><p>Explain your changes or to ask for review.</p></li>
+</ul>
+</li>
+</ol>
+<div class="section" id="test-coverage">
+<h2>Test coverage<a class="headerlink" href="#test-coverage" title="Permalink to this headline">¶</a></h2>
+<p>To measure the test coverage, install
+<a class="reference external" href="https://pytest-cov.readthedocs.io/en/latest/">pytest-cov</a>
+(using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pytest-cov</span></code>) and then run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make coverage
+</pre></div>
+</div>
+<p>This will print a report with one line for each file in <cite>skmine</cite>,
+detailing the test coverage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Name</span>                                          <span class="n">Stmts</span>   <span class="n">Miss</span> <span class="n">Branch</span> <span class="n">BrPart</span>  <span class="n">Cover</span>   <span class="n">Missing</span>
+<span class="o">-----------------------------------------------------------------------------------------</span>
+<span class="n">skmine</span><span class="o">/</span><span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>                                <span class="mi">4</span>      <span class="mi">0</span>      <span class="mi">0</span>      <span class="mi">0</span>   <span class="mi">100</span><span class="o">%</span>
+<span class="n">skmine</span><span class="o">/</span><span class="n">base</span><span class="o">.</span><span class="n">py</span>                                   <span class="mi">46</span>      <span class="mi">4</span>     <span class="mi">16</span>      <span class="mi">2</span>    <span class="mi">90</span><span class="o">%</span>   <span class="mi">154</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">202</span><span class="o">-&gt;</span><span class="mi">207</span><span class="p">,</span> <span class="mi">203</span><span class="o">-&gt;</span><span class="mi">206</span><span class="p">,</span> <span class="mi">206</span><span class="o">-</span><span class="mi">207</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-a-benchmark">
+<h2>Writing a benchmark<a class="headerlink" href="#writing-a-benchmark" title="Permalink to this headline">¶</a></h2>
+<p>While not mandatory for most pull requests, we ask that performance related
+PRs include a benchmark in order to clearly depict the use-case that is being
+optimized for.
+This section mainly refers to the
+<a class="reference external" href="https://asv.readthedocs.io/en/latest/writing_benchmarks.html">airpseed velocity documentation</a>.</p>
+<p>In this section we will review how to setup the benchmarks,
+and three commands <code class="docutils literal notranslate"><span class="pre">asv</span> <span class="pre">dev</span></code>, <code class="docutils literal notranslate"><span class="pre">asv</span> <span class="pre">run</span></code> and <code class="docutils literal notranslate"><span class="pre">asv</span> <span class="pre">continuous</span></code>.</p>
+<p>You should have installed asv when running <cite>pip install -r dev_requirements.txt</cite>.</p>
+<p>First of all you should run the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">asv</span> <span class="n">machine</span>
+</pre></div>
+</div>
+<p>To write  benchmark, add a python file in the <code class="docutils literal notranslate"><span class="pre">asv_bench</span></code> directory which contains a
+a class with one <code class="docutils literal notranslate"><span class="pre">setup</span></code> method and at least one method prefixed with <code class="docutils literal notranslate"><span class="pre">time_</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In scikit-mine we use <cite>asv</cite> in a broad manner, i.e not only to mesure
+time and memory consumption. <cite>asv</cite> let us profile custom indicator, which we use for MDL-based methods
+to track compression ratios and make sure we don’t hurt the quality of our compression schemes from one
+development to another.</p>
+</div>
+<p>Take for example the <code class="docutils literal notranslate"><span class="pre">slim</span></code> benchmark:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
+<span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
+
+<span class="k">class</span> <span class="nc">SLIMBench</span><span class="p">:</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">])</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;n_transactions&quot;</span><span class="p">,</span> <span class="s2">&quot;density&quot;</span><span class="p">]</span>
+    <span class="c1"># timeout = 20  # timeout for a single run, in seconds</span>
+    <span class="n">repeat</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">processes</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_transactions</span><span class="p">,</span> <span class="n">density</span><span class="p">):</span>
+        <span class="n">transactions</span> <span class="o">=</span> <span class="n">make_transactions</span><span class="p">(</span>
+            <span class="n">n_transactions</span><span class="o">=</span><span class="n">n_transactions</span><span class="p">,</span>
+            <span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transactions</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">transactions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">time_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transactions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">track_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slim</span><span class="o">.</span><span class="n">data_size_</span>
+</pre></div>
+</div>
+<div class="section" id="testing-the-benchmarks-locally">
+<h3>Testing the benchmarks locally<a class="headerlink" href="#testing-the-benchmarks-locally" title="Permalink to this headline">¶</a></h3>
+<p>Prior to running the true benchmark, it is often worthwhile to test that the
+code is free of typos. To do so, you may use the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">asv</span> <span class="n">dev</span> <span class="o">-</span><span class="n">b</span> <span class="n">slim</span>
+</pre></div>
+</div>
+<p>Where the <code class="docutils literal notranslate"><span class="pre">SLIM</span></code> above will be run once in your current environment
+to test that everything is in order.</p>
+</div>
+<div class="section" id="comparing-results-to-master">
+<h3>Comparing results to master<a class="headerlink" href="#comparing-results-to-master" title="Permalink to this headline">¶</a></h3>
+<p>Often, the goal of a PR is to compare the results of the modifications in terms
+speed to a snapshot of the code that is in the master branch of the
+<code class="docutils literal notranslate"><span class="pre">scikit-mine</span></code> repository. The command <code class="docutils literal notranslate"><span class="pre">asv</span> <span class="pre">continuous</span></code> is of help here:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$asv continuous master -b slim
+· Creating environments
+· Discovering benchmarks
+·· Uninstalling from conda-py3.6-pandas1.0.3
+·· Building f353431e &lt;v0.0.2&gt; for conda-py3.6-pandas1.0.3.
+·· Installing f353431e &lt;v0.0.2&gt; into conda-py3.6-pandas1.0.3
+· Running 6 total benchmarks (2 commits * 1 environments * 3 benchmarks)
+[  0.00%] · For scikit-mine commit f353431e &lt;v0.0.2&gt; (round 1/1):
+[  0.00%] ·· Benchmarking conda-py3.6-pandas1.0.3
+[ 16.67%] ··· slim.SLIMBench.time_fit                                                                                  ok
+[ 16.67%] ··· ================ ============= ============ ============= ============
+            --                                 density / pruning
+            ---------------- -----------------------------------------------------
+            n_transactions   0.4 / False   0.4 / True   0.6 / False   0.6 / True
+            ================ ============= ============ ============= ============
+                    20          329±0.03ms    619±3ms       371±2ms      1.21±0s
+            ================ ============= ============ ============= ============
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 

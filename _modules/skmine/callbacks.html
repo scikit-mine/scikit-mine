@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.callbacks &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.callbacks &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../HISTORY.html">History</a></li>
 </ul>
 
@@ -186,6 +187,7 @@
 
 <span class="kn">import</span> <span class="nn">re</span>
 
+
 <span class="k">def</span> <span class="nf">has_self_assigment</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
@@ -195,10 +197,11 @@
 <span class="sd">    check if no assignement is made on the ``self`` keyword</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;self(\.\w+)?\s*=.*&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;self(\.\w+)?\s*=.*&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">getsource</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
+
 
 <span class="k">def</span> <span class="nf">_get_params</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
     <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
@@ -209,16 +212,18 @@
         <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">params</span>
 
+
 <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_name</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;decorator, call callback on returned values, after main function&quot;&quot;&quot;</span>
     <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_name</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
     <span class="n">callback_params</span> <span class="o">=</span> <span class="n">_get_params</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;self&#39;</span> <span class="ow">in</span> <span class="n">callback_params</span><span class="p">:</span>
-            <span class="n">_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">callback_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">res</span>
-            <span class="n">args_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">_w</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">callback_params</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">())</span>
+        <span class="k">if</span> <span class="s2">&quot;self&quot;</span> <span class="ow">in</span> <span class="n">callback_params</span><span class="p">:</span>
+            <span class="n">_w</span> <span class="o">=</span> <span class="p">(</span><span class="n">res</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">callback_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">res</span>
+            <span class="n">args_</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="n">_w</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">callback_params</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">args_</span> <span class="o">=</span> <span class="n">res</span>
         <span class="k">try</span><span class="p">:</span>
@@ -226,6 +231,7 @@
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="n">callback</span><span class="p">(</span><span class="n">args_</span><span class="p">)</span>  <span class="c1"># list.extend</span>
         <span class="k">return</span> <span class="n">res</span>
+
     <span class="k">return</span> <span class="n">_</span>
 
 
@@ -250,12 +256,13 @@
 <span class="sd">    &gt;&gt;&gt; stack = list()</span>
 <span class="sd">    &gt;&gt;&gt; callbacks = CallBacks(f=stack.append)</span>
 <span class="sd">    &gt;&gt;&gt; a = A()</span>
-<span class="sd">    &gt;&gt;&gt; _ = callbacks(a)</span>
+<span class="sd">    &gt;&gt;&gt; callbacks(a)</span>
 <span class="sd">    &gt;&gt;&gt; a.f()</span>
 <span class="sd">    10</span>
 <span class="sd">    &gt;&gt;&gt; stack</span>
 <span class="sd">    [10]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">dict</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
@@ -266,7 +273,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;values must be callables, found </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">has_self_assigment</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>  <span class="c1"># TODO : only allow lambdas or builtins ?</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;callbacks should not modify `self` attributes&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;callbacks should not modify `self` attributes&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_frozen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> is immutable&quot;</span><span class="p">)</span>
@@ -275,7 +282,9 @@
     <span class="n">update</span> <span class="o">=</span> <span class="n">_frozen</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">miner</span><span class="p">):</span>
-        <span class="n">miner_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">f_name</span> <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">))]</span>
+        <span class="n">miner_methods</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">f_name</span> <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">))</span>
+        <span class="p">]</span>
         <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="n">miner_methods</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -290,28 +299,45 @@
 
 
 <span class="k">def</span> <span class="nf">_print_positive_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="o">.</span><span class="mi">01</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">)</span>
+            <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_print_candidates_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> new candidates considered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> new candidates considered&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
 
-<span class="n">mdl_prints</span> <span class="o">=</span> <span class="n">CallBacks</span><span class="p">(</span><span class="n">evaluate</span><span class="o">=</span><span class="n">_print_positive_gain</span><span class="p">,</span> <span class="n">generate_candidates</span><span class="o">=</span><span class="n">_print_candidates_size</span><span class="p">)</span>
+
+<span class="n">mdl_prints</span> <span class="o">=</span> <span class="n">CallBacks</span><span class="p">(</span>
+    <span class="n">evaluate</span><span class="o">=</span><span class="n">_print_positive_gain</span><span class="p">,</span> <span class="n">generate_candidates</span><span class="o">=</span><span class="n">_print_candidates_size</span>
+<span class="p">)</span>
 <span class="n">mdl_prints</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">Base callback for miners which inherit the :class:`skmine.base.MDLOptimizer`</span>
 
-<span class="s2">Prints data size and model size when compression has improved</span>
+<span class="s2">Prints data size and model size when compression has improved,</span>
+<span class="s2">only if ``verbose`` is set to True for the miner to attach.</span>
 
 <span class="s2">Examples</span>
 <span class="s2">--------</span>
-<span class="s2">&gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="s2">&gt;&gt;&gt; from skmine.callbacks import mdl_prints</span>
-<span class="s2">&gt;&gt;&gt; slim = SLIM(callbacks=mdl_prints)</span>
-<span class="s2">&gt;&gt;&gt; slim.fit(D)</span>
+<span class="s2">&gt;&gt;&gt; from skmine.base import MDLOptimizer</span>
+<span class="s2">&gt;&gt;&gt; class MyMDLMiner(MDLOptimizer):</span>
+<span class="s2">&gt;&gt;&gt;    def __init__(self):</span>
+<span class="s2">...        self.codetable_ = dict()</span>
+<span class="s2">...        self.verbose = True</span>
+<span class="s2">...    def generate_candidates(self):</span>
+<span class="s2">...        return [(2,), (2, 3), (2, 4)]</span>
+<span class="s2">...    def evaluate(self): pass</span>
+
+<span class="s2">&gt;&gt;&gt; miner = MyMDLMiner()</span>
+<span class="s2">&gt;&gt;&gt; mdl_prints(miner)</span>
+<span class="s2">&gt;&gt;&gt; miner.generate_candidates()</span>
+<span class="s2">3 new candidates considered</span>
+<span class="s2">[(2,), (2, 3), (2, 4)]</span>
 <span class="s2">&quot;&quot;&quot;</span>
 </pre></div>
 

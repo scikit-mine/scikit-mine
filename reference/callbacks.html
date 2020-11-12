@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Callback API &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
 </ul>
 
@@ -234,7 +235,7 @@ or function results</strong>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stack</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">CallBacks</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">callbacks</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">callbacks</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
 <span class="go">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stack</span>
@@ -247,12 +248,25 @@ or function results</strong>.</p>
 <dt id="skmine.callbacks.mdl_prints">
 <code class="sig-prename descclassname">skmine.callbacks.</code><code class="sig-name descname">mdl_prints</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">miner</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.callbacks.mdl_prints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base callback for miners which inherit the <a class="reference internal" href="base.html#skmine.base.MDLOptimizer" title="skmine.base.MDLOptimizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">skmine.base.MDLOptimizer</span></code></a></p>
-<p>Prints data size and model size when compression has improved</p>
+<p>Prints data size and model size when compression has improved,
+only if <code class="docutils literal notranslate"><span class="pre">verbose</span></code> is set to True for the miner to attach.</p>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.callbacks</span> <span class="kn">import</span> <span class="n">mdl_prints</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">callbacks</span><span class="o">=</span><span class="n">mdl_prints</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.callbacks</span> <span class="kn">import</span> <span class="n">mdl_prints</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.base</span> <span class="kn">import</span> <span class="n">MDLOptimizer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyMDLMiner</span><span class="p">(</span><span class="n">MDLOptimizer</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">miner</span> <span class="o">=</span> <span class="n">MyMDLMiner</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mdl_prints</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">miner</span><span class="o">.</span><span class="n">generate_candidates</span><span class="p">()</span>
+<span class="go">3 new candidates considered</span>
+<span class="go">[(2,), (2, 3), (2, 4)]</span>
 </pre></div>
 </div>
 </dd></dl>

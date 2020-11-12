@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.preprocessing.transaction_encoder &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.preprocessing.transaction_encoder &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
@@ -201,7 +202,7 @@
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">codetable</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TransactionEncoder"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.TransactionEncoder">[docs]</a><span class="k">class</span> <span class="nc">TransactionEncoder</span><span class="p">():</span>
+<div class="viewcode-block" id="TransactionEncoder"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.TransactionEncoder">[docs]</a><span class="k">class</span> <span class="nc">TransactionEncoder</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;`TransactionEncoder` acts like `sklearn&#39;s MultiLabelBinarizer</span>
 <span class="sd">    &lt;https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer&gt;`_,</span>
 <span class="sd">    but differs in many ways:</span>
@@ -217,13 +218,18 @@
 <span class="sd">    sparse_output: bool</span>
 <span class="sd">        True if a sparse output is to be produced.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparse_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sparse_output</span> <span class="o">=</span> <span class="n">sparse_output</span>
 
-    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span> <span class="c1"># pylint: disable=missing-function-docstring</span>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>  <span class="c1"># pylint: disable=missing-function-docstring</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;D should be a list of list, or at least an iterator of iterator&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;D should be a list of list, or at least an iterator of iterator&quot;</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="n">partial_fit</span> <span class="o">=</span> <span class="n">fit</span>
 
 <div class="viewcode-block" id="TransactionEncoder.transform"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.TransactionEncoder.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply transformation on the transactional input</span>
@@ -244,7 +250,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; from skmine.preprocessing import TransactionEncoder</span>
 <span class="sd">        &gt;&gt;&gt; transactions = [[&#39;banana&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;cookies&#39;, &#39;banana&#39;]]</span>
-<span class="sd">        &gt;&gt;&gt; te = TransactionEncoder()</span>
+<span class="sd">        &gt;&gt;&gt; te = TransactionEncoder(sparse_output=False)</span>
 <span class="sd">        &gt;&gt;&gt; te.fit_transform(transactions)</span>
 <span class="sd">           banana  cookies  milk</span>
 <span class="sd">        0    True    False  True</span>
@@ -268,7 +274,6 @@
         <span class="k">for</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cols</span><span class="p">):</span>
             <span class="n">tids</span> <span class="o">=</span> <span class="n">vert</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
             <span class="n">mat</span><span class="p">[</span><span class="n">tids</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sparse_output</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">from_spmatrix</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>

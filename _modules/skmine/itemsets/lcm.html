@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
@@ -26,16 +31,12 @@
         <script src="../../../_static/doctools.js"></script>
         <script src="../../../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -77,6 +78,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -84,27 +86,42 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation &amp; API</span></p>
+              <p class="caption"><span class="caption-text">Installation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
 <p class="caption"><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -143,7 +160,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -172,28 +189,28 @@
 <span class="c1"># License: BSD 3 clause</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span>
-<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">delayed</span>
-<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedDict</span>
 
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_min_supp</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">filter_maximal</span>
+<span class="kn">from</span> <span class="nn">..bitmaps</span> <span class="kn">import</span> <span class="n">Bitmap</span>
 
-<span class="k">def</span> <span class="nf">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">min_supp</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Minimum support must be strictly positive&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">min_supp</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">min_supp</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Minimum support must be between 0 and 1&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Mimimum support must be of type int or float&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">min_supp</span>
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span>
 
-<div class="viewcode-block" id="LCM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM">[docs]</a><span class="k">class</span> <span class="nc">LCM</span><span class="p">():</span>
+
+<div class="viewcode-block" id="LCM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM">[docs]</a><span class="k">class</span> <span class="nc">LCM</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Linear time Closed item set Miner.</span>
+
+<span class="sd">    LCM can be used as a generic purpose miner, yielding some patterns</span>
+<span class="sd">    that will be later submitted to a custom acceptance criterion.</span>
+
+<span class="sd">    It can also be used to simply discover the set of closed itemsets from</span>
+<span class="sd">    a transactional dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -233,39 +250,42 @@
 <span class="sd">    4  (21, 58)    2224</span>
 <span class="sd">    &gt;&gt;&gt; patterns[patterns.itemset.map(len) &gt; 3]  # doctest: +SKIP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">min_supp</span>  <span class="c1"># provided by user</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions_</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ctr</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
-    <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
-        <span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">RoaringBitmap</span><span class="p">)</span>
+<div class="viewcode-block" id="LCM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        fit LCM on the transactional database, by keeping records of singular items</span>
+<span class="sd">        and their transaction ids.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions_</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># reset for safety</span>
+        <span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Bitmap</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">D</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">transaction</span><span class="p">:</span>
-                <span class="n">item_to_tids</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">item_to_tids</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_transactions_</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions_</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
             <span class="c1"># make support absolute if needed</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_transactions_</span>
 
         <span class="n">low_supp_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">low_supp_items</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">item_to_tids</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="n">item_to_tids</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="n">item_to_tids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="LCM.fit_discover"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.fit_discover">[docs]</a>    <span class="k">def</span> <span class="nf">fit_discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;fit LCM on the transactional database, and return the set of</span>
-<span class="sd">        closed itemsets in this database, with respect to the minium support</span>
-
-<span class="sd">        Different from ``fit_transform``, see the `Returns` section below.</span>
+<div class="viewcode-block" id="LCM.discover"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the set of closed itemsets, with respect to the minium support</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -280,116 +300,148 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        pd.DataFrame:</span>
+<span class="sd">        pd.DataFrame</span>
 <span class="sd">            DataFrame with the following columns</span>
 <span class="sd">                ==========  =================================</span>
-<span class="sd">                itemset     a `frozenset` of co-occured items</span>
+<span class="sd">                itemset     a `tuple` of co-occured items</span>
 <span class="sd">                support     frequence for this itemset</span>
 <span class="sd">                ==========  =================================</span>
 
+<span class="sd">            if `return_tids=True` then</span>
+<span class="sd">                ==========  =================================</span>
+<span class="sd">                itemset     a `tuple` of co-occured items</span>
+<span class="sd">                tids        a bitmap tracking positions</span>
+<span class="sd">                ==========  =================================</span>
+
 <span class="sd">        Example</span>
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; from skmine.itemsets import LCM</span>
 <span class="sd">        &gt;&gt;&gt; D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]</span>
-<span class="sd">        &gt;&gt;&gt; lcm = LCM(min_supp=2)</span>
-<span class="sd">        &gt;&gt;&gt; lcm.fit_discover(D)</span>
+<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_discover(D)</span>
 <span class="sd">             itemset  support</span>
 <span class="sd">        0     (2, 5)        3</span>
 <span class="sd">        1  (2, 3, 5)        2</span>
+<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_discover(D, return_tids=True)  # doctest: +SKIP</span>
+<span class="sd">             itemset       tids</span>
+<span class="sd">        0     (2, 5)  [0, 1, 2]</span>
+<span class="sd">        1  (2, 3, 5)     [0, 1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-
-        <span class="n">empty_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;itemset&#39;</span><span class="p">,</span> <span class="s1">&#39;tids&#39;</span><span class="p">])</span>
+        <span class="n">empty_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">])</span>
 
         <span class="c1"># reverse order of support</span>
-        <span class="n">supp_sorted_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">supp_sorted_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
 
-        <span class="n">dfs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;processes&#39;</span><span class="p">)(</span>
+        <span class="n">dfs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
             <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_explore_item</span><span class="p">)(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="n">supp_sorted_items</span>
         <span class="p">)</span>
 
-        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_df</span><span class="p">)</span> <span class="c1"># make sure we have something to concat</span>
+        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_df</span><span class="p">)</span>  <span class="c1"># make sure we have something to concat</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">return_tids</span><span class="p">:</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;support&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;tids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;tids&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;tids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;tids&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">df</span></div>
-
-<div class="viewcode-block" id="LCM.fit_transform"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.fit_transform">[docs]</a>    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;fit LCM on the transactional database, and encode the frequencies</span>
-<span class="sd">        of the resulting patterns in a tabular format.</span>
-
-<span class="sd">        This makes LCM a possible preprocessing step, compatible with ``scikit-learn``</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        Cells in the result will contain frequencies of patterns. Note that this process</span>
-<span class="sd">        is somehow similar to Term-Frequency encoding, but operates on co-occuring terms</span>
-<span class="sd">        instead of singular terms.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        D : pd.Series or Iterable</span>
-<span class="sd">            The input transactional database. Items must be both hashable and comparable</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pd.DataFrame</span>
-<span class="sd">            A DataFrame with itemsets as columns, and transactions as rows</span>
-
-<span class="sd">        Example</span>
-<span class="sd">        -------</span>
-<span class="sd">        &gt;&gt;&gt; from skmine.itemsets import LCM</span>
-<span class="sd">        &gt;&gt;&gt; D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]</span>
-<span class="sd">        &gt;&gt;&gt; lcm = LCM(min_supp=2)</span>
-<span class="sd">        &gt;&gt;&gt; lcm.fit_transform(D)                # doctest: +SKIP</span>
-<span class="sd">            2  3  5  # columns are single items w.r.t to the minium support</span>
-<span class="sd">        0   2  2  2  # (2, 3, 5) has length 3 but support of 2</span>
-<span class="sd">        1   2  2  2  # (2, 3, 5) has length 3 but support of 2</span>
-<span class="sd">        2   3  0  3  # (2, 5) has length 2 but support of 3</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">patterns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">tid_s</span> <span class="o">=</span> <span class="n">patterns</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;itemset&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">tids</span>
-        <span class="n">by_supp</span> <span class="o">=</span> <span class="n">tid_s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">patterns</span> <span class="o">=</span> <span class="n">tid_s</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">by_supp</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-
-        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_transactions</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">))</span>
-        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
-
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="n">tid_s</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">tids</span><span class="p">,</span> <span class="n">pattern</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span>  <span class="c1"># fill with support</span>
-        <span class="k">return</span> <span class="n">df</span></div>
-
 
     <span class="k">def</span> <span class="nf">_explore_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">):</span>
         <span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(),</span> <span class="n">tids</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">it</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;itemset&#39;</span><span class="p">,</span> <span class="s1">&#39;tids&#39;</span><span class="p">])</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">it</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;LCM found </span><span class="si">{}</span><span class="s1"> new itemsets from item : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">item</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;LCM found </span><span class="si">{}</span><span class="s2"> new itemsets from item : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">item</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
         <span class="c1"># project and reduce DB w.r.t P</span>
         <span class="n">cp</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">item</span> <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span>
+            <span class="n">item</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span>
         <span class="p">)</span>
 
-        <span class="n">max_k</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">cp</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># items are in reverse order, so the first consumed is the max</span>
+        <span class="n">max_k</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="n">cp</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">)</span>  <span class="c1"># items are in reverse order, so the first consumed is the max</span>
 
         <span class="k">if</span> <span class="n">max_k</span> <span class="ow">and</span> <span class="n">max_k</span> <span class="o">==</span> <span class="n">limit</span><span class="p">:</span>
-            <span class="n">p_prime</span> <span class="o">=</span> <span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">}</span>  <span class="c1"># max_k has been consumed when calling next()</span>
+            <span class="n">p_prime</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">}</span>
+            <span class="p">)</span>  <span class="c1"># max_k has been consumed when calling next()</span>
             <span class="c1"># sorted items in ouput for better reproducibility</span>
             <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p_prime</span><span class="p">)),</span> <span class="n">tids</span>
 
-            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
-            <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span><span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
             <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
-                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
                     <span class="n">new_limit_tids</span> <span class="o">=</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
                     <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">new_limit_tids</span><span class="p">,</span> <span class="n">new_limit</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">LCMMax</span><span class="p">(</span><span class="n">LCM</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Linear time Closed item set Miner.</span>
+
+<span class="sd">    Adapted to Maximal itemsets (or borders).</span>
+<span class="sd">    A maximal itemset is an itemset with no frequent superset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_supp: int or float, default=0.2</span>
+<span class="sd">        The minimum support for itemsets to be rendered in the output</span>
+<span class="sd">        Either an int representing the absolute support, or a float for relative support</span>
+
+<span class="sd">        Default to 0.2 (20%)</span>
+<span class="sd">    n_jobs : int, default=1</span>
+<span class="sd">        The number of jobs to use for the computation. Each single item is attributed a job</span>
+<span class="sd">        to discover potential itemsets, considering this item as a root in the search space.</span>
+<span class="sd">        Processes are preffered over threads.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    LCM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+        <span class="c1"># project and reduce DB w.r.t P</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">item</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span>
+        <span class="p">)</span>
+
+        <span class="n">max_k</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="n">cp</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">)</span>  <span class="c1"># items are in reverse order, so the first consumed is the max</span>
+
+        <span class="k">if</span> <span class="n">max_k</span> <span class="ow">and</span> <span class="n">max_k</span> <span class="o">==</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">p_prime</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">}</span>
+            <span class="p">)</span>  <span class="c1"># max_k has been consumed when calling next()</span>
+
+            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
+
+            <span class="n">no_cand</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
+                    <span class="n">no_cand</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">new_limit_tids</span> <span class="o">=</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+                    <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">new_limit_tids</span><span class="p">,</span> <span class="n">new_limit</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">no_cand</span>
+            <span class="p">):</span>  <span class="c1"># only if no child node. This is how we PRE-check for maximality</span>
+                <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p_prime</span><span class="p">)),</span> <span class="n">tids</span>
+
+    <span class="k">def</span> <span class="nf">fit_discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">patterns</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="n">return_tids</span><span class="p">)</span>
+        <span class="n">maximums</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">filter_maximal</span><span class="p">(</span><span class="n">patterns</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">])]</span>
+        <span class="k">return</span> <span class="n">patterns</span><span class="p">[</span><span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">maximums</span><span class="p">)]</span>
 </pre></div>
 
            </div>
@@ -402,11 +454,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Rémi Adon
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -417,7 +477,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

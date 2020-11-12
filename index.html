@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -105,7 +105,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 
@@ -209,7 +210,7 @@
 <h1>Welcome to scikit-mine’s documentation!<a class="headerlink" href="#welcome-to-scikit-mine-s-documentation" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://badge.fury.io/py/scikit-mine"><img alt="https://badge.fury.io/py/scikit-mine.svg" src="https://badge.fury.io/py/scikit-mine.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/remiadon/scikit-mine"><img alt="https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg" src="https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg" /></a>
-<a class="reference external image-reference" href="https://asv.readthedocs.io/en/stable"><img alt="http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]" src="http://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)]" /></a>
+<a class="reference external image-reference" href="https://www.inria.fr/en"><img alt="https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&amp;colorA=384257&amp;colorB=E23324" src="https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&amp;colorA=384257&amp;colorB=E23324" /></a>
 <p>Scikit-mine : pattern mining in Python</p>
 <ul class="simple">
 <li><p><strong>Descriptive analysis</strong>, leading to <strong>interpretable</strong>, concise descriptions using the <a class="reference external" href="https://en.wikipedia.org/wiki/Minimum_description_length">Minimum Description Length Principle</a></p></li>
@@ -234,14 +235,15 @@ Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.</p>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>scikit-mine requires Python&gt;=3.6,
-and some extra dependencies:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scipy</span><span class="o">&gt;=</span><span class="mf">1.2</span><span class="o">.</span><span class="mi">1</span>
-<span class="n">pandas</span><span class="o">&gt;=</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span><span class="o">!=</span><span class="mf">1.1</span><span class="o">.</span><span class="mi">0</span>
-<span class="n">roaringbitmap</span><span class="o">==</span><span class="mf">0.7</span>
-<span class="n">joblib</span><span class="o">&gt;=</span><span class="mf">0.11</span><span class="o">.</span><span class="mi">1</span>
-<span class="n">sortedcontainers</span><span class="o">&gt;=</span><span class="mf">2.1</span><span class="o">.</span><span class="mi">0</span>
-</pre></div>
-</div>
+and some extra dependencies</p>
+<ul class="simple">
+<li><p>scipy&gt;=1.2.1</p></li>
+<li><p>pandas&gt;=1.0.0</p></li>
+<li><p>sortedcontainers&gt;=2.1.0</p></li>
+<li><p>roaringbitmap==0.7</p></li>
+<li><p>joblib&gt;=0.11.1</p></li>
+</ul>
+<p><strong>scikit-learn</strong> is not a dependency. However, scikit-mine is <strong>contiuously tested for interactions with scikit-learn</strong></p>
 </div>
 <div class="section" id="development">
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
@@ -277,11 +279,11 @@ and some extra dependencies:</p>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/preprocessing.html#transactionencoder">TransactionEncoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/preprocessing.html#mdlpdiscretizer">MDLPDiscretizer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/preprocessing.html#lcm">LCM</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/itemsets.html#slim">SLIM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/itemsets.html#lcm">LCM</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a><ul>
@@ -305,10 +307,9 @@ and some extra dependencies:</p>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html#Now-let’s-generate-associated-labels,-for-multiclass-classification">Now let’s generate associated labels, for multiclass classification</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html#load-the-chess-dataset">load the chess dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html#fit_discover()">fit_discover()</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html#fit_transform()">fit_transform()</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -331,6 +332,7 @@ and some extra dependencies:</p>
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 </div>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets._samples_generator &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.datasets._samples_generator &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
@@ -187,11 +188,10 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<div class="viewcode-block" id="make_transactions"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_transactions">[docs]</a><span class="k">def</span> <span class="nf">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                      <span class="n">n_items</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                      <span class="n">density</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span>
-                      <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">item_start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+<div class="viewcode-block" id="make_transactions"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_transactions">[docs]</a><span class="k">def</span> <span class="nf">make_transactions</span><span class="p">(</span>
+    <span class="n">n_transactions</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">item_start</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a transactional dataset with predefined properties</span>
 
@@ -240,8 +240,8 @@
 <span class="sd">    pd.Series: a Series of shape (``n_transactions``,)</span>
 <span class="sd">        Earch entry is a list of integer values</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="o">.</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">density</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;density should be a float value between 0 and 1&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">density</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;density should be a float value between 0 and 1&quot;</span><span class="p">)</span>
 
     <span class="n">avg_transaction_size</span> <span class="o">=</span> <span class="n">density</span> <span class="o">*</span> <span class="n">n_items</span>
 
@@ -251,8 +251,8 @@
     <span class="n">choices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">item_start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">item_stop</span><span class="p">)</span>
     <span class="n">t_sizes</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span>
         <span class="n">n</span><span class="o">=</span><span class="n">avg_transaction_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="n">p</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># centered around avg_transaction_size</span>
-        <span class="n">size</span><span class="o">=</span><span class="n">n_transactions</span>
+        <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># centered around avg_transaction_size</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">n_transactions</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">max_size</span> <span class="o">=</span> <span class="n">t_sizes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">max_size</span> <span class="o">&gt;</span> <span class="n">n_items</span><span class="p">:</span>
@@ -262,9 +262,18 @@
     <span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="n">generator</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">t_sizes</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">D</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="make_classification"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_classification">[docs]</a><span class="k">def</span> <span class="nf">make_classification</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_items_per_class</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>  <span class="c1"># pylint: disable= too-many-locals</span>
-                        <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_sep</span><span class="o">=.</span><span class="mi">2</span><span class="p">,</span>
-                        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">densities</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="make_classification"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.make_classification">[docs]</a><span class="k">def</span> <span class="nf">make_classification</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">n_items_per_class</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>  <span class="c1"># pylint: disable= too-many-locals</span>
+    <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_sep</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">densities</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a random n-class classification problem</span>
 
@@ -312,7 +321,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">n_classes</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">densities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">densities</span> <span class="o">=</span> <span class="p">[</span><span class="o">.</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_classes</span>
+        <span class="n">densities</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_classes</span>
 
     <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n_classes</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_classes</span>  <span class="c1"># balanced by default</span>
@@ -341,8 +350,8 @@
 
     <span class="n">dfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">_class</span><span class="p">,</span> <span class="n">transactions</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">transactions</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;transaction&#39;</span><span class="p">)</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_class</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">transactions</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;transaction&quot;</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_class</span>
         <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -350,7 +359,7 @@
     <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;transaction&#39;</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;transaction&quot;</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span></div>
 </pre></div>
 
            </div>

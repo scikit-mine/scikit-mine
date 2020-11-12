@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
@@ -227,7 +228,7 @@
         <span class="n">first_half_ent</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">idx</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">first_half_ent</span> <span class="o">*=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span>
 
-        <span class="n">second_half_ent</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span> <span class="n">end</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">second_half_ent</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">:</span><span class="n">end</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">second_half_ent</span> <span class="o">*=</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">idx</span><span class="p">)</span> <span class="o">/</span> <span class="n">length</span>
 
         <span class="n">new_ent</span> <span class="o">=</span> <span class="n">first_half_ent</span> <span class="o">+</span> <span class="n">second_half_ent</span>
@@ -247,6 +248,7 @@
 <span class="sd">    This class operates at a column level, i.e it finds the best cut points for a given feature</span>
 <span class="sd">    to fit a the corresponding labels</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_depth_</span> <span class="o">=</span> <span class="n">min_depth</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">entropy_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
@@ -259,14 +261,16 @@
 <span class="sd">        Evaluate vector y of size ``end`` - ``start``,</span>
 <span class="sd">        given a ``cutpoint``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">entropy1</span><span class="p">,</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">cut_point</span><span class="p">])</span>
-        <span class="n">entropy2</span><span class="p">,</span> <span class="n">k2</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">cut_point</span><span class="p">:</span> <span class="n">end</span><span class="p">])</span>
-        <span class="n">whole_entropy</span><span class="p">,</span> <span class="n">k0</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">end</span><span class="p">])</span>
+        <span class="n">entropy1</span><span class="p">,</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">cut_point</span><span class="p">])</span>
+        <span class="n">entropy2</span><span class="p">,</span> <span class="n">k2</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">cut_point</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+        <span class="n">whole_entropy</span><span class="p">,</span> <span class="n">k0</span> <span class="o">=</span> <span class="n">get_entropy_nb_ones</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
 
         <span class="n">N</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
 
         <span class="n">part1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="p">((</span><span class="n">cut_point</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="n">entropy1</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">cut_point</span><span class="p">)</span> <span class="o">*</span> <span class="n">entropy2</span><span class="p">)</span>
-        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">k0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">k0</span> <span class="o">*</span> <span class="n">whole_entropy</span> <span class="o">-</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">entropy1</span> <span class="o">-</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">entropy2</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">k0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span>
+            <span class="n">k0</span> <span class="o">*</span> <span class="n">whole_entropy</span> <span class="o">-</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">entropy1</span> <span class="o">-</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">entropy2</span>
+        <span class="p">)</span>
 
         <span class="n">gain</span> <span class="o">=</span> <span class="n">whole_entropy</span> <span class="o">-</span> <span class="n">part1</span>
 
@@ -357,6 +361,7 @@
 <span class="sd">    {0: array([5.5, 6.2]), 1: array([2.9, 3.3]), 2: array([2.45, 4.9 ]), 3: array([0.8, 1.7])}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">_check_random_state</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
@@ -364,7 +369,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">discretizers_</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="MDLPDiscretizer.fit"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.</span>
+        <span class="sd">&quot;&quot;&quot;fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -383,7 +388,7 @@
 
         <span class="n">n_cols</span> <span class="o">=</span> <span class="n">_X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="n">discs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;processes&#39;</span><span class="p">)(</span>
+        <span class="n">discs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
             <span class="n">delayed</span><span class="p">(</span><span class="n">MDLPVectDiscretizer</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">)(</span><span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span>
         <span class="p">)</span>
 
@@ -402,16 +407,16 @@
         <span class="sd">&quot;&quot;&quot;user-friendly view on cut points&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MDLPDiscretizer.transform"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="c1">#pylint: disable=unused-argument</span>
+<div class="viewcode-block" id="MDLPDiscretizer.transform"><a class="viewcode-back" href="../../../reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
         <span class="sd">&quot;&quot;&quot;Discretizes the input matrix X</span>
 
 <span class="sd">        This applies the cutpoints their respective columns</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;X columns should be </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;X columns should be </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">_X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
 
-        <span class="n">vects</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s1">&#39;threads&#39;</span><span class="p">)(</span>
+        <span class="n">vects</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;threads&quot;</span><span class="p">)(</span>
             <span class="n">delayed</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">)(</span><span class="n">cut_points</span><span class="p">,</span> <span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">cut_points</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
         <span class="p">)</span>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets.fimi &mdash; scikit-mine 0.0.1 documentation</title>
+  <title>skmine.datasets.fimi &mdash; scikit-mine 0.0.3 documentation</title>
   
 
   
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">LCM as a preprocessing step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html#development-process">Development process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../HISTORY.html">History</a></li>
 </ul>
 
@@ -190,11 +191,13 @@
 <span class="kn">from</span> <span class="nn">.conf</span> <span class="kn">import</span> <span class="n">urlopen</span>
 <span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">get_data_home</span>
 
-<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s1">&#39;http://fimi.uantwerpen.be/data/&#39;</span>
+<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;http://fimi.uantwerpen.be/data/&quot;</span>
+
 
 <span class="k">def</span> <span class="nf">_preprocess</span><span class="p">(</span><span class="n">transaction</span><span class="p">):</span>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">transaction</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="fetch_any"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_any">[docs]</a><span class="k">def</span> <span class="nf">fetch_any</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base loader for all datasets from the FIMI repository</span>
@@ -221,7 +224,7 @@
     <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_home</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_home</span><span class="p">):</span>  <span class="c1"># already fetched</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>                                  <span class="c1"># not fetched yet</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># not fetched yet</span>
         <span class="n">url</span> <span class="o">=</span> <span class="n">BASE_URL</span> <span class="o">+</span> <span class="n">filename</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="n">it</span> <span class="o">=</span> <span class="p">(</span><span class="n">_preprocess</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span> <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">)</span>
@@ -229,10 +232,13 @@
         <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="n">s</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">l</span><span class="p">)))</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">pass</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">l</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
 
     <span class="k">return</span> <span class="n">s</span></div>
+
 
 <div class="viewcode-block" id="fetch_chess"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_chess">[docs]</a><span class="k">def</span> <span class="nf">fetch_chess</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Fetch and return the chess dataset (Frequent Itemset Mining)</span>
@@ -256,7 +262,7 @@
 <span class="sd">        Transactions from the chess dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;chess.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;chess.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_connect"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_connect">[docs]</a><span class="k">def</span> <span class="nf">fetch_connect</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -281,7 +287,7 @@
 <span class="sd">        Transactions from the connect dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;connect.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;connect.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_mushroom"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">[docs]</a><span class="k">def</span> <span class="nf">fetch_mushroom</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_D_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -334,7 +340,7 @@
 <span class="sd">    1    3916</span>
 <span class="sd">    Name: mushroom, dtype: int64</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mush</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;mushroom.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="n">mush</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;mushroom.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
     <span class="n">D</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
     <span class="k">if</span> <span class="n">return_D_y</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -368,7 +374,7 @@
 <span class="sd">        Transactions from the pumsb dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;pumsb.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_pumsb_star"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_pumsb_star">[docs]</a><span class="k">def</span> <span class="nf">fetch_pumsb_star</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -393,7 +399,7 @@
 <span class="sd">        Transactions from the pumsb_star dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;pumsb_star.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb_star.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_kosarak"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_kosarak">[docs]</a><span class="k">def</span> <span class="nf">fetch_kosarak</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -420,7 +426,7 @@
 <span class="sd">        Transactions from the kosarak dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;kosarak.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;kosarak.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_retail"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_retail">[docs]</a><span class="k">def</span> <span class="nf">fetch_retail</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -456,7 +462,8 @@
 <span class="sd">        Transactions from the retail dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;retail.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;retail.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="fetch_accidents"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_accidents">[docs]</a><span class="k">def</span> <span class="nf">fetch_accidents</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Fetch and return the accidents dataset (Frequent Itemset Mining)</span>
@@ -485,7 +492,7 @@
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s1">&#39;accidents.dat&#39;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;accidents.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
