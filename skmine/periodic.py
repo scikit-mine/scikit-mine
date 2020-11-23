@@ -80,17 +80,6 @@ def cycle_length(S_alpha, inter, n_event_tot, dS):
     return L_a, L_r, L_p, L_tau, L_E
 
 
-def cycle_length_dyn(scores, k_scores, k, score_one):
-    """
-    compute length of cycles of length k given scores of cycles of lengths 1..k
-    """
-    for i in range(k):
-        prev_start = sum(range(k - i + 1, k + 1))  # compute start
-        prev_scores = scores[prev_start : prev_start + k]
-        left_scores = prev_scores[:-1]
-        right_scores = prev_scores[1:]
-
-
 def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
     S_a = S_a.astype("int64")
     diffs = np.diff(S_a)
@@ -135,6 +124,29 @@ def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
             cut_points[(ia, iz)] = cut_point
 
     return scores, cut_points
+
+
+def recover_splits_rec(cut_points, ia, iz):
+    if (ia, iz) in cut_points:
+        if cut_points[(ia, iz)] is None:
+            return [(ia, iz)]
+        else:
+            im = cut_points[(ia, iz)]
+            if im >= 0:
+                return recover_splits_rec(cut_points, ia, im) + recover_splits_rec(
+                    cut_points, im + 1, iz
+                )
+    return []
+
+
+def compute_cycles_dyn(S_a, n_event_tot):
+    scores, cut_points = get_table_dyn(S_a, n_event_tot)
+
+    cycles = list()
+    covered = set()
+    for si, s in enumerate(cut_points):
+        if s[1] - s[0] > 3:
+            pass
 
 
 # TODO : inherit MDLOptimizer

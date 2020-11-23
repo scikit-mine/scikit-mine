@@ -7,6 +7,7 @@ from .periodic import (
     residual_length,
     cycle_length,
     get_table_dyn,
+    recover_splits_rec,
 )
 
 
@@ -15,6 +16,33 @@ def minutes():
     cuts = np.arange(3) * 400
     smalls = np.arange(0, 20, 2).reshape((10, 1))
     return (cuts + smalls).T.reshape(-1)
+
+
+@pytest.fixture
+def cut_points():
+    return {
+        (2, 7): 3,
+        (2, 5): 2,
+        (1, 3): None,
+        (4, 6): None,
+        (1, 7): 3,
+        (1, 6): 3,
+        (0, 6): 3,
+        (5, 7): None,
+        (4, 7): None,
+        (1, 4): 3,
+        (2, 4): -1,
+        (1, 5): 3,
+        (2, 6): 3,
+        (0, 5): 3,
+        (0, 7): 3,
+        (3, 6): 3,
+        (0, 4): 3,
+        (3, 7): 3,
+        (0, 3): None,
+        (0, 2): None,
+        (3, 5): -1,
+    }
 
 
 @pytest.mark.parametrize("k", [3, 5])
@@ -57,32 +85,14 @@ def test_residual_length(minutes, idx, length):
     assert r == pytest.approx(length, rel=1e-4)
 
 
-def test_get_table_dyn():
+def test_get_table_dyn(cut_points):
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
     scores, cut_points = get_table_dyn(minutes, len(minutes))
     expected_len = ((len(minutes) - 1) * (len(minutes) - 2)) / 2
     assert len(scores) == len(cut_points) == expected_len
-    assert cut_points == {
-        (2, 7): 3,
-        (2, 5): 2,
-        (1, 3): None,
-        (4, 6): None,
-        (1, 7): 3,
-        (1, 6): 3,
-        (0, 6): 3,
-        (5, 7): None,
-        (4, 7): None,
-        (1, 4): 3,
-        (2, 4): -1,
-        (1, 5): 3,
-        (2, 6): 3,
-        (0, 5): 3,
-        (0, 7): 3,
-        (3, 6): 3,
-        (0, 4): 3,
-        (3, 7): 3,
-        (0, 3): None,
-        (0, 2): None,
-        (3, 5): -1,
-    }
+    assert cut_points == cut_points
     assert np.mean(list(scores.values())) == pytest.approx(37.3237, rel=1e-4)
+
+
+def test_recover_split_rec(cut_points):
+    assert recover_splits_rec(cut_points, 0, 7) == [(0, 3), (4, 7)]
