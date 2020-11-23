@@ -67,7 +67,9 @@ def cycle_length(S_alpha, inter, n_event_tot, dS):
     p = np.median(inter, axis=1)
     E = inter - p.reshape((-1, 1))
     dE = E.sum(axis=1)
-    S_alpha_size = len(S_alpha) + r - 1
+    S_alpha_size = (
+        len(S_alpha) + r - 1
+    )  # beware of this if S_alpha was generated with stepsize > 1
 
     L_a = -log(S_alpha_size / n_event_tot)  # FIXME
     L_r = log(S_alpha_size)
@@ -78,25 +80,61 @@ def cycle_length(S_alpha, inter, n_event_tot, dS):
     return L_a, L_r, L_p, L_tau, L_E
 
 
-def get_table_dyn(S_a: pd.Series):
-    pass
-
-
-def get_cycles_dyn(S_a: pd.Series):
+def cycle_length_dyn(scores, k_scores, k, score_one):
     """
-    Parameters
-    ----------
-    S_a: pd.Series
-        Series corresponding to a single event a
-
-    Return
-    ------
-    pd.DataFrame
-        DataFrame of cycles
+    compute length of cycles of length k given scores of cycles of lengths 1..k
     """
+    for i in range(k):
+        prev_start = sum(range(k - i + 1, k + 1))  # compute start
+        prev_scores = scores[prev_start : prev_start + k]
+        left_scores = prev_scores[:-1]
+        right_scores = prev_scores[1:]
 
-    scores, cut_points = get_table_dyn(S_a)
-    return pd.DataFrame()
+
+def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
+    S_a = S_a.astype("int64")
+    diffs = np.diff(S_a)
+    triples = window_stack(S_a, width=3)
+    diff_pairs = window_stack(diffs, width=2)
+    delta_S = S_a.max() - S_a.min()
+
+    score_one = residual_length(1, n_event_tot, delta_S)
+
+    L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, diff_pairs, len(S_a), delta_S)
+    triple_scores = L_a + L_r + L_p + L_tau + L_E
+    change = triple_scores > 3 * score_one
+    triple_scores[change] = 3 * score_one  # inplace replacement
+    cut_points = np.array([-1] * len(triple_scores), dtype=object)
+    cut_points[~change] = None
+
+    scores = dict(zip(((i, i + 2) for i in range(len(triple_scores))), triple_scores))
+    cut_points = dict(zip(scores.keys(), cut_points))
+
+    for k in range(4, len(S_a) + 1):
+        w = window_stack(S_a, width=k)
+        _diffs = window_stack(diffs, width=k - 1)
+        _s = sum(cycle_length(w, _diffs, len(S_a), delta_S))
+
+        for ia, best_score in enumerate(_s):
+            cut_point = None
+            iz = ia + k - 1
+            for im in range(ia, iz):
+                if im - ia + 1 < 3:
+                    score_left = score_one * (im - ia + 1)
+                else:
+                    score_left = scores[(ia, im)]
+                if iz - im < 3:
+                    score_right = score_one * (iz - im)
+                else:
+                    score_right = scores[(im + 1, iz)]
+
+                if score_left + score_right < best_score:
+                    best_score = score_left + score_right
+                    cut_point = im
+            scores[(ia, iz)] = best_score
+            cut_points[(ia, iz)] = cut_point
+
+    return scores, cut_points
 
 
 # TODO : inherit MDLOptimizer

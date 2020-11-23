@@ -1,7 +1,13 @@
 import pytest
 import numpy as np
+from collections import Counter
 
-from .periodic import get_cycles_dyn, window_stack, residual_length, cycle_length
+from .periodic import (
+    window_stack,
+    residual_length,
+    cycle_length,
+    get_table_dyn,
+)
 
 
 @pytest.fixture
@@ -49,3 +55,34 @@ def test_residual_length(minutes, idx, length):
     delta_S = minutes[-1] - minutes[0]
     r = residual_length(S_a, len(minutes), delta_S)
     assert r == pytest.approx(length, rel=1e-4)
+
+
+def test_get_table_dyn():
+    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+    scores, cut_points = get_table_dyn(minutes, len(minutes))
+    expected_len = ((len(minutes) - 1) * (len(minutes) - 2)) / 2
+    assert len(scores) == len(cut_points) == expected_len
+    assert cut_points == {
+        (2, 7): 3,
+        (2, 5): 2,
+        (1, 3): None,
+        (4, 6): None,
+        (1, 7): 3,
+        (1, 6): 3,
+        (0, 6): 3,
+        (5, 7): None,
+        (4, 7): None,
+        (1, 4): 3,
+        (2, 4): -1,
+        (1, 5): 3,
+        (2, 6): 3,
+        (0, 5): 3,
+        (0, 7): 3,
+        (3, 6): 3,
+        (0, 4): 3,
+        (3, 7): 3,
+        (0, 3): None,
+        (0, 2): None,
+        (3, 5): -1,
+    }
+    assert np.mean(list(scores.values())) == pytest.approx(37.3237, rel=1e-4)
