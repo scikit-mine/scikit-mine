@@ -89,14 +89,13 @@ def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
 
     score_one = residual_length(1, n_event_tot, delta_S)
 
-    L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, diff_pairs, len(S_a), delta_S)
-    triple_scores = L_a + L_r + L_p + L_tau + L_E
-    change = triple_scores > 3 * score_one
-    triple_scores[change] = 3 * score_one  # inplace replacement
-    cut_points = np.array([-1] * len(triple_scores), dtype=object)
+    scores = sum(cycle_length(triples, diff_pairs, len(S_a), delta_S))
+    change = scores > 3 * score_one
+    scores[change] = 3 * score_one  # inplace replacement
+    cut_points = np.array([-1] * len(scores), dtype=object)
     cut_points[~change] = None
 
-    scores = dict(zip(((i, i + 2) for i in range(len(triple_scores))), triple_scores))
+    scores = dict(zip(((i, i + 2) for i in range(len(scores))), scores))
     cut_points = dict(zip(scores.keys(), cut_points))
 
     for k in range(4, len(S_a) + 1):
@@ -130,12 +129,11 @@ def recover_splits_rec(cut_points, ia, iz):
     if (ia, iz) in cut_points:
         if cut_points[(ia, iz)] is None:
             return [(ia, iz)]
-        else:
-            im = cut_points[(ia, iz)]
-            if im >= 0:
-                return recover_splits_rec(cut_points, ia, im) + recover_splits_rec(
-                    cut_points, im + 1, iz
-                )
+        im = cut_points[(ia, iz)]
+        if im >= 0:
+            return recover_splits_rec(cut_points, ia, im) + recover_splits_rec(
+                cut_points, im + 1, iz
+            )
     return []
 
 
