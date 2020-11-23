@@ -1,6 +1,8 @@
 import pytest
 import numpy as np
+import pandas as pd
 from collections import Counter
+import datetime as dt
 
 from .periodic import (
     window_stack,
@@ -8,6 +10,8 @@ from .periodic import (
     cycle_length,
     get_table_dyn,
     recover_splits_rec,
+    compute_cycles_dyn,
+    PeriodicCycleMiner,
 )
 
 
@@ -96,3 +100,23 @@ def test_get_table_dyn(cut_points):
 
 def test_recover_split_rec(cut_points):
     assert recover_splits_rec(cut_points, 0, 7) == [(0, 3), (4, 7)]
+
+
+def test_compute_cycles_dyn():
+    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+
+    cycles, covered = compute_cycles_dyn(minutes, len(minutes))
+    assert covered == set(range(len(minutes)))
+    assert "start" in cycles.columns
+
+
+def test_fit():
+    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+
+    S = pd.Series("alpha", index=minutes)
+    S.index = S.index.map(lambda e: dt.datetime.now() - dt.timedelta(minutes=e))
+    S.index = pd.to_datetime(S.index)
+    pcm = PeriodicCycleMiner()
+    pcm.fit(S)
+
+    assert pcm.cycles_.index.to_series().nunique() == 2

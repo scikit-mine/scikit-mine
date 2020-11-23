@@ -140,22 +140,56 @@ def recover_splits_rec(cut_points, ia, iz):
 
 
 def compute_cycles_dyn(S_a, n_event_tot):
-    scores, cut_points = get_table_dyn(S_a, n_event_tot)
+    _, cut_points = get_table_dyn(S_a, n_event_tot)
+    splits = recover_splits_rec(cut_points, 0, len(S_a) - 1)
 
     cycles = list()
     covered = set()
-    for si, s in enumerate(cut_points):
-        if s[1] - s[0] > 3:
-            pass
+    for start, end in splits:
+        length = end - start + 1
+        if length >= 3:
+            cov = S_a[start : start + length]
+            E = np.abs(np.diff(cov))
+            period = np.median(E)
+            # TODO : compute score ?
+            cycles.append([start, length, period])
+            covered.update(range(start, end + 1))
+
+    cycles = pd.DataFrame(cycles, columns=["start", "length", "period"])
+    return cycles, covered
+
+
+def remove_zeros(numbers: pd.Series):
+    n = 0
+    while (numbers % 10 == 0).all():
+        numbers //= 10
+        n += 1
+    return numbers, n
 
 
 # TODO : inherit MDLOptimizer
 class PeriodicCycleMiner(BaseMiner):
+    def __init__(self):
+        self.cycles_ = pd.DataFrame()
+        self.is_datetime_ = None
+        self.n_zeros_ = 0
+
     def fit(self, S):
-        if not isinstance(S, pd.Series) or not isinstance(S.index, pd.DatetimeIndex):
-            raise TypeError("S must be a Series with a datetime index")
+        if not isinstance(S, pd.Series):
+            raise TypeError("S must be a pandas Series")
 
+        if not isinstance(S.index, (pd.RangeIndex, pd.DatetimeIndex)):
+            raise TypeError("S must have an index of type RangeIndex of DatetimeIndex")
+
+        S.index, self.n_zeros_ = remove_zeros(S.index.astype("int64"))
+        n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
-        alpha_sizes = alpha_groups.apply(len)
+        cycles = alpha_groups.apply(
+            lambda S_a: compute_cycles_dyn(S_a.index, n_event_tot)[0]
+        )
 
-        # TODO
+        self.cycles_ = cycles
+        return self
+
+    def discover(self):
+        return self.cycles_.copy()
