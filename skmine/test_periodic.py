@@ -114,9 +114,22 @@ def test_fit():
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() - dt.timedelta(minutes=e))
+    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
     S.index = pd.to_datetime(S.index)
     pcm = PeriodicCycleMiner()
     pcm.fit(S)
 
     assert pcm.cycles_.index.to_series().nunique() == 2
+    assert "inters" in pcm.cycles_.columns
+
+
+def test_discover():
+    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+
+    S = pd.Series("alpha", index=minutes)
+    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    S.index = pd.to_datetime(S.index)
+    pcm = PeriodicCycleMiner()
+    pcm.fit(S)
+    cycles = pcm.discover()
+    assert (cycles.dtypes != "object").all()  # only output structured data

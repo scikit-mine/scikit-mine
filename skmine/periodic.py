@@ -147,13 +147,13 @@ def compute_cycles_dyn(S_a, n_event_tot):
         length = end - start + 1
         if length >= 3:
             cov = S_a[start : start + length]
-            E = np.abs(np.diff(cov))
-            period = np.median(E)
+            E = np.diff(cov)
+            period = np.floor(np.median(E)).astype("int64")
             # TODO : compute score ?
-            cycles.append([start, length, period])
+            cycles.append([cov[0], length, period, E])
             covered.update(range(start, end + 1))
 
-    cycles = pd.DataFrame(cycles, columns=["start", "length", "period"])
+    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "inters"])
     return cycles, covered
 
 
@@ -179,6 +179,7 @@ class PeriodicCycleMiner(BaseMiner):
         if not isinstance(S.index, (pd.RangeIndex, pd.DatetimeIndex)):
             raise TypeError("S must have an index of type RangeIndex of DatetimeIndex")
 
+        S = S.copy()
         S.index, self.n_zeros_ = remove_zeros(S.index.astype("int64"))
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
@@ -190,4 +191,12 @@ class PeriodicCycleMiner(BaseMiner):
         return self
 
     def discover(self):
-        return self.cycles_.copy()
+        cycles = self.cycles_[["start", "length", "period"]].copy()
+        cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
+            10 ** self.n_zeros_
+        )
+
+        cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
+        cycles.loc[:, "period"] = cycles.period.astype("timedelta64[ns]")
+
+        return cycles
