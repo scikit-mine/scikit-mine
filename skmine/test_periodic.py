@@ -120,7 +120,7 @@ def test_fit():
     pcm.fit(S)
 
     assert pcm.cycles_.index.to_series().nunique() == 2
-    assert "inters" in pcm.cycles_.columns
+    assert "dE" in pcm.cycles_.columns
 
 
 def test_discover():
@@ -130,6 +130,16 @@ def test_discover():
     S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
     S.index = pd.to_datetime(S.index)
     pcm = PeriodicCycleMiner()
-    pcm.fit(S)
-    cycles = pcm.discover()
+    cycles = pcm.fit_discover(S)
     assert (cycles.dtypes != "object").all()  # only output structured data
+
+
+def test_reconstruct():
+    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+
+    S = pd.Series("alpha", index=minutes)
+    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    S.index = pd.to_datetime(S.index)
+    pcm = PeriodicCycleMiner().fit(S)
+    reconstructed = pcm.reconstruct()
+    pd.testing.assert_series_equal(reconstructed, S)

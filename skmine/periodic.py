@@ -2,8 +2,7 @@ import numpy as np
 
 import pandas as pd
 
-from skmine.base import MDLOptimizer
-from skmine.base import BaseMiner
+from skmine.base import MDLOptimizer, BaseMiner, DiscovererMixin
 
 log = np.log2
 
@@ -149,15 +148,16 @@ def compute_cycles_dyn(S_a, n_event_tot):
             cov = S_a[start : start + length]
             E = np.diff(cov)
             period = np.floor(np.median(E)).astype("int64")
+            dE = E - period
             # TODO : compute score ?
-            cycles.append([cov[0], length, period, E])
+            cycles.append([cov[0], length, period, dE])
             covered.update(range(start, end + 1))
 
-    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "inters"])
+    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "dE"])
     return cycles, covered
 
 
-def remove_zeros(numbers: pd.Series):
+def _remove_zeros(numbers: pd.Series):
     n = 0
     while (numbers % 10 == 0).all():
         numbers //= 10
@@ -165,8 +165,28 @@ def remove_zeros(numbers: pd.Series):
     return numbers, n
 
 
+def _reconstruct(start, period, d_E):
+    """
+    Parameters
+    ----------
+    start: int or datetime
+        starting point for the event
+    period: int or timedelta
+        period between two occurences
+    d_E: np.array of [int|timedelta]
+        inters occurences deltas
+    """
+    occurences = [start]
+    current = start
+    for d_e in d_E:
+        e = current + period + d_e
+        occurences.append(e)
+        current = e
+    return occurences
+
+
 # TODO : inherit MDLOptimizer
-class PeriodicCycleMiner(BaseMiner):
+class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     def __init__(self):
         self.cycles_ = pd.DataFrame()
         self.is_datetime_ = None
@@ -179,8 +199,13 @@ class PeriodicCycleMiner(BaseMiner):
         if not isinstance(S.index, (pd.RangeIndex, pd.DatetimeIndex)):
             raise TypeError("S must have an index of type RangeIndex of DatetimeIndex")
 
+        if not S.index.is_monotonic:
+            raise TypeError("S must have a monotonic index")
+
+        self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
+
         S = S.copy()
-        S.index, self.n_zeros_ = remove_zeros(S.index.astype("int64"))
+        S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
         cycles = alpha_groups.apply(
@@ -196,7 +221,24 @@ class PeriodicCycleMiner(BaseMiner):
             10 ** self.n_zeros_
         )
 
-        cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
-        cycles.loc[:, "period"] = cycles.period.astype("timedelta64[ns]")
+        if self.is_datetime_:
+            cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
+            cycles.loc[:, "period"] = cycles.period.astype("timedelta64[ns]")
 
         return cycles
+
+    def reconstruct(self):
+        cycles = self.cycles_[["start", "period", "dE"]]
+        result = list()
+        for alpha, df in cycles.groupby(level=0):
+            l = list()
+            for start, period, dE in df.values:
+                occurences = _reconstruct(start, period, dE)
+                l.extend(occurences)
+            S = pd.Series(alpha, index=l)
+            result.append(S)
+        S = pd.concat(result)
+        S.index *= 10 ** self.n_zeros_
+        if self.is_datetime_:
+            S.index = S.index.astype("datetime64[ns]")
+        return S
