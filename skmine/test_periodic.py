@@ -9,8 +9,10 @@ from .periodic import (
     residual_length,
     cycle_length,
     get_table_dyn,
-    recover_splits_rec,
+    _recover_splits_rec,
     compute_cycles_dyn,
+    extract_triples,
+    merge_triples,
     PeriodicCycleMiner,
 )
 
@@ -47,6 +49,22 @@ def cut_points():
         (0, 2): None,
         (3, 5): -1,
     }
+
+
+@pytest.fixture
+def triples():
+    return np.array(
+        [
+            [0, 2, 4],
+            [0, 2, 6],
+            [0, 4, 6],
+            [2, 4, 6],
+            [400, 402, 404],
+            [400, 402, 406],
+            [400, 404, 406],
+            [402, 404, 406],
+        ]
+    )
 
 
 @pytest.mark.parametrize("k", [3, 5])
@@ -99,7 +117,7 @@ def test_get_table_dyn(cut_points):
 
 
 def test_recover_split_rec(cut_points):
-    assert recover_splits_rec(cut_points, 0, 7) == [(0, 3), (4, 7)]
+    assert _recover_splits_rec(cut_points, 0, 7) == [(0, 3), (4, 7)]
 
 
 def test_compute_cycles_dyn():
@@ -108,6 +126,19 @@ def test_compute_cycles_dyn():
     cycles, covered = compute_cycles_dyn(minutes, len(minutes))
     assert covered == set(range(len(minutes)))
     assert "start" in cycles.columns
+
+
+def test_extract_triples(triples):
+    minutes = pd.Index(np.array([0, 2, 4, 6, 400, 402, 404, 406]))
+    delta_S = minutes[-1] - minutes[0]
+    t = extract_triples(minutes, delta_S)
+    assert t.ndim == 2
+    np.testing.assert_array_equal(triples, t)
+
+
+def test_merge_triples(triples):
+    merged = merge_triples(triples)
+    assert len(merged) == 2
 
 
 def test_fit():

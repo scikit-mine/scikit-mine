@@ -1,8 +1,11 @@
 import numpy as np
 
 import pandas as pd
+from .bitmaps import Bitmap
+from .utils import intersect2d
 
-from skmine.base import MDLOptimizer, BaseMiner, DiscovererMixin
+from skmine.base import BaseMiner, DiscovererMixin, MDLOptimizer
+from joblib import Parallel, delayed
 
 log = np.log2
 
@@ -79,16 +82,53 @@ def cycle_length(S_alpha, inter, n_event_tot, dS):
     return L_a, L_r, L_p, L_tau, L_E
 
 
-def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
-    S_a = S_a.astype("int64")
-    diffs = np.diff(S_a)
-    triples = window_stack(S_a, width=3)
+def compute_cycles_dyn(S, n_tot):
+    """
+    Parameters
+    ----------
+    S: pd.Index or np.array
+        a Series of occurences
+    n_tot: int
+        total number of occurences in the original events
+    """
+    _, cut_points = get_table_dyn(S, n_tot)
+    splits = _recover_splits_rec(cut_points, 0, len(S) - 1)
+
+    cycles = list()
+    covered = set()
+    for start, end in splits:
+        length = end - start + 1
+        if length >= 3:
+            cov = S[start : start + length]
+            E = np.diff(cov)
+            period = np.floor(np.median(E)).astype("int64")
+            dE = E - period
+            # TODO : compute score ?
+            cycles.append([cov[0], length, period, dE])
+            covered.update(range(start, end + 1))
+
+    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "dE"])
+    return cycles, covered
+
+
+def get_table_dyn(S: pd.Index, n_tot: int):
+    """
+    Parameters
+    ----------
+    S: pd.Index or np.ndarray
+        a Series of occurences
+    n_tot: int
+        total number of occurences in the original events
+    """
+    S = S.astype("int64")
+    diffs = np.diff(S)
+    triples = window_stack(S, width=3)
     diff_pairs = window_stack(diffs, width=2)
-    delta_S = S_a.max() - S_a.min()
+    delta_S = S.max() - S.min()
 
-    score_one = residual_length(1, n_event_tot, delta_S)
+    score_one = residual_length(1, n_tot, delta_S)
 
-    scores = sum(cycle_length(triples, diff_pairs, len(S_a), delta_S))
+    scores = sum(cycle_length(triples, diff_pairs, len(S), delta_S))
     change = scores > 3 * score_one
     scores[change] = 3 * score_one  # inplace replacement
     cut_points = np.array([-1] * len(scores), dtype=object)
@@ -97,10 +137,10 @@ def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
     scores = dict(zip(((i, i + 2) for i in range(len(scores))), scores))
     cut_points = dict(zip(scores.keys(), cut_points))
 
-    for k in range(4, len(S_a) + 1):
-        w = window_stack(S_a, width=k)
+    for k in range(4, len(S) + 1):
+        w = window_stack(S, width=k)
         _diffs = window_stack(diffs, width=k - 1)
-        _s = sum(cycle_length(w, _diffs, len(S_a), delta_S))
+        _s = sum(cycle_length(w, _diffs, len(S), delta_S))
 
         for ia, best_score in enumerate(_s):
             cut_point = None
@@ -124,37 +164,74 @@ def get_table_dyn(S_a: pd.DatetimeIndex, n_event_tot: int):
     return scores, cut_points
 
 
-def recover_splits_rec(cut_points, ia, iz):
+def extract_triples(S, delta_S):
+    """
+    Extract cycles of length 3 given a list of occurences S
+    Parameters
+    ----------
+    S: pd.Index
+        input occurences
+
+    delta_S
+        difference between max event and min event, from original Series
+    """
+    if not S.is_monotonic_increasing:
+        S = S.sort_values()
+    l_max = log(delta_S + 1) - 2
+    triples = list()
+
+    for idx, occ in enumerate(S[1:-1], 1):
+        righties = S[idx + 1 :]
+        lefties = S[:idx]
+        righties_diffs = righties - occ
+        lefties_diffs = lefties - occ
+        grid = np.array(np.meshgrid(lefties_diffs, righties_diffs)).T.reshape(-1, 2)
+        # keep = (np.abs(grid[:, 1]) - np.abs(grid[:, 0])) <= l
+        keep = np.abs(grid[:, 0] - grid[:, 1]) < l_max
+        t = occ + grid[keep]
+        if t.size != 0:
+            e = np.array([t[:, 0], np.array([occ] * t.shape[1]), t[:, 1]]).T
+            triples.append(e)
+            # covered.update(np.searchsorted(S.values, e).reshape(-1))
+
+    triples = np.vstack(triples)
+    return triples
+
+
+def merge_triples(triples, n_merge=10):
+    """
+    Parameters
+    ----------
+    triples: ndarray
+        cycles of size 3 (i.e triples.shape[1] == 3)
+    n_merge: int
+        maximum number of merge operation to perform
+    """
+    res = [triples]
+    for idx in range(1, n_merge + 1):
+        prev = res[idx - 1]
+        lefties = prev[:, :2]
+        righties = prev[:, -2:]
+        _, left_idx, right_idx = intersect2d(lefties, righties, return_indices=True)
+        if left_idx.size == 0 or right_idx.size == 0:
+            break
+        merged = np.hstack([prev[right_idx], prev[left_idx, 2:]])
+        res.append(merged)
+        to_delete = np.union1d(left_idx, right_idx)
+        res[idx - 1] = np.delete(res[idx - 1], to_delete, axis=0)
+    return res
+
+
+def _recover_splits_rec(cut_points, ia, iz):
     if (ia, iz) in cut_points:
         if cut_points[(ia, iz)] is None:
             return [(ia, iz)]
         im = cut_points[(ia, iz)]
         if im >= 0:
-            return recover_splits_rec(cut_points, ia, im) + recover_splits_rec(
+            return _recover_splits_rec(cut_points, ia, im) + _recover_splits_rec(
                 cut_points, im + 1, iz
             )
     return []
-
-
-def compute_cycles_dyn(S_a, n_event_tot):
-    _, cut_points = get_table_dyn(S_a, n_event_tot)
-    splits = recover_splits_rec(cut_points, 0, len(S_a) - 1)
-
-    cycles = list()
-    covered = set()
-    for start, end in splits:
-        length = end - start + 1
-        if length >= 3:
-            cov = S_a[start : start + length]
-            E = np.diff(cov)
-            period = np.floor(np.median(E)).astype("int64")
-            dE = E - period
-            # TODO : compute score ?
-            cycles.append([cov[0], length, period, dE])
-            covered.update(range(start, end + 1))
-
-    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "dE"])
-    return cycles, covered
 
 
 def _remove_zeros(numbers: pd.Series):
@@ -165,8 +242,13 @@ def _remove_zeros(numbers: pd.Series):
     return numbers, n
 
 
-def _reconstruct(start, period, d_E):
+def _reconstruct(start, period, dE):
     """
+    Reconstruct occurences,
+    starting from `start`, and
+    correcting `period` with a delta for all deltas in `dE`,
+    `len(dE)` occurences are reconstructed
+
     Parameters
     ----------
     start: int or datetime
@@ -178,7 +260,7 @@ def _reconstruct(start, period, d_E):
     """
     occurences = [start]
     current = start
-    for d_e in d_E:
+    for d_e in dE:
         e = current + period + d_e
         occurences.append(e)
         current = e
@@ -206,14 +288,24 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+
+        self.cycles_ = self.generate_candidates(S)
+        # TODO fitler candidates
+        return self
+
+    def generate_candidates(self, S):
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
-        cycles = alpha_groups.apply(
-            lambda S_a: compute_cycles_dyn(S_a.index, n_event_tot)[0]
-        )
 
-        self.cycles_ = cycles
-        return self
+        cycles, covered = zip(
+            *Parallel()(
+                delayed(compute_cycles_dyn)(S_a.index, n_event_tot)
+                for _, S_a in alpha_groups
+            )
+        )
+        # covered = reduce(set.union, covered)
+        cycles = dict(zip(alpha_groups.groups.keys(), cycles))
+        return pd.concat(cycles.values(), keys=cycles.keys())  # return multiindex
 
     def discover(self):
         cycles = self.cycles_[["start", "length", "period"]].copy()
@@ -241,4 +333,5 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
             S.index = S.index.astype("datetime64[ns]")
+
         return S
