@@ -69,7 +69,7 @@ def triples():
 
 @pytest.mark.parametrize("k", [3, 5])
 def test_window_stack(minutes, k):
-    w = window_stack(minutes, width=k, stepsize=1)
+    w = window_stack(minutes, width=k)
     assert w.shape == (len(minutes) - k + 1, k)
     np.testing.assert_array_equal(w[0], minutes[:k])
     np.testing.assert_array_equal(w[-1], minutes[-k:])
