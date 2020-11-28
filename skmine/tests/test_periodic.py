@@ -4,7 +4,7 @@ import pandas as pd
 from collections import Counter
 import datetime as dt
 
-from .periodic import (
+from ..periodic import (
     window_stack,
     residual_length,
     cycle_length,
