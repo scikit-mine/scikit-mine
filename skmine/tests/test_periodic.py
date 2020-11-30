@@ -165,12 +165,24 @@ def test_discover():
     assert (cycles.dtypes != "object").all()  # only output structured data
 
 
-def test_reconstruct():
+@pytest.mark.parametrize("is_datetime", (True, False))
+def test_reconstruct(is_datetime):
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
-    S.index = pd.to_datetime(S.index)
+    if is_datetime:
+        S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+        S.index = pd.to_datetime(S.index)
     pcm = PeriodicCycleMiner().fit(S)
+    assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
     pd.testing.assert_series_equal(reconstructed, S)
+
+
+def test_fit_triples_and_residuals():
+    minutes = np.array([0, 20, 31, 40, 60, 240, 400, 420, 431, 440, 460])
+
+    S = pd.Series("alpha", index=minutes)
+
+    pcm = PeriodicCycleMiner().fit(S)
+    pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240]))

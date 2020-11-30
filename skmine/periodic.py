@@ -9,6 +9,12 @@ from joblib import Parallel, delayed
 
 log = np.log2
 
+INDEX_TYPES = (
+    pd.DatetimeIndex,
+    pd.RangeIndex,
+    pd.Int64Index,
+)
+
 
 def window_stack(x, width=3):
     """
@@ -122,11 +128,11 @@ def get_table_dyn(S: pd.Index, n_tot: int):
     diffs = np.diff(S)
     triples = window_stack(S, width=3)
     diff_pairs = window_stack(diffs, width=2)
-    delta_S = S.max() - S.min()
+    dS = S.max() - S.min()
 
-    score_one = residual_length(1, n_tot, delta_S)
+    score_one = residual_length(1, n_tot, dS)
 
-    scores = sum(cycle_length(triples, diff_pairs, len(S), delta_S))
+    scores = sum(cycle_length(triples, diff_pairs, len(S), dS))
     change = scores > 3 * score_one
     scores[change] = 3 * score_one  # inplace replacement
     cut_points = np.array([-1] * len(scores), dtype=object)
@@ -138,7 +144,7 @@ def get_table_dyn(S: pd.Index, n_tot: int):
     for k in range(4, len(S) + 1):
         w = window_stack(S, width=k)
         _diffs = window_stack(diffs, width=k - 1)
-        _s = sum(cycle_length(w, _diffs, len(S), delta_S))
+        _s = sum(cycle_length(w, _diffs, len(S), dS))
 
         for ia, best_score in enumerate(_s):
             cut_point = None
@@ -162,7 +168,7 @@ def get_table_dyn(S: pd.Index, n_tot: int):
     return scores, cut_points
 
 
-def extract_triples(S, delta_S):
+def extract_triples(S, dS):
     """
     Extract cycles of length 3 given a list of occurences S
     Parameters
@@ -170,12 +176,10 @@ def extract_triples(S, delta_S):
     S: pd.Index
         input occurences
 
-    delta_S
+    dS
         difference between max event and min event, from original Series
     """
-    if not S.is_monotonic_increasing:
-        S = S.sort_values()
-    l_max = log(delta_S + 1) - 2
+    l_max = log(dS + 1) - 2
     triples = list()
 
     for idx, occ in enumerate(S[1:-1], 1):
@@ -192,8 +196,7 @@ def extract_triples(S, delta_S):
             triples.append(e)
             # covered.update(np.searchsorted(S.values, e).reshape(-1))
 
-    triples = np.vstack(triples)
-    return triples
+    return np.vstack(triples)
 
 
 def merge_triples(triples, n_merge=10):
@@ -269,25 +272,24 @@ def _reconstruct(start, period, dE):
 class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     def __init__(self):
         self.cycles_ = pd.DataFrame()
+        self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
+        self.is_fitted = lambda: self.is_datetime_ is not None
 
     def fit(self, S):
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
 
-        if not isinstance(S.index, (pd.RangeIndex, pd.DatetimeIndex)):
-            raise TypeError("S must have an index of type RangeIndex of DatetimeIndex")
-
-        if not S.index.is_monotonic:
-            raise TypeError("S must have a monotonic index")
+        if not isinstance(S.index, INDEX_TYPES):
+            raise TypeError(f"S must have an index with a type amongst {INDEX_TYPES}")
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        self.cycles_ = self.generate_candidates(S)
+        self.cycles_, self.residuals_ = self.generate_candidates(S)
         # TODO fitler candidates
         return self
 
@@ -295,17 +297,48 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
 
-        cycles, covered = zip(
+        cycles, residuals = zip(
             *Parallel()(
-                delayed(compute_cycles_dyn)(S_a.index, n_event_tot)
+                delayed(self._generate_candidates)(S_a.index, n_event_tot)
                 for _, S_a in alpha_groups
             )
         )
-        # covered = reduce(set.union, covered)
-        cycles = dict(zip(alpha_groups.groups.keys(), cycles))
-        return pd.concat(cycles.values(), keys=cycles.keys())  # return multiindex
+        gr = alpha_groups.groups
+        c = dict(zip(gr.keys(), cycles))
+        cycles = pd.concat(c.values(), keys=c.keys())
+        residuals = dict(zip(gr.keys(), residuals))
+        return cycles, residuals
+
+    def _generate_candidates(self, S_a: pd.Index, n_event_tot: int):
+        # TODO : sort S_a here
+        S_a = S_a.sort_values()
+        dS = S_a[-1] - S_a[0]
+        cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
+        covered = Bitmap(covered)
+        if len(S_a) - len(covered) > 3:
+            _S_a = S_a[~covered]
+            triples = extract_triples(_S_a, dS)
+            merged = merge_triples(triples)
+            new_cycles = list()
+
+            for batch in merged:
+                covered.update(np.unique(np.searchsorted(S_a, batch)))
+                E = np.diff(batch)
+                period = np.floor(np.median(E)).astype("int64")
+                dE = E - period
+                # TODO : compute score ?
+                new_cycles.append([batch[:, 0], batch.shape[1], period, dE])
+
+            if new_cycles:
+                new_cycles = pd.concat(new_cycles)
+                cycles = pd.concat([cycles, new_cycles])
+
+        residuals = S_a[~covered]
+        return cycles, residuals
 
     def discover(self):
+        if not self.is_fitted():
+            raise Exception(f"{type(self)} instance if not fitted")
         cycles = self.cycles_[["start", "length", "period"]].copy()
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_
