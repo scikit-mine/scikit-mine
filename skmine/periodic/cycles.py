@@ -1,10 +1,14 @@
+"""Periodic pattern mining with a MDL criterion"""
+# Authors: Rémi Adon <remi.adon@gmail.com>
+# License: BSD 3 clause
+
 import numpy as np
 
 import pandas as pd
-from .bitmaps import Bitmap
-from .utils import intersect2d
+from ..bitmaps import Bitmap
+from ..utils import intersect2d
 
-from skmine.base import BaseMiner, DiscovererMixin, MDLOptimizer
+from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from joblib import Parallel, delayed
 
 log = np.log2
@@ -42,10 +46,7 @@ def residual_length(S, n_event_tot, dS):
     dS: int
         max - min from original events
     """
-    if isinstance(S, np.ndarray):
-        card = S.shape[0]
-    else:  # single value as scalar
-        card = 1
+    card = S.shape[0] if isinstance(S, np.ndarray) else 1
     return log(dS + 1) - log(card / float(n_event_tot))
 
 
@@ -68,7 +69,8 @@ def cycle_length(S, inter, n_event_tot, dS):
 
     Returns
     -------
-    tuple()
+    tuple:
+        lengths for (a, r, p, tau, E)
     """
     r = S.shape[1]
     assert inter.shape[1] == r - 1  # check inter occurences compliant with events
@@ -99,7 +101,7 @@ def compute_cycles_dyn(S, n_tot):
     splits = _recover_splits_rec(cut_points, 0, len(S) - 1)
 
     cycles = list()
-    covered = set()
+    covered = Bitmap()
     for start, end in splits:
         length = end - start + 1
         if length >= 3:
@@ -194,7 +196,6 @@ def extract_triples(S, dS):
         if t.size != 0:
             e = np.array([t[:, 0], np.array([occ] * t.shape[1]), t[:, 1]]).T
             triples.append(e)
-            # covered.update(np.searchsorted(S.values, e).reshape(-1))
 
     return np.vstack(triples)
 
@@ -207,6 +208,11 @@ def merge_triples(triples, n_merge=10):
         cycles of size 3 (i.e triples.shape[1] == 3)
     n_merge: int
         maximum number of merge operation to perform
+
+    Returns
+    -------
+    list[np.ndarray]
+        a list of cycles
     """
     res = [triples]
     for idx in range(1, n_merge + 1):
@@ -270,6 +276,50 @@ def _reconstruct(start, period, dE):
 
 # TODO : inherit MDLOptimizer
 class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
+    """
+    Mining periodic cycles with a MDL Criterion
+
+    PeriodicCycleMiner is an approach to mine periodic cycles from event logs
+    while relying on a Minimum Description Length (MDL) criterion to evaluate
+    candidate cycles. The goal here is to extract a set of cycles that characterizes
+    the periodic structure present in the data
+
+    A cycle is defined a 5-tuple of of the form
+        .. math:: \\alpha, r, p, \\tau, E
+
+    From left to right
+
+    - the repeating event
+    - the number of repetitions of the event, called the cycle length
+    - the inter-occurence distance, called the cycle period
+    - the index of the first occurence, called the cycle starting point
+    - a list of r - 1 signed integer offsets, called the cycle shift corrections
+
+
+    Parameters
+    ----------
+    n_jobs : int, default=1
+        The number of jobs to use for the computation. Each single event is attributed a job
+        to discover potential cycles.
+        Threads are preffered over processes.
+
+    Examples
+    --------
+    >>> from skmine.periodic import PeriodicCycleMiner
+    >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
+    >>> pcm = PeriodicCycleMiner().fit(S)
+    >>> pcm.discover()
+                   start  length  period
+    ring_a_bell 0     10       3      11
+                1     40       4      20
+
+    References
+    ----------
+    .. [1]
+        Galbrun, E & Cellier, P & Tatti, N & Termier, A & Crémilleux, B
+        "Mining Periodic Pattern with a MDL Criterion"
+    """
+
     def __init__(self):
         self.cycles_ = pd.DataFrame()
         self.residuals_ = dict()
@@ -278,6 +328,17 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         self.is_fitted = lambda: self.is_datetime_ is not None
 
     def fit(self, S):
+        """fit PeriodicCycleMiner on data logs
+
+        This generate new candidate cycles and evaluate them.
+        Residual occurences are stored as an internal attribute,
+        for later reconstruction (MDL is lossless)
+
+        Parameters
+        -------
+        D: pd.DataFrame
+            Transactional dataset, encoded as tabular binary data
+        """
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
 
