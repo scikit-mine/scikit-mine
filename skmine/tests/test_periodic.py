@@ -186,3 +186,7 @@ def test_fit_triples_and_residuals():
 
     pcm = PeriodicCycleMiner().fit(S)
     pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240]))
+
+    rec_minutes = pcm.reconstruct()
+
+    pd.testing.assert_series_equal(S, rec_minutes)

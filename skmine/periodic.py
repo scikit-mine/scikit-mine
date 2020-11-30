@@ -315,6 +315,7 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         dS = S_a[-1] - S_a[0]
         cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
         covered = Bitmap(covered)
+
         if len(S_a) - len(covered) > 3:
             _S_a = S_a[~covered]
             triples = extract_triples(_S_a, dS)
@@ -358,8 +359,11 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
             for start, period, dE in df.values:
                 occurences = _reconstruct(start, period, dE)
                 l.extend(occurences)
-            S = pd.Series(alpha, index=l)
+            residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
+            S = pd.concat([residuals, pd.Series(alpha, index=l)])
+            S.index = S.index.sort_values()
             result.append(S)
+
         S = pd.concat(result)
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
