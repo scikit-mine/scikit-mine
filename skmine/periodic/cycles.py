@@ -336,8 +336,10 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
 
         Parameters
         -------
-        D: pd.DataFrame
-            Transactional dataset, encoded as tabular binary data
+        S: pd.Series
+            logs, represented as a pandas Series
+            This pandas Series must have an index of type in
+            (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)
         """
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
@@ -355,6 +357,13 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         return self
 
     def generate_candidates(self, S):
+        """
+        Generate candidates from S
+
+        Returns
+        -------
+        list[np.ndarray]  # TODO
+        """
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
 
@@ -376,7 +385,6 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         dS = S_a[-1] - S_a[0]
         cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
         covered = Bitmap(covered)
-
         if len(S_a) - len(covered) > 3:
             _S_a = S_a[~covered]
             triples = extract_triples(_S_a, dS)
@@ -395,7 +403,7 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
                 new_cycles = pd.concat(new_cycles)
                 cycles = pd.concat([cycles, new_cycles])
 
-        residuals = S_a[~covered]
+        residuals = S_a[~covered]  # FIXME check this is valid boolean masking
         return cycles, residuals
 
     def discover(self):

@@ -10,3 +10,6 @@ def test_bitmapmock():
     assert bm.intersection_len(bm2) == 1
     bm.flip_range(1, 5)
     assert repr(bm) == "[3, 4]"
+
+    bm3 = BitmapMock([1, 6])
+    assert list(~bm3) == [2, 3, 4, 5]
