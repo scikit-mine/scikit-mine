@@ -407,6 +407,31 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         return cycles, residuals
 
     def discover(self):
+        """Return cycles as a pandas DataFrame, with 3 columns,
+        with a 2-level multi-index: the first level mapping events,
+        and the second level being positional
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with the following columns
+                ==========  =================================
+                start       when the cycle starts
+                length      number of occurences in the event
+                period      inter-occurence delay
+                ==========  =================================
+
+        Example
+        -------
+        >>> from skmine.periodic import PeriodicCycleMiner
+        >>> S = pd.Series("ring", [10, 20, 32, 40, 60, 79, 100, 240])
+        >>> pcm = PeriodicCycleMiner().fit(S)
+        >>> pcm.discover()
+                start  length  period
+        ring 0     10       3      11
+             1     40       4      20
+
+        """
         if not self.is_fitted():
             raise Exception(f"{type(self)} instance if not fitted")
         cycles = self.cycles_[["start", "length", "period"]].copy()
