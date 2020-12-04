@@ -60,8 +60,10 @@ def describe_logs(D):
     -------
     >>> from skmine.datasets.periodic import fetch_health_app
     >>> from skmine.datasets.utils import describe_logs
-    >>> describe(fetch_health_app())  # doctest: +SKIP
-    {'n_events': 20, 'avg_delta_per_event': Timedelta('0 days 00:53:24.984000'), 'avg_nb_points_per_event': 100.0}
+    >>> describe(fetch_health_app()) # doctest: +SKIP
+    {'n_events': 20,
+    'avg_delta_per_event': Timedelta('0 days 00:53:24.984000'),
+    'avg_nb_points_per_event': 100.0}
     """
     gb = D.groupby(D.values)
     a = gb.apply(lambda df: (df.index.max() - df.index.min(), len(df)))
