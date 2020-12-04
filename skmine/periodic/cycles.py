@@ -3,13 +3,12 @@
 # License: BSD 3 clause
 
 import numpy as np
-
 import pandas as pd
+from joblib import Parallel, delayed
+
 from ..bitmaps import Bitmap
 from ..utils import intersect2d
-
-from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
-from joblib import Parallel, delayed
+from ..base import BaseMiner, DiscovererMixin
 
 log = np.log2
 
@@ -274,6 +273,34 @@ def _reconstruct(start, period, dE):
     return occurences
 
 
+def _generate_candidates(S_a: pd.Index, n_event_tot: int):
+    # TODO : sort S_a here
+    S_a = S_a.sort_values()
+    dS = S_a[-1] - S_a[0]
+    cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
+    covered = Bitmap(covered)
+    if len(S_a) - len(covered) > 3:
+        _S_a = S_a[~covered]
+        triples = extract_triples(_S_a, dS)
+        merged = merge_triples(triples)
+        new_cycles = list()
+
+        for batch in merged:
+            covered.update(np.unique(np.searchsorted(S_a, batch)))
+            E = np.diff(batch)
+            period = np.floor(np.median(E)).astype("int64")
+            dE = E - period
+            # TODO : compute score ?
+            new_cycles.append([batch[:, 0], batch.shape[1], period, dE])
+
+        if new_cycles:
+            new_cycles = pd.concat(new_cycles)
+            cycles = pd.concat([cycles, new_cycles])
+
+    residuals = S_a[~covered]  # FIXME check this is valid boolean masking
+    return cycles, residuals
+
+
 # TODO : inherit MDLOptimizer
 class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     """
@@ -352,59 +379,24 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        self.cycles_, self.residuals_ = self.generate_candidates(S)
-        # TODO fitler candidates
-        return self
-
-    def generate_candidates(self, S):
-        """
-        Generate candidates from S
-
-        Returns
-        -------
-        list[np.ndarray]  # TODO
-        """
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
 
         cycles, residuals = zip(
             *Parallel()(
-                delayed(self._generate_candidates)(S_a.index, n_event_tot)
+                delayed(_generate_candidates)(S_a.index, n_event_tot)
                 for _, S_a in alpha_groups
             )
         )
+
         gr = alpha_groups.groups
         c = dict(zip(gr.keys(), cycles))
         cycles = pd.concat(c.values(), keys=c.keys())
         residuals = dict(zip(gr.keys(), residuals))
-        return cycles, residuals
+        self.cycles_, self.residuals_ = cycles, residuals
 
-    def _generate_candidates(self, S_a: pd.Index, n_event_tot: int):
-        # TODO : sort S_a here
-        S_a = S_a.sort_values()
-        dS = S_a[-1] - S_a[0]
-        cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
-        covered = Bitmap(covered)
-        if len(S_a) - len(covered) > 3:
-            _S_a = S_a[~covered]
-            triples = extract_triples(_S_a, dS)
-            merged = merge_triples(triples)
-            new_cycles = list()
-
-            for batch in merged:
-                covered.update(np.unique(np.searchsorted(S_a, batch)))
-                E = np.diff(batch)
-                period = np.floor(np.median(E)).astype("int64")
-                dE = E - period
-                # TODO : compute score ?
-                new_cycles.append([batch[:, 0], batch.shape[1], period, dE])
-
-            if new_cycles:
-                new_cycles = pd.concat(new_cycles)
-                cycles = pd.concat([cycles, new_cycles])
-
-        residuals = S_a[~covered]  # FIXME check this is valid boolean masking
-        return cycles, residuals
+        # TODO fitler candidates
+        return self
 
     def discover(self):
         """Return cycles as a pandas DataFrame, with 3 columns,
@@ -446,6 +438,24 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         return cycles
 
     def reconstruct(self):
+        """Reconstruct the original occurences from the current cycles
+        Residuals will also be included, as the compression scheme is lossless
+
+        Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle
+        :math:`C`, we have
+
+        .. math::
+            \Delta(C)=(r-1) p+\sigma(E)
+
+        Returns
+        -------
+        pd.Series
+            The reconstructed dataset
+
+        Notes
+        -----
+        The index of the resulting pd.Series will not be sorted
+        """
         cycles = self.cycles_[["start", "period", "dE"]]
         result = list()
         for alpha, df in cycles.groupby(level=0):
