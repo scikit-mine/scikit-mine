@@ -314,13 +314,13 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     A cycle is defined a 5-tuple of of the form
         .. math:: \\alpha, r, p, \\tau, E
 
-    From left to right
+    Where
 
-    - the repeating event
-    - the number of repetitions of the event, called the cycle length
-    - the inter-occurence distance, called the cycle period
-    - the index of the first occurence, called the cycle starting point
-    - a list of r - 1 signed integer offsets, called the cycle shift corrections
+    - :math:`\\alpha` is the `repeating event`
+    - :math:`r` is the number of repetitions of the event, called the `cycle length`
+    - :math:`p` is the inter-occurence distance, called the `cycle period`
+    - :math:`\\tau` is the index of the first occurence, called the `cycle starting point`
+    - :math:`E` is a list of :math:`r - 1` signed integer offsets, called the `cycle shift corrections`
 
 
     Parameters
