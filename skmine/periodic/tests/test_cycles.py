@@ -175,10 +175,10 @@ def test_evaluate():
     cycles, residuals = evaluate(minutes, cands)
     assert residuals.size == 0
     assert cycles.dtypes.to_dict() == {
-        "start": int,
-        "length": int,
-        "period": int,
-        "dE": object,
+        "start": np.dtype("int64"),
+        "length": np.dtype("int64"),
+        "period": np.dtype("int64"),
+        "dE": np.dtype("object"),
     }
     assert cycles.length.tolist() == [6, 3, 3]
     assert (cycles.period == 2).all()
