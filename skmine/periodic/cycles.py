@@ -193,7 +193,7 @@ def extract_triples(S, dS):
         t = occ + grid[keep]
         if t.size != 0:
             e = np.array([t[:, 0], np.array([occ] * t.shape[0]), t[:, 1]]).T
-            assert e.dtype == int and e.shape[1] == 3
+            assert np.issubdtype(e.dtype, np.number) and e.shape[1] == 3
             triples.append(e)
     if triples:
         return np.vstack(triples)

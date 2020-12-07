@@ -177,7 +177,6 @@ def test_evaluate():
     _types = np.unique(cycles.dtypes)
     assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
     assert np.issubdtype(_types[0], np.number)
-    assert np.issubdtype(_types[1], np.object)
     assert cycles.length.tolist() == [6, 3, 3]
     assert (cycles.period == 2).all()
     assert cycles.index.is_monotonic_increasing
