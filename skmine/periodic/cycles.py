@@ -2,9 +2,9 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
+from itertools import groupby
 import numpy as np
 import pandas as pd
-from itertools import groupby
 
 from ..bitmaps import Bitmap
 from ..utils import intersect2d
@@ -381,7 +381,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.n_zeros_ = 0
         self.is_fitted = lambda: self.is_datetime_ is not None
         self.n_jobs = n_jobs
-        self.max_length_ = max_length
+        self.max_length = max_length
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -444,7 +444,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         candidates = dict()
         for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length_)
+            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length)
             if cands:
                 candidates[event] = cands
 
