@@ -174,12 +174,10 @@ def test_evaluate():
     minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
     cycles, residuals = evaluate(minutes, cands)
     assert residuals.size == 0
-    assert cycles.dtypes.to_dict() == {
-        "start": np.dtype("int"),
-        "length": np.dtype("int"),
-        "period": np.dtype("int"),
-        "dE": np.dtype("object"),
-    }
+    _types = np.unique(cycles.dtypes)
+    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert np.issubdtype(_types[0], np.number)
+    assert np.issubdtype(_types[1], np.object)
     assert cycles.length.tolist() == [6, 3, 3]
     assert (cycles.period == 2).all()
     assert cycles.index.is_monotonic_increasing
