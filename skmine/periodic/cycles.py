@@ -4,7 +4,7 @@
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
+from itertools import groupby
 
 from ..bitmaps import Bitmap
 from ..utils import intersect2d
@@ -101,19 +101,15 @@ def compute_cycles_dyn(S, n_tot):
 
     cycles = list()
     covered = Bitmap()
-    for start, end in splits:
-        length = end - start + 1
-        if length >= 3:
-            cov = S[start : start + length]
-            E = np.diff(cov)
-            period = np.floor(np.median(E)).astype("int64")
-            dE = E - period
-            # TODO : compute score ?
-            cycles.append([cov[0], length, period, dE])
-            covered.update(range(start, end + 1))
+    for length, g in groupby(splits, key=lambda e: e[1] - e[0]):
+        g = list(g)
+        if length >= 2:  # eq to length + 1 >= 3
+            curr_cycles = np.vstack([S[s : e + 1] for s, e in g])  # COPY
+            cycles.append(curr_cycles)
+            for s, e in g:
+                covered.update(range(s, e + 1))
 
-    cycles = pd.DataFrame(cycles, columns=["start", "length", "period", "dE"])
-    return cycles, covered
+    return list(reversed(cycles)), covered
 
 
 def get_table_dyn(S: pd.Index, n_tot: int):
@@ -195,8 +191,9 @@ def extract_triples(S, dS):
         if t.size != 0:
             e = np.array([t[:, 0], np.array([occ] * t.shape[1]), t[:, 1]]).T
             triples.append(e)
-
-    return np.vstack(triples)
+    if triples:
+        return np.vstack(triples)
+    return None
 
 
 def merge_triples(triples, n_merge=10):
@@ -213,6 +210,8 @@ def merge_triples(triples, n_merge=10):
     list[np.ndarray]
         a list of cycles
     """
+    if triples is None:
+        return list()
     res = [triples]
     for idx in range(1, n_merge + 1):
         prev = res[idx - 1]
@@ -225,7 +224,7 @@ def merge_triples(triples, n_merge=10):
         res.append(merged)
         to_delete = np.union1d(left_idx, right_idx)
         res[idx - 1] = np.delete(res[idx - 1], to_delete, axis=0)
-    return res
+    return list(reversed(res))  # inverse order of length
 
 
 def _recover_splits_rec(cut_points, ia, iz):
@@ -274,31 +273,45 @@ def _reconstruct(start, period, dE):
 
 
 def _generate_candidates(S_a: pd.Index, n_event_tot: int):
-    # TODO : sort S_a here
     S_a = S_a.sort_values()
     dS = S_a[-1] - S_a[0]
     cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
     covered = Bitmap(covered)
-    if len(S_a) - len(covered) > 3:
-        _S_a = S_a[~covered]
+
+    if len(S_a) - len(covered) > 3:  # add triples if necessary
+        _all = Bitmap(range(len(S_a)))
+        _S_a = S_a[_all - covered]
         triples = extract_triples(_S_a, dS)
         merged = merge_triples(triples)
-        new_cycles = list()
+        cycles.extend(merged)
 
-        for batch in merged:
-            covered.update(np.unique(np.searchsorted(S_a, batch)))
-            E = np.diff(batch)
-            period = np.floor(np.median(E)).astype("int64")
-            dE = E - period
-            # TODO : compute score ?
-            new_cycles.append([batch[:, 0], batch.shape[1], period, dE])
+    return list(sorted(cycles, key=lambda _: _.shape[1], reverse=True))
 
-        if new_cycles:
-            new_cycles = pd.concat(new_cycles)
-            cycles = pd.concat([cycles, new_cycles])
 
-    residuals = S_a[~covered]  # FIXME check this is valid boolean masking
-    return cycles, residuals
+def evaluate(S, cands):
+    """
+    Parameters
+    ----------
+    cand: list[np.ndarray]
+        A list of candidate occurences, sorted by decreasing order of length
+    """
+    res = list()  # list of pandas DataFrame
+    covered = Bitmap()
+    for cand_batch in cands:
+        length = cand_batch.shape[1]
+        E = np.diff(cand_batch, axis=1)
+        period = np.floor(np.median(E, axis=1)).astype("int64")
+        dE = (E.T - period).T
+        df = pd.DataFrame(
+            dict(start=cand_batch[:, 0], length=length, period=period, dE=dE.tolist())
+        )
+        res.append(df)
+        covered.update(np.searchsorted(S, np.unique(cand_batch)))
+
+    res = pd.concat(res, ignore_index=True)
+    _all = Bitmap(range(len(S)))
+    not_covered = _all - covered
+    return res, S[not_covered]
 
 
 # TODO : inherit MDLOptimizer
@@ -320,7 +333,7 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     - :math:`r` is the number of repetitions of the event, called the `cycle length`
     - :math:`p` is the inter-occurence distance, called the `cycle period`
     - :math:`\\tau` is the index of the first occurence, called the `cycle starting point`
-    - :math:`E` is a list of :math:`r - 1` signed integer offsets, called the `cycle shift corrections`
+    - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`
 
 
     Parameters
@@ -337,8 +350,8 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
     >>> pcm = PeriodicCycleMiner().fit(S)
     >>> pcm.discover()
                    start  length  period
-    ring_a_bell 0     10       3      11
-                1     40       4      20
+    ring_a_bell 0     40       4      20
+                1     10       3      11
 
     References
     ----------
@@ -347,12 +360,13 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self):
+    def __init__(self, n_jobs=1):
         self.cycles_ = pd.DataFrame()
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
         self.is_fitted = lambda: self.is_datetime_ is not None
+        self.n_jobs = n_jobs
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -382,17 +396,21 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         n_event_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
 
+        gr = alpha_groups.groups
+        candidates = dict()
+        for event, S_a in alpha_groups:
+            cands = _generate_candidates(S_a.index, n_event_tot)
+            if cands:
+                candidates[event] = cands
+
         cycles, residuals = zip(
-            *Parallel()(
-                delayed(_generate_candidates)(S_a.index, n_event_tot)
-                for _, S_a in alpha_groups
-            )
+            *(evaluate(gr[event], cands) for event, cands in candidates.items())
         )
 
-        gr = alpha_groups.groups
         c = dict(zip(gr.keys(), cycles))
         cycles = pd.concat(c.values(), keys=c.keys())
         residuals = dict(zip(gr.keys(), residuals))
+        residuals = {**gr, **residuals}  # fill groups with no cands with all occurences
         self.cycles_, self.residuals_ = cycles, residuals
 
         # TODO fitler candidates
@@ -420,8 +438,8 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         >>> pcm = PeriodicCycleMiner().fit(S)
         >>> pcm.discover()
                 start  length  period
-        ring 0     10       3      11
-             1     40       4      20
+        ring 0     40       4      20
+             1     10       3      11
 
         """
         if not self.is_fitted():

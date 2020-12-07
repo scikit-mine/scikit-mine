@@ -14,7 +14,10 @@ from ..cycles import (
     extract_triples,
     merge_triples,
     PeriodicCycleMiner,
+    _generate_candidates,
+    evaluate,
 )
+from .. import cycles
 
 
 @pytest.fixture
@@ -123,9 +126,22 @@ def test_recover_split_rec(cut_points):
 def test_compute_cycles_dyn():
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
-    cycles, covered = compute_cycles_dyn(minutes, len(minutes))
+    occs, covered = compute_cycles_dyn(minutes, len(minutes))
     assert covered == set(range(len(minutes)))
-    assert "start" in cycles.columns
+    assert isinstance(occs, list)
+
+
+def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
+    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
+
+    monkeypatch.setattr(
+        cycles, "_recover_splits_rec", lambda *args: [(0, 2), (3, 5), (6, 11)]
+    )
+
+    occs, covered = compute_cycles_dyn(minutes, len(minutes))
+    assert covered == set(range(len(minutes)))
+    assert all([isinstance(e, np.ndarray) for e in occs])
+    assert [e.shape for e in occs] == [(1, 6), (2, 3)]
 
 
 def test_extract_triples(triples):
@@ -139,6 +155,32 @@ def test_extract_triples(triples):
 def test_merge_triples(triples):
     merged = merge_triples(triples)
     assert len(merged) == 2
+
+
+def test_generate_candidate():
+    minutes = pd.Index([0, 20, 31, 40, 60, 240, 400, 420, 440, 460])
+    cands = _generate_candidates(minutes, len(minutes))
+    widths = [_.shape[1] for _ in cands]
+    assert all(x > y for x, y in zip(widths, widths[1:]))  # monotonic but decreasing
+
+
+def test_evaluate():
+    cands = [
+        np.array([[400, 402, 404, 406, 408, 410]]),
+        np.array([[0, 2, 4], [6, 8, 10]]),
+    ]
+    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
+    cycles, residuals = evaluate(minutes, cands)
+    assert residuals.size == 0
+    assert cycles.dtypes.to_dict() == {
+        "start": int,
+        "length": int,
+        "period": int,
+        "dE": object,
+    }
+    assert cycles.length.tolist() == [6, 3, 3]
+    assert (cycles.period == 2).all()
+    assert cycles.index.is_monotonic_increasing
 
 
 def test_fit():
@@ -180,12 +222,12 @@ def test_reconstruct(is_datetime):
 
 
 def test_fit_triples_and_residuals():
-    minutes = np.array([0, 20, 31, 40, 60, 240, 400, 420, 431, 440, 460])
+    minutes = np.array([0, 20, 31, 40, 60, 240, 400, 420, 431, 440, 460, 781])
 
     S = pd.Series("alpha", index=minutes)
 
     pcm = PeriodicCycleMiner().fit(S)
-    pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240]))
+    pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240, 781]))
 
     rec_minutes = pcm.reconstruct()
 
