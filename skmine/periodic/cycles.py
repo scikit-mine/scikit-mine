@@ -8,7 +8,7 @@ from itertools import groupby
 
 from ..bitmaps import Bitmap
 from ..utils import intersect2d
-from ..base import BaseMiner, DiscovererMixin
+from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 
 log = np.log2
 
@@ -87,7 +87,7 @@ def cycle_length(S, inter, n_event_tot, dS):
     return L_a, L_r, L_p, L_tau, L_E
 
 
-def compute_cycles_dyn(S, n_tot):
+def compute_cycles_dyn(S, n_tot, max_length=100):
     """
     Parameters
     ----------
@@ -96,7 +96,7 @@ def compute_cycles_dyn(S, n_tot):
     n_tot: int
         total number of occurences in the original events
     """
-    _, cut_points = get_table_dyn(S, n_tot)
+    _, cut_points = get_table_dyn(S, n_tot, max_length)
     splits = _recover_splits_rec(cut_points, 0, len(S) - 1)
 
     cycles = list()
@@ -112,7 +112,7 @@ def compute_cycles_dyn(S, n_tot):
     return list(reversed(cycles)), covered
 
 
-def get_table_dyn(S: pd.Index, n_tot: int):
+def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     """
     Parameters
     ----------
@@ -120,8 +120,10 @@ def get_table_dyn(S: pd.Index, n_tot: int):
         a Series of occurences
     n_tot: int
         total number of occurences in the original events
+    max_length: int, default=None
+        maximum number of occurences for a cycle to cover,
+        by default it will be set to :math:`\log_{2}\left(|S|\right)`
     """
-    S = S.astype("int64")
     diffs = np.diff(S)
     triples = window_stack(S, width=3)
     diff_pairs = window_stack(diffs, width=2)
@@ -138,7 +140,8 @@ def get_table_dyn(S: pd.Index, n_tot: int):
     scores = dict(zip(((i, i + 2) for i in range(len(scores))), scores))
     cut_points = dict(zip(scores.keys(), cut_points))
 
-    for k in range(4, len(S) + 1):
+    max_length = min([len(S), max_length])
+    for k in range(4, max_length + 1):
         w = window_stack(S, width=k)
         _diffs = window_stack(diffs, width=k - 1)
         _s = sum(cycle_length(w, _diffs, len(S), dS))
@@ -189,7 +192,8 @@ def extract_triples(S, dS):
         keep = np.abs(grid[:, 0] - grid[:, 1]) < l_max
         t = occ + grid[keep]
         if t.size != 0:
-            e = np.array([t[:, 0], np.array([occ] * t.shape[1]), t[:, 1]]).T
+            e = np.array([t[:, 0], np.array([occ] * t.shape[0]), t[:, 1]]).T
+            assert e.dtype == int and e.shape[1] == 3
             triples.append(e)
     if triples:
         return np.vstack(triples)
@@ -272,10 +276,10 @@ def _reconstruct(start, period, dE):
     return occurences
 
 
-def _generate_candidates(S_a: pd.Index, n_event_tot: int):
+def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100):
     S_a = S_a.sort_values()
     dS = S_a[-1] - S_a[0]
-    cycles, covered = compute_cycles_dyn(S_a, n_event_tot)
+    cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
     covered = Bitmap(covered)
 
     if len(S_a) - len(covered) > 3:  # add triples if necessary
@@ -292,8 +296,13 @@ def evaluate(S, cands):
     """
     Parameters
     ----------
-    cand: list[np.ndarray]
-        A list of candidate occurences, sorted by decreasing order of length
+    S: pd.Index
+        Series of occurences for a specific event
+    cands: list[np.ndarray]
+        A list of candidate batches. Each batch contains candidates occurences of the same length,
+        hence stored in a common `numpy.ndarray`.
+        Batches are sorted by decreasing order of width,
+        so that we consider larger candidates first.
     """
     res = list()  # list of pandas DataFrame
     covered = Bitmap()
@@ -315,7 +324,7 @@ def evaluate(S, cands):
 
 
 # TODO : inherit MDLOptimizer
-class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
+class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     """
     Mining periodic cycles with a MDL Criterion
 
@@ -338,6 +347,8 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
 
     Parameters
     ----------
+    max_length: int, default=100
+        maximum length for a candidate cycle, when running the dynamic programming heuristic
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single event is attributed a job
         to discover potential cycles.
@@ -360,13 +371,14 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self, n_jobs=1):
+    def __init__(self, *, max_length=100, n_jobs=1):
         self.cycles_ = pd.DataFrame()
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
         self.is_fitted = lambda: self.is_datetime_ is not None
         self.n_jobs = n_jobs
+        self.max_length_ = max_length
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -393,28 +405,47 @@ class PeriodicCycleMiner(BaseMiner, DiscovererMixin):
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        n_event_tot = S.shape[0]
-        alpha_groups = S.groupby(S.values)
+        candidates = self.generate_candidates(S)
 
-        gr = alpha_groups.groups
-        candidates = dict()
-        for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index, n_event_tot)
-            if cands:
-                candidates[event] = cands
-
+        gr = S.groupby(S.values).groups
         cycles, residuals = zip(
             *(evaluate(gr[event], cands) for event, cands in candidates.items())
         )
 
-        c = dict(zip(gr.keys(), cycles))
+        c = dict(zip(candidates.keys(), cycles))
         cycles = pd.concat(c.values(), keys=c.keys())
-        residuals = dict(zip(gr.keys(), residuals))
+        residuals = dict(zip(candidates.keys(), residuals))
         residuals = {**gr, **residuals}  # fill groups with no cands with all occurences
         self.cycles_, self.residuals_ = cycles, residuals
 
         # TODO fitler candidates
         return self
+
+    evaluate = evaluate
+
+    def generate_candidates(self, S):
+        """
+        Parameters
+        ----------
+        S: pd.Index or numpy.ndarray
+            Series of occurences for a specific event
+
+        Returns
+        -------
+        list[np.ndarray]
+            A list of batch of candidates. Batches are sorted in inverse order of width,
+            so that we consider larger candidate cycles first.
+        """
+        n_event_tot = S.shape[0]
+        alpha_groups = S.groupby(S.values)
+
+        candidates = dict()
+        for event, S_a in alpha_groups:
+            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length_)
+            if cands:
+                candidates[event] = cands
+
+        return candidates
 
     def discover(self):
         """Return cycles as a pandas DataFrame, with 3 columns,
