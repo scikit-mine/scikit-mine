@@ -154,7 +154,9 @@ def test_extract_triples(triples):
 
 def test_merge_triples(triples):
     merged = merge_triples(triples)
-    assert len(merged) == 2
+    # original triples (size 3) should all have been merged into larger candidates
+    assert len(merged) == 1
+    np.testing.assert_array_equal(np.unique(merged[0]), np.unique(triples))
 
 
 def test_generate_candidate():

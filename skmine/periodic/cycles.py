@@ -228,6 +228,9 @@ def merge_triples(triples, n_merge=10):
         res.append(merged)
         to_delete = np.union1d(left_idx, right_idx)
         res[idx - 1] = np.delete(res[idx - 1], to_delete, axis=0)
+        if (np.unique(merged) == np.unique(merged)).all():
+            res.pop(idx - 1)
+            break
     return list(reversed(res))  # inverse order of length
 
 
