@@ -39,6 +39,8 @@ true_patterns = pd.DataFrame(
 
 true_patterns.loc[:, "itemset"] = true_patterns.itemset.map(tuple)
 
+NULL_RESULT = (None, None, 0)
+
 
 def test_lcm_fit():
     lcm = LCM(min_supp=3)
@@ -56,12 +58,12 @@ def test_first_parent_limit_1():
     tids = lcm.item_to_tids_[limit]
 
     ## pattern = {4, 6} -> first parent OK
-    itemset, tids = next(lcm._inner((frozenset([4, 6]), tids), limit), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset([4, 6]), tids), limit), NULL_RESULT)
     assert itemset == (1, 4, 6)
     assert len(tids) == 3
 
     # pattern = {} -> first parent fails
-    itemset, tids = next(lcm._inner((frozenset(), tids), limit), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), limit), NULL_RESULT)
     assert itemset == None
 
 
@@ -71,13 +73,13 @@ def test_first_parent_limit_2():
 
     # pattern = {} -> first parent OK
     tids = lcm.item_to_tids_[2]
-    itemset, tids = next(lcm._inner((frozenset(), tids), 2), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), 2), NULL_RESULT)
     assert itemset == (2,)
     assert len(tids) == 5
 
     # pattern = {4} -> first parent OK
     tids = lcm.item_to_tids_[2] & lcm.item_to_tids_[4]
-    itemset, tids = next(lcm._inner((frozenset([4]), tids), 2), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset([4]), tids), 2), NULL_RESULT)
     assert itemset == (2, 4)
     assert len(tids) == 3
 
@@ -87,7 +89,7 @@ def test_first_parent_limit_3():
     lcm.fit(D)
 
     tids = lcm.item_to_tids_[3]
-    itemset, tids = next(lcm._inner((frozenset(), tids), 3), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), 3), NULL_RESULT)
     assert itemset == (3,)
     assert len(tids) == 3
 
@@ -97,7 +99,7 @@ def test_first_parent_limit_4():
     lcm.fit(D)
 
     tids = lcm.item_to_tids_[4]
-    itemset, tids = next(lcm._inner((frozenset(), tids), 4), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), 4), NULL_RESULT)
     assert itemset == (4,)
     assert len(tids) == 5
 
@@ -107,7 +109,7 @@ def test_first_parent_limit_5():
     lcm.fit(D)
 
     tids = lcm.item_to_tids_[5]
-    itemset, tids = next(lcm._inner((frozenset(), tids), 5), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), 5), NULL_RESULT)
     assert itemset == (2, 5)
     assert len(tids) == 4
 
@@ -117,7 +119,7 @@ def test_first_parent_limit_6():
     lcm.fit(D)
 
     tids = lcm.item_to_tids_[6]
-    itemset, tids = next(lcm._inner((frozenset(), tids), 6), (None, None))
+    itemset, tids, _ = next(lcm._inner((frozenset(), tids), 6), NULL_RESULT)
     assert itemset == (4, 6)
     assert len(tids) == 4
 
@@ -148,8 +150,7 @@ def test_lcm_discover():
 
 
 def test_lcm_discover_max_depth():
-    lcm = LCM(min_supp=3)
-    patterns = lcm.fit_discover(D, max_depth=2)
+    patterns = LCM(min_supp=3, max_depth=2).fit_discover(D)
     assert not ((1, 4, 6) in patterns.itemset.tolist())
 
 

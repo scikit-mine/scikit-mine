@@ -36,8 +36,12 @@ class LCM(BaseMiner, DiscovererMixin):
     min_supp: int or float, default=0.2
         The minimum support for itemsets to be rendered in the output
         Either an int representing the absolute support, or a float for relative support
-
         Default to 0.2 (20%)
+
+    max_depth: int, default=20
+        Maximum depth for exploration in the search space.
+        A root node is considered of depth 1.
+        This can avoid cumbersome computation.
 
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
@@ -71,9 +75,10 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
+    def __init__(self, *, min_supp=0.2, max_depth=20, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
+        self.max_depth = int(max_depth)
         self._min_supp = _check_min_supp(self.min_supp)
         self.item_to_tids_ = SortedDict()
         self.n_transactions_ = 0
@@ -104,7 +109,7 @@ class LCM(BaseMiner, DiscovererMixin):
         self.item_to_tids_ = SortedDict(item_to_tids)
         return self
 
-    def discover(self, return_tids=False, max_depth=100):
+    def discover(self, return_tids=False, return_depth=False):
         """Return the set of closed itemsets, with respect to the minium support
 
         Parameters
@@ -114,14 +119,12 @@ class LCM(BaseMiner, DiscovererMixin):
             Where every entry contain singular items
             Items must be both hashable and comparable
 
-        return_tids: bool
+        return_tids: bool, default=False
             Either to return transaction ids along with itemset.
             Default to False, will return supports instead
 
-        max_depth: int, default=100
-            Maximum depth for exploration in the search space.
-            A root node is considered of depth 1.
-            This can avoid cumbersome computation.
+        return_depth: bool, default=False
+            Either to return depth for each item or not.
 
         Returns
         -------
@@ -151,34 +154,35 @@ class LCM(BaseMiner, DiscovererMixin):
         0     (2, 5)  [0, 1, 2]
         1  (2, 3, 5)     [0, 1]
         """
-        empty_df = pd.DataFrame(columns=["itemset", "tids"])
-
         # reverse order of support
         supp_sorted_items = sorted(
             self.item_to_tids_.items(), key=lambda e: len(e[1]), reverse=True
         )
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-            delayed(self._explore_root)(item, tids, max_depth)
-            for item, tids in supp_sorted_items
+            delayed(self._explore_root)(item, tids) for item, tids in supp_sorted_items
         )
 
-        dfs.append(empty_df)  # make sure we have something to concat
+        # make sure we have something to concat
+        dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
         df = pd.concat(dfs, axis=0, ignore_index=True)
         if not return_tids:
             df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
             df.drop("tids", axis=1, inplace=True)
+
+        if not return_depth:
+            df.drop("depth", axis=1, inplace=True)
         return df
 
-    def _explore_root(self, item, tids, max_depth):
-        it = self._inner((frozenset(), tids), item, 1, max_depth)
-        df = pd.DataFrame(data=it, columns=["itemset", "tids"])
+    def _explore_root(self, item, tids):
+        it = self._inner((frozenset(), tids), item, 1)
+        df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from item : {}".format(len(df), item))
         return df
 
-    def _inner(self, p_tids, limit, depth=1, max_depth=100):
-        if depth >= max_depth:
+    def _inner(self, p_tids, limit, depth=1):
+        if depth >= self.max_depth:
             return
         p, tids = p_tids
         # project and reduce DB w.r.t P
@@ -197,7 +201,7 @@ class LCM(BaseMiner, DiscovererMixin):
                 p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
-            yield tuple(sorted(p_prime)), tids
+            yield tuple(sorted(p_prime)), tids, depth
 
             candidates = self.item_to_tids_.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
@@ -206,7 +210,7 @@ class LCM(BaseMiner, DiscovererMixin):
                 if tids.intersection_len(ids) >= self._min_supp:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
-                    yield from self._inner(new_p_tids, new_limit, depth + 1, max_depth)
+                    yield from self._inner(new_p_tids, new_limit, depth + 1)
 
 
 class LCMMax(LCM):
@@ -221,8 +225,13 @@ class LCMMax(LCM):
     min_supp: int or float, default=0.2
         The minimum support for itemsets to be rendered in the output
         Either an int representing the absolute support, or a float for relative support
-
         Default to 0.2 (20%)
+
+    max_depth: int, default=20
+        Maximum depth for exploration in the search space.
+        A root node is considered of depth 1.
+        This can avoid cumbersome computation.
+
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
@@ -233,8 +242,8 @@ class LCMMax(LCM):
     LCM
     """
 
-    def _inner(self, p_tids, limit, depth=1, max_depth=100):
-        if depth >= max_depth:
+    def _inner(self, p_tids, limit, depth=1):
+        if depth >= self.max_depth:
             return
         p, tids = p_tids
         # project and reduce DB w.r.t P
@@ -264,14 +273,14 @@ class LCMMax(LCM):
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
-                    yield from self._inner(new_p_tids, new_limit, depth + 1, max_depth)
+                    yield from self._inner(new_p_tids, new_limit, depth + 1)
 
             # only if no child node. This is how we PRE-check for maximality
             if no_cand:
-                yield tuple(sorted(p_prime)), tids
+                yield tuple(sorted(p_prime)), tids, depth
 
-    def discover(self, return_tids=False, max_depth=100):
-        patterns = super().discover(return_tids=return_tids, max_depth=max_depth)
+    def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
+        patterns = super().discover(*args, **kwargs)
         maximums = [tuple(sorted(x)) for x in filter_maximal(patterns["itemset"])]
         return patterns[patterns.itemset.isin(maximums)]
 
