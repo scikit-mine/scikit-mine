@@ -3,7 +3,9 @@ LCM: Linear time Closed item set Miner
 as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 """
 
-# Author: Rémi Adon <remi.adon@gmail.com>
+# Authors: Rémi Adon <remi.adon@gmail.com>
+#          Luis Galárraga <galarraga@luisgalarraga.de>
+#
 # License: BSD 3 clause
 
 from collections import defaultdict
@@ -90,6 +92,18 @@ class LCM(BaseMiner, DiscovererMixin):
         """
         fit LCM on the transactional database, by keeping records of singular items
         and their transaction ids.
+
+        Parameters
+        ----------
+        D: pd.Series or iterable
+            a transactional database. All entries in this D should be lists.
+            If D is a pandas.Series, then `(D.map(type) == list).all()` should return `True`
+
+        Raises
+        ------
+        TypeError
+            if any entry in D is not iterable itself OR if any item is not **hashable**
+            OR if all items are not **comparable** with each other.
         """
         self.n_transactions_ = 0  # reset for safety
         item_to_tids = defaultdict(Bitmap)
