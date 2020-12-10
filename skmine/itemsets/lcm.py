@@ -27,10 +27,10 @@ class LCM(BaseMiner, DiscovererMixin):
     """
     Linear time Closed item set Miner.
 
-    LCM can be used as a generic purpose miner, yielding some patterns
+    LCM can be used as a **generic purpose** miner, yielding some patterns
     that will be later submitted to a custom acceptance criterion.
 
-    It can also be used to simply discover the set of closed itemsets from
+    It can also be used to simply discover the set of **closed itemsets** from
     a transactional dataset.
 
     Parameters
@@ -42,13 +42,16 @@ class LCM(BaseMiner, DiscovererMixin):
 
     max_depth: int, default=20
         Maximum depth for exploration in the search space.
-        A root node is considered of depth 1.
+        When going into recursion, we check if the current depth
+        is **strictly greater** than `max_depth`.
+        If this is the case, we stop.
         This can avoid cumbersome computation.
+        A **root node is considered of depth 0**.
 
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
-        Processes are preffered over threads.
+        **Processes are preffered** over threads.
 
     References
     ----------
@@ -123,7 +126,7 @@ class LCM(BaseMiner, DiscovererMixin):
         self.item_to_tids_ = SortedDict(item_to_tids)
         return self
 
-    def discover(self, return_tids=False, return_depth=False):
+    def discover(self, *, return_tids=False, return_depth=False):
         """Return the set of closed itemsets, with respect to the minium support
 
         Parameters
@@ -155,6 +158,8 @@ class LCM(BaseMiner, DiscovererMixin):
                 tids        a bitmap tracking positions
                 ==========  =================================
 
+            if `return_depth` is `True`, then a `depth` column is also present
+
         Example
         -------
         >>> from skmine.itemsets import LCM
@@ -163,10 +168,10 @@ class LCM(BaseMiner, DiscovererMixin):
              itemset  support
         0     (2, 5)        3
         1  (2, 3, 5)        2
-        >>> LCM(min_supp=2).fit_discover(D, return_tids=True)  # doctest: +SKIP
-             itemset       tids
-        0     (2, 5)  [0, 1, 2]
-        1  (2, 3, 5)     [0, 1]
+        >>> LCM(min_supp=2).fit_discover(D, return_tids=True, return_depth=True)
+             itemset       tids depth
+        0     (2, 5)  [0, 1, 2]     0
+        1  (2, 3, 5)     [0, 1]     1
         """
         # reverse order of support
         supp_sorted_items = sorted(
@@ -189,13 +194,13 @@ class LCM(BaseMiner, DiscovererMixin):
         return df
 
     def _explore_root(self, item, tids):
-        it = self._inner((frozenset(), tids), item, 1)
+        it = self._inner((frozenset(), tids), item)
         df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from item : {}".format(len(df), item))
         return df
 
-    def _inner(self, p_tids, limit, depth=1):
+    def _inner(self, p_tids, limit, depth=0):
         if depth >= self.max_depth:
             return
         p, tids = p_tids
@@ -243,20 +248,23 @@ class LCMMax(LCM):
 
     max_depth: int, default=20
         Maximum depth for exploration in the search space.
-        A root node is considered of depth 1.
+        When going into recursion, we check if the current depth
+        is **strictly greater** than `max_depth`.
+        If this is the case, we stop.
         This can avoid cumbersome computation.
+        A **root node is considered of depth 0**.
 
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
-        Processes are preffered over threads.
+        **Processes are preffered** over threads.
 
     See Also
     --------
     LCM
     """
 
-    def _inner(self, p_tids, limit, depth=1):
+    def _inner(self, p_tids, limit, depth=0):
         if depth >= self.max_depth:
             return
         p, tids = p_tids
