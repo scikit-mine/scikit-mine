@@ -150,8 +150,9 @@ def test_lcm_discover():
 
 
 def test_lcm_discover_max_depth():
-    patterns = LCM(min_supp=3, max_depth=2).fit_discover(D)
+    patterns = LCM(min_supp=3, max_depth=1).fit_discover(D, return_depth=True)
     assert not ((1, 4, 6) in patterns.itemset.tolist())
+    assert (patterns.depth < 2).all()
 
 
 def test_relative_support():
