@@ -38,6 +38,7 @@ class LCM(BaseMiner, DiscovererMixin):
         Either an int representing the absolute support, or a float for relative support
 
         Default to 0.2 (20%)
+
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
@@ -103,7 +104,7 @@ class LCM(BaseMiner, DiscovererMixin):
         self.item_to_tids_ = SortedDict(item_to_tids)
         return self
 
-    def discover(self, return_tids=False):
+    def discover(self, return_tids=False, max_depth=100):
         """Return the set of closed itemsets, with respect to the minium support
 
         Parameters
@@ -116,6 +117,11 @@ class LCM(BaseMiner, DiscovererMixin):
         return_tids: bool
             Either to return transaction ids along with itemset.
             Default to False, will return supports instead
+
+        max_depth: int, default=100
+            Maximum depth for exploration in the search space.
+            A root node is considered of depth 1.
+            This can avoid cumbersome computation.
 
         Returns
         -------
@@ -153,7 +159,8 @@ class LCM(BaseMiner, DiscovererMixin):
         )
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-            delayed(self._explore_item)(item, tids) for item, tids in supp_sorted_items
+            delayed(self._explore_root)(item, tids, max_depth)
+            for item, tids in supp_sorted_items
         )
 
         dfs.append(empty_df)  # make sure we have something to concat
@@ -163,14 +170,17 @@ class LCM(BaseMiner, DiscovererMixin):
             df.drop("tids", axis=1, inplace=True)
         return df
 
-    def _explore_item(self, item, tids):
-        it = self._inner(frozenset(), tids, item)
+    def _explore_root(self, item, tids, max_depth):
+        it = self._inner((frozenset(), tids), item, 1, max_depth)
         df = pd.DataFrame(data=it, columns=["itemset", "tids"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from item : {}".format(len(df), item))
         return df
 
-    def _inner(self, p, tids, limit):
+    def _inner(self, p_tids, limit, depth=1, max_depth=100):
+        if depth >= max_depth:
+            return
+        p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
             item
@@ -194,8 +204,9 @@ class LCM(BaseMiner, DiscovererMixin):
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
-                    new_limit_tids = tids.intersection(ids)
-                    yield from self._inner(p_prime, new_limit_tids, new_limit)
+                    # new pattern and its associated tids
+                    new_p_tids = (p_prime, tids.intersection(ids))
+                    yield from self._inner(new_p_tids, new_limit, depth + 1, max_depth)
 
 
 class LCMMax(LCM):
@@ -222,7 +233,10 @@ class LCMMax(LCM):
     LCM
     """
 
-    def _inner(self, p, tids, limit):
+    def _inner(self, p_tids, limit, depth=1, max_depth=100):
+        if depth >= max_depth:
+            return
+        p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
             item
@@ -248,15 +262,17 @@ class LCMMax(LCM):
                 ids = self.item_to_tids_[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
                     no_cand = False
-                    new_limit_tids = tids.intersection(ids)
-                    yield from self._inner(p_prime, new_limit_tids, new_limit)
+                    # get new pattern and its associated tids
+                    new_p_tids = (p_prime, tids.intersection(ids))
+                    yield from self._inner(new_p_tids, new_limit, depth + 1, max_depth)
 
-            if (
-                no_cand
-            ):  # only if no child node. This is how we PRE-check for maximality
+            # only if no child node. This is how we PRE-check for maximality
+            if no_cand:
                 yield tuple(sorted(p_prime)), tids
 
-    def fit_discover(self, D, return_tids=False):
-        patterns = super().fit_discover(D, return_tids=return_tids)
+    def discover(self, return_tids=False, max_depth=100):
+        patterns = super().discover(return_tids=return_tids, max_depth=max_depth)
         maximums = [tuple(sorted(x)) for x in filter_maximal(patterns["itemset"])]
         return patterns[patterns.itemset.isin(maximums)]
+
+    setattr(discover, "__doc__", LCM.discover.__doc__.replace("closed", "maximal"))
