@@ -5,6 +5,7 @@
 
 from functools import reduce, lru_cache
 from itertools import chain
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,12 @@ from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
 from ..callbacks import mdl_prints
 
+def _to_vertical(D):
+    res = defaultdict(Bitmap)
+    for idx, transaction in enumerate(D):
+        for e in transaction:
+            res[e].add(idx)
+    return dict(res)
 
 def _log2(values):
     res_index = values.index if isinstance(values, pd.Series) else None
@@ -194,9 +201,9 @@ class SLIM(BaseMiner, MDLOptimizer):
     Examples
     --------
     >>> from skmine.itemsets import SLIM
-    >>> from skmine.preprocessing import TransactionEncoder
+    >>> from sklearn.preprocessing import MultiLabelBinarizer
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> D = TransactionEncoder().fit_transform(D)
+    >>> D = MultiLabelBinarizer().fit_transform(D)
     >>> SLIM().fit(D)                       # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
@@ -236,10 +243,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         D: pd.DataFrame
             Transactional dataset, encoded as tabular binary data
         """
-        D = _check_D(D)
-        if y is not None:
-            D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
-
         self._prefit(D)
         n_iter_no_change = 0
         seen_cands = set()
@@ -285,9 +288,9 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         Example
         -------
-        >>> from skmine.preprocessing import TransactionEncoder
+        >>> from sklearn.preprocessing import MultiLabelBinarizer
         >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> te = TransactionEncoder()
+        >>> te = MultiLabelBinarizer()
         >>> D = te.fit_transform(D)
         >>> new_D = te.transform([['cookies', 'butter']])
         >>> slim = SLIM().fit(D)
@@ -387,8 +390,14 @@ class SLIM(BaseMiner, MDLOptimizer):
     def _standard_candidate_order(self, itemset):
         return (-self.get_support(itemset), -len(itemset), tuple(itemset))
 
-    def _prefit(self, D):
-        item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+    def _prefit(self, D, y=None):
+        if hasattr(D, 'ndim') and D.ndim == 2:
+            D = _check_D(D)
+            if y is not None:
+                D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
+            item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        else:
+            item_to_tids = _to_vertical(D)
         self.standard_codetable_ = pd.Series(item_to_tids)
         usage = self.standard_codetable_.map(len).astype(np.uint32)
 
