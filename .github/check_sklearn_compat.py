@@ -35,8 +35,9 @@ FAIL = "\x1b[41m[FAIL]\x1b[0m"
 
 def is_estimator(e):
     _, est = e
-    meth = getattr(est, "fit", None)
-    return callable(meth)
+    fit_meth = getattr(est, "fit", None)
+    pred_meth = getattr(est, "decision_function", None)
+    return callable(fit_meth) and callable(pred_meth)
 
 
 if __name__ == "__main__":

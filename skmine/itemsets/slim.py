@@ -201,10 +201,10 @@ class SLIM(BaseMiner, MDLOptimizer):
     Examples
     --------
     >>> from skmine.itemsets import SLIM
-    >>> from sklearn.preprocessing import MultiLabelBinarizer
+    >>> from sklearn.preprocessing import MultiLabelBinarizer  # doctest: +SKIP
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> D = MultiLabelBinarizer().fit_transform(D)
-    >>> SLIM().fit(D)                       # doctest: +SKIP
+    >>> D = MultiLabelBinarizer().fit_transform(D)  # doctest: +SKIP
+    >>> SLIM().fit(D).codetable  # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
     (cookies)          [1, 2]
@@ -286,14 +286,18 @@ class SLIM(BaseMiner, MDLOptimizer):
         Setting ``pruning`` to False when creating the model
         is recommended to cover unseen data, and especially when building a classifier.
 
+        Parameters
+        ----------
+        D: pd.DataFrame or np.ndarray
+            new data to make predictions on, in tabular format
+
         Example
         -------
-        >>> from sklearn.preprocessing import MultiLabelBinarizer
+        >>> from skmine.itemsets import SLIM; import pandas as pd
+        >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
         >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> te = MultiLabelBinarizer()
-        >>> D = te.fit_transform(D)
-        >>> new_D = te.transform([['cookies', 'butter']])
-        >>> slim = SLIM().fit(D)
+        >>> new_D = to_tabular([['cookies', 'butter']])
+        >>> slim = SLIM().fit(to_tabular(D))
         >>> slim.decision_function(new_D)
         0   -1.321928
         dtype: float32
