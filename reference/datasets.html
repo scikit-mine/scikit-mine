@@ -29,7 +29,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
@@ -622,7 +621,7 @@ and <code class="docutils literal notranslate"><span class="pre">fetch_instacart
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#skmine.datasets.get_data_home" title="skmine.datasets.get_data_home"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_data_home()</span></code></a></p>
+<p><a class="reference internal" href="#skmine.datasets.get_data_home" title="skmine.datasets.get_data_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_home</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">fetch_instacart</span>
@@ -716,7 +715,9 @@ parameter.</p>
 <li><p><strong>n_items_per_class</strong> (<em>int</em><em>, </em><em>default=100</em>) – The number of items per class. This is similar to the <code class="docutils literal notranslate"><span class="pre">n_features</span></code>
 parameters in scikit-learn, but operates at a class level.</p></li>
 <li><p><strong>n_classes</strong> (<em>int</em><em>, </em><em>default=2</em>) – The number of classes (or labels) of the classification problem</p></li>
-<li><p><strong>array-like of shape</strong><strong> (</strong><strong>n_classes</strong><strong>,</strong><strong>) </strong><strong>default=None</strong> (<em>weigths</em><em>,</em>) – The proportions of samples assigned to each class. If None, then classes are balanced</p></li>
+<li><p><strong>weigths</strong> – The proportions of samples assigned to each class. If None, then classes are balanced</p></li>
+<li><p><strong>of shape</strong><strong> (</strong><strong>n_classes</strong> (<em>array-like</em>) – The proportions of samples assigned to each class. If None, then classes are balanced</p></li>
+<li><p><strong>default=None</strong> (<em>)</em>) – The proportions of samples assigned to each class. If None, then classes are balanced</p></li>
 <li><p><strong>class_sep</strong> (<em>float</em><em>, </em><em>default=0.2</em>) – The factor of different items in different between classes.
 Setting this to 1.0 will make classification dummy.</p></li>
 <li><p><strong>shuffle</strong> (<em>boolean</em><em>, </em><em>default=True</em>) – Shuffle the samples and the labels</p></li>
@@ -735,7 +736,7 @@ for reproducible output across multiple function calls.</p></li>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference internal" href="#skmine.datasets.make_transactions" title="skmine.datasets.make_transactions"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_transactions()</span></code></a></dt><dd><p>which is used internally to generate samples</p>
+<dt><a class="reference internal" href="#skmine.datasets.make_transactions" title="skmine.datasets.make_transactions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_transactions</span></code></a></dt><dd><p>which is used internally to generate samples</p>
 </dd>
 </dl>
 </div>

@@ -1,7 +1,0 @@
-**/__pycache__/
-.vscode
-.coverage
-asv_bench/
-*.egg*
-docs/
-
