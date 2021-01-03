@@ -297,6 +297,12 @@ def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100)
 
 def evaluate(S, cands):
     """
+    Evaluate candidates `cands`, given S
+
+    Unlike the original implementation by Galbrun & Al.,
+    if an occurence is present in more than one candidate cycle, we keep the cycle
+    with the greatest length.
+
     Parameters
     ----------
     S: pd.Index
@@ -308,8 +314,11 @@ def evaluate(S, cands):
         so that we consider larger candidates first.
     """
     res = list()  # list of pandas DataFrame
-    covered = Bitmap()
+    covered = list()
+
     for cand_batch in cands:
+        seen_occs = np.isin(cand_batch, covered).any(axis=1)
+        cand_batch = cand_batch[~seen_occs]  # larger candidates already seen
         length = cand_batch.shape[1]
         E = np.diff(cand_batch, axis=1)
         period = np.floor(np.median(E, axis=1)).astype("int64")
@@ -318,15 +327,13 @@ def evaluate(S, cands):
             dict(start=cand_batch[:, 0], length=length, period=period, dE=dE.tolist())
         )
         res.append(df)
-        covered.update(np.searchsorted(S, np.unique(cand_batch)))
+        covered.extend(np.unique(cand_batch))
 
     res = pd.concat(res, ignore_index=True)
-    _all = Bitmap(range(len(S)))
-    not_covered = _all - covered
-    return res, S[not_covered]
+    residual_pos = Bitmap(range(len(S))) - Bitmap(np.searchsorted(S, sorted(covered)))
+    return res, S[residual_pos]
 
 
-# TODO : inherit MDLOptimizer
 class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     """
     Mining periodic cycles with a MDL Criterion
@@ -379,7 +386,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.is_fitted = lambda: self.is_datetime_ is not None
+        self.is_fitted = lambda: self.is_datetime_ is not None  # TODO : this make pickle broken
         self.n_jobs = n_jobs
         self.max_length = max_length
 
@@ -421,7 +428,6 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         residuals = {**gr, **residuals}  # fill groups with no cands with all occurences
         self.cycles_, self.residuals_ = cycles, residuals
 
-        # TODO fitler candidates
         return self
 
     evaluate = evaluate
@@ -435,8 +441,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         Returns
         -------
-        list[np.ndarray]
-            A list of batch of candidates. Batches are sorted in inverse order of width,
+        dict[object, list[np.ndarray]]
+            A dict, where each key is an event and each value a list of batch of candidates.
+            Batches are sorted in inverse order of width,
             so that we consider larger candidate cycles first.
         """
         n_event_tot = S.shape[0]
@@ -510,7 +517,8 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         """
         cycles = self.cycles_[["start", "period", "dE"]]
         result = list()
-        for alpha, df in cycles.groupby(level=0):
+        cycles_groups = cycles.groupby(level=0)
+        for alpha, df in cycles_groups:
             l = list()
             for start, period, dE in df.values:
                 occurences = _reconstruct(start, period, dE)
@@ -519,6 +527,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             S = pd.concat([residuals, pd.Series(alpha, index=l)])
             S.index = S.index.sort_values()
             result.append(S)
+
+        for event in self.residuals_.keys() - cycles_groups.groups.keys():  # add unfrequent events
+            result.append(pd.Series(event, index=self.residuals_[event]))
 
         S = pd.concat(result)
         S.index *= 10 ** self.n_zeros_

@@ -182,6 +182,22 @@ def test_evaluate():
     assert cycles.index.is_monotonic_increasing
 
 
+def test_evaluate_overlapping_candidates():
+    cands = [
+        np.array([[400, 402, 404, 406, 408, 410]]),
+        np.array([[0, 2, 4, 8]]),
+        np.array([[0, 2, 4], [6, 8, 10]]),
+    ]
+    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
+    cycles, residuals = evaluate(minutes, cands)
+    assert residuals.tolist() == [6, 10]
+    _types = np.unique(cycles.dtypes)
+    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert np.issubdtype(_types[0], np.number)
+    assert cycles.length.tolist() == [6, 4]
+    assert (cycles.period == 2).all()
+
+
 def test_fit():
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
@@ -211,9 +227,13 @@ def test_reconstruct(is_datetime):
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
+    # add infrequent item to be included in reconstructed
+    S = S.append(pd.Series("beta", index=[10]))
+
     if is_datetime:
         S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
         S.index = pd.to_datetime(S.index)
+
     pcm = PeriodicCycleMiner().fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
