@@ -362,22 +362,27 @@ and finally the set of itemsets for which usage decreased</p>
 <h2>LCM<a class="headerlink" href="#lcm" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.LCM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linear time Closed item set Miner.</p>
-<p>LCM can be used as a generic purpose miner, yielding some patterns
+<p>LCM can be used as a <strong>generic purpose</strong> miner, yielding some patterns
 that will be later submitted to a custom acceptance criterion.</p>
-<p>It can also be used to simply discover the set of closed itemsets from
+<p>It can also be used to simply discover the set of <strong>closed itemsets</strong> from
 a transactional dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>min_supp</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=0.2</em>) – <p>The minimum support for itemsets to be rendered in the output
-Either an int representing the absolute support, or a float for relative support</p>
-<p>Default to 0.2 (20%)</p>
-</p></li>
+<li><p><strong>min_supp</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=0.2</em>) – The minimum support for itemsets to be rendered in the output
+Either an int representing the absolute support, or a float for relative support
+Default to 0.2 (20%)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em><em>, </em><em>default=20</em>) – Maximum depth for exploration in the search space.
+When going into recursion, we check if the current depth
+is <strong>strictly greater</strong> than <cite>max_depth</cite>.
+If this is the case, we stop.
+This can avoid cumbersome computation.
+A <strong>root node is considered of depth 0</strong>.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of jobs to use for the computation. Each single item is attributed a job
 to discover potential itemsets, considering this item as a root in the search space.
-Processes are preffered over threads.</p></li>
+<strong>Processes are preffered</strong> over threads.</p></li>
 </ul>
 </dd>
 </dl>
@@ -413,11 +418,21 @@ Processes are preffered over threads.</p></li>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit LCM on the transactional database, by keeping records of singular items
 and their transaction ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>iterable</em>) – a transactional database. All entries in this D should be lists.
+If D is a pandas.Series, then <cite>(D.map(type) == list).all()</cite> should return <cite>True</cite></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – if any entry in D is not iterable itself OR if any item is not <strong>hashable</strong>
+    OR if all items are not <strong>comparable</strong> with each other.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.discover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_depth</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.discover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minium support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -425,8 +440,9 @@ and their transaction ids.</p>
 <li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database
 Where every entry contain singular items
 Items must be both hashable and comparable</p></li>
-<li><p><strong>return_tids</strong> (<em>bool</em>) – Either to return transaction ids along with itemset.
+<li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids along with itemset.
 Default to False, will return supports instead</p></li>
+<li><p><strong>return_depth</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return depth for each item or not.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -462,6 +478,7 @@ Default to False, will return supports instead</p></li>
 </table>
 </dd>
 </dl>
+<p>if <cite>return_depth</cite> is <cite>True</cite>, then a <cite>depth</cite> column is also present</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -475,10 +492,10 @@ Default to False, will return supports instead</p></li>
 <span class="go">     itemset  support</span>
 <span class="go">0     (2, 5)        3</span>
 <span class="go">1  (2, 3, 5)        2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
-<span class="go">     itemset       tids</span>
-<span class="go">0     (2, 5)  [0, 1, 2]</span>
-<span class="go">1  (2, 3, 5)     [0, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_depth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+<span class="go">     itemset       tids depth</span>
+<span class="go">0     (2, 5)  [0, 1, 2]     0</span>
+<span class="go">1  (2, 3, 5)     [0, 1]     1</span>
 </pre></div>
 </div>
 </dd></dl>
