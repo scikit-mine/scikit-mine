@@ -413,7 +413,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
         if S.index.duplicated().any():
-            raise TypeError(f"S index must not contain duplicates")   # FIXME
+            raise TypeError("S index must not contain duplicates")   # FIXME
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -539,6 +539,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         if self.is_datetime_:
             S.index = S.index.astype("datetime64[ns]")
 
-        S = S.groupby(S.index).first()  # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
+        # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
+        S = S.groupby(S.index).first()
 
         return S
