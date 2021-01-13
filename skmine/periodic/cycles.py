@@ -412,6 +412,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
+        if S.index.duplicated().any():
+            raise TypeError(f"S index must not contain duplicates")   # FIXME
+
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
@@ -525,7 +528,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
                 l.extend(occurences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
             S = pd.concat([residuals, pd.Series(alpha, index=l)])
-            S.index = S.index.sort_values()
+            #S.index = S.index.sort_values()
             result.append(S)
 
         for event in self.residuals_.keys() - cycles_groups.groups.keys():  # add unfrequent events
@@ -535,5 +538,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
             S.index = S.index.astype("datetime64[ns]")
+
+        S = S.groupby(S.index).first()  # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
 
         return S

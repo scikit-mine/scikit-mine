@@ -1,5 +1,5 @@
 """
-Python script to ensure full reconstruction of datasets using MDL miners
+Python script to ensure full reconstruction of datasets using SLIM miners
 
 As MDL is a lossless compression framework, the entire original data should be reconstructed from
 the concise representation that MDL provides

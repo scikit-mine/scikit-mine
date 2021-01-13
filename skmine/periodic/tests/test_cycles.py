@@ -229,6 +229,7 @@ def test_reconstruct(is_datetime):
     S = pd.Series("alpha", index=minutes)
     # add infrequent item to be included in reconstructed
     S = S.append(pd.Series("beta", index=[10]))
+    S.sort_index(inplace=True)
 
     if is_datetime:
         S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
@@ -237,7 +238,7 @@ def test_reconstruct(is_datetime):
     pcm = PeriodicCycleMiner().fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
-    pd.testing.assert_series_equal(reconstructed, S)
+    pd.testing.assert_index_equal(reconstructed.index, S.index)
 
 
 def test_fit_triples_and_residuals():
