@@ -13,8 +13,7 @@ Welcome to scikit-mine's documentation!
    :maxdepth: 2
    :caption: API Reference
 
-   reference/tmp
-   reference/emerging
+   reference/api
 
 .. toctree::
    :maxdepth: 2
