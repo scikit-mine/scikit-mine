@@ -13,12 +13,8 @@ Welcome to scikit-mine's documentation!
    :maxdepth: 2
    :caption: API Reference
 
-   reference/datasets
-   reference/preprocessing
-   reference/itemsets
+   reference/tmp
    reference/emerging
-   reference/base
-   reference/callbacks
 
 .. toctree::
    :maxdepth: 2

@@ -38,6 +38,7 @@ else:
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx_automodapi.automodapi',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
@@ -62,6 +63,7 @@ autodoc_member_order = 'bysource'
 napoleon_use_ivar = True
 
 numpydoc_class_members_toctree = False
+numpy_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
