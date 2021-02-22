@@ -1,0 +1,29 @@
+name: scikit-mine-docs
+channels:
+  - anaconda-fusion
+  - defaults
+dependencies:
+  - scikit-learn>=0.23.1
+  - numpy
+  - nbclient==0.5.1
+  - nbconvert==6.0.7
+  - nbformat==5.0.8
+  - notebook==6.1.6
+  - pandas==1.1.5
+  - pandocfilters==1.4.3
+  - pyyaml==5.3.1
+  - scipy
+  - sortedcontainers==2.3.0
+  - sphinx==3.4.1
+  - sphinxcontrib-applehelp==1.0.2
+  - sphinxcontrib-devhelp==1.0.2
+  - sphinxcontrib-htmlhelp==1.0.3
+  - sphinxcontrib-jsmath==1.0.1
+  - sphinxcontrib-qthelp==1.0.3
+  - sphinxcontrib-serializinghtml==1.1.4
+  - parso<0.9.0,>=0.8.0
+  - pip:
+    - nbsphinx==0.8.0
+    - sphinx-rtd-theme==0.5.0
+    - pre-commit==2.9.3
+    - roaringbitmap==0.7

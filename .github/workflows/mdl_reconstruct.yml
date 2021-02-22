@@ -8,8 +8,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: 3.x
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Reconstruct
-        run: python setup.py install && cd .github/ && python reconstruct.py
+          python-version: 3.7
+      - name: Install external dependencies
+        run: pip install -U numpy
+      - name: MDL reconstruction
+        run: python setup.py install && cd .github/ && python mdl_reconstruct.py

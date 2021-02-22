@@ -1,6 +1,5 @@
-
-.. image:: https://badge.fury.io/py/scikit-mine.svg
-    :target: https://badge.fury.io/py/scikit-mine
+.. image:: https://img.shields.io/pypi/v/scikit-mine.svg
+    :target: https://pypi.python.org/pypi/scikit-mine/
 
 
 .. image:: https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg
