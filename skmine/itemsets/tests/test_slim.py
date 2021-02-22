@@ -1,14 +1,14 @@
+import numpy as np
+import pandas as pd
+import pytest
+from pyroaring import BitMap
+from sortedcontainers import SortedDict
+
 from ..slim import (
     SLIM,
     cover,
     generate_candidates,
 )
-from ...bitmaps import Bitmap
-
-import pytest
-import pandas as pd
-import numpy as np
-from sortedcontainers import SortedDict
 
 @pytest.fixture
 def D():
@@ -44,7 +44,7 @@ def test_complex_evaluate():
         frozenset("E"): {},
     }
 
-    u = {k: Bitmap(v) for k, v in u.items()}
+    u = {k: BitMap(v) for k, v in u.items()}
 
     slim.codetable_.update(u)
 
@@ -85,7 +85,7 @@ def test_complex_evaluate_2():
         frozenset("E"): {},
     }
 
-    u = {k: Bitmap(v) for k, v in u.items()}
+    u = {k: BitMap(v) for k, v in u.items()}
 
     slim.codetable_.update(u)
 
@@ -107,9 +107,9 @@ def test_generate_candidate_1():
 
     codetable = SortedDict(
         {
-            frozenset("A"): Bitmap(range(0, 7)),
-            frozenset("B"): Bitmap([0, 1, 2, 3, 4, 5, 7]),
-            frozenset("C"): Bitmap(range(0, 5)),
+            frozenset("A"): BitMap(range(0, 7)),
+            frozenset("B"): BitMap([0, 1, 2, 3, 4, 5, 7]),
+            frozenset("C"): BitMap(range(0, 5)),
         }
     )
 
@@ -121,7 +121,7 @@ def test_generate_candidate_1():
 
 
 def test_generate_candidate_2():
-    usage = [Bitmap(_) for _ in (range(6), [6], [7], range(5))]
+    usage = [BitMap(_) for _ in (range(6), [6], [7], range(5))]
 
     index = list(map(frozenset, ["AB", "A", "B", "C"]))
     codetable = SortedDict(zip(index, usage))
@@ -131,7 +131,7 @@ def test_generate_candidate_2():
 
 
 def test_generate_candidate_stack():
-    usage = [Bitmap(_) for _ in (range(6), [6, 7], [6, 8], [])]
+    usage = [BitMap(_) for _ in (range(6), [6, 7], [6, 8], [])]
 
     index = list(map(frozenset, ["ABC", "A", "B", "C"]))
 
@@ -181,10 +181,10 @@ def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
-        frozenset("ABC"): Bitmap(range(0, 5)),
-        frozenset("AB"): Bitmap([5]),
-        frozenset("A"): Bitmap([6]),
-        frozenset("B"): Bitmap([7]),
+        frozenset("ABC"): BitMap(range(0, 5)),
+        frozenset("AB"): BitMap([5]),
+        frozenset("A"): BitMap([6]),
+        frozenset("B"): BitMap([7]),
     }
 
     data_size, model_size = slim._compute_sizes(CT)
@@ -196,10 +196,10 @@ def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
-        frozenset("ABC"): Bitmap(range(0, 5)),
-        frozenset("A"): Bitmap([5, 6]),
-        frozenset("B"): Bitmap([5, 7]),
-        frozenset("C"): Bitmap(),
+        frozenset("ABC"): BitMap(range(0, 5)),
+        frozenset("A"): BitMap([5, 6]),
+        frozenset("B"): BitMap([5, 7]),
+        frozenset("C"): BitMap(),
     }
 
     data_size, model_size = slim._compute_sizes(CT)

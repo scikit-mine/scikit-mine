@@ -3,22 +3,21 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from functools import reduce, lru_cache
+from functools import lru_cache, reduce
 from itertools import chain
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from pyroaring import BitMap
 from sortedcontainers import SortedDict
 
 from ..base import BaseMiner, MDLOptimizer
-from ..bitmaps import Bitmap
-from ..utils import supervised_to_unsupervised
-from ..utils import _check_D
 from ..callbacks import mdl_prints
+from ..utils import _check_D, supervised_to_unsupervised
 
 def _to_vertical(D):
-    res = defaultdict(Bitmap)
+    res = defaultdict(BitMap)
     for idx, transaction in enumerate(D):
         for e in transaction:
             res[e].add(idx)
@@ -37,7 +36,7 @@ def cover(sct: SortedDict, itemsets: list):
 
     Parameters
     ----------
-    sct: SortedDict[object, Bitmap]
+    sct: SortedDict[object, pyroaring.BitMap]
         a standard codetable, i.e the vertical representation of a dataset
     itemsets: list
         itemsets from a given codetable
@@ -50,10 +49,10 @@ def cover(sct: SortedDict, itemsets: list):
     for iset in itemsets:
         _iset = frozenset(iset & sct.keys())
         if _iset != iset:
-            usage = Bitmap()
+            usage = BitMap()
         else:
             it = [sct[i] for i in _iset]
-            usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
+            usage = reduce(BitMap.intersection, it).copy() if it else BitMap()
         covers[iset] = usage
         for k in _iset:
             sct[k] -= usage
@@ -64,10 +63,10 @@ def update_usages(sct, ct, candidate, delete=False):
     """
     Parameters
     ----------
-    sct: SortedDict[frozenset, Bitmap]
+    sct: SortedDict[frozenset, pyroaring.BitMap]
         a standard codetable, i.e the vertical representation of a dataset
 
-    ct: SortedDict[frozenset, Bitmap]
+    ct: SortedDict[frozenset, pyroaring.BitMap]
         A codetable, sorted in Standard Candidate Order
 
     candidate: object
@@ -94,7 +93,7 @@ def update_usages(sct, ct, candidate, delete=False):
     update_d = dict()
     for iset in new_isets:
         it = (_sct[i] for i in iset)
-        usage = reduce(Bitmap.intersection, it)
+        usage = reduce(BitMap.intersection, it)
         if iset == candidate:  # candidate should never be a singleton
             update_d[iset] = usage
         elif usage != ct[iset]:
@@ -124,7 +123,7 @@ def generate_candidates_big(codetable, stack=None):
 
     Parameters
     ----------
-    codetable: SortedDict[frozenset, Bitmap]
+    codetable: SortedDict[frozenset, pyroaring.BitMap]
         A codetable, sorted in Standard Candidate Order
 
     stack: set[frozenset], defaut=None
@@ -146,7 +145,7 @@ def generate_candidates_big(codetable, stack=None):
                 if XY in stack:
                     continue
                 stack.add(XY)
-            inter_len = y_usage.intersection_len(X_usage)
+            inter_len = y_usage.intersection_cardinality(X_usage)
             if inter_len > _best_usage:
                 _best_usage = inter_len
                 best_XY = X.union(y)
@@ -278,7 +277,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     def decision_function(self, D):
         """Compute covers on new data, and return code length
 
-        This function function is named ``decision_funciton`` because code lengths
+        This function function is named ``decision_function`` because code lengths
         represent the distance between a point and the current codetable.
 
         Setting ``pruning`` to False when creating the model
@@ -302,7 +301,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         """
         D = _check_D(D)
         codetable = self.codetable  # this is a function call, beware
-        D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        D_sct = {k: BitMap(np.where(D[k])[0]) for k in D.columns}
         covers = cover(D_sct, codetable.index)
 
         mat = np.zeros(shape=(len(D), len(covers)))
@@ -335,7 +334,7 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         Returns
         -------
-        iterator[tuple(frozenset, Bitmap)]
+        iterator[tuple(frozenset, BitMap)]
         """
         ct = SortedDict(self._standard_candidate_order, self.codetable.items())
         # if big number of elements in codetable, just take a generator, do not sort output
@@ -370,7 +369,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     def reconstruct(self):
         """reconstruct the original data from the current codetable"""
         ct = self.codetable
-        n_transactions = ct.map(Bitmap.max).max() + 1
+        n_transactions = ct.map(BitMap.max).max() + 1
 
         D = pd.Series([set()] * n_transactions)
 
@@ -381,7 +380,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):
         """Get support from an itemset"""
-        U = reduce(Bitmap.intersection, self.standard_codetable_.loc[itemset])
+        U = reduce(BitMap.intersection, self.standard_codetable_.loc[itemset])
         return len(U)
 
     def _standard_cover_order(self, itemset):
@@ -399,7 +398,7 @@ class SLIM(BaseMiner, MDLOptimizer):
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
-            item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+            item_to_tids = {k: BitMap(np.where(D[k])[0]) for k in D.columns}
         else:
             item_to_tids = _to_vertical(D)
         self.standard_codetable_ = pd.Series(item_to_tids)
