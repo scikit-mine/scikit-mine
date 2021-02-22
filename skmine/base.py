@@ -5,6 +5,7 @@ import inspect
 from abc import ABC, abstractmethod
 
 import pandas as pd
+import numpy as np
 
 
 def _get_tags(self):
@@ -24,6 +25,7 @@ def _get_tags(self):
         "multioutput_only": False,
         "binary_only": False,
         "requires_fit": True,
+        "preserves_dtype": [np.float64],
         "requires_y": False,
         "pairwise": False,
     }
