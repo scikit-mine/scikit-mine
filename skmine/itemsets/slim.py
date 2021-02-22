@@ -5,6 +5,7 @@
 
 from functools import reduce, lru_cache
 from itertools import chain
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,12 @@ from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
 from ..callbacks import mdl_prints
 
+def _to_vertical(D):
+    res = defaultdict(Bitmap)
+    for idx, transaction in enumerate(D):
+        for e in transaction:
+            res[e].add(idx)
+    return dict(res)
 
 def _log2(values):
     res_index = values.index if isinstance(values, pd.Series) else None
@@ -194,10 +201,8 @@ class SLIM(BaseMiner, MDLOptimizer):
     Examples
     --------
     >>> from skmine.itemsets import SLIM
-    >>> from skmine.preprocessing import TransactionEncoder
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> D = TransactionEncoder().fit_transform(D)
-    >>> SLIM().fit(D)                       # doctest: +SKIP
+    >>> SLIM().fit(D).codetable  # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
     (cookies)          [1, 2]
@@ -234,13 +239,9 @@ class SLIM(BaseMiner, MDLOptimizer):
         Parameters
         -------
         D: pd.DataFrame
-            Transactional dataset, encoded as tabular binary data
+            Transactional dataset, either as an iterable of iterables or encoded as tabular binary data
         """
-        D = _check_D(D)
-        if y is not None:
-            D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
-
-        self._prefit(D)
+        self._prefit(D, y=y)
         n_iter_no_change = 0
         seen_cands = set()
 
@@ -283,14 +284,18 @@ class SLIM(BaseMiner, MDLOptimizer):
         Setting ``pruning`` to False when creating the model
         is recommended to cover unseen data, and especially when building a classifier.
 
+        Parameters
+        ----------
+        D: pd.DataFrame or np.ndarray
+            new data to make predictions on, in tabular format
+
         Example
         -------
-        >>> from skmine.preprocessing import TransactionEncoder
+        >>> from skmine.itemsets import SLIM; import pandas as pd
+        >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
         >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> te = TransactionEncoder()
-        >>> D = te.fit_transform(D)
-        >>> new_D = te.transform([['cookies', 'butter']])
-        >>> slim = SLIM().fit(D)
+        >>> new_D = to_tabular([['cookies', 'butter']])
+        >>> slim = SLIM().fit(to_tabular(D))
         >>> slim.decision_function(new_D)
         0   -1.321928
         dtype: float32
@@ -308,8 +313,10 @@ class SLIM(BaseMiner, MDLOptimizer):
         code_lengths = codetable.map(len)
         ct_codes = code_lengths / code_lengths.sum()
         codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
-        # positive sign on log2 to return negative distance : sklearn
-        return _log2(codes)
+        # positive sign on log2 to return negative distance : sklearn]
+        r = _log2(codes)
+        r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
+        return r
 
     def generate_candidates(self, stack=None, thresh=1e3):
         """
@@ -387,8 +394,14 @@ class SLIM(BaseMiner, MDLOptimizer):
     def _standard_candidate_order(self, itemset):
         return (-self.get_support(itemset), -len(itemset), tuple(itemset))
 
-    def _prefit(self, D):
-        item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+    def _prefit(self, D, y=None):
+        if hasattr(D, 'ndim') and D.ndim == 2:
+            D = _check_D(D)
+            if y is not None:
+                D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
+            item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
+        else:
+            item_to_tids = _to_vertical(D)
         self.standard_codetable_ = pd.Series(item_to_tids)
         usage = self.standard_codetable_.map(len).astype(np.uint32)
 

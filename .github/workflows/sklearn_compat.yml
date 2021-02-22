@@ -10,6 +10,6 @@ jobs:
         with:
           python-version: 3.7
       - name: Install external dependencies
-        run: pip install -U scikit-learn
+        run: pip install scikit-learn
       - name: check compatibility
         run: python setup.py install && cd .github/ && python check_sklearn_compat.py
