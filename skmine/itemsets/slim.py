@@ -243,7 +243,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         D: pd.DataFrame
             Transactional dataset, encoded as tabular binary data
         """
-        self._prefit(D)
+        self._prefit(D, y=y)
         n_iter_no_change = 0
         seen_cands = set()
 
@@ -315,8 +315,10 @@ class SLIM(BaseMiner, MDLOptimizer):
         code_lengths = codetable.map(len)
         ct_codes = code_lengths / code_lengths.sum()
         codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
-        # positive sign on log2 to return negative distance : sklearn
-        return _log2(codes)
+        # positive sign on log2 to return negative distance : sklearn]
+        r = _log2(codes)
+        r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
+        return r
 
     def generate_candidates(self, stack=None, thresh=1e3):
         """
