@@ -1,5 +1,8 @@
 name: linting
-on: [push, pull_request]
+on:
+  - push:
+    paths:
+      - skmine/
 jobs:
   run:
     runs-on: ubuntu-latest

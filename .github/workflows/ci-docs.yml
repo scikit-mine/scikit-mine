@@ -1,5 +1,14 @@
 name: CI
-on: [push, pull_request]
+on:
+  - push:
+    branches:
+      - master
+    paths:
+      - skmine/
+      - docs/
+  - pull_request:
+    paths:
+      - skmine/
 
 jobs:
   docs:
