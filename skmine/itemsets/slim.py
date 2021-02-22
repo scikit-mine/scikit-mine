@@ -201,9 +201,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     Examples
     --------
     >>> from skmine.itemsets import SLIM
-    >>> from sklearn.preprocessing import MultiLabelBinarizer  # doctest: +SKIP
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> D = MultiLabelBinarizer().fit_transform(D)  # doctest: +SKIP
     >>> SLIM().fit(D).codetable  # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
@@ -241,7 +239,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         Parameters
         -------
         D: pd.DataFrame
-            Transactional dataset, encoded as tabular binary data
+            Transactional dataset, either as an iterable of iterables or encoded as tabular binary data
         """
         self._prefit(D, y=y)
         n_iter_no_change = 0

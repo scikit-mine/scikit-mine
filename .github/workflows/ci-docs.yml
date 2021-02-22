@@ -9,6 +9,7 @@ on:
   - pull_request:
     paths:
       - skmine/
+      - docs/
 
 jobs:
   docs:
@@ -32,9 +33,7 @@ jobs:
 
       - name: Build docs
         shell: bash -l {0}
-        run: |
-          cd docs
-          make html
+        run: make docs
 
       - name: Deploy docs
         if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request'}}
