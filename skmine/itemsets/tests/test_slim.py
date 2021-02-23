@@ -252,9 +252,8 @@ def test_prune_empty(D):
 def test_decision_function(D):
     slim = SLIM(pruning=True).fit(D)
 
-    """
-    new_D = ["AB"] * 2 + ["ABD", "AC", "B"]
-    new_D = te.fit_transform(new_D)
+    new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
+    new_D = new_D.str.join('|').str.get_dummies(sep="|")
 
     dists = slim.decision_function(new_D)
     assert dists.dtype == np.float32
@@ -262,7 +261,6 @@ def test_decision_function(D):
     np.testing.assert_array_almost_equal(
         dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
     )
-    """ # FIXME
 
 
 def test_reconstruct(D):

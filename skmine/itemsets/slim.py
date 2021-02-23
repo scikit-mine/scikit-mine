@@ -29,16 +29,15 @@ def _log2(values):
     res[values != 0] = np.log2(values[values != 0]).astype(np.float32)
     return pd.Series(res, index=res_index)
 
-
-def cover(sct: SortedDict, itemsets: list):
+def cover(sct: dict, itemsets: list):
     """
     cover a standard codetable sct given itemsets
 
     Parameters
     ----------
-    sct: SortedDict[object, pyroaring.BitMap]
+    sct: dict[object, pyroaring.BitMap]
         a standard codetable, i.e the vertical representation of a dataset
-    itemsets: list
+    itemsets: list[frozenset]
         itemsets from a given codetable
 
     Notes
@@ -52,63 +51,29 @@ def cover(sct: SortedDict, itemsets: list):
             usage = BitMap()
         else:
             it = [sct[i] for i in _iset]
-            usage = reduce(BitMap.intersection, it).copy() if it else BitMap()
+            if len(it) > 1:
+                usage = reduce(BitMap.intersection, it)
+            else:
+                usage = it[0].copy()
         covers[iset] = usage
         for k in _iset:
             sct[k] -= usage
     return covers
 
+def reconstruct(codetable, n_transactions=None):
+    """reconstruct the original data from the `codetable`"""
+    if n_transactions is None:
+        n_transactions = max(
+            map(BitMap.max,
+                filter(lambda e: e, codetable.values())
+            )
+         ) + 1
 
-def update_usages(sct, ct, candidate, delete=False):
-    """
-    Parameters
-    ----------
-    sct: SortedDict[frozenset, pyroaring.BitMap]
-        a standard codetable, i.e the vertical representation of a dataset
+    D = pd.Series([set()] * n_transactions)
 
-    ct: SortedDict[frozenset, pyroaring.BitMap]
-        A codetable, sorted in Standard Candidate Order
-
-    candidate: object
-        candidate to consider for update
-
-    delete: bool, default=False
-        either to delete or add `candidate` in ct
-
-    Returns
-    -------
-    dict, dict
-        a tuple, first dict is containing the updated usage,
-        seconde dict contains decreased usages (for later pruning)
-    """
-    new_isets = list(ct.keys())
-
-    if delete:
-        new_isets.remove(candidate)
-    else:
-        cand_pos = ct.bisect(candidate)
-        new_isets.insert(cand_pos, candidate)
-
-    _sct = {k: tids.copy() for k, tids in sct.items()}
-    update_d = dict()
-    for iset in new_isets:
-        it = (_sct[i] for i in iset)
-        usage = reduce(BitMap.intersection, it)
-        if iset == candidate:  # candidate should never be a singleton
-            update_d[iset] = usage
-        elif usage != ct[iset]:
-            usage = usage.copy()
-            update_d[iset] = usage
-        if usage:
-            for k in iset:
-                _sct[k] -= usage
-
-    # assert not _sct
-    decreased = {
-        k for k, v in update_d.items() if k != candidate and len(v) < len(ct[k])
-    }
-
-    return update_d, decreased
+    for itemset, tids in codetable.items():
+        D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
+    return D.map(sorted)
 
 
 def generate_candidates_big(codetable, stack=None):
@@ -185,8 +150,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         Number of candidate evaluation with no improvement to count before stopping optimization.
     tol: float, default=None
         Tolerance for the early stopping, in bits.
-        When the compression size is not improving by at least tol for n_iter_no_change iterations,
-        the training stops.
+        When the compression size is not improving by at least `tol` for `n_iter_no_change`
+        iterations, the training stops.
         Default to None, will be automatically computed considering the size of input data.
     pruning: bool, default=False
         Either to activate pruning or not. Pruned itemsets may be useful at
@@ -221,7 +186,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
-        self.codetable_ = pd.Series([], dtype="object")
+        self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
@@ -233,7 +198,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         """fit SLIM on a transactional dataset
 
         This generate new candidate patterns and add those which improve compression,
-        iteratibely refining ``self.codetable``
+        iteratibely refining ``self.codetable_``
 
         Parameters
         -------
@@ -300,9 +265,10 @@ class SLIM(BaseMiner, MDLOptimizer):
         dtype: float32
         """
         D = _check_D(D)
-        codetable = self.codetable  # this is a function call, beware
-        D_sct = {k: BitMap(np.where(D[k])[0]) for k in D.columns}
-        covers = cover(D_sct, codetable.index)
+        D_sct = {k: BitMap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
+        covers = cover(D_sct, self.codetable_.keys())
+
+        codetable = pd.Series(self.codetable_)
 
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values()):
@@ -336,7 +302,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         -------
         iterator[tuple(frozenset, BitMap)]
         """
-        ct = SortedDict(self._standard_candidate_order, self.codetable.items())
+        ct = SortedDict(self._standard_candidate_order, self.codetable_.items())
         # if big number of elements in codetable, just take a generator, do not sort output
         gen = generate_candidates if len(ct) < thresh else generate_candidates_big
         return gen(ct, stack=stack)
@@ -356,26 +322,26 @@ class SLIM(BaseMiner, MDLOptimizer):
             updated (data size, model size, codetable)
             and finally the set of itemsets for which usage decreased
         """
-        update_d, decreased = update_usages(
-            self.standard_codetable_, self.codetable_, candidate
-        )
-
-        CTc = {**self.codetable_, **update_d}
+        idx = self.codetable_.bisect(candidate)
+        ct = list(self.codetable_)
+        ct.insert(idx, candidate)
+        #import pdb; pdb.set_trace()
+        D = {k: v.copy() for k, v in self.standard_codetable_.items()}
+        CTc = cover(D, ct)
+        update_d, decreased = {candidate: CTc[candidate]}, set()
+        for iset, usage in self.codetable_.items():
+            if usage != CTc[iset]:
+                update_d[iset] = CTc[iset]
+                if len(CTc[iset]) < len(usage):
+                    decreased.add(iset)
 
         data_size, model_size = self._compute_sizes(CTc)
 
         return data_size, model_size, update_d, decreased
 
     def reconstruct(self):
-        """reconstruct the original data from the current codetable"""
-        ct = self.codetable
-        n_transactions = ct.map(BitMap.max).max() + 1
-
-        D = pd.Series([set()] * n_transactions)
-
-        for itemset, tids in ct.iteritems():
-            D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
-        return D.map(sorted)
+        """Reconstruct the original dataset from `self.codetable_`"""
+        return reconstruct(self.codetable_)
 
     @lru_cache(maxsize=1024)
     def get_support(self, itemset):
@@ -460,7 +426,7 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         Parameters
         ----------
-        codetable: pd.Series
+        codetable: SortedDict
         D: pd.Series
         prune_set: pd.Series
             subset of ``codetable`` for which usage has decreased
@@ -480,17 +446,20 @@ class SLIM(BaseMiner, MDLOptimizer):
             cand = min(prune_set, key=lambda e: len(codetable[e]))
             prune_set.discard(cand)
 
-            update_d, decreased = update_usages(
-                self.standard_codetable_, codetable, cand, delete=True
-            )
+            ct = list(codetable)
+            ct.remove(cand)  # TODO bisect ?
 
-            CTp = {**codetable, **update_d}
-            del CTp[cand]
+            D = {k: v.copy() for k, v in self.standard_codetable_.items()}
+            CTp = cover(D, ct)
+            decreased = {
+                k for k, v in CTp.items() 
+                if len(v) < len(codetable[k]) and len(k) > 1
+            }
 
             d_size, m_size = self._compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                codetable.update(update_d)
+                codetable.update(CTp)
                 del codetable[cand]
                 prune_set.update(decreased)
                 data_size, model_size = d_size, m_size

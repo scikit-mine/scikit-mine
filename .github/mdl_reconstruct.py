@@ -14,8 +14,8 @@ if __name__ == "__main__":
     Ds = [fetch_any(k) for k in ("chess.dat", "connect.dat", "mushroom.dat")]
 
     miners = [
-        SLIM(pruning=False, n_iter_no_change=1000),
-        # SLIM(pruning=True, n_iter_no_change=1000)
+        SLIM(pruning=False, n_iter_no_change=100),
+        SLIM(pruning=True, n_iter_no_change=100)
     ]
     for D in Ds:
         for miner in miners:
