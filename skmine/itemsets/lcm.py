@@ -14,13 +14,11 @@ from itertools import takewhile
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+from pyroaring import BitMap
 from sortedcontainers import SortedDict
 
-from ..utils import _check_min_supp
-from ..utils import filter_maximal
-from ..bitmaps import Bitmap
-
 from ..base import BaseMiner, DiscovererMixin
+from ..utils import _check_min_supp, filter_maximal
 
 
 class LCM(BaseMiner, DiscovererMixin):
@@ -109,7 +107,7 @@ class LCM(BaseMiner, DiscovererMixin):
             OR if all items are not **comparable** with each other.
         """
         self.n_transactions_ = 0  # reset for safety
-        item_to_tids = defaultdict(Bitmap)
+        item_to_tids = defaultdict(BitMap)
         for transaction in D:
             for item in transaction:
                 item_to_tids[item].add(self.n_transactions_)
@@ -153,10 +151,10 @@ class LCM(BaseMiner, DiscovererMixin):
                 ==========  =================================
 
             if `return_tids=True` then
-                ==========  =================================
+                ==========  =======================================
                 itemset     a `tuple` of co-occured items
-                tids        a bitmap tracking positions
-                ==========  =================================
+                tids        a `pyroaring.BitMap` tracking positions
+                ==========  =======================================
 
             if `return_depth` is `True`, then a `depth` column is also present
 
@@ -226,7 +224,7 @@ class LCM(BaseMiner, DiscovererMixin):
             candidates = candidates[: candidates.bisect_left(limit)]
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
-                if tids.intersection_len(ids) >= self._min_supp:
+                if tids.intersection_cardinality(ids) >= self._min_supp:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit, depth + 1)
@@ -291,7 +289,7 @@ class LCMMax(LCM):
             no_cand = True
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
-                if tids.intersection_len(ids) >= self._min_supp:
+                if tids.intersection_cardinality(ids) >= self._min_supp:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))

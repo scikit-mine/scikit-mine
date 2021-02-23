@@ -2,7 +2,7 @@ name: linting
 on:
   - push:
     paths:
-      - skmine/**
+    - skmine/**
 jobs:
   run:
     runs-on: ubuntu-latest
