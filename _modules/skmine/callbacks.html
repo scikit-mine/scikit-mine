@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.callbacks &mdash; scikit-mine 0.0.3 documentation</title>
+  <title>skmine.callbacks &mdash; scikit-mine 0.0.4 documentation</title>
   
 
   
@@ -298,17 +298,14 @@
 
 
 <span class="k">def</span> <span class="nf">_print_positive_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">)</span>
-            <span class="p">)</span>
-
+    <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_size_</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size_</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">data_size</span> <span class="o">+</span> <span class="n">model_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">)</span>
+        <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_print_candidates_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> new candidates considered&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> new candidates considered&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>
 
 
 <span class="n">mdl_prints</span> <span class="o">=</span> <span class="n">CallBacks</span><span class="p">(</span>
@@ -327,7 +324,6 @@
 <span class="s2">&gt;&gt;&gt; class MyMDLMiner(MDLOptimizer):</span>
 <span class="s2">&gt;&gt;&gt;    def __init__(self):</span>
 <span class="s2">...        self.codetable_ = dict()</span>
-<span class="s2">...        self.verbose = True</span>
 <span class="s2">...    def generate_candidates(self):</span>
 <span class="s2">...        return [(2,), (2, 3), (2, 4)]</span>
 <span class="s2">...    def evaluate(self): pass</span>

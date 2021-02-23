@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API &mdash; scikit-mine 0.0.3 documentation</title>
+  <title>Callback API &mdash; scikit-mine 0.0.4 documentation</title>
   
 
   
@@ -255,7 +255,6 @@ only if <code class="docutils literal notranslate"><span class="pre">verbose</sp
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyMDLMiner</span><span class="p">(</span><span class="n">MDLOptimizer</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="gp">... </span>   <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>       <span class="k">return</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
 <span class="gp">... </span>   <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">pass</span>

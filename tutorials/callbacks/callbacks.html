@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API demo &mdash; scikit-mine 0.0.3 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 0.0.4 documentation</title>
   
 
   
@@ -472,142 +472,41 @@ div.rendered_html tbody tr:hover {
 
 <span class="kn">from</span> <span class="nn">skmine.callbacks</span> <span class="kn">import</span> <span class="n">CallBacks</span>
 <span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
-<span class="kn">from</span> <span class="nn">skmine.preprocessing</span> <span class="kn">import</span> <span class="n">TransactionEncoder</span>
 <span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_mushroom</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">mushroom</span> <span class="o">=</span> <span class="n">fetch_mushroom</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">te</span> <span class="o">=</span> <span class="n">TransactionEncoder</span><span class="p">()</span>
-<span class="n">D</span> <span class="o">=</span> <span class="n">te</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">mushroom</span><span class="p">)</span>
-<span class="n">D</span><span class="o">.</span><span class="n">loc</span><span class="p">[:</span><span class="mi">5</span><span class="p">,</span> <span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+<span class="n">mushroom</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>3</th>
-      <th>4</th>
-      <th>5</th>
-      <th>6</th>
-      <th>7</th>
-      <th>8</th>
-      <th>9</th>
-      <th>10</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0    [3, 9, 13, 23, 25, 34, 36, 38, 40, 52, 54, 59,...
+1    [3, 9, 14, 23, 26, 34, 36, 39, 40, 52, 55, 59,...
+2    [4, 9, 15, 23, 27, 34, 36, 39, 41, 52, 55, 59,...
+3    [3, 10, 15, 23, 25, 34, 36, 38, 41, 52, 54, 59...
+4    [3, 9, 16, 24, 28, 34, 37, 39, 40, 53, 54, 59,...
+Name: mushroom, dtype: object
+</pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># set n_iter_no_change to a high value so learning takes longer</span>
-<span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -621,7 +520,7 @@ div.rendered_html tbody tr:hover {
 <li><p><code class="docutils literal notranslate"><span class="pre">post_gen</span></code> is executed after <code class="docutils literal notranslate"><span class="pre">SLIM.generate_candidates</span></code>, and just records the size of the current batch of candidates</p></li>
 </ol>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -639,7 +538,7 @@ div.rendered_html tbody tr:hover {
 <p>A <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is a collection of callbacks.</p>
 <p>It’s a mapping between function names and their dedicated callbacks. When an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is called (<code class="docutils literal notranslate"><span class="pre">()</span> <span class="pre">operator</span></code>) on an object, it looks for internal methods and tries to attach the callbacks.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -650,11 +549,11 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">%</span><span class="k">time</span> slim.fit(D)
+<span></span><span class="o">%</span><span class="k">time</span> slim.fit(mushroom)
 </pre></div>
 </div>
 </div>
@@ -663,12 +562,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 2.46 s, sys: 9.85 ms, total: 2.47 s
-Wall time: 2.47 s
+CPU times: user 3.75 s, sys: 36.7 ms, total: 3.79 s
+Wall time: 3.8 s
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -695,24 +594,24 @@ Wall time: 2.47 s
   </thead>
   <tbody>
     <tr>
-      <th>(3, 10, 85, 86, 23, 90, 28, 93, 34, 99, 36, 39, 111, 116, 53, 56, 59, 63)</th>
-      <td>[917, 939, 1250, 1269, 1470, 1526, 1688, 1830,...</td>
+      <th>(36, 39, 116, 23, 56, 28, 93)</th>
+      <td>[305, 335, 384, 449, 632, 684, 873, 890, 917, ...</td>
     </tr>
     <tr>
-      <th>(3, 10, 85, 86, 23, 90, 28, 93, 98, 34, 36, 39, 111, 116, 53, 56, 59, 63)</th>
-      <td>[1229, 1545, 1600, 1808, 1838, 2021, 2039, 209...</td>
+      <th>(34, 85, 86, 90, 59, 63)</th>
+      <td>[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,...</td>
     </tr>
     <tr>
-      <th>(66, 3, 11, 16, 85, 86, 24, 90, 29, 34, 36, 101, 39, 110, 52, 117, 56, 61)</th>
-      <td>[2594, 2605, 2937, 3062, 3069, 3073, 3082, 316...</td>
+      <th>(110, 53, 102, 24, 58, 94)</th>
+      <td>[4023, 4100, 4104, 4196, 4200, 4329, 4376, 442...</td>
     </tr>
     <tr>
-      <th>(66, 3, 11, 16, 85, 86, 24, 90, 29, 34, 36, 101, 39, 110, 116, 52, 56, 61)</th>
-      <td>[2536, 2766, 2990, 3187, 3239, 3277, 3284, 332...</td>
+      <th>(66, 61, 36, 101, 39, 29)</th>
+      <td>[1816, 2128, 2178, 2238, 2385, 2443, 2533, 253...</td>
     </tr>
     <tr>
-      <th>(6, 10, 85, 86, 23, 90, 28, 93, 34, 36, 39, 111, 116, 53, 56, 59, 63)</th>
-      <td>[2033, 2077, 2121, 2185, 2208, 2242, 2256, 228...</td>
+      <th>(67, 36, 39, 23, 76, 93)</th>
+      <td>[1, 2, 5, 6, 7, 9, 10, 11, 12, 20, 22, 23, 24,...</td>
     </tr>
     <tr>
       <th>...</th>
@@ -740,7 +639,7 @@ Wall time: 2.47 s
     </tr>
   </tbody>
 </table>
-<p>300 rows × 1 columns</p>
+<p>236 rows × 1 columns</p>
 </div></div>
 </div>
 </div>
@@ -750,7 +649,7 @@ Wall time: 2.47 s
 <p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
 <p><strong>We can clearly dinstinguish the beginning of a batch of candidates, where the learning curve is quite abrupt, from the end of a batch, where it reaches a plateau</strong>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -765,13 +664,13 @@ Wall time: 2.47 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_11_0.png" src="../../_images/tutorials_callbacks_callbacks_11_0.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_10_0.png" src="../../_images/tutorials_callbacks_callbacks_10_0.png" />
 </div>
 </div>
 <hr class="docutils" />
 <p>And here is how the model size goes up</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -780,7 +679,7 @@ Wall time: 2.47 s
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -792,7 +691,7 @@ Wall time: 2.47 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_13_1.png" src="../../_images/tutorials_callbacks_callbacks_13_1.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_12_1.png" src="../../_images/tutorials_callbacks_callbacks_12_1.png" />
 </div>
 </div>
 </div>
