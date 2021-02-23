@@ -85,3 +85,4 @@ build/
 env/
 results/
 html/
+.dvcignore
