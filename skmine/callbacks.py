@@ -117,17 +117,14 @@ class CallBacks(dict):
 
 
 def _print_positive_gain(self, data_size, model_size, *_):
-    if getattr(self, "verbose", None):
-        diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-        if diff > 0.01:
-            print(
-                "data size : {:.2f} | model size : {:.2f}".format(data_size, model_size)
-            )
-
+    diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
+    if diff > 0.01:
+        print(
+            "data size : {:.2f} | model size : {:.2f}".format(data_size, model_size)
+        )
 
 def _print_candidates_size(self, candidates):
-    if getattr(self, "verbose", None):
-        print("{} new candidates considered".format(len(candidates)))
+    print("{} new candidates considered".format(len(candidates)))
 
 
 mdl_prints = CallBacks(
@@ -146,7 +143,6 @@ Examples
 >>> class MyMDLMiner(MDLOptimizer):
 >>>    def __init__(self):
 ...        self.codetable_ = dict()
-...        self.verbose = True
 ...    def generate_candidates(self):
 ...        return [(2,), (2, 3), (2, 4)]
 ...    def evaluate(self): pass
