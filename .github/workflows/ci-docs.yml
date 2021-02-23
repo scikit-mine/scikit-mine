@@ -29,7 +29,6 @@ jobs:
         run: make docs
 
       - name: Deploy docs
-        if: ${{ github.ref == 'refs/heads/master' && startsWith(github.ref, 'refs/tags/v')}}
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.SKMINE_GITHUB_TOKEN }}
