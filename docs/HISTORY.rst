@@ -2,6 +2,12 @@
 History
 =======
 
+0.0.4 (2021-02-23)
+------------------
+* remove TransactionEncoder
+* SLIM pruning
+* max_depth argument for LCM
+
 0.0.3 (2020-11-12)
 ------------------
 

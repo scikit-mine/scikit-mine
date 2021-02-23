@@ -155,8 +155,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         prediction time, so it is usually recommended to set it to False
         to build a classifier. The model will be less concise, but will lead
         to more accurate predictions on average.
-    verbose: integer
-        Controls the verbosity: the higher, the more messages.
 
 
     Examples

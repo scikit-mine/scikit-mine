@@ -1,15 +1,8 @@
 name: CI
 on:
-  - push:
-    branches:
-      - master
-    paths:
-      - skmine/**
-      - docs/**
-  - pull_request:
-    paths:
-      - skmine/**
-      - docs/**
+  push:
+    tags:
+      - "v*"
 
 jobs:
   docs:
