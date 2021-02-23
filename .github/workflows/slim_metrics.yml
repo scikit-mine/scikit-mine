@@ -1,6 +1,5 @@
 name: SLIM_metrics
 pull_request:
-  types: [opened]
   paths:
   - 'skmine/itemsets/*.py'
 jobs:

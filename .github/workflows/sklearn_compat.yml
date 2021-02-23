@@ -2,8 +2,8 @@ name: sklearn_compat
 on: 
   - pull_request:
     paths:
-      - skmine/
-      - .github/check_sklearn_compat.py
+    - skmine/
+    - .github/check_sklearn_compat.py
 jobs:
   run:
     runs-on: ubuntu-latest
