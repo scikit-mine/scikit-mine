@@ -15,7 +15,6 @@ from ..base import BaseMiner, MDLOptimizer
 from ..bitmaps import Bitmap
 from ..utils import supervised_to_unsupervised
 from ..utils import _check_D
-from ..callbacks import mdl_prints
 
 def _to_vertical(D):
     res = defaultdict(Bitmap)
@@ -180,7 +179,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=True, verbose=False):
+    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=True):
         self.n_iter_no_change = n_iter_no_change
         self.tol = tol
         self.standard_codetable_ = None
@@ -188,9 +187,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
-        self.verbose = verbose
-
-        mdl_prints(self)  # attach mdl_prints <-- output if self.verbose set
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
@@ -227,8 +223,6 @@ class SLIM(BaseMiner, MDLOptimizer):
 
                 if diff < tol:
                     n_iter_no_change += 1
-                    if self.verbose:
-                        print("n_iter_no_change : {}".format(n_iter_no_change))
                     if n_iter_no_change > self.n_iter_no_change:
                         break  # inner break
 
