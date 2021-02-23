@@ -25,7 +25,7 @@ def test_fetch_any(monkeypatch):
     monkeypatch.setattr(pd, "read_pickle", mock_read_pickle)
     data = fimi.fetch_any("{}.dat".format(name))
     assert data.shape == (2,)
-    pd.testing.assert_series_equal(pd.Series([3, 2]), data.map(len))
+    pd.testing.assert_series_equal(pd.Series([3, 2], name=name), data.map(len))
 
     # now DATA_HOME to be empty, file has to be fetched
     monkeypatch.setattr(os, "listdir", lambda *args: list())
