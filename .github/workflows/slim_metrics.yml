@@ -1,8 +1,5 @@
 name: SLIM_metrics
-on:
-  - push:
-    paths:
-    - skmine/itemsets/*.py'
+on: [pull_request]
 jobs:
   run:
     runs-on: [ubuntu-latest]
@@ -13,7 +10,7 @@ jobs:
         env:
           repo_token: ${{ secrets.SKMINE_GITHUB_TOKEN }}
         run: |
-          pip install -r requirements.txt
+          python setup.py install
           dvc repro slim_metrics
           git fetch --prune
           dvc metrics diff --show-md master > report.md
