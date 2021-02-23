@@ -1,7 +1,8 @@
 name: SLIM_metrics
-pull_request:
-  paths:
-  - 'skmine/itemsets/*.py'
+on:
+  - push:
+    paths:
+    - skmine/itemsets/*.py'
 jobs:
   run:
     runs-on: [ubuntu-latest]
