@@ -1,6 +1,7 @@
 from skmine.itemsets import SLIM
 from skmine.datasets import make_transactions
-from skmine.preprocessing import TransactionEncoder
+from sklearn.preprocessing import MultiLabelBinarizer
+from skmine.datasets.fimi import fetch_any
 
 
 class SLIMBench:
@@ -12,21 +13,32 @@ class SLIMBench:
 
     def setup(self, n_transactions, density):
         transactions = make_transactions(
-            n_transactions=n_transactions,
-            density=density,
-            random_state=7,
+            n_transactions=n_transactions, density=density, random_state=7,
         )
-        te = TransactionEncoder()
-        self.transactions = te.fit_transform(transactions)
-        self.new_transactions = te.transform(transactions.sample(len(transactions)))
-        self.slim = SLIM()
-        self.fitted_slim = SLIM().fit(self.transactions)
+        mlb = MultiLabelBinarizer()
+        self.transactions = mlb.fit_transform(transactions)
+        self.new_transaction = mlb.transform(transactions.sample(len(transactions)))
+        self.fitted_slim = SLIM().fit(transactions)
 
     def time_fit(self, *args):
-        self.slim.fit(self.transactions)
+        SLIM().fit(self.transactions)
 
     def time_decision_function(self, *args):
         self.fitted_slim.decision_function(self.new_transactions)
 
     def track_data_size(self, *args):
-        return self.slim.data_size_
+        return self.fitted_slim.data_size_
+
+
+class SLIMStandardDatasets:
+    params = ["chess", "kosarak", "mushroom"]
+    param_names = ["dataset"]
+
+    def setup(self, dataset):
+        self.dataset = dataset
+
+    def time_fit(self, *args):
+        SLIM().fit(self.dataset)
+
+    def mem_fit(self, *args):
+        SLIM().fit(self.dataset)
