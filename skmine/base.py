@@ -131,6 +131,8 @@ class DiscovererMixin:
         pd.Series
             patterns discovered by a mining algorithm
         """
+        if y is None:
+            return self.fit(D).discover(**kwargs)
         return self.fit(D, y=y).discover(**kwargs)
 
 

@@ -29,6 +29,9 @@ class BitmapMock(SortedSet):  # pylint: disable=too-many-ancestors
     def __repr__(self):
         return "[{}]".format(", ".join(map(str, self)))
 
+    def __invert__(self):
+        return type(self)(set(range(self[0], self[-1])) - self)
+
     max = lambda self: self[-1]
     min = lambda self: self[0]
 

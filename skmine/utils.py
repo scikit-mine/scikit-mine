@@ -141,3 +141,41 @@ def _check_D_y(D, y=None):
     if y is not None:
         y = _check_y(y)
     return D, y
+
+
+def intersect2d(ar1, ar2, return_indices=True):
+    """
+    Find the intersection of two 2 dimnesional arrays
+
+    Return the sorted, unique rows that are both of the input arrays
+
+    Parameters
+    ----------
+    x, y: array_like
+        Input arrays
+    return_indices: bool
+        If True, the indices wich correspond to the intersection of the two array
+        are returned. The first instance of a value is used if there are multiple.
+        Default is False
+
+    Returns
+    -------
+    intersect2d: ndarray
+        Sorted 2D array of common and unique rows
+    comm1: ndarray
+        The indices of the first occurences of the common rows in `ar1`.
+        Only provided if `return_indices` is True
+    comm2: ndarray
+        The indices of the first occurences of the common rows in `ar2`.
+        Only provided if `return_indices` is True
+    """
+    ar1, ar2 = np.asanyarray(ar1), np.asanyarray(ar2)
+    assert ar1.ndim == ar2.ndim == 2
+    _, x_ind, y_ind = np.intersect1d(ar1[:, 0], ar2[:, 0], return_indices=True)
+    x, y = ar1[x_ind], ar2[y_ind]
+    xy_where = np.argwhere((x == y).all(axis=1)).reshape(-1)
+    x_ind = x_ind[xy_where]
+    if return_indices:
+        y_ind = y_ind[xy_where]
+        return ar1[x_ind], x_ind, y_ind
+    return ar1[x_ind]
