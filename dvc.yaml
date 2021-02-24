@@ -1,0 +1,6 @@
+stages:
+  slim_metrics:
+    cmd:  python bench/slim_metrics.py >> metrics.json
+    metrics:
+      - metrics.json:
+          cache: false

@@ -3,7 +3,6 @@ from ..slim import (
     cover,
     generate_candidates,
 )
-from ...preprocessing.transaction_encoder import TransactionEncoder
 from ...bitmaps import Bitmap
 
 import pytest
@@ -11,18 +10,14 @@ import pandas as pd
 import numpy as np
 from sortedcontainers import SortedDict
 
+@pytest.fixture
+def D():
+    return pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
 
-def dense_D():
-    D = ["ABC"] * 5 + ["AB", "A", "B"]
-    D = TransactionEncoder().fit_transform(D)
-    return D
+def to_tabular_df(D):
+    return D.map(list).str.join('|').str.get_dummies(sep="|")
 
-
-def sparse_D():
-    D = ["ABC"] * 5 + ["AB", "A", "B"]
-    D = TransactionEncoder(sparse_output=True).fit_transform(D)
-    return D
-
+_id = lambda args: args
 
 def test_complex_evaluate():
     """
@@ -35,7 +30,7 @@ def test_complex_evaluate():
     """
     slim = SLIM()
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
-    slim._prefit(TransactionEncoder().fit_transform(D))
+    slim._prefit(D)
 
     u = {
         frozenset("ABC"): {0, 5},
@@ -76,7 +71,7 @@ def test_complex_evaluate_2():
     """
     slim = SLIM()
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
-    slim._prefit(TransactionEncoder().fit_transform(D))
+    slim._prefit(D)
 
     u = {
         frozenset("CDE"): {4, 5},
@@ -145,19 +140,17 @@ def test_generate_candidate_stack():
     new_candidates = generate_candidates(codetable, stack={frozenset("AB")})
     assert new_candidates == []
 
-
-def test_prefit():
-    D = ["ABC"] * 5 + ["BC", "B", "C"]
-    D = TransactionEncoder().fit_transform(D)
-    slim = SLIM()
-    slim._prefit(D)
+@pytest.mark.parametrize("preproc", [to_tabular_df, _id])
+def test_prefit(preproc):
+    D = pd.Series(["ABC"] * 5 + ["BC", "B", "C"])
+    D = preproc(D)
+    slim = SLIM()._prefit(D)
     np.testing.assert_almost_equal(slim.model_size_, 9.614, 3)
     np.testing.assert_almost_equal(slim.data_size_, 29.798, 3)
     assert len(slim.codetable) == 3
     assert slim.codetable.index.tolist() == list(map(frozenset, ["B", "C", "A"]))
 
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_get_standard_size_1(D):
     slim = SLIM()
     slim._prefit(D)
@@ -168,7 +161,6 @@ def test_get_standard_size_1(D):
     )
 
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_get_standard_size_2(D):
     slim = SLIM()
     slim._prefit(D)
@@ -179,15 +171,13 @@ def test_get_standard_size_2(D):
     )
 
 
-@pytest.mark.parametrize("D", [dense_D()])
 def test_get_support(D):
     slim = SLIM()._prefit(D)
     assert slim.get_support(frozenset("ABC")) == 5
     assert slim.get_support(frozenset("C")) == 5
 
 
-@pytest.mark.parametrize("D", [dense_D()])
-def test__compute_sizes_1(D):
+def test_compute_sizes_1(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -202,8 +192,7 @@ def test__compute_sizes_1(D):
     np.testing.assert_almost_equal(model_size, 20.25, 2)
 
 
-@pytest.mark.parametrize("D", [dense_D()])
-def test__compute_sizes_2(D):
+def test_compute_sizes_2(D):
     slim = SLIM()
     slim._prefit(D)
     CT = {
@@ -217,29 +206,22 @@ def test__compute_sizes_2(D):
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_fit_no_pruning(D):
-    slim = SLIM(pruning=False)
-    self = slim.fit(D)
-    assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_fit(D):
+@pytest.mark.parametrize("preproc,pass_y", ([to_tabular_df, False], [_id, True]))
+def test_fit_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=True)
+    y = None if not pass_y else  np.array([1] * len(D))
+    D = preproc(D)
     self = slim.fit(D)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
+@pytest.mark.parametrize("preproc,pass_y", ([to_tabular_df, True], [_id, False]))
+def test_fit_no_pruning(D, preproc, pass_y):
+    slim = SLIM(pruning=False)
+    y = None if not pass_y else np.array([1] * len(D))
+    D = preproc(D)
+    self = slim.fit(D)
+    assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_fit_ndarray(D):
-    slim = SLIM(pruning=True)
-    self = slim.fit(D.values)
-    assert list(self.codetable_) == list(map(frozenset, [[0, 1, 2], [0], [1], [2]]))
-
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = [frozenset("AB")]
@@ -254,8 +236,6 @@ def test_prune(D):
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
 
-
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
 def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
     prune_set = [frozenset("ABC")]
@@ -269,13 +249,11 @@ def test_prune_empty(D):
     assert list(new_codetable) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
 
 
-def test_decision_function():
-    te = TransactionEncoder(sparse_output=False)
-    D = te.fit_transform(["ABC"] * 5 + ["AB", "A", "B"])
+def test_decision_function(D):
     slim = SLIM(pruning=True).fit(D)
 
-    new_D = ["AB"] * 2 + ["ABD", "AC", "B"]
-    new_D = te.fit_transform(new_D)
+    new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
+    new_D = new_D.str.join('|').str.get_dummies(sep="|")
 
     dists = slim.decision_function(new_D)
     assert dists.dtype == np.float32
@@ -285,17 +263,7 @@ def test_decision_function():
     )
 
 
-@pytest.mark.parametrize("D", [dense_D(), sparse_D()])
-def test_fit_sklearn(D):
-    y = np.array([1] * len(D))
-    slim = SLIM().fit(D, y)
-    assert slim.standard_codetable_.index.tolist() == ["A", "B", "C"]
-
-    slim = SLIM().fit(D.values, y)
-
-
-def test_reconstruct():
-    D = dense_D()
+def test_reconstruct(D):
     slim = SLIM().fit(D)
     s = slim.reconstruct().map("".join)  # originally a string so we have to join
     true_s = pd.Series(["ABC"] * 5 + ["AB", "A", "B"])

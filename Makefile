@@ -12,7 +12,11 @@ clean: clean_doc
 	find . -name "*.pyc" -exec rm -f {} \;
 	$(RM) -rf dist/ build/ *.egg-info
 	$(RM) -rf **/__pycache__/
+	$(RM) -rf __pycache__/
 	$(RM) -rf htmlcov/
+	$(RM) -rf .ipynb*
+	$(RM) -rf .pytest_cache/
+	
 
 
 clean_doc:

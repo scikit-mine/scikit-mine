@@ -40,20 +40,21 @@ def fetch_any(filename, data_home=None):
     """
     data_home = data_home or get_data_home()
     filepath = os.path.join(data_home, filename)
+    name, _ = os.path.splitext(filename)
     if filename in os.listdir(data_home):  # already fetched
         s = pd.read_pickle(filepath)
+        s.name = name
     else:  # not fetched yet
         url = BASE_URL + filename
         resp = urlopen(url)
         it = (_preprocess(transaction) for transaction in resp)
-        name, _ = os.path.splitext(filename)
         s = pd.Series(it, name=name)
         s.to_pickle(filepath)
 
     try:
         s = s.map(lambda l: list(map(int, l)))
     except ValueError:
-        pass
+        print(f"Could not cast {filename} items to integers")
 
     return s
 
