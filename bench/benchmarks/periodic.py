@@ -11,11 +11,9 @@ class PeriodicCycleBench:
 
     def setup(self, max_length):
         self.logs = fetch_health_app()
-        self.miner = PeriodicCycleMiner(max_length=max_length)
-        self.max_length = max_length
 
     def time_fit(self, max_length):
-        PeriodicCycleMiner(n_jobs=1, max_length=max_length).fit(self.logs)
+        PeriodicCycleMiner(max_length=max_length).fit(self.logs)
 
-    def mem_fit(self, max_length):
-        PeriodicCycleMiner(n_jobs=1, max_length=max_length).fit(self.logs)
+    def peakmem_fit(self, max_length):
+        PeriodicCycleMiner(max_length=max_length).fit(self.logs)
