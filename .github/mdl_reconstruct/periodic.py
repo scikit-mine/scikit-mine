@@ -17,4 +17,4 @@ if __name__ == "__main__":
             )
             miner.fit(D)
             r_D = miner.reconstruct()
-            pd.testing.assert_series_equal(_D, r_D, check_names=False)
+            pd.testing.assert_series_equal(_D, r_D, check_names=False, check_dtype=False)
