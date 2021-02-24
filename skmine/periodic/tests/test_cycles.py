@@ -252,3 +252,7 @@ def test_fit_triples_and_residuals():
     rec_minutes = pcm.reconstruct()
 
     pd.testing.assert_series_equal(S, rec_minutes)
+
+def test_duplicates():
+    S = pd.Series("alpha", index=[20, 20, 40, 50])
+    PeriodicCycleMiner().fit(S)

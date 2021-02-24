@@ -18,6 +18,8 @@ INDEX_TYPES = (
     pd.Int64Index,
 )
 
+import warnings
+
 
 def window_stack(x, width=3):
     """
@@ -413,7 +415,8 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
         if S.index.duplicated().any():
-            raise TypeError("S index must not contain duplicates")   # FIXME
+            warnings.warn(f"found duplicates in S, removing them")
+            S = S.groupby(S.index).first()
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
