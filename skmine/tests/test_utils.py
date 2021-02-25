@@ -6,6 +6,7 @@ from ..utils import _check_min_supp
 from ..utils import _check_growth_rate
 from ..utils import filter_maximal
 from ..utils import filter_minimal
+from ..utils import intersect2d
 
 
 def test_check_random_state():
@@ -76,3 +77,12 @@ def test_filter_min():
     maximums = list(filter_minimal(D))
 
     assert maximums == D.iloc[[1, 2, 3]].tolist()
+
+
+def test_intersect2d():
+    a = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    b = [[1, 3, 5], [7, 1, 2], [4, 5, 6]]
+    ab, a_ind, b_ind = intersect2d(a, b)
+    np.testing.assert_array_equal(ab, np.array([a[1]]))
+    np.testing.assert_array_equal(a_ind, np.array([1]))
+    np.testing.assert_array_equal(b_ind, np.array([2]))

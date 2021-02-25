@@ -1,7 +1,6 @@
 """
-The :mod:`skming.itemset` module includes methods which consider
-itemsets for their singular properties, such as the minimum support threshold,
-or the closeness.
+The :mod:`skmine.itemset` module includes methods which consider reccurent itemsets.
+An itemset is an unsorted set of items, eg. identifiers for books in a store, words in a text, etc.
 """
 from .lcm import LCM
 from .slim import SLIM

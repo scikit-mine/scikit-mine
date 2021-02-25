@@ -1,6 +1,5 @@
 from skmine.itemsets import SLIM
 from skmine.datasets import make_transactions
-from sklearn.preprocessing import MultiLabelBinarizer
 from skmine.datasets.fimi import fetch_any
 
 
@@ -15,9 +14,8 @@ class SLIMBench:
         transactions = make_transactions(
             n_transactions=n_transactions, density=density, random_state=7,
         )
-        mlb = MultiLabelBinarizer()
-        self.transactions = mlb.fit_transform(transactions)
-        self.new_transaction = mlb.transform(transactions.sample(len(transactions)))
+        new_transaction = transactions.sample(len(transactions))
+        self.new_transactions = new_transaction.str.join("|").str.get_dummies(sep="|")  # tabular
         self.fitted_slim = SLIM().fit(transactions)
 
     def time_fit(self, *args):
@@ -40,5 +38,5 @@ class SLIMStandardDatasets:
     def time_fit(self, *args):
         SLIM().fit(self.dataset)
 
-    def mem_fit(self, *args):
+    def peakmem_fit(self, *args):
         SLIM().fit(self.dataset)
