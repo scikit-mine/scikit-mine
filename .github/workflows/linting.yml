@@ -1,6 +1,6 @@
 name: linting
 on:
-  - push:
+  push:
     paths:
       - skmine/**
 jobs:
