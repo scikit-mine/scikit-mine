@@ -18,7 +18,9 @@ jobs:
           pip install pytest pytest-cov
           pip install -r requirements.txt
       - name: Generate coverage report
-        run: pytest --cov-report xml --cov=skmine --cov-config=.coveragerc --cov-fail-under=.95 skmine
+        run: |
+          pytest --cov-report xml --cov=skmine --cov-config=.coveragerc skmine
+          coverage report --fail-under=92
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
