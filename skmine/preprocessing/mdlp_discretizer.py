@@ -201,13 +201,14 @@ class MDLPDiscretizer(BaseMiner):
         assert y is not None and np.issubdtype(y.dtype, np.integer)
         permutation = self.random_state.permutation(len(X))
         _X = X.values if isinstance(X, pd.DataFrame) else X
+        _y = y.values if isinstance(y, pd.Series) else y
         _X = _X[permutation]
-        y = y[permutation]
+        _y = _y[permutation]
 
         n_cols = _X.shape[1]
 
         discs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-            delayed(MDLPVectDiscretizer().fit)(_X[:, idx], y) for idx in range(n_cols)
+            delayed(MDLPVectDiscretizer().fit)(_X[:, idx], _y) for idx in range(n_cols)
         )
 
         self.discretizers_ = discs
