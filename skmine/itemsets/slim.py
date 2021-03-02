@@ -3,9 +3,9 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from functools import reduce, lru_cache
-from itertools import chain
 from collections import defaultdict
+from functools import lru_cache, reduce
+from itertools import chain
 
 import numpy as np
 import pandas as pd
@@ -13,8 +13,8 @@ from sortedcontainers import SortedDict
 
 from ..base import BaseMiner, MDLOptimizer
 from ..bitmaps import Bitmap
-from ..utils import supervised_to_unsupervised
-from ..utils import _check_D
+from ..utils import _check_D, supervised_to_unsupervised
+
 
 def _to_vertical(D):
     res = defaultdict(Bitmap)
@@ -22,6 +22,7 @@ def _to_vertical(D):
         for e in transaction:
             res[e].add(idx)
     return dict(res)
+
 
 def _log2(values):
     res_index = values.index if isinstance(values, pd.Series) else None
@@ -58,14 +59,13 @@ def cover(sct: dict, itemsets: list):
             sct[k] -= usage
     return covers
 
+
 def reconstruct(codetable, n_transactions=None):
     """reconstruct the original data from the `codetable`"""
     if n_transactions is None:
-        n_transactions = max(
-            map(Bitmap.max,
-                filter(lambda e: e, codetable.values())
-            )
-         ) + 1
+        n_transactions = (
+            max(map(Bitmap.max, filter(lambda e: e, codetable.values()))) + 1
+        )
 
     D = pd.Series([set()] * n_transactions)
     for itemset, tids in codetable.items():
@@ -195,7 +195,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         Parameters
         -------
         D: pd.DataFrame
-            Transactional dataset, either as an iterable of iterables or encoded as tabular binary data
+            Transactional dataset, either as an iterable of iterables
+            or encoded as tabular binary data
         """
         self._prefit(D, y=y)
         n_iter_no_change = 0
@@ -256,7 +257,11 @@ class SLIM(BaseMiner, MDLOptimizer):
         """
         D = _check_D(D)
         codetable = pd.Series(self.codetable_)
-        D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
+        D_sct = {
+            k: Bitmap(np.where(D[k])[0])
+            for k in D.columns
+            if k in self.standard_codetable_
+        }
         covers = cover(D_sct, codetable.index)
 
         mat = np.zeros(shape=(len(D), len(covers)))
@@ -349,7 +354,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         return (-self.get_support(itemset), -len(itemset), tuple(itemset))
 
     def _prefit(self, D, y=None):
-        if hasattr(D, 'ndim') and D.ndim == 2:
+        if hasattr(D, "ndim") and D.ndim == 2:
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
@@ -437,11 +442,12 @@ class SLIM(BaseMiner, MDLOptimizer):
             ct = list(codetable)
             ct.remove(cand)
 
-            D = {k: v.copy() for k, v in self.standard_codetable_.items()}  # TODO avoid data copies
+            D = {
+                k: v.copy() for k, v in self.standard_codetable_.items()
+            }  # TODO avoid data copies
             CTp = cover(D, ct)
             decreased = {
-                k for k, v in CTp.items()
-                if len(k) > 1 and len(v) < len(codetable[k])
+                k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])
             }
 
             d_size, m_size = self._compute_sizes(CTp)

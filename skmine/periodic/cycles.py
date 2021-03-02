@@ -2,13 +2,15 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
+import warnings
 from itertools import groupby
+
 import numpy as np
 import pandas as pd
 
+from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
 from ..utils import intersect2d, sliding_window_view
-from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 
 log = np.log2
 
@@ -17,8 +19,6 @@ INDEX_TYPES = (
     pd.RangeIndex,
     pd.Int64Index,
 )
-
-import warnings
 
 
 def residual_length(S, n_event_tot, dS):
@@ -380,7 +380,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.is_fitted = lambda: self.is_datetime_ is not None  # TODO : this make pickle broken
+        self.is_fitted = (
+            lambda: self.is_datetime_ is not None
+        )  # TODO : this make pickle broken
         self.n_jobs = n_jobs
         self.max_length = max_length
 
@@ -407,7 +409,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
         if S.index.duplicated().any():
-            warnings.warn(f"found duplicates in S, removing them")
+            warnings.warn("found duplicates in S, removing them")
             S = S.groupby(S.index).first()
 
         S = S.copy()
@@ -495,7 +497,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         return cycles
 
     def reconstruct(self):
-        """Reconstruct the original occurences from the current cycles
+        """Reconstruct the original occurences from the current cycles.
         Residuals will also be included, as the compression scheme is lossless
 
         Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle
@@ -523,10 +525,12 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
                 l.extend(occurences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
             S = pd.concat([residuals, pd.Series(alpha, index=l)])
-            #S.index = S.index.sort_values()
+            # S.index = S.index.sort_values()
             result.append(S)
 
-        for event in self.residuals_.keys() - cycles_groups.groups.keys():  # add unfrequent events
+        for event in (
+            self.residuals_.keys() - cycles_groups.groups.keys()
+        ):  # add unfrequent events
             result.append(pd.Series(event, index=self.residuals_[event]))
 
         S = pd.concat(result)

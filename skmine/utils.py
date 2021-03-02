@@ -255,7 +255,7 @@ def sliding_window_view(x, window_shape, axis=None, *,
     as a prototyping and developing tool, this function can be a good solution.
     Examples
     --------
-   
+
     >>> x = np.arange(6)
     >>> x.shape
     (6,)
