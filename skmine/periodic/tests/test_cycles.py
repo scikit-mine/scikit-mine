@@ -5,7 +5,7 @@ from collections import Counter
 import datetime as dt
 
 from ..cycles import (
-    window_stack,
+    sliding_window_view,
     residual_length,
     cycle_length,
     get_table_dyn,
@@ -71,16 +71,16 @@ def triples():
 
 
 @pytest.mark.parametrize("k", [3, 5])
-def test_window_stack(minutes, k):
-    w = window_stack(minutes, width=k)
+def test_window_view(minutes, k):
+    w = sliding_window_view(minutes, k)
     assert w.shape == (len(minutes) - k + 1, k)
     np.testing.assert_array_equal(w[0], minutes[:k])
     np.testing.assert_array_equal(w[-1], minutes[-k:])
 
 
 def test_cycle_length_triples(minutes):
-    triples = window_stack(minutes)
-    inter = window_stack(np.diff(minutes), width=2)
+    triples = sliding_window_view(minutes, 3)
+    inter = sliding_window_view(np.diff(minutes), 2)
     delta_S = delta_S = minutes[-1] - minutes[0]
     L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, inter, len(minutes), delta_S)
 

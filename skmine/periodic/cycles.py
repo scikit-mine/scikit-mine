@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from ..bitmaps import Bitmap
-from ..utils import intersect2d
+from ..utils import intersect2d, sliding_window_view
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 
 log = np.log2
@@ -19,16 +19,6 @@ INDEX_TYPES = (
 )
 
 import warnings
-
-
-def window_stack(x, width=3):
-    """
-    Returns
-        np.array of shape (x.shape[0] - width + stepsize, width)
-    """
-    n = x.shape[0]
-    subs = [x[i : 1 + n + i - width] for i in range(0, width)]
-    return np.vstack(subs).T
 
 
 def residual_length(S, n_event_tot, dS):
@@ -127,8 +117,8 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
         by default it will be set to :math:`\log_{2}\left(|S|\right)`
     """
     diffs = np.diff(S)
-    triples = window_stack(S, width=3)
-    diff_pairs = window_stack(diffs, width=2)
+    triples = sliding_window_view(S, 3)
+    diff_pairs = sliding_window_view(diffs, 2)
     dS = S.max() - S.min()
 
     score_one = residual_length(1, n_tot, dS)
@@ -144,8 +134,8 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
 
     max_length = min([len(S), max_length])
     for k in range(4, max_length + 1):
-        w = window_stack(S, width=k)
-        _diffs = window_stack(diffs, width=k - 1)
+        w = sliding_window_view(S, k)
+        _diffs = sliding_window_view(diffs, k - 1)
         _s = sum(cycle_length(w, _diffs, len(S), dS))
 
         for ia, best_score in enumerate(_s):
@@ -282,6 +272,8 @@ def _reconstruct(start, period, dE):
 
 
 def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100):
+    if len(S_a) < 3:
+        return list()
     S_a = S_a.sort_values()
     dS = S_a[-1] - S_a[0]
     cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
