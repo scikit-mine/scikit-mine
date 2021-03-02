@@ -8,6 +8,9 @@
 .. image:: https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&colorA=384257&colorB=E23324
   :target: https://www.inria.fr/en
 
+.. image:: https://pepy.tech/badge/scikit-mine
+  :target: https://pepy.tech/project/scikit-mine
+
 
 Scikit-mine : pattern mining in Python
 
@@ -63,11 +66,10 @@ This project is funded by the `INRIA center in Rennes, Brittany, France <https:/
 We welcome new contributors of all experience levels. 
 
 
-Contributors
-------------
+Internal Contributors
+---------------------
 
 - Rémi Adon (https://github.com/remiadon)
-- Peggy Cellier (https://github.com/PeggyCellier)
-- Alexandre Termier (https://github.com/alexandre-termier)
 - Luis Galárraga (https://github.com/lgalarra)
 - Josie Signe (https://github.com/Darlysia)
+- Esther Galbrun (https://github.com/nurblageij)
