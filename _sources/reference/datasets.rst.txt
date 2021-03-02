@@ -42,4 +42,5 @@ Synthetic data generation
 utils
 -------
 .. autofunction:: skmine.datasets.utils.describe
+.. autofunction:: skmine.datasets.utils.describe_logs
 .. autofunction:: skmine.datasets.get_data_home

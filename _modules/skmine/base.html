@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.base &mdash; scikit-mine 0.0.4 documentation</title>
+  <title>skmine.base &mdash; scikit-mine 0.0.5 documentation</title>
   
 
   
@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/periodic.html">Periodic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/callbacks.html">Callback API</a></li>
@@ -312,6 +313,8 @@
 <span class="sd">        pd.Series</span>
 <span class="sd">            patterns discovered by a mining algorithm</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 

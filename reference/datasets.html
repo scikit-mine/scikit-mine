@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Datasets &mdash; scikit-mine 0.0.4 documentation</title>
+  <title>Datasets &mdash; scikit-mine 0.0.5 documentation</title>
   
 
   
@@ -103,6 +103,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="periodic.html">Periodic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
@@ -782,6 +783,43 @@ for reproducible output across multiple function calls.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">fetch_connect</span><span class="p">())</span>  
 <span class="go">{&#39;n_items&#39;: 75, &#39;avg_transaction_size&#39;: 37.0, &#39;n_transactions&#39;: 3196, &#39;density&#39;: 0.4933}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skmine.datasets.utils.describe_logs">
+<code class="sig-prename descclassname">skmine.datasets.utils.</code><code class="sig-name descname">describe_logs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/utils.html#describe_logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.utils.describe_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give some high level properties on logs</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 86%" />
+<col style="width: 14%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Number of events</p></td>
+<td><p>int</p></td>
+</tr>
+<tr class="row-even"><td><p>Average delta per event</p></td>
+<td><p>float</p></td>
+</tr>
+<tr class="row-odd"><td><p>Average nb of points per event</p></td>
+<td><p>float</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>D</strong> (<em>pd.Series</em>) – A dataset containing logs</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.periodic</span> <span class="kn">import</span> <span class="n">fetch_health_app</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe_logs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">fetch_health_app</span><span class="p">())</span> 
+<span class="go">{&#39;n_events&#39;: 20,</span>
+<span class="go">&#39;avg_delta_per_event&#39;: Timedelta(&#39;0 days 00:53:24.984000&#39;),</span>
+<span class="go">&#39;avg_nb_points_per_event&#39;: 100.0}</span>
 </pre></div>
 </div>
 </dd></dl>

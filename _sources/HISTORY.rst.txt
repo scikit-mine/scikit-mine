@@ -2,6 +2,11 @@
 History
 =======
 
+0.0.5 (2021-03-02)
+------------------
+* PeriodicCycleMiner
+* fix bug on MDLPDiscretizer with pandas
+
 0.0.4 (2021-02-23)
 ------------------
 * remove TransactionEncoder

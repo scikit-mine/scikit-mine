@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.4 documentation</title>
+  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.5 documentation</title>
   
 
   
@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/periodic.html">Periodic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
@@ -382,13 +383,14 @@
         <span class="k">assert</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
         <span class="n">permutation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
         <span class="n">_X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="n">y</span>
         <span class="n">_X</span> <span class="o">=</span> <span class="n">_X</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">_y</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
 
         <span class="n">n_cols</span> <span class="o">=</span> <span class="n">_X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">discs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
-            <span class="n">delayed</span><span class="p">(</span><span class="n">MDLPVectDiscretizer</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">)(</span><span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">MDLPVectDiscretizer</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">)(</span><span class="n">_X</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">],</span> <span class="n">_y</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">discretizers_</span> <span class="o">=</span> <span class="n">discs</span>

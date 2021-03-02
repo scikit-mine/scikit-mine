@@ -16,6 +16,7 @@ Welcome to scikit-mine's documentation!
    reference/datasets
    reference/preprocessing
    reference/itemsets
+   reference/periodic
    reference/emerging
    reference/base
    reference/callbacks

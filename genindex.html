@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; scikit-mine 0.0.4 documentation</title>
+  <title>Index &mdash; scikit-mine 0.0.5 documentation</title>
   
 
   
@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/periodic.html">Periodic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
@@ -190,6 +191,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -226,12 +228,16 @@
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.utils.describe">describe() (in module skmine.datasets.utils)</a>
 </li>
+      <li><a href="reference/datasets.html#skmine.datasets.utils.describe_logs">describe_logs() (in module skmine.datasets.utils)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/emerging.html#skmine.emerging.MBDLLBorder.discover">discover() (skmine.emerging.MBDLLBorder method)</a>
 
       <ul>
         <li><a href="reference/itemsets.html#skmine.itemsets.LCM.discover">(skmine.itemsets.LCM method)</a>
+</li>
+        <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.discover">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
       </ul></li>
       <li><a href="reference/base.html#skmine.base.DiscovererMixin">DiscovererMixin (class in skmine.base)</a>
@@ -246,6 +252,8 @@
 
       <ul>
         <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.evaluate">(skmine.itemsets.SLIM method)</a>
+</li>
+        <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.evaluate">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -270,10 +278,10 @@
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb">fetch_pumsb() (in module skmine.datasets.fimi)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_pumsb_star">fetch_pumsb_star() (in module skmine.datasets.fimi)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_retail">fetch_retail() (in module skmine.datasets.fimi)</a>
 </li>
       <li><a href="reference/base.html#skmine.base.BaseMiner.fit">fit() (skmine.base.BaseMiner method)</a>
@@ -284,6 +292,8 @@
         <li><a href="reference/itemsets.html#skmine.itemsets.LCM.fit">(skmine.itemsets.LCM method)</a>
 </li>
         <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.fit">(skmine.itemsets.SLIM method)</a>
+</li>
+        <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.fit">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
         <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
@@ -302,6 +312,8 @@
 
       <ul>
         <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.generate_candidates">(skmine.itemsets.SLIM method)</a>
+</li>
+        <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.generate_candidates">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -343,11 +355,23 @@
   </ul></td>
 </tr></table>
 
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner">PeriodicCycleMiner (class in skmine.periodic)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.reconstruct">reconstruct() (skmine.itemsets.SLIM method)</a>
+
+      <ul>
+        <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.reconstruct">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

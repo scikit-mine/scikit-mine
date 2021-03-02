@@ -1,0 +1,448 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Periodic &mdash; scikit-mine 0.0.5 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Emerging" href="emerging.html" />
+    <link rel="prev" title="Itemsets" href="itemsets.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Periodic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#periodiccycleminer">PeriodicCycleMiner</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+</ul>
+<p class="caption"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#development-process">Development process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Periodic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/periodic.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="periodic">
+<span id="id1"></span><h1>Periodic<a class="headerlink" href="#periodic" title="Permalink to this headline">¶</a></h1>
+<p>Models and functions to mine periodic patterns</p>
+<div class="section" id="periodiccycleminer">
+<h2>PeriodicCycleMiner<a class="headerlink" href="#periodiccycleminer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.periodic.PeriodicCycleMiner">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.</code><code class="sig-name descname">PeriodicCycleMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mining periodic cycles with a MDL Criterion</p>
+<p>PeriodicCycleMiner is an approach to mine periodic cycles from event logs
+while relying on a Minimum Description Length (MDL) criterion to evaluate
+candidate cycles. The goal here is to extract a set of cycles that characterizes
+the periodic structure present in the data</p>
+<dl>
+<dt>A cycle is defined a 5-tuple of of the form</dt><dd><div class="math notranslate nohighlight">
+\[\alpha, r, p, \tau, E\]</div>
+</dd>
+</dl>
+<p>Where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the <cite>repeating event</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(r\)</span> is the number of repetitions of the event, called the <cite>cycle length</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(p\)</span> is the inter-occurence distance, called the <cite>cycle period</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau\)</span> is the index of the first occurence, called the <cite>cycle starting point</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(E\)</span> is a list of <span class="math notranslate nohighlight">\(r - 1\)</span> signed integer offsets, i.e <cite>cycle shift corrections</cite></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=100</em>) – maximum length for a candidate cycle, when running the dynamic programming heuristic</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of jobs to use for the computation. Each single event is attributed a job
+to discover potential cycles.
+Threads are preffered over processes.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring_a_bell&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
+<span class="go">               start  length  period</span>
+<span class="go">ring_a_bell 0     40       4      20</span>
+<span class="go">            1     10       3      11</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets">1</span></dt>
+<dd><p>Galbrun, E &amp; Cellier, P &amp; Tatti, N &amp; Termier, A &amp; Crémilleux, B
+“Mining Periodic Pattern with a MDL Criterion”</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit PeriodicCycleMiner on data logs</p>
+<p>This generate new candidate cycles and evaluate them.
+Residual occurences are stored as an internal attribute,
+for later reconstruction (MDL is lossless)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>S</strong> (<em>pd.Series</em>) – logs, represented as a pandas Series
+This pandas Series must have an index of type in
+(pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cands</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate candidates <cite>cands</cite>, given S</p>
+<p>Unlike the original implementation by Galbrun &amp; Al.,
+if an occurence is present in more than one candidate cycle, we keep the cycle
+with the greatest length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>S</strong> (<em>pd.Index</em>) – Series of occurences for a specific event</p></li>
+<li><p><strong>cands</strong> (<em>list</em><em>[</em><em>np.ndarray</em><em>]</em>) – A list of candidate batches. Each batch contains candidates occurences of the same length,
+hence stored in a common <cite>numpy.ndarray</cite>.
+Batches are sorted by decreasing order of width,
+so that we consider larger candidates first.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.generate_candidates">
+<code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.generate_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>S</strong> (<em>pd.Index</em><em> or </em><em>numpy.ndarray</em>) – Series of occurences for a specific event</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dict, where each key is an event and each value a list of batch of candidates.
+Batches are sorted in inverse order of width,
+so that we consider larger candidate cycles first.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict[object, list[np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.discover">
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return cycles as a pandas DataFrame, with 3 columns,
+with a 2-level multi-index: the first level mapping events,
+and the second level being positional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl>
+<dt>DataFrame with the following columns</dt><dd><table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>start</p></td>
+<td><p>when the cycle starts</p></td>
+</tr>
+<tr class="row-even"><td><p>length</p></td>
+<td><p>number of occurences in the event</p></td>
+</tr>
+<tr class="row-odd"><td><p>period</p></td>
+<td><p>inter-occurence delay</p></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
+<span class="go">        start  length  period</span>
+<span class="go">ring 0     40       4      20</span>
+<span class="go">     1     10       3      11</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.reconstruct">
+<code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.reconstruct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the original occurences from the current cycles.
+Residuals will also be included, as the compression scheme is lossless</p>
+<p>Denoting as <span class="math notranslate nohighlight">\(\sigma(E)\)</span> the sum of the shift corrections for a cycle
+<span class="math notranslate nohighlight">\(C\)</span>, we have</p>
+<div class="math notranslate nohighlight">
+\[\Delta(C)=(r-1) p+\sigma(E)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The reconstructed dataset</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.Series</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The index of the resulting pd.Series will not be sorted</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="emerging.html" class="btn btn-neutral float-right" title="Emerging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="itemsets.html" class="btn btn-neutral float-left" title="Itemsets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

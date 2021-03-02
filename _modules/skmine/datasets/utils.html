@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets.utils &mdash; scikit-mine 0.0.4 documentation</title>
+  <title>skmine.datasets.utils &mdash; scikit-mine 0.0.5 documentation</title>
   
 
   
@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/periodic.html">Periodic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
@@ -220,6 +221,40 @@
         <span class="n">avg_transaction_size</span><span class="o">=</span><span class="n">avg_transaction_size</span><span class="p">,</span>
         <span class="n">n_transactions</span><span class="o">=</span><span class="n">n_transactions</span><span class="p">,</span>
         <span class="n">density</span><span class="o">=</span><span class="n">avg_transaction_size</span> <span class="o">/</span> <span class="n">n_items</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="describe_logs"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.utils.describe_logs">[docs]</a><span class="k">def</span> <span class="nf">describe_logs</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Give some high level properties on logs</span>
+
+<span class="sd">    ==============================      =====</span>
+<span class="sd">    Number of events                    int</span>
+<span class="sd">    Average delta per event             float</span>
+<span class="sd">    Average nb of points per event      float</span>
+<span class="sd">    ==============================      =====</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D: pd.Series</span>
+<span class="sd">        A dataset containing logs</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.datasets.periodic import fetch_health_app</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe_logs</span>
+<span class="sd">    &gt;&gt;&gt; describe(fetch_health_app()) # doctest: +SKIP</span>
+<span class="sd">    {&#39;n_events&#39;: 20,</span>
+<span class="sd">    &#39;avg_delta_per_event&#39;: Timedelta(&#39;0 days 00:53:24.984000&#39;),</span>
+<span class="sd">    &#39;avg_nb_points_per_event&#39;: 100.0}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gb</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">gb</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+    <span class="n">avg_nb_points</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">n_events</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">gb</span><span class="p">),</span>
+        <span class="n">avg_delta_per_event</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="n">avg_nb_points_per_event</span><span class="o">=</span><span class="n">avg_nb_points</span><span class="p">,</span>
     <span class="p">)</span></div>
 </pre></div>
 
