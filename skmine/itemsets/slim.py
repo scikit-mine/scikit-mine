@@ -3,7 +3,7 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from functools import lru_cache, reduce
 from itertools import chain
 
@@ -58,19 +58,6 @@ def cover(sct: dict, itemsets: list):
         for k in _iset:
             sct[k] -= usage
     return covers
-
-
-def reconstruct(codetable, n_transactions=None):
-    """reconstruct the original data from the `codetable`"""
-    if n_transactions is None:
-        n_transactions = (
-            max(map(Bitmap.max, filter(lambda e: e, codetable.values()))) + 1
-        )
-
-    D = pd.Series([set()] * n_transactions)
-    for itemset, tids in codetable.items():
-        D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
-    return D.map(sorted)
 
 
 def generate_candidates_big(codetable, stack=None):
@@ -335,23 +322,33 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
-        return reconstruct(self.codetable_)
+        n_transactions = (
+            max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
+        )
+
+        D = pd.Series([set()] * n_transactions)
+        for itemset, tids in self.codetable_.items():
+            D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
+        return D.map(sorted)
 
     @lru_cache(maxsize=1024)
-    def get_support(self, itemset):
+    def get_support(self, *items):
         """Get support from an itemset"""
-        U = reduce(Bitmap.intersection, self.standard_codetable_.loc[itemset])
-        return len(U)
+        a = items[-1]
+        tids = self.standard_codetable_[a]
+        if len(items) > 1:
+            return tids & self.get_support(*items[:-1])
+        return tids
 
     def _standard_cover_order(self, itemset):
         """
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
-        return (-len(itemset), -self.get_support(itemset), tuple(itemset))
+        return (-len(itemset), -len(self.get_support(*itemset)), tuple(itemset))
 
     def _standard_candidate_order(self, itemset):
-        return (-self.get_support(itemset), -len(itemset), tuple(itemset))
+        return (-len(self.get_support(*itemset)), -len(itemset), tuple(itemset))
 
     def _prefit(self, D, y=None):
         if hasattr(D, "ndim") and D.ndim == 2:
@@ -378,13 +375,12 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     def _get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
-        flat_items = list(chain(*index))
-        items, counts = np.unique(flat_items, return_counts=True)
+        counts = Counter(chain(*index))
 
-        usages = self.standard_codetable_.loc[items].map(len).astype(np.uint32)
+        usages = self.standard_codetable_.loc[counts.keys()].map(len).astype(np.uint32)
         usages /= usages.sum()
         codes = -_log2(usages)
-        return codes * counts
+        return codes * np.array(list(counts.values()))
 
     def _compute_sizes(self, codetable):
         """

@@ -10,14 +10,18 @@ import pandas as pd
 import numpy as np
 from sortedcontainers import SortedDict
 
+
 @pytest.fixture
 def D():
     return pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
 
+
 def to_tabular_df(D):
-    return D.map(list).str.join('|').str.get_dummies(sep="|")
+    return D.map(list).str.join("|").str.get_dummies(sep="|")
+
 
 _id = lambda args: args
+
 
 def test_complex_evaluate():
     """
@@ -140,6 +144,7 @@ def test_generate_candidate_stack():
     new_candidates = generate_candidates(codetable, stack={frozenset("AB")})
     assert new_candidates == []
 
+
 @pytest.mark.parametrize("preproc", [to_tabular_df, _id])
 def test_prefit(preproc):
     D = pd.Series(["ABC"] * 5 + ["BC", "B", "C"])
@@ -173,8 +178,9 @@ def test_get_standard_size_2(D):
 
 def test_get_support(D):
     slim = SLIM()._prefit(D)
-    assert slim.get_support(frozenset("ABC")) == 5
-    assert slim.get_support(frozenset("C")) == 5
+    assert len(slim.get_support(*frozenset("ABC"))) == 5
+    assert len(slim.get_support("C")) == 5
+    assert slim.get_support.cache_info().currsize > 0
 
 
 def test_compute_sizes_1(D):
@@ -206,13 +212,15 @@ def test_compute_sizes_2(D):
     np.testing.assert_almost_equal(data_size, 12.92, 2)
     np.testing.assert_almost_equal(model_size, 12.876, 2)
 
+
 @pytest.mark.parametrize("preproc,pass_y", ([to_tabular_df, False], [_id, True]))
 def test_fit_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=True)
-    y = None if not pass_y else  np.array([1] * len(D))
+    y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
     self = slim.fit(D)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "A", "B", "C"]))
+
 
 @pytest.mark.parametrize("preproc,pass_y", ([to_tabular_df, True], [_id, False]))
 def test_fit_no_pruning(D, preproc, pass_y):
@@ -221,6 +229,7 @@ def test_fit_no_pruning(D, preproc, pass_y):
     D = preproc(D)
     self = slim.fit(D)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
+
 
 def test_prune(D):
     slim = SLIM(pruning=False).fit(D)
@@ -235,6 +244,7 @@ def test_prune(D):
 
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
+
 
 def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
@@ -253,7 +263,7 @@ def test_decision_function(D):
     slim = SLIM(pruning=True).fit(D)
 
     new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
-    new_D = new_D.str.join('|').str.get_dummies(sep="|")
+    new_D = new_D.str.join("|").str.get_dummies(sep="|")
 
     dists = slim.decision_function(new_D)
     assert dists.dtype == np.float32
