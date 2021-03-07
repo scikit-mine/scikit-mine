@@ -15,11 +15,17 @@ class SLIMBench:
             n_transactions=n_transactions, density=density, random_state=7,
         )
         new_transaction = transactions.sample(len(transactions))
-        self.new_transactions = new_transaction.str.join("|").str.get_dummies(sep="|")  # tabular
+        self.new_transactions = (
+            new_transaction.map(str).str.join("|").str.get_dummies(sep="|")
+        )  # tabular
         self.fitted_slim = SLIM().fit(transactions)
+        self.transactions = transactions
 
     def time_fit(self, *args):
         SLIM().fit(self.transactions)
+
+    def time_prefit(self, *args):
+        SLIM()._prefit(self.transactions)
 
     def time_decision_function(self, *args):
         self.fitted_slim.decision_function(self.new_transactions)
