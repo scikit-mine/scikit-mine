@@ -1,10 +1,11 @@
 import warnings
 from collections import defaultdict
-import pandas as pd
-import numpy as np
 
-from .bitmaps import Bitmap
+import numpy as np
+import pandas as pd
+
 from .base import BaseMiner, MDLOptimizer
+from .bitmaps import Bitmap
 
 
 def to_vertical(D):
@@ -43,7 +44,7 @@ def compress_size(D, patt, seq_lengths, *, max_gap=1):
     max_gap: int
         maximum number of gaps in a pattern
 
-    TODO add max_gap=2 and interleaving=True
+    TODO verctorize with numpy.searchsorted
     """
     cost = len(patt) + sum(map(len, D.values()))
     # sum(D.values()) vertical eq. to sum(len(Si) for Si in horizontal D)
@@ -126,11 +127,12 @@ def estimate_gain(tids, seq_lengths):
 
 
 class GoKrimp(BaseMiner, MDLOptimizer):  # TODO : inerit MDL Optimizer
-    def __init__(self, k=100):
-        self.k_ = k
+    def __init__(self, k=100, max_gap=1):
+        self.k = k
         self._cum_seq_lengths = None
         self.codetable_ = None
         self.standard_codetable_ = None
+        self.max_gap = max_gap
 
     def fit(self, D):
         vert_D, cum_seq_lengths = to_vertical(D)
@@ -139,7 +141,7 @@ class GoKrimp(BaseMiner, MDLOptimizer):  # TODO : inerit MDL Optimizer
         }
 
         H = dict()
-        while len(H) < self.k_:
+        while len(H) < self.k:
             p_star, update_d = best_compressing(vert_D, cum_seq_lengths)
             if not p_star:
                 break
@@ -156,6 +158,11 @@ class GoKrimp(BaseMiner, MDLOptimizer):  # TODO : inerit MDL Optimizer
     def discover(self):
         cpy = {pattern: tids.copy() for pattern, tids in self.codetable_.items()}
         return pd.Series(cpy.values(), index=list(cpy.keys()))
+
+    def evaluate(self, candidate):
+        return compress_size(
+            self.codetable_, candidate, self.seq_lengths, max_gap=self.max_gap
+        )
 
     def generate_candidates(self):
         """
