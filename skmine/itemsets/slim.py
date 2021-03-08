@@ -189,7 +189,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         n_iter_no_change = 0
         seen_cands = set()
 
-        tol = self.tol or self.standard_codetable_.map(len).median()
+        tol = self.tol or (self.standard_codetable_.map(len).median() ** 2)
 
         while n_iter_no_change < self.n_iter_no_change:
             candidates = self.generate_candidates(stack=seen_cands)
