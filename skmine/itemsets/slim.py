@@ -3,7 +3,7 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
 
@@ -365,6 +365,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -_log2(usage / usage.sum())
+        self._starting_codes = codes
 
         # L(code_ST(X)) = L(code_CT(X)), because CT=ST
         self.model_size_ = 2 * codes.sum()
@@ -376,11 +377,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     def _get_standard_codes(self, index):
         """compute the size of a codetable index given the standard codetable"""
         counts = Counter(chain(*index))
-
-        usages = self.standard_codetable_.loc[counts.keys()].map(len).astype(np.uint32)
-        usages /= usages.sum()
-        codes = -_log2(usages)
-        return codes * np.array(list(counts.values()))
+        return self._starting_codes * np.array(list(counts.values()))
 
     def _compute_sizes(self, codetable):
         """
@@ -405,7 +402,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         usages = np.array(usages, dtype=np.uint32)
         codes = -_log2(usages / usages.sum())
 
-        stand_codes = self._get_standard_codes(isets)
+        counts = Counter(chain(*isets))
+        stand_codes = self._starting_codes * pd.Series(counts)
 
         model_size = stand_codes.sum() + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()

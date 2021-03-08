@@ -1,14 +1,10 @@
-from ..slim import (
-    SLIM,
-    cover,
-    generate_candidates,
-)
-from ...bitmaps import Bitmap
-
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 from sortedcontainers import SortedDict
+
+from ...bitmaps import Bitmap
+from ..slim import SLIM, cover, generate_candidates
 
 
 @pytest.fixture
@@ -162,7 +158,7 @@ def test_get_standard_size_1(D):
     CT_index = ["ABC", "AB", "A", "B"]
     codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
-        codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), check_less_precise=2
+        codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), atol=1e-2
     )
 
 
@@ -172,7 +168,7 @@ def test_get_standard_size_2(D):
     CT_index = ["ABC", "A", "B"]
     codes = slim._get_standard_codes(CT_index)
     pd.testing.assert_series_equal(
-        codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), check_less_precise=2
+        codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), atol=1e-2
     )
 
 
