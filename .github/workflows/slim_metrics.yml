@@ -2,7 +2,7 @@ name: SLIM_metrics
 on:
   pull_request:
     paths:
-    - 'skmine/itemsets/slim.py'
+      - "skmine/itemsets/slim.py"
 
 jobs:
   run:
@@ -14,6 +14,8 @@ jobs:
         env:
           repo_token: ${{ secrets.SKMINE_GITHUB_TOKEN }}
         run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python-dev
           pip install -r requirements.txt
           dvc repro slim_metrics
           git fetch --prune
