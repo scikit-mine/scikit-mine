@@ -11,6 +11,7 @@ jobs:
           repo_token: ${{ secrets.SKMINE_GITHUB_TOKEN }}
         run: |
           pip install numpy
+          pip install --user https://github.com/Ezibenroc/PyRoaringBitMap/releases/download/0.2.1/pyroaring-0.2.1-cp36-cp36m-linux_x86_64.whl
           python setup.py install
           dvc repro slim_metrics
           git fetch --prune
