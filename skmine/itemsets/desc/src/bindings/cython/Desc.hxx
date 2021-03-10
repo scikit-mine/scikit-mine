@@ -359,8 +359,8 @@ public:
             {
                 auto p = composition.models[j].expectation(x.point(i));
                 if (y_i.second < p) { y_i = {j, p}; }
-                y[i] = labels[y_i.first];
             }
+            y[i] = labels[y_i.first];
         }
 
         return y;
