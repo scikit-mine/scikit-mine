@@ -9,18 +9,13 @@
 
 #if defined(HAS_EXECUTION_POLICIES)
 #include <execution>
+#include <tbb/iterators.h>
 #endif
 
 namespace sd
 {
 namespace disc
 {
-
-#if defined(HAS_EXECUTION_POLICIES)
-static constexpr bool has_execution_policies = true;
-#else
-static constexpr bool has_execution_policies = false;
-#endif
 
 template <typename S, typename T>
 struct SlimCandidate
@@ -65,7 +60,7 @@ SlimCandidate<S, T> join(const SlimCandidate<S, T> a, const SlimCandidate<S, T>&
 }
 
 template <typename State>
-struct SlimGeneratorImpl
+struct CandidateGeneratorImpl
 {
     using state_type = State;
 
@@ -102,33 +97,18 @@ struct SlimGeneratorImpl
         constexpr int operator()(const state_type&) const noexcept { return 1; }
     };
 
-    template <typename Data, typename score_fn = ConstantScoreFunction>
-    SlimGeneratorImpl(const Data&           data,
-                      size_t                min_support,
-                      std::optional<size_t> max_width = {},
-                      score_fn&&            score     = {})
-        : max_width(max_width), min_support(min_support)
+    template <typename Data>
+    CandidateGeneratorImpl(const Data& data, size_t min_support, std::optional<size_t> max_depth)
+        : max_depth(max_depth), min_support(min_support)
     {
-        init(data, std::forward<score_fn>(score));
-    }
-
-    template <typename Data, typename Patternset, typename score_fn = ConstantScoreFunction>
-    SlimGeneratorImpl(const Data&           data,
-                      const Patternset&     summary,
-                      size_t                min_support,
-                      std::optional<size_t> max_width = {},
-                      score_fn&&            score     = {})
-        : max_width(max_width), min_support(min_support)
-    {
-        init_from_patternset(data, summary, std::forward<score_fn>(score));
+        init(data);
     }
 
     const state_type& top() const { return candidates.back(); }
 
     std::optional<state_type> next()
     {
-        if (candidates.empty())
-            return {};
+        if (candidates.empty()) return {};
 
         // std::pop_heap(candidates.begin(), candidates.end(), ordering{});
         auto ret = std::move(candidates.back());
@@ -138,8 +118,8 @@ struct SlimGeneratorImpl
     }
 
     static bool is_candidate_known(const state_type&              x,
-                                size_t                         count_x,
-                                const std::vector<state_type>& candidates)
+                                   size_t                         count_x,
+                                   const std::vector<state_type>& candidates)
     {
         return end(candidates) !=
                std::find_if(begin(candidates), end(candidates), [&](const auto& y) {
@@ -155,123 +135,85 @@ struct SlimGeneratorImpl
                        const state_type& other,
                        score_fn&&        score = {})
     {
-        if (is_subset(other.pattern, next.pattern))
-            return 0;
+        if (is_subset(other.pattern, next.pattern)) return 0;
 
         join(joined, next, other);
 
-        if (joined.support < min_support)
-            return 0;
+        if (joined.support < min_support) return 0;
 
         auto n = count(joined.pattern);
 
-        if (n <= count_next)
-            return 0;
+        if (n <= count_next) return 0;
 
-        if (max_width && n > *max_width)
-            return 0;
+        if (max_depth && n > *max_depth) return 0;
 
         joined.score = score(joined);
 
         return n;
     }
 
-    template <typename score_fn = ConstantScoreFunction>
+    template<typename score_fn>
     void combine_pairs_allocate_tmp(const state_type& next, score_fn&& score = {})
     {
-        const size_t count_next = count(next.pattern);
+        novel.resize(singletons.size());
 
-#pragma omp parallel
-        {
-            std::vector<state_type> novel;
-            novel.reserve(singletons.size() * 0.33 / 24);
-            state_type joined;
-#pragma omp for nowait
-            for (size_t i = 0; i < singletons.size(); ++i)
-            {
-                if (intersects(singleton_blacklist[i], next.pattern))
-                    continue;
-                if (combine_two(joined, count_next, next, singletons[i], score))
-                {
-                    novel.push_back(joined);
-                }
-            }
+        auto count_next = count(next.pattern);
 
-#pragma omp critical
-            {
-                candidates.reserve(candidates.size() + novel.size());
-                candidates.insert(candidates.end(),
-                                  std::move_iterator(novel.begin()),
-                                  std::move_iterator(novel.end()));
-            }
-        }
-    }
-
-    template <typename score_fn = ConstantScoreFunction>
-    void combine_pairs_locking(const state_type& next, score_fn&& score = {})
-    {
-        const size_t count_next = count(next.pattern);
-
-        candidates.reserve(candidates.size() + singletons.size() * 0.33);
-        thread_local state_type joined;
-// private(joined)
-#pragma omp parallel for
-        for (size_t i = 0; i < singletons.size(); ++i)
-        {
-            if (intersects(singleton_blacklist[i], next.pattern))
-                continue;
-            if (combine_two(joined, count_next, next, singletons[i], score))
-            {
-#pragma omp critical
-                {
-                    candidates.push_back(joined);
-                }
-            }
-        }
-    }
-
-    template <typename score_fn = ConstantScoreFunction>
-    void combine_pairs(const state_type& next, bool make_unique, score_fn&& score = {})
-    {
-        if (singletons.size() > 128)
-            combine_pairs_allocate_tmp(next, std::forward<score_fn>(score));
-        else
-            combine_pairs_locking(next, std::forward<score_fn>(score));
-
-        if (make_unique)
-        {
-            // remove_duplicates();
-        }
-    }
-
-    void remove_duplicates()
-    {
+        auto update_candidate = [&](const auto& i) {
+            novel[i].score = 0;
+            combine_two(novel[i], count_next, next, singletons[i], score);
+        };
 
 #if HAS_EXECUTION_POLICIES
-        if (candidates.size() > 1024 * 2)
-        {
-            std::sort(std::execution::par_unseq,
-                      candidates.begin(),
-                      candidates.end(),
-                      lexless_pattern{});
-
-            auto ptr = std::unique(std::execution::par_unseq,
-                                   candidates.begin(),
-                                   candidates.end(),
-                                   equals_pattern{});
-            candidates.erase(ptr, candidates.end());
-            return;
-        }
+        std::for_each(std::execution::par,
+                      tbb::counting_iterator<size_t>(0),
+                      tbb::counting_iterator<size_t>(singletons.size()),
+                      update_candidate);
+#else
+#pragma omp parallel for
+        for (size_t i = 0; i < singletons.size(); ++i) { update_candidate(i); }
 #endif
-        std::sort(candidates.begin(), candidates.end(), lexless_pattern{});
-        auto ptr = std::unique(candidates.begin(), candidates.end(), equals_pattern{});
-        candidates.erase(ptr, candidates.end());
+        candidates.reserve(candidates.size() + novel.size());
+        std::copy_if(novel.begin(),
+                     novel.end(),
+                     std::back_inserter(candidates),
+                     [](const auto& x) { return x.score > 0; });
     }
+
+    template <typename score_fn = ConstantScoreFunction>
+    void combine_pairs(const state_type& next, score_fn&& score = {})
+    {
+        combine_pairs_allocate_tmp(next, std::forward<score_fn>(score));
+    }
+
+    //     void remove_duplicates()
+    //     {
+
+    // #if HAS_EXECUTION_POLICIES
+    //         if (candidates.size() > 1024)
+    //         {
+    //             std::sort(std::execution::par_unseq,
+    //                       candidates.begin(),
+    //                       candidates.end(),
+    //                       lexless_pattern{});
+
+    //             auto ptr = std::unique(std::execution::par_unseq,
+    //                                    candidates.begin(),
+    //                                    candidates.end(),
+    //                                    equals_pattern{});
+    //             candidates.erase(ptr, candidates.end());
+    //             return;
+    //         }
+    // #endif
+    //         std::sort(candidates.begin(), candidates.end(), lexless_pattern{});
+    //         auto ptr = std::unique(candidates.begin(), candidates.end(), equals_pattern{});
+    //         candidates.erase(ptr, candidates.end());
+    //     }
 
     void order_candidates()
     {
 #if HAS_EXECUTION_POLICIES
-        if (candidates.size() > 1024 * 2)
+        if (candidates.size() > 1024)
         {
             std::sort(
                 std::execution::par_unseq, candidates.begin(), candidates.end(), ordering{});
@@ -325,8 +267,7 @@ struct SlimGeneratorImpl
                       std::begin(candidates),
                       std::end(candidates),
                       [&](auto& x) {
-                          if (intersects(joined.pattern, x.pattern))
-                              x.score = score(x);
+                          if (intersects(joined.pattern, x.pattern)) x.score = score(x);
                       });
 #else
 #pragma omp parallel for
@@ -341,34 +282,29 @@ struct SlimGeneratorImpl
     template <typename score_fn>
     void expand_from(const state_type& next, score_fn&& score)
     {
-        combine_pairs(next, true);
         // compute_scores(std::forward<score_fn>(score));
-        compute_scores(next, std::forward<score_fn>(score));
+        compute_scores(next, score);
+        combine_pairs(next, score);
         order_candidates();
     }
 
     template <typename score_fn, typename prune_fn>
     void expand_bfs(score_fn&& score, prune_fn&& prune_pred, size_t max_layer_expansion)
     {
-        if (!has_next())
-            return;
+        if (!has_next()) return;
 
         for (size_t layer = 0; layer < max_layer_expansion; ++layer)
         {
             auto curr = candidates.back(); // copy is intentional
 
-            combine_pairs(curr, true, score);
+            combine_pairs(curr, score);
             this->prune(prune_pred);
 
-            if (!has_next())
-                break;
+            if (!has_next()) break;
 
             order_candidates();
 
-            if (curr.score >= top().score || sd::equal(curr.pattern, top().pattern))
-            {
-                break;
-            }
+            if (curr.score >= top().score || sd::equal(curr.pattern, top().pattern)) { break; }
         }
     }
 
@@ -402,11 +338,8 @@ struct SlimGeneratorImpl
     void init_singletons(Data const& data)
     {
         singletons = std::vector<state_type>(data.dim);
-        singleton_blacklist.clear();
-        singleton_blacklist.resize(data.dim);
 
-        if (data.size() == 0 || data.dim == 0)
-            return;
+        if (data.size() == 0 || data.dim == 0) return;
 
         size_t i = 0;
         for (auto& s : singletons)
@@ -418,14 +351,12 @@ struct SlimGeneratorImpl
         size_t row_index = 0;
         for (const auto& x : data)
         {
-            foreach(point(x), [&](size_t i) { singletons[i].row_ids.insert(row_index); });
+            foreach (point(x), [&](size_t i) { singletons[i].row_ids.insert(row_index); })
+                ;
             ++row_index;
         }
 
-        for (auto& s : singletons)
-        {
-            s.support = count(s.row_ids);
-        }
+        for (auto& s : singletons) { s.support = count(s.row_ids); }
 
         singletons.erase(std::remove_if(singletons.begin(),
                                         singletons.end(),
@@ -433,86 +364,75 @@ struct SlimGeneratorImpl
                          singletons.end());
     }
 
-    template <typename Data, typename score_fn = ConstantScoreFunction>
-    void init(Data const& data, score_fn&& score = {})
+    template <typename score_fn = ConstantScoreFunction>
+    void initialize_pairs(score_fn&& score)
+    {
+        size_t     n = singletons.size();
+        novel.resize((size_t)std::ceil(n * double(n + 1) / 2));
+        auto sym_index = [n](auto i, auto j) {
+            if (j < i) { std::swap(i, j); }
+            return i * n - (i - 1) * i / 2 + j - i;
+        };
+
+#if HAS_EXECUTION_POLICIES
+        std::for_each(
+            std::execution::par,
+            tbb::counting_iterator<size_t>(0),
+            tbb::counting_iterator<size_t>(n),
+            [&](size_t i) {
+                for (size_t j = i + 1; j < n; ++j)
+                {
+                    combine_two(novel[sym_index(i, j)], 1, singletons[i], singletons[j], score);
+                }
+            });
+#else
+        state_type joined;
+#pragma omp parallel for schedule(dynamic, 1)
+        for (size_t i = 0; i < singletons.size(); ++i)
+        {
+            for (size_t j = i + 1; j < singletons.size(); ++j)
+            {
+                combine_two(novel[sym_index(i, j)], 1, singletons[i], singletons[j], score); 
+            }
+        }
+#endif
+        candidates.reserve(candidates.size() + novel.size());
+        std::copy_if(std::make_move_iterator(novel.begin()),
+                     std::make_move_iterator(novel.end()),
+                     std::back_inserter(candidates),
+                     [](const auto& x) { return x.score > 0; });
+        novel.clear();
+        order_candidates();
+    }
+
+    template <typename Data>
+    void init(Data const& data)
     {
         init_singletons(data);
         candidates.clear();
         candidates.reserve(data.dim * 3);
-
-        state_type joined;
-#pragma omp parallel for firstprivate(joined) schedule(dynamic, 1) // collapse (2)
-        for (size_t i = 0; i < singletons.size(); ++i)
-        {
-            if (singletons[i].support >= min_support)
-            {
-                for (size_t j = i + 1; j < singletons.size(); ++j)
-                {
-                    if (singletons[j].support >= min_support)
-                    {
-                        join(joined, singletons[i], singletons[j]);
-                        if (max_width && count(joined.pattern) > *max_width)
-                            continue;
-                        if (joined.support >= min_support)
-                        {
-                            joined.score = score(joined);
-                            if (joined.score > 0)
-                            {
-#pragma omp critical
-                                {
-                                    candidates.push_back(joined);
-                                }
-                            }
-                            else
-                            {
-#pragma omp critical
-                                {
-                                    singleton_blacklist[i].insert(j);
-                                    singleton_blacklist[j].insert(i);
-                                }
-                            }
-                        }
-                        else
-                        {
-#pragma omp critical
-                            {
-                                singleton_blacklist[i].insert(j);
-                                singleton_blacklist[j].insert(i);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        order_candidates();
     }
 
-    template <typename Data, typename Patternset, typename score_fn = ConstantScoreFunction>
-    void
-    init_from_patternset(Data const& data, const Patternset& patternset, score_fn&& score = {})
+    template <typename Patternset, typename score_fn = ConstantScoreFunction>
+    void initialize_expansion(const Patternset& patternset, score_fn&& score = {})
     {
-        init(data, score);
-        for (const auto& x : patternset)
-        {
-            combine_pairs(point(x), false);
-        }
-        // remove_duplicates();
+        for (const auto& x : patternset) { combine_pairs(point(x), score); }
         order_candidates();
     }
 
 private:
-    std::optional<size_t>   max_width;
+    std::optional<size_t>   max_depth;
     size_t                  min_support = 2;
     std::vector<state_type> singletons;
     std::vector<state_type> candidates;
 
-    std::vector<itemset<typename state_type::pattern_type>> singleton_blacklist;
+    std::vector<state_type> novel;
 
     static_assert(std::is_swappable_v<state_type>);
 };
 
 template <typename S, typename T>
-using SlimGenerator = SlimGeneratorImpl<SlimCandidate<S, T>>;
+using CandidateGenerator = CandidateGeneratorImpl<SlimCandidate<S, T>>;
 
 } // namespace disc
 } // namespace sd

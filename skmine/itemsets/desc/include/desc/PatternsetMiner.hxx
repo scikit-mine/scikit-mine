@@ -24,18 +24,14 @@ bool is_allowed(const Composition<Trait>& c, const Candidate& x)
 template <typename Trait, typename Config>
 void prepare(Component<Trait>& c, const Config& cfg)
 {
-    if (c.summary.empty() || c.model.model.dim != c.data.dim) 
-        initialize_model(c, cfg);
+    if (c.summary.empty() || c.model.model.dim != c.data.dim) initialize_model(c, cfg);
 }
 
 template <typename Trait, typename Config>
 void prepare(Composition<Trait>& c, const Config& cfg)
 {
-    if(!check_invariant(c)) 
-    {
-        initialize_model(c, cfg);
-    }
-    
+    if (!check_invariant(c)) { initialize_model(c, cfg); }
+
     c.masks = construct_component_masks(c);
 }
 
@@ -74,7 +70,7 @@ void discover_patterns_generic(C& s, const Config& cfg, I fn = {}, Info&& info =
 {
     using patter_type = typename C::pattern_type;
     using float_type  = typename C::float_type;
-    using generator   = SlimGenerator<patter_type, float_type>;
+    using generator   = CandidateGenerator<patter_type, float_type>;
     using clk         = std::chrono::high_resolution_clock;
 
     assert(s.data.dim != 0);
@@ -86,13 +82,12 @@ void discover_patterns_generic(C& s, const Config& cfg, I fn = {}, Info&& info =
     auto score_fn = [&](auto& x) { return fn.heuristic(s, x, cfg); };
     auto prune_fn = [&](auto& x) { return x.score <= 0 || !fn.is_allowed(s, x, cfg); };
 
-    auto gen = generator(
-        s.data, cfg.min_support, cfg.max_pattern_size.value_or(cfg.max_factor_width), score_fn);
+    auto max_depth = cfg.max_pattern_size.value_or(cfg.max_factor_width);
+    auto gen       = generator(s.data, cfg.min_support, max_depth);
 
-    if (cfg.search_depth > 1)
-    {
-        gen.expand_bfs(score_fn, prune_fn, cfg.search_depth);
-    }
+    gen.initialize_pairs(score_fn);
+
+    if (cfg.search_depth > 1) { gen.expand_bfs(score_fn, prune_fn, cfg.search_depth); }
 
     size_t     items_used = 0;
     size_t     patience   = cfg.max_patience;
@@ -112,20 +107,11 @@ void discover_patterns_generic(C& s, const Config& cfg, I fn = {}, Info&& info =
         else if (patience-- == 0)
             break;
 
-        if (cfg.max_time && (clk::now() - start_time) > *cfg.max_time)
-        {
-            break;
-        }
+        if (cfg.max_time && (clk::now() - start_time) > *cfg.max_time) { break; }
 
-        if (cfg.max_patternset_size && items_used >= *cfg.max_patternset_size)
-        {
-            break;
-        }
+        if (cfg.max_patternset_size && items_used >= *cfg.max_patternset_size) { break; }
 
-        if (c)
-        {
-            gen.expand_from(*c, score_fn, prune_fn, cfg.search_depth);
-        }
+        if (c) { gen.expand_from(*c, score_fn, prune_fn, cfg.search_depth); }
     }
 
     fn.finish(s, cfg);

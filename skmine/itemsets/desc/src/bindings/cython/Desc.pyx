@@ -31,7 +31,7 @@ cdef class Desc:
     cdef CppDesc desc
 
     def fit(self, D, y=None):
-        self.has_labels = y is not None and len(y) > 0
+        # self.has_labels = y is not None and len(y) > 0
         if self.is_sparse:
             self.desc.fit(to_sparse_dataset(D), to_size_t_vector(y))
         else:
