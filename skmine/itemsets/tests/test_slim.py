@@ -152,26 +152,6 @@ def test_prefit(preproc):
     assert slim.codetable.index.tolist() == list(map(frozenset, ["B", "C", "A"]))
 
 
-def test_get_standard_size_1(D):
-    slim = SLIM()
-    slim._prefit(D)
-    CT_index = ["ABC", "AB", "A", "B"]
-    codes = slim._get_standard_codes(CT_index)
-    pd.testing.assert_series_equal(
-        codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), atol=1e-2
-    )
-
-
-def test_get_standard_size_2(D):
-    slim = SLIM()
-    slim._prefit(D)
-    CT_index = ["ABC", "A", "B"]
-    codes = slim._get_standard_codes(CT_index)
-    pd.testing.assert_series_equal(
-        codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), atol=1e-2
-    )
-
-
 def test_get_support(D):
     slim = SLIM()._prefit(D)
     assert len(slim.get_support(*frozenset("ABC"))) == 5

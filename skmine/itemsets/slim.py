@@ -372,11 +372,6 @@ class SLIM(BaseMiner, MDLOptimizer):
 
         return self
 
-    def _get_standard_codes(self, index):
-        """compute the size of a codetable index given the standard codetable"""
-        counts = Counter(chain(*index))
-        return self._starting_codes * np.array(list(counts.values()))
-
     def _compute_sizes(self, codetable):
         """
         Compute sizes for both the data and the model
