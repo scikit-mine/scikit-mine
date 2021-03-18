@@ -48,19 +48,15 @@ def cover(sct: dict, itemsets: list):
     """
     covers = dict()
     for iset in itemsets:
-        _iset = frozenset(iset & sct.keys())
-        if _iset != iset:
-            usage = Bitmap()
-        else:
-            it = [sct[i] for i in _iset]
-            usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
+        it = [sct[i] for i in iset]
+        usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
         covers[iset] = usage
-        for k in _iset:
+        for k in iset:
             sct[k] -= usage
     return covers
 
 
-def generate_candidates_big(codetable, stack=None):
+def generate_candidates_big(codetable, stack=set(), depth=None):
     """
     Generate candidates, but does not sort output by estimated gain
 
@@ -75,7 +71,7 @@ def generate_candidates_big(codetable, stack=None):
     codetable: SortedDict[frozenset, Bitmap]
         A codetable, sorted in Standard Candidate Order
 
-    stack: set[frozenset], defaut=None
+    stack: set[frozenset], defaut=set()
         A stack of already seen itemsets, which will not be considered in output
         Note that this function updates the stack, passed as a reference
 
@@ -84,26 +80,26 @@ def generate_candidates_big(codetable, stack=None):
     generate_candidates
     """
     assert isinstance(codetable, SortedDict)
+    depth = depth or int(np.log2(len(codetable)) * 1e2)
     for idx, (X, X_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1 :]
+        Y = codetable.items()[idx + 1 : idx + 1 + depth]
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
-            if stack is not None:
-                if XY in stack:
-                    continue
-                stack.add(XY)
+            if XY in stack:
+                continue
+            stack.add(XY)
             inter_len = y_usage.intersection_len(X_usage)
             if inter_len > _best_usage:
                 _best_usage = inter_len
-                best_XY = X.union(y)
+                best_XY = XY
 
         if best_XY is not None:
             yield best_XY, _best_usage
 
 
-def generate_candidates(codetable, stack=None):
+def generate_candidates(codetable, stack=set()):
     """
     assumes codetable is sorted in Standard Candidate Order
     """
@@ -189,7 +185,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         n_iter_no_change = 0
         seen_cands = set()
 
-        tol = self.tol or (self.standard_codetable_.map(len).median() ** 2)
+        tol = self.tol or (len(self.standard_codetable_) ** 2) // 100
 
         while n_iter_no_change < self.n_iter_no_change:
             candidates = self.generate_candidates(stack=seen_cands)
@@ -215,6 +211,7 @@ class SLIM(BaseMiner, MDLOptimizer):
             if not candidates:  # if empty candidate generation
                 n_iter_no_change += self.n_iter_no_change  # force while loop to break
 
+        self.tol = tol
         return self
 
     def decision_function(self, D):
@@ -249,7 +246,8 @@ class SLIM(BaseMiner, MDLOptimizer):
             for k in D.columns
             if k in self.standard_codetable_
         }
-        covers = cover(D_sct, codetable.index)
+        isets = [frozenset(i & D_sct.keys()) for i in codetable.index]
+        covers = cover(D_sct, isets)
 
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values()):
