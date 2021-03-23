@@ -55,5 +55,4 @@ def test_inverted_index(data):
 def test_fit_non_integers(data):
     data = [[str(_) for _ in t] for t in data]
     bide = BIDE(min_supp=2, min_len=0).fit(data)
-    assert bide._results == []
     assert bide._db == data  # FIXME dataset should not be kept as ref

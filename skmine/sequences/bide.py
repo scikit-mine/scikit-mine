@@ -65,19 +65,18 @@ class BIDE(BaseMiner, DiscovererMixin):
         self.min_len = min_len
         self.max_len = max_len
         self._db = None
-        self._results = list()
 
     def fit(self, D):
-        self._results.clear()
         self._db = D  # TODO this is dummy
         return self
 
     def discover(self):
         if self._db is None:
             raise Exception("must call fit before")
+        results = list()
         matches = [(i, -1) for i in range(len(self._db))]
-        self.bide_frequent_rec([], matches)
-        patterns, supports = zip(*self._results)
+        self.bide_frequent_rec(results, [], matches)
+        patterns, supports = zip(*results)
         return pd.Series(supports, index=map(tuple, patterns))
 
     def __reversescan(self, db, patt, matches, check_type):
@@ -124,7 +123,7 @@ class BIDE(BaseMiner, DiscovererMixin):
     def canclosedprune(self, db, patt, matches):
         return self.__reversescan(db, [None, *patt], matches[:], "prune")
 
-    def bide_frequent_rec(self, patt, matches):
+    def bide_frequent_rec(self, results, patt, matches):
 
         sup = len(matches)
 
@@ -136,7 +135,7 @@ class BIDE(BaseMiner, DiscovererMixin):
                 return None
             # if pattern is closed (backward extension check), record the pattern and its support
             if self.isclosed(self._db, patt, matches):
-                self._results.append((patt, sup))
+                results.append((patt, sup))
 
         # if pattern's length is greater than maximum length, stop recurssion
         if len(patt) == self.max_len:
@@ -149,13 +148,13 @@ class BIDE(BaseMiner, DiscovererMixin):
             newpatt = patt + [newitem]
 
             # forward closed pattern checking
-            if (len(matches) == len(newmatches)) and ((patt, sup) in self._results):
-                self._results.remove((patt, sup))
+            if (len(matches) == len(newmatches)) and ((patt, sup) in results):
+                results.remove((patt, sup))
 
             # can we stop pruning the new pattern
             if self.canclosedprune(self._db, newpatt, newmatches):
                 continue
-            self.bide_frequent_rec(newpatt, newmatches)
+            self.bide_frequent_rec(results, newpatt, newmatches)
 
 
 def invertedindex(seqs, entries=None) -> dict:
