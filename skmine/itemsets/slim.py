@@ -128,11 +128,6 @@ class SLIM(BaseMiner, MDLOptimizer):
     ----------
     n_iter_no_change: int, default=100
         Number of candidate evaluation with no improvement to count before stopping optimization.
-    tol: float, default=None
-        Tolerance for the early stopping, in bits.
-        When the compression size is not improving by at least `tol` for `n_iter_no_change`
-        iterations, the training stops.
-        Default to None, will be automatically computed considering the size of input data.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
@@ -160,9 +155,9 @@ class SLIM(BaseMiner, MDLOptimizer):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=True):
+    def __init__(self, *, n_iter_no_change=100, pruning=True):
         self.n_iter_no_change = n_iter_no_change
-        self.tol = tol
+        self.tol_ = None
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
@@ -185,7 +180,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         n_iter_no_change = 0
         seen_cands = set()
 
-        tol = self.tol or (len(self.standard_codetable_) ** 2) // 100
+        tol = (len(self.standard_codetable_) ** 2) // 100
 
         while n_iter_no_change < self.n_iter_no_change:
             candidates = self.generate_candidates(stack=seen_cands)
@@ -211,7 +206,7 @@ class SLIM(BaseMiner, MDLOptimizer):
             if not candidates:  # if empty candidate generation
                 n_iter_no_change += self.n_iter_no_change  # force while loop to break
 
-        self.tol = tol
+        self.tol_ = tol
         return self
 
     def decision_function(self, D):
