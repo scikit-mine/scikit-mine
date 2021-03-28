@@ -4,18 +4,15 @@ from skmine.datasets.fimi import fetch_any
 
 
 class SLIMBench:
-    params = ([20, 1000], [0.3, 0.7], [100, 1000])
-    param_names = ["n_transactions", "density", "n_items"]
+    params = ([20, 1000], [100, 1000])
+    param_names = ["n_transactions", "n_items"]
     # timeout = 20  # timeout for a single run, in seconds
     repeat = (1, 3, 20.0)
     processes = 1
 
-    def setup(self, n_transactions, density, n_items):
+    def setup(self, n_transactions, n_items):
         transactions = make_transactions(
-            n_transactions=n_transactions,
-            density=density,
-            n_items=n_items,
-            random_state=7,
+            n_transactions=n_transactions, n_items=n_items, random_state=7,
         )
         new_transaction = transactions.sample(len(transactions))
         self.new_transactions = (
