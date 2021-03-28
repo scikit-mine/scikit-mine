@@ -4,8 +4,8 @@ from skmine.datasets.fimi import fetch_any
 
 
 class SLIMBench:
-    params = ([20, 1000], [100, 1000])
-    param_names = ["n_transactions", "n_items"]
+    params = ([20, 1000], [0.3], [100, 500])
+    param_names = ["n_transactions", "density", "n_items"]
     # timeout = 20  # timeout for a single run, in seconds
     repeat = (1, 3, 20.0)
     processes = 1

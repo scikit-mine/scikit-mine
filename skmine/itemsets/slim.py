@@ -326,7 +326,14 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     @lru_cache(maxsize=1024)
     def get_support(self, *items):
-        """Get support from an itemset"""
+        """
+        Get support from an itemset
+
+        Note
+        ----
+        Items in an itemset must be passed as positional arguments
+        Unseen items will throw errors
+        """
         a = items[-1]
         tids = self.standard_codetable_[a]
         if len(items) > 1:
@@ -391,9 +398,11 @@ class SLIM(BaseMiner, MDLOptimizer):
         codes = -_log2(usages / usages.sum())
 
         counts = Counter(chain(*isets))
-        stand_codes = self._starting_codes * pd.Series(counts)
+        stand_codes_sum = sum(
+            self._starting_codes[item] * ctr for item, ctr in counts.items()
+        )
 
-        model_size = stand_codes.sum() + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
+        model_size = stand_codes_sum + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
         return data_size, model_size
 
