@@ -161,7 +161,7 @@ class SLIM(BaseMiner, MDLOptimizer):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).codetable  # doctest: +SKIP
+    >>> SLIM().fit(D).discover(singletons=True)  # doctest: +SKIP
     (butter, tea)         [2]
     (milk, bananas)    [0, 1]
     (cookies)          [1, 2]
@@ -255,20 +255,8 @@ class SLIM(BaseMiner, MDLOptimizer):
         0   -1.321928
         dtype: float32
         """
-        D = _check_D(D)
+        mat = self.cover(D)
         codetable = pd.Series(self.codetable_)
-        D_sct = {
-            k: Bitmap(np.where(D[k])[0])
-            for k in D.columns
-            if k in self.standard_codetable_
-        }
-        covers = cover(D_sct, codetable.index)
-
-        mat = np.zeros(shape=(len(D), len(covers)))
-        for idx, tids in enumerate(covers.values()):
-            mat[tids, idx] = 1
-        mat = pd.DataFrame(mat, columns=covers.keys())
-
         code_lengths = codetable.map(len)
         ct_codes = code_lengths / code_lengths.sum()
         codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
@@ -296,7 +284,9 @@ class SLIM(BaseMiner, MDLOptimizer):
         -------
         iterator[tuple(frozenset, Bitmap)]
         """
-        ct = SortedDict(self._standard_candidate_order, self.codetable.items())
+        ct = SortedDict(
+            self._standard_candidate_order, self.codetable_.items()
+        )  # TODO : filter empty usages
         # if big number of elements in codetable, just take a generator, do not sort output
         gen = generate_candidates if len(ct) < thresh else generate_candidates_big
         return gen(ct, stack=stack)
@@ -332,6 +322,51 @@ class SLIM(BaseMiner, MDLOptimizer):
         data_size, model_size = self._compute_sizes(CTc)  # TODO pruning in evaluate
 
         return data_size, model_size, updated, decreased
+
+    def cover(self, D):
+        """
+        cover unseen data
+        items never seen are dropped out
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        if hasattr(D, "shape"):  # tabular
+            D = _check_D(D)
+            D_sct = {
+                k: Bitmap(np.where(D[k])[0])
+                for k in D.columns
+                if k in self.standard_codetable_
+            }
+        else:  # transactional
+            D_sct = _to_vertical(D)
+
+        codetable = pd.Series(self.codetable_, dtype=object)
+        covers = cover(D_sct, codetable.index)
+
+        mat = np.zeros(shape=(len(D), len(covers)))
+        for idx, tids in enumerate(covers.values()):
+            mat[tids, idx] = 1
+        return pd.DataFrame(mat, columns=covers.keys())
+
+    def discover(self, singletons=False, usage_tids=False):
+        """Get a user-friendly copy of the codetable
+
+        Returns
+        -------
+        pd.Series
+            codetable containing patterns and ids of transactions in which they are used
+        """
+        s = {
+            iset: tids.copy()
+            for iset, tids in self.codetable_.items()
+            if len(tids) > 0 and len(iset) > (not singletons)
+        }
+        s = pd.Series(s)
+        if not usage_tids:
+            s = s.map(len).astype(np.uint32)
+        return s
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""

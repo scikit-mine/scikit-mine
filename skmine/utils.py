@@ -2,21 +2,27 @@
 utils functions
 """
 
+import numbers
+
 import numpy as np
 import pandas as pd
-from sortedcontainers import SortedList
+import scipy.sparse
 from numpy.core.numeric import normalize_axis_tuple
 from numpy.core.overrides import array_function_dispatch
 from numpy.lib.stride_tricks import as_strided
+from sortedcontainers import SortedList
 
 
-def _check_random_state(random_state):
-    if random_state is None or isinstance(random_state, int):
-        random_state = np.random.RandomState(random_state)
-    elif not isinstance(random_state, np.random.RandomState):
-        raise TypeError("random_state should be an int or a RandomState instance")
-
-    return random_state
+def _check_random_state(seed):
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, numbers.Integral):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError(
+        f"{seed} cannot be used to seed a numpy.random.RandomState instance"
+    )
 
 
 def _check_min_supp(min_supp, accept_absolute=True):
@@ -123,6 +129,8 @@ def _check_D(D):
         D = D.reset_index(drop=True)  # positional indexing
     elif isinstance(D, np.ndarray):
         D = pd.DataFrame(D)
+    elif scipy.sparse.issparse(D):
+        D = pd.DataFrame.sparse.from_spmatrix(D)
     else:
         raise TypeError("D should be an instance of np.ndarray or pd.DataFrame")
 
@@ -184,14 +192,14 @@ def intersect2d(ar1, ar2, return_indices=True):
     return ar1[x_ind]
 
 
-def _sliding_window_view_dispatcher(x, window_shape, axis=None, *,
-                                    subok=None, writeable=None):
+def _sliding_window_view_dispatcher(
+    x, window_shape, axis=None, *, subok=None, writeable=None
+):
     return (x,)
 
 
 @array_function_dispatch(_sliding_window_view_dispatcher)
-def sliding_window_view(x, window_shape, axis=None, *,
-                        subok=False, writeable=False):
+def sliding_window_view(x, window_shape, axis=None, *, subok=False, writeable=False):
     """
     COPIED from https://github.com/numpy/numpy/blob/v1.20.0/numpy/lib/stride_tricks.py#L122-L336
 
@@ -271,29 +279,31 @@ def sliding_window_view(x, window_shape, axis=None, *,
     >>> moving_average
     array([1., 2., 3., 4.])
     """
-    window_shape = (tuple(window_shape)
-                    if np.iterable(window_shape)
-                    else (window_shape,))
+    window_shape = tuple(window_shape) if np.iterable(window_shape) else (window_shape,)
     # first convert input to array, possibly keeping subclass
     x = np.array(x, copy=False, subok=subok)
 
     window_shape_array = np.array(window_shape)
     if np.any(window_shape_array < 0):
-        raise ValueError('`window_shape` cannot contain negative values')
+        raise ValueError("`window_shape` cannot contain negative values")
 
     if axis is None:
         axis = tuple(range(x.ndim))
         if len(window_shape) != len(axis):
-            raise ValueError(f'Since axis is `None`, must provide '
-                             f'window_shape for all dimensions of `x`; '
-                             f'got {len(window_shape)} window_shape elements '
-                             f'and `x.ndim` is {x.ndim}.')
+            raise ValueError(
+                f"Since axis is `None`, must provide "
+                f"window_shape for all dimensions of `x`; "
+                f"got {len(window_shape)} window_shape elements "
+                f"and `x.ndim` is {x.ndim}."
+            )
     else:
         axis = normalize_axis_tuple(axis, x.ndim, allow_duplicate=True)
         if len(window_shape) != len(axis):
-            raise ValueError(f'Must provide matching length window_shape and '
-                             f'axis; got {len(window_shape)} window_shape '
-                             f'elements and {len(axis)} axes elements.')
+            raise ValueError(
+                f"Must provide matching length window_shape and "
+                f"axis; got {len(window_shape)} window_shape "
+                f"elements and {len(axis)} axes elements."
+            )
 
     out_strides = x.strides + tuple(x.strides[ax] for ax in axis)
 
@@ -301,9 +311,9 @@ def sliding_window_view(x, window_shape, axis=None, *,
     x_shape_trimmed = list(x.shape)
     for ax, dim in zip(axis, window_shape):
         if x_shape_trimmed[ax] < dim:
-            raise ValueError(
-                'window shape cannot be larger than input array shape')
+            raise ValueError("window shape cannot be larger than input array shape")
         x_shape_trimmed[ax] -= dim - 1
     out_shape = tuple(x_shape_trimmed) + window_shape
-    return as_strided(x, strides=out_strides, shape=out_shape,
-                      subok=subok, writeable=writeable)
+    return as_strided(
+        x, strides=out_strides, shape=out_shape, subok=subok, writeable=writeable
+    )

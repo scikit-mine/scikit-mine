@@ -15,36 +15,36 @@ import skmine.preprocessing
 
 MODULES = [
     skmine.itemsets,
-    # skmine.preprocessing,
+    skmine.preprocessing,
 ]
 
 EXCLUDED_CHECKS = [
     "check_no_attributes_set_in_init",
-    "check_complex_data",
     "check_estimator_sparse_data",
-    "check_fit2d_predict1d",
-    "check_dtype_object",
-    "check_estimators_empty_data_messages",
-    "check_fit1d",
-    "check_estimators_pickle",  # FIXME : broken because of callbacks ...
+    "check_estimators_pickle",
+    "check_estimators_dtypes",
+    "check_methods_subset_invariance",
+    "check_dict_unchanged",
+    "check_fit_idempotent",
 ]
 
 OK = "\x1b[42m[ OK ]\x1b[0m"
 FAIL = "\x1b[41m[FAIL]\x1b[0m"
 
 
-def is_estimator(e):
+def verify(e):
     _, est = e
     fit_meth = getattr(est, "fit", None)
     pred_meth = getattr(est, "decision_function", None)
-    return callable(fit_meth) and callable(pred_meth)
+    transform_meth = getattr(est, "transform", None)
+    return callable(fit_meth) and (callable(pred_meth) or callable(transform_meth))
 
 
 if __name__ == "__main__":
     ret_code = 0
     for module in MODULES:
         clsmembers = inspect.getmembers(module, inspect.isclass)
-        estimators = filter(is_estimator, clsmembers)
+        estimators = filter(verify, clsmembers)
         for est_name, est in estimators:
             # from sklearn 0.23 check_estimator takes an instance as input
             obj = est() if sklearn.__version__[:4] >= "0.23" else est

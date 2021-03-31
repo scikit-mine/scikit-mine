@@ -4,3 +4,4 @@ to make the data ingestion easier
 """
 
 from .mdlp_discretizer import MDLPDiscretizer
+from .slim_transformer import SLIMTransformer
