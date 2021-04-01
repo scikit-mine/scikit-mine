@@ -8,13 +8,10 @@ from .. import SLIMTransformer
 def test_fit_transform(strategy):
     D = [["banana", "cookies"], ["banana", "milk"], ["banana", "milk", "cookies"]]
 
-    with pytest.raises(ValueError):
-        SLIMTransformer().fit(D)  # default k too big
-
     st = SLIMTransformer(k=2, strategy=strategy)
     new_D = D + [["cookies", "milk", "apple"]]  # apple unseen
     mat = st.fit(D).transform(new_D)
-    assert not "apple" in mat.columns
+    assert "apple" not in mat.columns
     assert mat.shape == (4, 2)
 
     uniques = np.unique(mat)

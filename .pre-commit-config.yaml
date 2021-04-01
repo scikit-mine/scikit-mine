@@ -1,15 +1,11 @@
-repos:
--   repo: https://github.com/python/black
-    rev: stable
-    hooks:
-    - id: black
-      language_version: python3.7
-
-
 files: skmine
+exclude: '.git|.tox'
+default_stages: [commit]
+fail_fast: true
+
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
@@ -27,3 +23,4 @@ repos:
     rev: 3.8.4
     hooks:
     -   id: flake8
+
