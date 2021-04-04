@@ -1,12 +1,12 @@
-import warnings
-from itertools import islice
+# import warnings
+# from itertools import islice
 
 import numpy as np
 import pandas as pd
 
-from ..base import BaseMiner, TransformerMixin, _get_tags
+from ..base import TransformerMixin, _get_tags
 from ..itemsets import SLIM
-from ..itemsets.slim import _log2, _to_vertical, cover
+from ..itemsets.slim import _to_vertical, cover
 
 STRATEGIES = ("codes", "one-hot")
 
@@ -86,18 +86,25 @@ class SLIMTransformer(SLIM, TransformerMixin):
         --------
         skmine.itemsets.SLIM.cover
         """
-        mat = self.cover(D)  # start by covering
-        isets = self.codetable_.keys()[: self.k]
-        mat = mat.loc[:, isets]
+        D_sct = _to_vertical(D)
+
+        codetable = pd.Series(self.codetable_, dtype=object)
+        isets = codetable.map(len).nlargest(
+            self.k
+        )  # real usages sorted in decreasing order
+        covers = cover(D_sct, isets.index)
+
+        mat = np.zeros(shape=(len(D), len(covers)))
+        for idx, tids in enumerate(covers.values()):
+            mat[tids, idx] = 1
+        mat = pd.DataFrame(mat, columns=covers.keys())
 
         if self.strategy == "codes":
-            codetable = pd.Series(self.codetable_, dtype=object)
             code_lengths = codetable.map(
                 len
-            )  # TODO : keep codelength as internal attribute ?
-            ct_codes = code_lengths[isets] / code_lengths.sum()
-            codes = (mat * ct_codes).astype(np.float32)
-            mat = -(np.log2(codes.replace(0.0, np.nan)).replace(np.nan, 0.0))
+            )  # TODO : keep self._usage_sum as internal attribute ?
+            ct_codes = code_lengths[isets.index] / code_lengths.sum()
+            mat = (mat * ct_codes).astype(np.float32)
 
         return mat
 
