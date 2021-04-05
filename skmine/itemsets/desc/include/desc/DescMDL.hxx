@@ -81,13 +81,14 @@ auto desc_heuristic_mdl_1(const C& c, const Distribution& pr, const Candidate& x
 {
     using float_type = typename C::float_type;
 
-    const auto s = static_cast<float_type>(x.support);
-    const auto q = s / c.data.size();
+    // const auto s = static_cast<float_type>(x.support);
+    const auto s = x.support;
+    const auto q = static_cast<float_type>(s) / c.data.size();
     const auto p = pr.expectation(x.pattern);
 
     assert(0 <= p && p <= 1);
 
-    return s * std::log2(q / p) - constant_mdl_cost(c, x.pattern) - additional_cost_mdl(x.support);
+    return s * std::log2(q / p) - constant_mdl_cost(c, x.pattern) - additional_cost_mdl(s);
 }
 
 struct IDescMDL : DefaultPatternsetMinerInterface
@@ -114,7 +115,7 @@ struct IDescMDL : DefaultPatternsetMinerInterface
     template <typename C, typename Config>
     static auto finish(C& c, const Config& cfg)
     {
-        prune_model(c, cfg);
+        IDesc::finish(c, cfg);
     }
 };
 

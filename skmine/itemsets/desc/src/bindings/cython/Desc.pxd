@@ -34,5 +34,4 @@ cdef extern from "<bindings/cython/Desc.hxx>" namespace "sd::disc":
         vector[size_t] emerging(vector[size_t], vector[size_t])
         vector[size_t] unique(vector[size_t], vector[size_t])
         vector[vector[size_t]] patterns()
-
-
+        

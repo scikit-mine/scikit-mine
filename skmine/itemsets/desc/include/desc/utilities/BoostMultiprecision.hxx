@@ -36,6 +36,8 @@ auto log(const precise_float_t& x) { return boost::multiprecision::log(x); }
 auto abs(const precise_float_t& x) { return boost::multiprecision::abs(x); }
 auto exp2(const precise_float_t& x) { return boost::multiprecision::exp2(x); }
 auto exp(const precise_float_t& x) { return boost::multiprecision::exp(x); }
+auto erf(const precise_float_t& x) { return boost::multiprecision::erf(x); }
+auto erfc(const precise_float_t& x) { return boost::multiprecision::erfc(x); }
 auto isnan(const precise_float_t& x) { return boost::multiprecision::isnan(x); }
 auto isinf(const precise_float_t& x) { return boost::multiprecision::isinf(x); }
 auto sqrt(const precise_float_t& x) { return boost::multiprecision::sqrt(x); }
@@ -72,6 +74,8 @@ auto log(const precise_float_t& x) { return boost::multiprecision::log(x); }
 auto abs(const precise_float_t& x) { return boost::multiprecision::abs(x); }
 auto exp2(const precise_float_t& x) { return boost::multiprecision::exp2(x); }
 auto exp(const precise_float_t& x) { return boost::multiprecision::exp(x); }
+auto erf(const precise_float_t& x) { return boost::multiprecision::erf(x); }
+auto erfc(const precise_float_t& x) { return boost::multiprecision::erfc(x); }
 auto isnan(const precise_float_t& x) { return boost::multiprecision::isnan(x); }
 auto isinf(const precise_float_t& x) { return boost::multiprecision::isinf(x); }
 auto sqrt(const precise_float_t& x) { return boost::multiprecision::sqrt(x); }

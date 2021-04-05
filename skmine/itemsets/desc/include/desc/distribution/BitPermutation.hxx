@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace sd::viva
+namespace sd::disc
 {
 
 size_t bit_permute_step(size_t x, size_t m, int shift)
@@ -102,4 +102,4 @@ void foreach(size_t i, Fn&& fn)
     }
 }
 
-} // namespace sd::viva
+} // namespace sd::disc

@@ -8,7 +8,7 @@
 
 namespace sd
 {
-namespace viva
+namespace disc
 {
 
 template <typename Fn>
@@ -179,7 +179,7 @@ size_t generate_blocks_and_counts(size_t dim, model_type const& m, block_contain
 
     size_t index = 0;
 
-    viva::permute_all(m.size(), [&](size_t i) {
+    disc::permute_all(m.size(), [&](size_t i) {
         auto& block = blocks[index];
 
         block.cover.clear();
@@ -239,5 +239,5 @@ size_t compute_counts(size_t dim, model_type const& m, block_container_type& blo
     // }
 }
 
-} // namespace viva
+} // namespace disc
 } // namespace sd

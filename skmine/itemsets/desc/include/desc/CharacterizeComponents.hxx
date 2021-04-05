@@ -3,6 +3,7 @@
 #include <desc/Composition.hxx>
 #include <desc/PatternAssignment.hxx>
 #include <desc/Support.hxx>
+
 #include <limits>
 
 namespace sd
@@ -19,20 +20,18 @@ void characterize_one_component(Composition<Trait>& c,
     c.models[index] = make_distribution(c, cfg);
     c.assignment[index].clear();
 
+    using float_t = typename Trait::float_type;
+
     for (size_t i = 0; i < c.summary.size(); ++i)
     {
         const auto& x = c.summary.point(i);
         if (is_singleton(x))
         {
             c.assignment[index].insert(i);
-            c.confidence(i, index) = std::numeric_limits<double>::infinity();
-            c.models[index].insert_singleton(c.frequency(i, index), x, false);
+            c.confidence(i, index) = std::numeric_limits<float_t>::infinity();
+            c.models[index].insert_singleton(c.frequency(i, index), x, true);
         }
     }
-
-    estimate_model(c.models[index]);
-
-    if (c.summary.size() <= c.data.dim) return;
 
     // separate stages: depends on singletons.
     for (size_t i = 0; i < c.summary.size(); ++i)
@@ -40,12 +39,10 @@ void characterize_one_component(Composition<Trait>& c,
         const auto& x = c.summary.point(i);
         const auto& q = c.frequency(i, index);
 
-        if (is_singleton(x)) // q == 0 ||
-            continue;
+        if (is_singleton(x)) continue;
 
-        c.confidence(i, index) = c.models[index].is_allowed(x)
-                                     ? f.confidence(c, index, q, x, cfg)
-                                     : typename Trait::float_type(0);
+        c.confidence(i, index) =
+            c.models[index].is_allowed(x) ? f.confidence(c, index, q, x, cfg) : float_t(0);
 
         if (c.confidence(i, index))
         {
@@ -63,7 +60,6 @@ void characterize_no_mining(Composition<Trait>& c, const Config& cfg, Interface&
     c.confidence.resize(sd::layout<2>({c.summary.size(), c.data.num_components()}), 0);
     c.assignment.assign(c.data.num_components(), {});
     c.models.assign(c.data.num_components(), make_distribution(c, cfg));
-    // c.subset_encodings.assign(c.data.num_components(), {});
 
     for (size_t j = 0; j < c.data.num_components(); ++j)
     {
@@ -84,19 +80,17 @@ void characterize_components(Component<Trait>& c, const Config& cfg = {}, Interf
     c.confidence.assign(c.summary.size(), 0);
     c.model = make_distribution(c, cfg);
 
+    using float_t = typename Trait::float_type;
+
     for (size_t i = 0; i < c.summary.size(); ++i)
     {
         const auto& x = c.summary.point(i);
         if (is_singleton(x))
         {
-            c.confidence[i] = std::numeric_limits<double>::infinity();
-            c.model.insert_singleton(c.frequency[i], x, false);
+            c.confidence[i] = std::numeric_limits<float_t>::infinity();
+            c.model.insert_singleton(c.frequency[i], x, true);
         }
     }
-
-    estimate_model(c.model);
-
-    if (c.summary.size() <= c.data.dim) return;
 
     // separate stages: depends on singletons.
     for (size_t i = 0; i < c.summary.size(); ++i)
@@ -104,45 +98,12 @@ void characterize_components(Component<Trait>& c, const Config& cfg = {}, Interf
         const auto& x = c.summary.point(i);
         const auto& q = c.frequency[i];
 
-        if (is_singleton(x) && c.model.is_allowed(x))
-        {
-            c.confidence[0] = f.confidence(c, q, x, cfg);
-            if (c.confidence[0]) { c.model.insert(q, x, true); }
-        }
+        if (is_singleton(x)) continue;
+
+        c.confidence[i] = c.model.is_allowed(x) ? f.confidence(c, q, x, cfg) : float_t(0);
+
+        if (c.confidence[0]) { c.model.insert(q, x, true); }
     }
-
-    // auto& data    = c.data;
-    // auto& summary = c.summary;
-    // assert(c.model.model.dim == data.dim);
-    // assert(c.model.model.factors.size() == data.dim);
-
-    // auto& pr = c.model;
-
-    // for (const auto& i : summary)
-    // {
-    //     if (is_singleton(point(i)))
-    //     {
-    //         pr.insert_singleton(label(i), point(i), false);
-    //     }
-    // }
-
-    // for (const auto& i : summary)
-    // {
-    //     const auto& x = point(i);
-    //     const auto& q = label(i);
-
-    //     if (q == 0 || is_singleton(x) || !c.model.is_allowed(x))
-    //         continue;
-
-    //     if (f.confidence(c, q, x, cfg)) // assignment_score
-    //     {
-    //         c.model.insert(label(i), point(i), true);
-    //     }
-    // }
-
-    // // estimate_model(pr);
-
-    // return pr;
 }
 
 struct TrueAssignment
@@ -153,6 +114,7 @@ struct TrueAssignment
         return true;
     }
 };
+
 template <typename Trait, typename Interface = TrueAssignment>
 void initialize_model(Component<Trait>& c, const Config& cfg = {}, Interface&& f = {})
 {
@@ -170,7 +132,6 @@ void initialize_model(Composition<Trait>& c, const Config& cfg = {}, Interface&&
     characterize_no_mining(c, cfg, std::forward<Interface>(f));
     c.masks = construct_component_masks(c);
     assert(check_invariant(c));
-
 }
 
 } // namespace disc

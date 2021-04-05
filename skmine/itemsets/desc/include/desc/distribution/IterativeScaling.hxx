@@ -1,14 +1,14 @@
 #pragma once
 
-#include <desc/distribution/InferProbabilities.hxx>
+#include <desc/distribution/MaxEntFactor.hxx>
 
-#include <algorithm>
 #include <cmath>
 #include <vector>
 
+
 namespace sd
 {
-namespace viva
+namespace disc
 {
 
 template <typename float_type>
@@ -174,15 +174,5 @@ auto estimate_model(MaxEntFactor<S, T>& m, IterativeScalingSettings<U> const& op
     return g;
 }
 
-template <typename U, typename V, typename W, typename F = double>
-void estimate_model(StaticFactorModel<U, V, W>& m, IterativeScalingSettings<F> const& opts = {})
-{
-#pragma omp parallel for
-    for (size_t i = 0; i < m.factors.size(); ++i)
-    {
-        estimate_model(m.factors[i].factor, opts);
-    }
-}
-
-} // namespace viva
+} // namespace disc
 } // namespace sd

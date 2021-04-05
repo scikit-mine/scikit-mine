@@ -11,6 +11,8 @@ auto desc_heuristic_multi(const Composition<Trait>& c, const Candidate& x)
 {
     using float_type = typename Trait::float_type;
 
+    using std::log2;
+
     float_type acc = 0;
 
     for (size_t i = 0; i < c.data.num_components(); ++i)
@@ -19,11 +21,11 @@ auto desc_heuristic_multi(const Composition<Trait>& c, const Candidate& x)
         auto p = c.models[i].expectation(x.pattern);
         auto s = size_of_intersection(x.row_ids, c.masks[i]);
         auto q = static_cast<float_type>(s) / n;
-        auto h = s == 0 ? 0 : s * std::log2(q / p);
+        auto h = s == 0 ? 0 : s * log2(q / p);
 
         assert(0 <= p && p <= 1);
 
-        acc += h - std::log2(n);
+        acc += h - log2(n);
     }
 
     return acc;
@@ -34,11 +36,12 @@ auto desc_heuristic_1(const C& c, const Distribution& pr, const Candidate& x)
 {
     using float_type = typename C::float_type;
 
+    using std::log2;
+
     const auto s = static_cast<float_type>(x.support);
     const auto q = s / c.data.size();
     const auto p = pr.expectation(x.pattern);
-    assert(0 <= p && p <= 1);
-    return s * std::log2(q / p) - std::log2(c.data.size());
+    return s * log2(q / p) - log2(c.data.size());
 }
 
 template <typename Trait, typename Candidate>

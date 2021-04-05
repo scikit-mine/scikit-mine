@@ -2,6 +2,7 @@
 
 #include <desc/storage/Dataset.hxx>
 #include <desc/storage/Itemset.hxx>
+#include <container/random-access-set.hxx>
 
 #include <algorithm>
 #include <optional>
@@ -62,7 +63,8 @@ SlimCandidate<S, T> join(const SlimCandidate<S, T> a, const SlimCandidate<S, T>&
 template <typename State>
 struct CandidateGeneratorImpl
 {
-    using state_type = State;
+    using state_type   = State;
+    using pattern_type = typename state_type::pattern_type;
 
     struct ordering
     {
@@ -72,18 +74,22 @@ struct CandidateGeneratorImpl
         }
     };
 
-    struct lexless_pattern
+    struct subset_relation
     {
-        bool operator()(const state_type x, const state_type& y) const noexcept
+        template <typename S, typename T>
+        bool operator()(const S& x, const T& y) const noexcept
         {
-            return is_subset(x.pattern, y.pattern);
-            // return std::lexicographical_compare(x.pattern.container.begin(),
-            //                                     x.pattern.container.end(),
-            //                                     y.pattern.container.begin(),
-            //                                     y.pattern.container.end());
+            return is_subset(x, y);
         }
     };
-
+    struct lex_relation
+    {
+        template <typename S, typename T>
+        bool operator()(const S& x, const T& y) const noexcept
+        {
+            return std::lexicographical_compare(x.container.begin(), x.container.end(), y.container.begin(), y.container.end());
+        }
+    };
     struct equals_pattern
     {
         bool operator()(const state_type x, const state_type& y) const noexcept
@@ -98,10 +104,12 @@ struct CandidateGeneratorImpl
     };
 
     template <typename Data>
-    CandidateGeneratorImpl(const Data& data, size_t min_support, std::optional<size_t> max_depth)
+    CandidateGeneratorImpl(const Data&           data,
+                           size_t                min_support,
+                           std::optional<size_t> max_depth)
         : max_depth(max_depth), min_support(min_support)
     {
-        init(data);
+        init_singletons(data);
     }
 
     const state_type& top() const { return candidates.back(); }
@@ -112,6 +120,7 @@ struct CandidateGeneratorImpl
 
         // std::pop_heap(candidates.begin(), candidates.end(), ordering{});
         auto ret = std::move(candidates.back());
+
         candidates.pop_back();
 
         return ret;
@@ -129,43 +138,43 @@ struct CandidateGeneratorImpl
     }
 
     template <typename score_fn = ConstantScoreFunction>
-    size_t combine_two(state_type&       joined,
-                       size_t            count_next,
-                       const state_type& next,
-                       const state_type& other,
-                       score_fn&&        score = {})
+    int combine_two(state_type&       joined,
+                    size_t            count_next,
+                    const state_type& next,
+                    const state_type& other,
+                    score_fn&&        score = {})
     {
-        if (is_subset(other.pattern, next.pattern)) return 0;
+        // if (is_subset(other.pattern, next.pattern)) return 0;
 
         join(joined, next, other);
-
         if (joined.support < min_support) return 0;
 
         auto n = count(joined.pattern);
-
         if (n <= count_next) return 0;
-
         if (max_depth && n > *max_depth) return 0;
+
+        if (known.find(next.pattern) != known.end()) return -1;
 
         joined.score = score(joined);
 
-        return n;
+        return 1;
     }
 
-    template<typename score_fn>
+    template <typename score_fn = ConstantScoreFunction>
     void combine_pairs_allocate_tmp(const state_type& next, score_fn&& score = {})
     {
-        novel.resize(singletons.size());
+        const size_t count_next = count(next.pattern);
 
-        auto count_next = count(next.pattern);
+        novel.resize(singletons.size());
 
         auto update_candidate = [&](const auto& i) {
             novel[i].score = 0;
-            combine_two(novel[i], count_next, next, singletons[i], score);
+            auto n         = combine_two(novel[i], count_next, next, singletons[i], score);
+            if (n == -1) { novel[i].score = -std::numeric_limits<double>::infinity(); }
         };
 
 #if HAS_EXECUTION_POLICIES
-        std::for_each(std::execution::par,
+        std::for_each(std::execution::par_unseq,
                       tbb::counting_iterator<size_t>(0),
                       tbb::counting_iterator<size_t>(singletons.size()),
                       update_candidate);
@@ -174,11 +183,87 @@ struct CandidateGeneratorImpl
         for (size_t i = 0; i < singletons.size(); ++i) { update_candidate(i); }
 #endif
         candidates.reserve(candidates.size() + novel.size());
-        std::copy_if(novel.begin(),
-                     novel.end(),
-                     std::back_inserter(candidates),
-                     [](const auto& x) { return x.score > 0; });
+        known.reserve(known.size() + novel.size());
+
+        std::for_each(novel.begin(), novel.end(), [&](const auto& x) {
+            if (x.score > 0) { candidates.push_back(x); }
+
+            if (x.score == -std::numeric_limits<double>::infinity())
+            {
+                known.insert(x.pattern);
+            }
+        });
+
+        // std::copy_if(novel.begin(),
+        //              novel.end(),
+        //              std::back_inserter(known.get_container()),
+        //              [](const auto& x) { return x.score !=
+        //              std::numeric_limits<double>::lowest(); });
+
+        // #if HAS_EXECUTION_POLICIES
+        //         std::sort(std::execution::par,
+        //                   known.get_container().begin(),
+        //                   known.get_container().end(),
+        //                   subset_relation{});
+        // #else
+        //         std::sort(known.get_container().begin(),
+        //                   known.get_container().end(),
+        //                   subset_relation{});
+        // #endif
+
+        // std::for_each(novel.begin(), novel.end(), [&](auto const &x) {
+        //     auto [it, inserted] =  known.insert(x.pattern);
+        // });
+
+        // std::copy(novel.begin(), novel.end(), std::inserter(known));
+
+        // #pragma omp parallel
+        //         {
+        //             std::vector<state_type> novel;
+        //             novel.reserve(singletons.size() * 0.33 / 24);
+        //             state_type joined;
+        // #pragma omp for nowait
+        //             for (size_t i = 0; i < singletons.size(); ++i)
+        //             {
+        //                 if (intersects(singleton_blacklist[i], next.pattern)) continue;
+        //                 if (combine_two(joined, count_next, next, singletons[i], score))
+        //                 {
+        //                     novel.push_back(joined);
+        //                 }
+        //             }
+
+        // #pragma omp critical
+        //             {
+        //                 candidates.reserve(candidates.size() + novel.size());
+        //                 candidates.insert(candidates.end(),
+        //                                   std::move_iterator(novel.begin()),
+        //                                   std::move_iterator(novel.end()));
+        //             }
+        //         }
+        // #endif
     }
+
+    //     template <typename score_fn = ConstantScoreFunction>
+    //     void combine_pairs_locking(const state_type& next, score_fn&& score = {})
+    //     {
+    //         const size_t count_next = count(next.pattern);
+
+    //         candidates.reserve(candidates.size() + singletons.size() * 0.33);
+    //         thread_local state_type joined;
+    // // private(joined)
+    // #pragma omp parallel for
+    //         for (size_t i = 0; i < singletons.size(); ++i)
+    //         {
+    //             if (intersects(singleton_blacklist[i], next.pattern)) continue;
+    //             if (combine_two(joined, count_next, next, singletons[i], score))
+    //             {
+    // #pragma omp critical
+    //                 {
+    //                     candidates.push_back(joined);
+    //                 }
+    //             }
+    //         }
+    //     }
 
     template <typename score_fn = ConstantScoreFunction>
     void combine_pairs(const state_type& next, score_fn&& score = {})
@@ -186,59 +271,43 @@ struct CandidateGeneratorImpl
         combine_pairs_allocate_tmp(next, std::forward<score_fn>(score));
     }
 
-    //     void remove_duplicates()
-    //     {
-
-    // #if HAS_EXECUTION_POLICIES
-    //         if (candidates.size() > 1024)
-    //         {
-    //             std::sort(std::execution::par_unseq,
-    //                       candidates.begin(),
-    //                       candidates.end(),
-    //                       lexless_pattern{});
-
-    //             auto ptr = std::unique(std::execution::par_unseq,
-    //                                    candidates.begin(),
-    //                                    candidates.end(),
-    //                                    equals_pattern{});
-    //             candidates.erase(ptr, candidates.end());
-    //             return;
-    //         }
-    // #endif
-    //         std::sort(candidates.begin(), candidates.end(), lexless_pattern{});
-    //         auto ptr = std::unique(candidates.begin(), candidates.end(), equals_pattern{});
-    //         candidates.erase(ptr, candidates.end());
-    //     }
+    void remove_duplicates()
+    {
+#if HAS_EXECUTION_POLICIES
+        std::sort(
+            std::execution::par_unseq, candidates.begin(), candidates.end(), lex_relation{});
+        auto ptr = std::unique(
+            std::execution::par_unseq, candidates.begin(), candidates.end(), equals_pattern{});
+        candidates.erase(ptr, candidates.end());
+#else
+        std::sort(candidates.begin(), candidates.end(), lex_relation{});
+        auto ptr = std::unique(candidates.begin(), candidates.end(), equals_pattern{});
+        candidates.erase(ptr, candidates.end());
+#endif
+    }
 
     void order_candidates()
     {
 #if HAS_EXECUTION_POLICIES
-        if (candidates.size() > 1024)
-        {
-            std::sort(
-                std::execution::par_unseq, candidates.begin(), candidates.end(), ordering{});
-            return;
-        }
-#endif
+        std::sort(std::execution::par_unseq, candidates.begin(), candidates.end(), ordering{});
+#else
         std::sort(candidates.begin(), candidates.end(), ordering{});
+#endif
     }
 
     template <typename Fn>
     void prune(Fn&& fn)
     {
 #if HAS_EXECUTION_POLICIES
-        if (candidates.size() > 1024 * 2)
-        {
-            auto ptr = std::remove_if(std::execution::par_unseq,
-                                      candidates.begin(),
-                                      candidates.end(),
-                                      std::forward<Fn>(fn));
-            candidates.erase(ptr, candidates.end());
-            return;
-        }
-#endif
+        auto ptr = std::remove_if(std::execution::par_unseq,
+                                  candidates.begin(),
+                                  candidates.end(),
+                                  std::forward<Fn>(fn));
+        candidates.erase(ptr, candidates.end());
+#else
         auto ptr = std::remove_if(candidates.begin(), candidates.end(), std::forward<Fn>(fn));
         candidates.erase(ptr, candidates.end());
+#endif
     }
 
     template <typename score_fn>
@@ -282,7 +351,6 @@ struct CandidateGeneratorImpl
     template <typename score_fn>
     void expand_from(const state_type& next, score_fn&& score)
     {
-        // compute_scores(std::forward<score_fn>(score));
         compute_scores(next, score);
         combine_pairs(next, score);
         order_candidates();
@@ -298,7 +366,7 @@ struct CandidateGeneratorImpl
             auto curr = candidates.back(); // copy is intentional
 
             combine_pairs(curr, score);
-            this->prune(prune_pred);
+            // this->prune(prune_pred);
 
             if (!has_next()) break;
 
@@ -320,12 +388,12 @@ struct CandidateGeneratorImpl
         {
             expand_bfs(score, std::forward<prune_fn>(prune_pred), max_search_depth - 1);
         }
-        else
+        // else
         {
             prune(std::forward<prune_fn>(prune_pred));
         }
 
-        if (has_next() && equal(next.pattern, top().pattern))
+        if (has_next() && (top().score <= 0 || equal(next.pattern, top().pattern)))
         {
             candidates.clear(); // done
         }
@@ -365,9 +433,24 @@ struct CandidateGeneratorImpl
     }
 
     template <typename score_fn = ConstantScoreFunction>
-    void initialize_pairs(score_fn&& score)
+    int combine_two_singletons(state_type&       joined,
+                               const state_type& next,
+                               const state_type& other,
+                               score_fn&&        score = {})
     {
-        size_t     n = singletons.size();
+        if (other.support < min_support) return 0;
+        if (next.support < min_support) return 0;
+        join(joined, next, other);
+        if (joined.support < min_support) return 0;
+        joined.score = score(joined);
+        return 1;
+    }
+
+    template <typename score_fn = ConstantScoreFunction>
+    void create_pair_candidates(score_fn&& score)
+    {
+        size_t n = singletons.size();
+        novel.clear();
         novel.resize((size_t)std::ceil(n * double(n + 1) / 2));
         auto sym_index = [n](auto i, auto j) {
             if (j < i) { std::swap(i, j); }
@@ -375,24 +458,32 @@ struct CandidateGeneratorImpl
         };
 
 #if HAS_EXECUTION_POLICIES
-        std::for_each(
-            std::execution::par,
-            tbb::counting_iterator<size_t>(0),
-            tbb::counting_iterator<size_t>(n),
-            [&](size_t i) {
+        std::for_each(std::execution::par_unseq,
+                      tbb::counting_iterator<size_t>(0),
+                      tbb::counting_iterator<size_t>(n),
+                      [&](size_t i) {
+                          if (singletons[i].support > min_support)
+                          {
+                              for (size_t j = i + 1; j < n; ++j)
+                              {
+                                  combine_two_singletons(novel[sym_index(i, j)],
+                                                         singletons[i],
+                                                         singletons[j],
+                                                         score);
+                              }
+                          }
+                      });
+#else
+#pragma omp parallel for schedule(dynamic, 1)
+        for (size_t i = 0; i < n; ++i)
+        {
+            if (singletons[i].support > min_support)
+            {
                 for (size_t j = i + 1; j < n; ++j)
                 {
-                    combine_two(novel[sym_index(i, j)], 1, singletons[i], singletons[j], score);
+                    combine_two_singletons(
+                        novel[sym_index(i, j)], singletons[i], singletons[j], score);
                 }
-            });
-#else
-        state_type joined;
-#pragma omp parallel for schedule(dynamic, 1)
-        for (size_t i = 0; i < singletons.size(); ++i)
-        {
-            for (size_t j = i + 1; j < singletons.size(); ++j)
-            {
-                combine_two(novel[sym_index(i, j)], 1, singletons[i], singletons[j], score); 
             }
         }
 #endif
@@ -404,13 +495,42 @@ struct CandidateGeneratorImpl
         novel.clear();
         order_candidates();
     }
-
-    template <typename Data>
-    void init(Data const& data)
+    template <typename score_fn = ConstantScoreFunction>
+    void create_singular_candidates(score_fn&& score)
     {
-        init_singletons(data);
-        candidates.clear();
-        candidates.reserve(data.dim * 3);
+        size_t n = singletons.size();
+        novel.clear();
+        novel.resize(n);
+
+#if HAS_EXECUTION_POLICIES
+        std::for_each(std::execution::par_unseq,
+                      tbb::counting_iterator<size_t>(0),
+                      tbb::counting_iterator<size_t>(n),
+                      [&](size_t i) {
+                          if (singletons[i].support > min_support)
+                          {
+                              novel[i]       = singletons[i];
+                              novel[i].score = score(novel[i]);
+                          }
+                      });
+#else
+#pragma omp parallel for schedule(dynamic, 1)
+        for (size_t i = 0; i < n; ++i)
+        {
+            if (singletons[i].support > min_support)
+            {
+                novel[i]       = singletons[i];
+                novel[i].score = score(novel[i]);
+            }
+        }
+#endif
+        candidates.reserve(candidates.size() + novel.size());
+        std::copy_if(std::make_move_iterator(novel.begin()),
+                     std::make_move_iterator(novel.end()),
+                     std::back_inserter(candidates),
+                     [](const auto& x) { return x.score > 0; });
+        novel.clear();
+        order_candidates();
     }
 
     template <typename Patternset, typename score_fn = ConstantScoreFunction>
@@ -425,8 +545,9 @@ private:
     size_t                  min_support = 2;
     std::vector<state_type> singletons;
     std::vector<state_type> candidates;
-
     std::vector<state_type> novel;
+
+    andres::RandomAccessSet<itemset<pattern_type>, lex_relation> known;
 
     static_assert(std::is_swappable_v<state_type>);
 };

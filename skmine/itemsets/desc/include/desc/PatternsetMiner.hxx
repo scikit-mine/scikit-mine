@@ -85,9 +85,11 @@ void discover_patterns_generic(C& s, const Config& cfg, I fn = {}, Info&& info =
     auto max_depth = cfg.max_pattern_size.value_or(cfg.max_factor_width);
     auto gen       = generator(s.data, cfg.min_support, max_depth);
 
-    gen.initialize_pairs(score_fn);
+    gen.create_pair_candidates(score_fn);
 
-    if (cfg.search_depth > 1) { gen.expand_bfs(score_fn, prune_fn, cfg.search_depth); }
+    if (cfg.search_depth > 1) { 
+        gen.expand_bfs(score_fn, prune_fn, cfg.search_depth); 
+    }
 
     size_t     items_used = 0;
     size_t     patience   = cfg.max_patience;

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <desc/distribution/InferProbabilities.hxx>
 #include <desc/distribution/MaxEntFactor.hxx>
 
-namespace sd::viva
+namespace sd::disc
 {
 
 template <typename factor_type>
@@ -39,7 +38,7 @@ void prune_factor(factor_type& next, size_t max_factor_size)
 
             auto p = expectation(replacement.factor, xs[j].point);
             auto q = xs[j].frequency;
-            auto g = std::log2(q / p); // assignment_score
+            auto g = std::abs(q * std::log2(q / p)) + std::abs(p * std::log2(p / q)); // assignment_score
 
             if (g > best.second)
             {
@@ -50,7 +49,7 @@ void prune_factor(factor_type& next, size_t max_factor_size)
         if (best.first >= n)
             break;
 
-        if (best.second > 0.0)
+        if (best.second != 0.0)
         {
             ++count;
             in_use.insert(best.first);
@@ -65,4 +64,4 @@ void prune_factor(factor_type& next, size_t max_factor_size)
     // assert(next.factor.itemsets.set.size() > 0);
 }
 
-} // namespace sd::viva
+} // namespace sd::disc

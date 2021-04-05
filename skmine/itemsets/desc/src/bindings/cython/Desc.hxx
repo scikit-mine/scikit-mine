@@ -1,26 +1,24 @@
 #pragma once
 
-#include "desc/storage/Itemset.hxx"
-#include <desc/utilities/BoostMultiprecision.hxx>
-
-#include <algorithm>
-#include <chrono>
-#include <exception>
-#include <optional>
-
 #include <desc/CharacterizeComponents.hxx>
 #include <desc/Component.hxx>
 #include <desc/Composition.hxx>
 #include <desc/Desc.hxx>
 #include <desc/DescMDL.hxx>
-#include <desc/utilities/BiMap.hxx>
-
-#include <stdexcept>
-#include <type_traits>
+#include <desc/storage/Itemset.hxx>
+#include <desc/utilities/BoostMultiprecision.hxx>
+// #include <desc/utilities/BiMap.hxx>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
+
+#include <algorithm>
+#include <chrono>
+#include <exception>
+#include <optional>
+#include <stdexcept>
+#include <type_traits>
 
 namespace sd::disc
 {
@@ -201,18 +199,18 @@ public:
 class Interface : public Explaination
 {
 public:
-    virtual void fit(Dataset<tag_sparse> const& x, std::vector<size_t> const& y) = 0;
-    virtual void fit(Dataset<tag_dense> const& x, std::vector<size_t> const& y)  = 0;
-    virtual label_vector predict(Dataset<tag_sparse> const& x) const = 0;
-    virtual label_vector predict(Dataset<tag_dense> const& x) const  = 0;
-    virtual real_matrix predict_probabilities(Dataset<tag_sparse> const& x) const = 0;
-    virtual real_matrix predict_probabilities(Dataset<tag_dense> const& x) const  = 0;
-    virtual real_matrix predict_log_probabilities(Dataset<tag_sparse> const& x) const = 0;
-    virtual real_matrix predict_log_probabilities(Dataset<tag_dense> const& x) const  = 0;
-    virtual double log_likelihood(Dataset<tag_sparse> const& x,
-                                  std::vector<size_t> const& y) const = 0;
-    virtual double log_likelihood(Dataset<tag_dense> const&  x,
-                                  std::vector<size_t> const& y) const = 0;
+    virtual void         fit(Dataset<tag_sparse> const& x, std::vector<size_t> const& y) = 0;
+    virtual void         fit(Dataset<tag_dense> const& x, std::vector<size_t> const& y)  = 0;
+    virtual label_vector predict(Dataset<tag_sparse> const& x) const                     = 0;
+    virtual label_vector predict(Dataset<tag_dense> const& x) const                      = 0;
+    virtual real_matrix  predict_probabilities(Dataset<tag_sparse> const& x) const       = 0;
+    virtual real_matrix  predict_probabilities(Dataset<tag_dense> const& x) const        = 0;
+    virtual real_matrix  predict_log_probabilities(Dataset<tag_sparse> const& x) const   = 0;
+    virtual real_matrix  predict_log_probabilities(Dataset<tag_dense> const& x) const    = 0;
+    virtual double       log_likelihood(Dataset<tag_sparse> const& x,
+                                        std::vector<size_t> const& y) const              = 0;
+    virtual double       log_likelihood(Dataset<tag_dense> const&  x,
+                                        std::vector<size_t> const& y) const              = 0;
     virtual ~Interface() = default;
 };
 

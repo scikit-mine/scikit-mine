@@ -40,18 +40,17 @@ void insert_pattern_to_summary(Composition<Trait>& c, const Candidate& x)
 
     assert(c.frequency.extent(1) > 0);
 
-    // const auto glob_frequency = static_cast<float_type>(x.support) / c.data.size();
     c.summary.insert(x.pattern);
-    // c.summary.insert(glob_frequency, x.pattern);
 
-    c.frequency.push_back();
+    auto row = c.frequency.extent(0);
+    c.frequency.resize(sd::layout<2>({row + 1, c.data.num_components()}));
+
     auto new_q = c.frequency[c.frequency.extent(0) - 1];
     for (size_t j = 0; j < c.data.num_components(); ++j)
     {
         auto s   = size_of_intersection(x.row_ids, c.masks[j]);
         new_q(j) = static_cast<float_type>(s) / c.data.subset(j).size();
     }
-    // new_q.back() = glob_frequency;
 }
 
 template <typename Trait, typename Candidate, typename Interface = DefaultAssignment>
@@ -64,18 +63,17 @@ bool find_assignment_impl(Composition<Trait>& c,
     if (x.score <= 0)
         return false;
 
-
     thread_local std::vector<float_type> conf; 
     conf.resize(c.data.num_components()); 
 
     size_t counter = 0;
     for (size_t i = 0; i < c.data.num_components(); ++i)
     {
-        auto  s  = size_of_intersection(x.row_ids, c.masks[i]);
+        auto s  = size_of_intersection(x.row_ids, c.masks[i]);
         auto q = static_cast<float_type>(s) / c.data.subset(i).size();
         auto& pr = c.models[i];
         conf[i] = f.confidence(c, i, q, x.pattern, cfg);
-        if (pr.is_allowed(x.pattern) && conf[i])
+        if (pr.is_allowed(x.pattern) && conf[i] > 0)
         {
             pr.insert(q, x.pattern, true);
             c.assignment[i].insert(c.summary.size());
@@ -109,7 +107,7 @@ bool find_assignment_impl_first(Composition<Trait>& c, const Candidate& x, const
 {
     using float_type = typename Trait::float_type;
 
-    if (x.score <= 0 || !c.models[0].is_allowed(x.pattern)) // x.support == 0
+    if (x.score <= 0 || !c.models[0].is_allowed(x.pattern))
         return false;
 
     auto q = static_cast<float_type>(x.support) / c.data.size();
@@ -149,12 +147,11 @@ bool find_assignment(Component<Trait>& c,
         return false;
 
     auto q = static_cast<float_type>(x.support) / c.data.size();
+
     c.model.insert(q, x.pattern, true);
     c.summary.insert(x.pattern);
     c.frequency.push_back(q);
     c.confidence.push_back(x.score);
-
-    // c.summary.insert(q, x.pattern);
 
     return true;
 }
