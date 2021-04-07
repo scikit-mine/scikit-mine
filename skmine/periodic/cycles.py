@@ -531,7 +531,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             alpha_occurences = list()
             for start, period, dE in df.values:
                 occurences = _reconstruct(start, period, dE)
-            alpha_occurences.extend(occurences)
+                alpha_occurences.extend(occurences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
             S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurences)])
             result.append(S)
