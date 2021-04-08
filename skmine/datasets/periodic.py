@@ -2,12 +2,10 @@
 Base IO for all periodic datasets
 """
 import os
-from zipfile import ZipFile
 
 import pandas as pd
 
 from ._base import get_data_home
-from .conf import urlopen
 
 
 def fetch_health_app(data_home=None, filename="health_app.csv"):
@@ -59,31 +57,21 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
     return s
 
 
-def _extract_canadian_tv(zip_name, filename, data_home):
-    resp = urlopen(
-        "https://applications.crtc.gc.ca/OpenData/Television%20Logs/STAR2/2020/2020-08.zip"
-    )
-    with open(zip_name, "wb") as fd:
-        fd.write(resp.read())
-    zf = ZipFile(zip_name)
-    zf.extract(filename, path=data_home)
-
-
-def fetch_canadian_tv(data_home=None, filename="2020-08\CBC_202008_140114251.log"):
+def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     """
     Fetch and return canadian TV logs from August 8, 2020
 
-    see: https://open.canada.ca/data/en/dataset/800106c1-0b08-401e-8be2-ac45d62e662e
+    see: https://zenodo.org/record/4671512
 
     If the dataset has never been downloaded before, it will be downloaded and stored.
 
-    The returned dataset contains only TV series episodes index by their associated timestamps
+    The returned dataset contains only TV series programs indexed by their associated timestamps.
     Adverts are ignored when loading the dataset.
 
     ==============================      =======================================
-    Number of events                    131
-    Average delta per event             Timedelta('15 days 14:59:42.137404580')
-    Average nb of points per event      15.977099236641221
+    Number of events                    98
+    Average delta per event             Timedelta('19 days 02:13:36.122448979')
+    Average nb of points per event      21.35714285714285
     ==============================      =======================================
 
     Parameters
@@ -110,28 +98,28 @@ def fetch_canadian_tv(data_home=None, filename="2020-08\CBC_202008_140114251.log
     Examples
     --------
     >>> from skmine.datasets import fetch_canadian_tv
-    >>> ctv = fetch_canadian_tv()  # first time will take long
+    >>> ctv = fetch_canadian_tv()  # first time will take a bit longer
     >>> ctv.head()
+    0
     2020-08-01 06:00:00            The Moblees
     2020-08-01 06:11:00    Big Block Sing Song
     2020-08-01 06:13:00    Big Block Sing Song
     2020-08-01 06:15:00               CBC Kids
     2020-08-01 06:15:00               CBC Kids
-    dtype: object
+    Name: canadian_tv, dtype: string
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
-    kwargs = dict(header=None, squeeze=True, dtype="string", sep="\t")
-    zip_name = filename.replace(".csv", ".zip")
+    kwargs = dict(header=None, squeeze=True, dtype="string", index_col=0,)
 
-    if not filename in os.listdir(data_home):
-        _extract_canadian_tv(zip_name, filename, data_home)
+    if filename not in os.listdir(data_home):
+        s = pd.read_csv(
+            "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs
+        )
+        s.to_csv(p, index=True, header=False)
+    else:
+        s = pd.read_csv(p, **kwargs)
 
-    s = pd.read_csv(p, **kwargs)
-    s = s.str.split("   ").str[1]  # TODO this is dirty. Store file on zenodo
-    s = s[s.str.match("\d+[^\d]+")]
-    index = s.str[:10]
-    data = s.str[24:]
-    s = pd.Series(data.values, index=index.values)
-    s.index = pd.to_datetime(s.index, format="%y%m%d%H%M")
+    s.index = pd.to_datetime(s.index)
+    s.name = "canadian_tv"
     return s

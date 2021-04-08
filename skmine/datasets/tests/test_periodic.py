@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import pytest
 
-from .. import periodic
 from ..periodic import fetch_canadian_tv, fetch_health_app
 
 
@@ -12,14 +11,9 @@ def mock_read_csv(*args, **kwargs):
 
 
 def mock_read_csv_canadian_tv(*args, **kwargs):
-    return pd.Series(
-        [
-            "2PGR10CBC   200801060000061130001130The Moblees                                       1-16 Great Galloping Moblees                                  C3772721 35105ACD",
-            "2PGR10CBC   200801061130061330000200Big Block Sing Song                               2-009 CHICKENS                                                B3684421 351120CD",
-            "2PGR10CBC   200801061330061530000200Big Block Sing Song                               2-010 SPECTACULAR                                             B3684421 351120CD",
-            "2PGR10CBC   200801061530061535000005CBC Kids                                          19/20-3456, Coming Up - NapkinMan                 CBC               21 341120CC",
-        ]
-    )
+    programs = ["The Moblees", "Big Block Sing Song", "Big Block Sing Song", "CBC Kids"]
+    index = pd.date_range(start="08/01/2020", periods=len(programs), freq="1H")
+    return pd.Series(programs, index=index)
 
 
 @pytest.mark.parametrize("already_downloaded", [True, False])
@@ -42,13 +36,10 @@ def test_fetch_healt_app(monkeypatch, already_downloaded):
 
 @pytest.mark.parametrize("already_downloaded", [True, False])
 def test_fetch_canadian_tv(monkeypatch, already_downloaded):
-    if already_downloaded:
-        monkeypatch.setattr(
-            os, "listdir", lambda *args: ["2020-08\CBC_202008_140114251.log"]
-        )
-    else:
-        monkeypatch.setattr(os, "listdir", lambda *args: [])
-        monkeypatch.setattr(periodic, "_extract_canadian_tv", lambda *args: None)
+    d_file = ["canadian_tv.txt"] if already_downloaded else []
+    if not already_downloaded:
+        monkeypatch.setattr(pd.Series, "to_csv", lambda *args, **kwargs: None)
+    monkeypatch.setattr(os, "listdir", lambda *args: d_file)
     monkeypatch.setattr(pd, "read_csv", mock_read_csv_canadian_tv)
     data = fetch_canadian_tv()
     assert data.shape == (4,)

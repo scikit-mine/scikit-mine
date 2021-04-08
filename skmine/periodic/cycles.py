@@ -536,9 +536,8 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurences)])
             result.append(S)
 
-        for event in (
-            self.residuals_.keys() - cycles_groups.groups.keys()
-        ):  # add unfrequent events
+        # add unfrequent events
+        for event in self.residuals_.keys() - cycles_groups.groups.keys():
             result.append(pd.Series(event, index=self.residuals_[event]))
 
         S = pd.concat(result)
