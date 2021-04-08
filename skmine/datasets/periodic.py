@@ -59,7 +59,7 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
 
 def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     """
-    Fetch and return canadian TV logs from August 8, 2020
+    Fetch and return canadian TV logs from August 2020
 
     see: https://zenodo.org/record/4671512
 
