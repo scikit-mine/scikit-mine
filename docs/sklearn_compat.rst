@@ -26,10 +26,6 @@ Sometimes *scikit-learn* provides us the tools we exactly need, sometimes not.
 **Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
 in a fully scikit-learn compatible way**.
 
-As an example, consider `this tutorial <tutorials/itemsets/SLIM.ipynb>`_
-in which we use a **TransactionEncoder** to easily ingest raw data,
-presented in the form of Python iterators.
-
 
 Pipelines
 ---------
