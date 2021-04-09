@@ -1,23 +1,23 @@
-import pytest
-import numpy as np
-import pandas as pd
-from collections import Counter
 import datetime as dt
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from .. import cycles
 from ..cycles import (
-    sliding_window_view,
-    residual_length,
-    cycle_length,
-    get_table_dyn,
-    _recover_splits_rec,
-    compute_cycles_dyn,
-    extract_triples,
-    merge_triples,
     PeriodicCycleMiner,
     _generate_candidates,
+    _recover_splits_rec,
+    compute_cycles_dyn,
+    cycle_length,
     evaluate,
+    extract_triples,
+    get_table_dyn,
+    merge_triples,
+    residual_length,
+    sliding_window_view,
 )
-from .. import cycles
 
 
 @pytest.fixture
@@ -224,7 +224,7 @@ def test_discover():
 
 @pytest.mark.parametrize("is_datetime", (True, False))
 def test_reconstruct(is_datetime):
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+    minutes = np.array([0, 2, 4, 6, 400, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
     # add infrequent item to be included in reconstructed
@@ -238,7 +238,7 @@ def test_reconstruct(is_datetime):
     pcm = PeriodicCycleMiner().fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
-    pd.testing.assert_index_equal(reconstructed.index, S.index)
+    pd.testing.assert_index_equal(reconstructed.index, S.index.drop_duplicates())
 
 
 def test_fit_triples_and_residuals():
@@ -253,6 +253,18 @@ def test_fit_triples_and_residuals():
 
     pd.testing.assert_series_equal(S, rec_minutes)
 
+
 def test_duplicates():
     S = pd.Series("alpha", index=[20, 20, 40, 50])
-    PeriodicCycleMiner().fit(S)
+    with pytest.warns(UserWarning):
+        PeriodicCycleMiner().fit(S)
+
+
+def test_small_datetime():
+    minutes = [10, 20, 32, 40, 60, 79, 100, 240]
+    # just check it does not break
+    S = pd.Series("ring_a_bell", index=minutes)
+    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    pcm = PeriodicCycleMiner().fit(S)
+    cycles = pcm.discover(shifts=True)
+    assert "dE" in cycles.columns

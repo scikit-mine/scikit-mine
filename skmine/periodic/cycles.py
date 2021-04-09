@@ -1,5 +1,7 @@
 """Periodic pattern mining with a MDL criterion"""
 # Authors: Rémi Adon <remi.adon@gmail.com>
+#          Esther Galbrun <esther.galbrun@inria.fr>
+#
 # License: BSD 3 clause
 
 import warnings
@@ -376,7 +378,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     """
 
     def __init__(self, *, max_length=100, n_jobs=1):
-        self.cycles_ = pd.DataFrame()
+        self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
@@ -416,6 +418,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
         candidates = self.generate_candidates(S)
+
+        if not candidates:
+            return self
 
         gr = S.groupby(S.values).groups
         cycles, residuals = zip(
@@ -457,7 +462,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         return candidates
 
-    def discover(self):
+    def discover(self, shifts=False):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
@@ -470,6 +475,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
                 start       when the cycle starts
                 length      number of occurences in the event
                 period      inter-occurence delay
+                dE          shift corrections, if shifts=True
                 ==========  =================================
 
         Example
@@ -485,7 +491,10 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         """
         if not self.is_fitted():
             raise Exception(f"{type(self)} instance if not fitted")
-        cycles = self.cycles_[["start", "length", "period"]].copy()
+        all_cols = ["start", "length", "period"]
+        if shifts:
+            all_cols += ["dE"]
+        cycles = self.cycles_[all_cols].copy()
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_
         )
@@ -519,18 +528,16 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         result = list()
         cycles_groups = cycles.groupby(level=0)
         for alpha, df in cycles_groups:
-            l = list()
+            alpha_occurences = list()
             for start, period, dE in df.values:
                 occurences = _reconstruct(start, period, dE)
-                l.extend(occurences)
+                alpha_occurences.extend(occurences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
-            S = pd.concat([residuals, pd.Series(alpha, index=l)])
-            # S.index = S.index.sort_values()
+            S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurences)])
             result.append(S)
 
-        for event in (
-            self.residuals_.keys() - cycles_groups.groups.keys()
-        ):  # add unfrequent events
+        # add unfrequent events
+        for event in self.residuals_.keys() - cycles_groups.groups.keys():
             result.append(pd.Series(event, index=self.residuals_[event]))
 
         S = pd.concat(result)
