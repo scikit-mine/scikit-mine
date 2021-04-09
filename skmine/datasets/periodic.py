@@ -106,19 +106,6 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     See Also
     -------
     skmine.datasets.get_data_home
-
-    Examples
-    --------
-    >>> from skmine.datasets import fetch_canadian_tv
-    >>> ctv = fetch_canadian_tv()  # first time will take a bit longer
-    >>> ctv.head()
-    timestamp
-    2020-08-01 06:00:00            The Moblees
-    2020-08-01 06:11:00    Big Block Sing Song
-    2020-08-01 06:13:00    Big Block Sing Song
-    2020-08-01 06:15:00               CBC Kids
-    2020-08-01 06:17:00               CBC Kids
-    Name: canadian_tv, dtype: string
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
