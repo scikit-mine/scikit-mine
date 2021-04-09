@@ -11,6 +11,9 @@
 .. image:: https://pepy.tech/badge/scikit-mine
   :target: https://pepy.tech/project/scikit-mine
 
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/scikit-mine/scikit-mine/HEAD?filepath=docs%2Ftutorials%2Fperiodic%2Fperiodic_canadian_tv.ipynb
+
 
 Scikit-mine : pattern mining in Python
 
