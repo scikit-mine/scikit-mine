@@ -15,7 +15,7 @@ def deduplicate(S):
     diff = len(S) - len(dedup)
     if diff:
         warnings.warn(f"found {diff} duplicates in S, removing them")
-        return dedup.sort_index()
+        return dedup
     return S
 
 
@@ -61,7 +61,6 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
             usecols=[0, 1],
             **kwargs,
         )
-        s = deduplicate(s)
         s.to_csv(p, header=False)
     s.index.name = "timestamp"
     s.index = pd.to_datetime(s.index, format="%Y%m%d-%H:%M:%S:%f")
@@ -115,7 +114,6 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
         s = pd.read_csv(
             "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs
         )
-        s = deduplicate(s)
         s.to_csv(p, index=True, header=False)
     else:
         s = pd.read_csv(p, **kwargs)
