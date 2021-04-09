@@ -256,7 +256,8 @@ def test_fit_triples_and_residuals():
 
 def test_duplicates():
     S = pd.Series("alpha", index=[20, 20, 40, 50])
-    PeriodicCycleMiner().fit(S)
+    with pytest.warns(UserWarning, match="1 duplicate"):
+        PeriodicCycleMiner().fit(S)
 
 
 def test_small_datetime():

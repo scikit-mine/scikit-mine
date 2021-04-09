@@ -410,9 +410,12 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
-        if S.index.duplicated().any():
-            warnings.warn("found duplicates in S, removing them")
-            S = S.groupby(S.index).first()
+        i_dup = S.index.duplicated(keep="first")
+        v_dup = S.duplicated(keep="first")
+        dup = i_dup & v_dup
+        if dup.any():
+            warnings.warn(f"found {dup.sum()} duplicates in S, removing them")
+            S = S[~dup]
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
