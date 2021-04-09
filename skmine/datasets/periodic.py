@@ -2,10 +2,21 @@
 Base IO for all periodic datasets
 """
 import os
+import warnings
 
 import pandas as pd
 
 from ._base import get_data_home
+
+
+def deduplicate(S):
+    """deduplicate pd.Series by removing rows with same index and values"""
+    dedup = S.groupby(S.index).first()
+    diff = len(S) - len(dedup)
+    if diff:
+        warnings.warn(f"found {diff} duplicates in S, removing them")
+        return dedup.sort_index()
+    return S
 
 
 def fetch_health_app(data_home=None, filename="health_app.csv"):
@@ -41,16 +52,17 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
     p = os.path.join(data_home, filename)
     kwargs = dict(header=None, index_col=0, squeeze=True, dtype="string")
     if filename in os.listdir(data_home):
-        s = pd.read_csv(p, index_col=0, squeeze=True)
+        s = pd.read_csv(p, **kwargs)
     else:
         s = pd.read_csv(
             "https://raw.githubusercontent.com/logpai/loghub/master/HealthApp/HealthApp_2k.log",
             sep="|",
             error_bad_lines=False,
             usecols=[0, 1],
-            **kwargs
+            **kwargs,
         )
-        s.to_csv(p)
+        s = deduplicate(s)
+        s.to_csv(p, header=False)
     s.index.name = "timestamp"
     s.index = pd.to_datetime(s.index, format="%Y%m%d-%H:%M:%S:%f")
 
@@ -100,12 +112,12 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     >>> from skmine.datasets import fetch_canadian_tv
     >>> ctv = fetch_canadian_tv()  # first time will take a bit longer
     >>> ctv.head()
-    0
+    timestamp
     2020-08-01 06:00:00            The Moblees
     2020-08-01 06:11:00    Big Block Sing Song
     2020-08-01 06:13:00    Big Block Sing Song
     2020-08-01 06:15:00               CBC Kids
-    2020-08-01 06:15:00               CBC Kids
+    2020-08-01 06:17:00               CBC Kids
     Name: canadian_tv, dtype: string
     """
     data_home = data_home or get_data_home()
@@ -116,10 +128,12 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
         s = pd.read_csv(
             "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs
         )
+        s = deduplicate(s)
         s.to_csv(p, index=True, header=False)
     else:
         s = pd.read_csv(p, **kwargs)
 
     s.index = pd.to_datetime(s.index)
+    s.index.name = "timestamp"
     s.name = "canadian_tv"
     return s

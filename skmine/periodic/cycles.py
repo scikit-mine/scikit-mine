@@ -4,7 +4,6 @@
 #
 # License: BSD 3 clause
 
-import warnings
 from itertools import groupby
 
 import numpy as np
@@ -12,6 +11,7 @@ import pandas as pd
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
+from ..datasets.periodic import deduplicate
 from ..utils import intersect2d, sliding_window_view
 
 log = np.log2
@@ -410,14 +410,8 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
-        i_dup = S.index.duplicated(keep="first")
-        v_dup = S.duplicated(keep="first")
-        dup = i_dup & v_dup
-        if dup.any():
-            warnings.warn(f"found {dup.sum()} duplicates in S, removing them")
-            S = S[~dup]
+        S = deduplicate(S).copy()
 
-        S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
         candidates = self.generate_candidates(S)
@@ -525,7 +519,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         Notes
         -----
-        The index of the resulting pd.Series will not be sorted
+        The index of the resulting pd.Series will be sorted
         """
         cycles = self.cycles_[["start", "period", "dE"]]
         result = list()
@@ -536,19 +530,20 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
                 occurences = _reconstruct(start, period, dE)
                 alpha_occurences.extend(occurences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
+            alpha_occurences = list(set(alpha_occurences))  # DEDUPLICATE
             S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurences)])
             result.append(S)
 
-        # add unfrequent events
+        # add events with no cycle at all
         for event in self.residuals_.keys() - cycles_groups.groups.keys():
             result.append(pd.Series(event, index=self.residuals_[event]))
 
         S = pd.concat(result)
+
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
             S.index = S.index.astype("datetime64[ns]")
 
-        # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
-        S = S.groupby(S.index).first()
+        S = S.sort_index()
 
         return S

@@ -224,7 +224,7 @@ def test_discover():
 
 @pytest.mark.parametrize("is_datetime", (True, False))
 def test_reconstruct(is_datetime):
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+    minutes = np.array([0, 2, 4, 6, 400, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
     # add infrequent item to be included in reconstructed
@@ -238,7 +238,7 @@ def test_reconstruct(is_datetime):
     pcm = PeriodicCycleMiner().fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
-    pd.testing.assert_index_equal(reconstructed.index, S.index)
+    pd.testing.assert_index_equal(reconstructed.index, S.index.drop_duplicates())
 
 
 def test_fit_triples_and_residuals():
