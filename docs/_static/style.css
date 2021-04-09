@@ -1,0 +1,23 @@
+.wy-nav-content {
+    max-width: 1200px !important;
+}
+
+div.wy-side-nav-search {
+    background-color: #f2f2f2 ;
+}
+
+div.wy-menu.wy-menu-vertical>p {
+    color: #FD9254 /* section titles */
+}
+
+a {
+    color: #2980B9
+}
+
+div.wy-menu.wy-menu-vertical>a {
+    color: #f2f2f2
+}
+
+/* a:visited {color:#4460db;} /* Visited link    */
+
+/*a:hover {color: #FD9254;} */

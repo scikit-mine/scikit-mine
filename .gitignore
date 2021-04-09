@@ -1,6 +1,5 @@
 *.vscode
 *.pkl
-*.png
 *.pdf
 *.dot
 
@@ -75,7 +74,6 @@ target/
 *.inv
 *.pickle
 docs/_build/*
-docs/_static/
 docs/skmine*.rst
 docs/modules*.rst
 build/
@@ -86,3 +84,4 @@ env/
 results/
 html/
 .dvcignore
+**/*.DS_Store
