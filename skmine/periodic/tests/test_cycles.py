@@ -268,3 +268,24 @@ def test_small_datetime():
     pcm = PeriodicCycleMiner().fit(S)
     cycles = pcm.discover(shifts=True)
     assert "dE" in cycles.columns
+
+
+def test_no_candidates():
+    minutes = np.array([0, 20, 31, 40, 60, 240])
+
+    S = pd.Series("alpha", index=minutes)
+    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+
+    with pytest.warns(UserWarning, match="candidate"):
+        PeriodicCycleMiner().fit(S)
+
+
+def test_get_residuals():
+    minutes = np.array([0, 20, 31, 40, 60, 154, 240, 270, 300, 330, 358])
+
+    S = pd.Series("alpha", index=minutes)
+
+    pcm = PeriodicCycleMiner().fit(S)
+    residuals = pcm.get_residuals()
+    # assert isinstance(residuals.index, pd.DatetimeIndex)
+    np.testing.assert_array_equal(residuals.index, [154])

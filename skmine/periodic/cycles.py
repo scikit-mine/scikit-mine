@@ -411,7 +411,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
         if S.index.duplicated().any():
-            warnings.warn("found duplicates in S, removing them")
+            warnings.warn("found duplicates in input sequence, removing them")
             S = S.groupby(S.index).first()
 
         S = S.copy()
@@ -420,6 +420,10 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         candidates = self.generate_candidates(S)
 
         if not candidates:
+            warnings.warn(
+                """could not generate candidates for the input sequence,
+                the model is left empty"""
+            )
             return self
 
         gr = S.groupby(S.values).groups
@@ -436,31 +440,6 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         return self
 
     evaluate = evaluate
-
-    def generate_candidates(self, S):
-        """
-        Parameters
-        ----------
-        S: pd.Index or numpy.ndarray
-            Series of occurences for a specific event
-
-        Returns
-        -------
-        dict[object, list[np.ndarray]]
-            A dict, where each key is an event and each value a list of batch of candidates.
-            Batches are sorted in inverse order of width,
-            so that we consider larger candidate cycles first.
-        """
-        n_event_tot = S.shape[0]
-        alpha_groups = S.groupby(S.values)
-
-        candidates = dict()
-        for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length)
-            if cands:
-                candidates[event] = cands
-
-        return candidates
 
     def discover(self, shifts=False):
         """Return cycles as a pandas DataFrame, with 3 columns,
@@ -549,3 +528,48 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S = S.groupby(S.index).first()
 
         return S
+
+    def generate_candidates(self, S):
+        """
+        Parameters
+        ----------
+        S: pd.Index or numpy.ndarray
+            Series of occurences for a specific event
+
+        Returns
+        -------
+        dict[object, list[np.ndarray]]
+            A dict, where each key is an event and each value a list of batch of candidates.
+            Batches are sorted in inverse order of width,
+            so that we consider larger candidate cycles first.
+        """
+        n_event_tot = S.shape[0]
+        alpha_groups = S.groupby(S.values)
+
+        candidates = dict()
+        for event, S_a in alpha_groups:
+            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length)
+            if cands:
+                candidates[event] = cands
+
+        return candidates
+
+    def get_residuals(self):
+        """Get the residual events, i.e events not covered by any cycle
+
+        It is the complementary function to `discover`
+
+        Returns
+        -------
+        pd.Series
+            residual events
+        """
+        if not self.residuals_:
+            return pd.Series()
+        residuals = pd.concat(
+            [pd.Series(alpha, index=occs) for alpha, occs in self.residuals_.items()]
+        )
+        residuals.index *= 10 ** self.n_zeros_
+        if self.is_datetime_:
+            residuals.index = residuals.index.astype("datetime64[ns]")
+        return residuals
