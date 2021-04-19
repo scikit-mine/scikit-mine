@@ -3,7 +3,7 @@
 # Authors: Rémi Adon <remi.adon@gmail.com>
 # License: BSD 3 clause
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
 
@@ -48,32 +48,15 @@ def cover(sct: dict, itemsets: list):
     """
     covers = dict()
     for iset in itemsets:
-        _iset = frozenset(iset & sct.keys())
-        if _iset != iset:
-            usage = Bitmap()
-        else:
-            it = [sct[i] for i in _iset]
-            usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
+        it = [sct[i] for i in iset]
+        usage = reduce(Bitmap.intersection, it).copy() if it else Bitmap()
         covers[iset] = usage
-        for k in _iset:
+        for k in iset:
             sct[k] -= usage
     return covers
 
 
-def reconstruct(codetable, n_transactions=None):
-    """reconstruct the original data from the `codetable`"""
-    if n_transactions is None:
-        n_transactions = (
-            max(map(Bitmap.max, filter(lambda e: e, codetable.values()))) + 1
-        )
-
-    D = pd.Series([set()] * n_transactions)
-    for itemset, tids in codetable.items():
-        D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
-    return D.map(sorted)
-
-
-def generate_candidates_big(codetable, stack=None):
+def generate_candidates_big(codetable, stack=set(), depth=None):
     """
     Generate candidates, but does not sort output by estimated gain
 
@@ -88,7 +71,7 @@ def generate_candidates_big(codetable, stack=None):
     codetable: SortedDict[frozenset, Bitmap]
         A codetable, sorted in Standard Candidate Order
 
-    stack: set[frozenset], defaut=None
+    stack: set[frozenset], defaut=set()
         A stack of already seen itemsets, which will not be considered in output
         Note that this function updates the stack, passed as a reference
 
@@ -97,26 +80,26 @@ def generate_candidates_big(codetable, stack=None):
     generate_candidates
     """
     assert isinstance(codetable, SortedDict)
+    depth = depth or int(np.log2(len(codetable)) * 1e2)
     for idx, (X, X_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1 :]
+        Y = codetable.items()[idx + 1 : idx + 1 + depth]
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
-            if stack is not None:
-                if XY in stack:
-                    continue
-                stack.add(XY)
+            if XY in stack:
+                continue
+            stack.add(XY)
             inter_len = y_usage.intersection_len(X_usage)
             if inter_len > _best_usage:
                 _best_usage = inter_len
-                best_XY = X.union(y)
+                best_XY = XY
 
         if best_XY is not None:
             yield best_XY, _best_usage
 
 
-def generate_candidates(codetable, stack=None):
+def generate_candidates(codetable, stack=set()):
     """
     assumes codetable is sorted in Standard Candidate Order
     """
@@ -143,18 +126,22 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     Parameters
     ----------
-    n_iter_no_change: int, default=100
-        Number of candidate evaluation with no improvement to count before stopping optimization.
-    tol: float, default=None
-        Tolerance for the early stopping, in bits.
-        When the compression size is not improving by at least `tol` for `n_iter_no_change`
-        iterations, the training stops.
-        Default to None, will be automatically computed considering the size of input data.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
         to build a classifier. The model will be less concise, but will lead
         to more accurate predictions on average.
+    n_items: int, default=200
+        Number of most frequent items to consider for mining.
+        As SLIM is highly dependant from the set of symbols from which
+        it refines its codetable,
+        lowering this argument will significantly improve runtime.
+
+        Note: The reconstruction is lossless from this set of items. If the input data
+        has more than `n_items` items, then the reconstruction will be lossy w.r.t this
+        input data.
+    n_iter_no_change: int, default=100
+        Number of candidate evaluation with no improvement to count before stopping optimization.
 
 
     Examples
@@ -177,9 +164,12 @@ class SLIM(BaseMiner, MDLOptimizer):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, n_iter_no_change=100, tol=None, pruning=True):
+    def __init__(
+        self, *, pruning=True, n_items=200, n_iter_no_change=100,
+    ):
         self.n_iter_no_change = n_iter_no_change
-        self.tol = tol
+        self.n_items = n_items
+        self.tol_ = None
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
@@ -202,7 +192,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         n_iter_no_change = 0
         seen_cands = set()
 
-        tol = self.tol or self.standard_codetable_.map(len).median()
+        tol = len(self.standard_codetable_) ** 2
 
         while n_iter_no_change < self.n_iter_no_change:
             candidates = self.generate_candidates(stack=seen_cands)
@@ -228,6 +218,7 @@ class SLIM(BaseMiner, MDLOptimizer):
             if not candidates:  # if empty candidate generation
                 n_iter_no_change += self.n_iter_no_change  # force while loop to break
 
+        self.tol_ = tol
         return self
 
     def decision_function(self, D):
@@ -262,7 +253,8 @@ class SLIM(BaseMiner, MDLOptimizer):
             for k in D.columns
             if k in self.standard_codetable_
         }
-        covers = cover(D_sct, codetable.index)
+        isets = [frozenset(i & D_sct.keys()) for i in codetable.index]
+        covers = cover(D_sct, isets)
 
         mat = np.zeros(shape=(len(D), len(covers)))
         for idx, tids in enumerate(covers.values()):
@@ -335,23 +327,41 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
-        return reconstruct(self.codetable_)
+        n_transactions = (
+            max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
+        )
+
+        D = pd.Series([set()] * n_transactions)
+        for itemset, tids in self.codetable_.items():
+            D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
+        return D.map(sorted)
 
     @lru_cache(maxsize=1024)
-    def get_support(self, itemset):
-        """Get support from an itemset"""
-        U = reduce(Bitmap.intersection, self.standard_codetable_.loc[itemset])
-        return len(U)
+    def get_support(self, *items):
+        """
+        Get support from an itemset
+
+        Note
+        ----
+        Items in an itemset must be passed as positional arguments
+
+        Unseen items will throw errors
+        """
+        a = items[-1]
+        tids = self.standard_codetable_[a]
+        if len(items) > 1:
+            return tids & self.get_support(*items[:-1])
+        return tids
 
     def _standard_cover_order(self, itemset):
         """
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
-        return (-len(itemset), -self.get_support(itemset), tuple(itemset))
+        return (-len(itemset), -len(self.get_support(*itemset)), tuple(itemset))
 
     def _standard_candidate_order(self, itemset):
-        return (-self.get_support(itemset), -len(itemset), tuple(itemset))
+        return (-len(self.get_support(*itemset)), -len(itemset), tuple(itemset))
 
     def _prefit(self, D, y=None):
         if hasattr(D, "ndim") and D.ndim == 2:
@@ -361,13 +371,17 @@ class SLIM(BaseMiner, MDLOptimizer):
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
             item_to_tids = _to_vertical(D)
-        self.standard_codetable_ = pd.Series(item_to_tids)
-        usage = self.standard_codetable_.map(len).astype(np.uint32)
+        sct = pd.Series(item_to_tids)
+        usage = sct.map(len).astype(np.uint32)
+        usage = usage.nlargest(self.n_items)
+        sct = sct[usage.index]
+        self.standard_codetable_ = sct
 
-        ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
+        ct_it = ((frozenset([e]), tids) for e, tids in sct.items())
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -_log2(usage / usage.sum())
+        self._starting_codes = codes
 
         # L(code_ST(X)) = L(code_CT(X)), because CT=ST
         self.model_size_ = 2 * codes.sum()
@@ -375,16 +389,6 @@ class SLIM(BaseMiner, MDLOptimizer):
         self.data_size_ = (codes * usage).sum()
 
         return self
-
-    def _get_standard_codes(self, index):
-        """compute the size of a codetable index given the standard codetable"""
-        flat_items = list(chain(*index))
-        items, counts = np.unique(flat_items, return_counts=True)
-
-        usages = self.standard_codetable_.loc[items].map(len).astype(np.uint32)
-        usages /= usages.sum()
-        codes = -_log2(usages)
-        return codes * counts
 
     def _compute_sizes(self, codetable):
         """
@@ -409,9 +413,12 @@ class SLIM(BaseMiner, MDLOptimizer):
         usages = np.array(usages, dtype=np.uint32)
         codes = -_log2(usages / usages.sum())
 
-        stand_codes = self._get_standard_codes(isets)
+        counts = Counter(chain(*isets))
+        stand_codes_sum = sum(
+            self._starting_codes[item] * ctr for item, ctr in counts.items()
+        )
 
-        model_size = stand_codes.sum() + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
+        model_size = stand_codes_sum + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
         return data_size, model_size
 
