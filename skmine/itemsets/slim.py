@@ -126,13 +126,22 @@ class SLIM(BaseMiner, MDLOptimizer):
 
     Parameters
     ----------
-    n_iter_no_change: int, default=100
-        Number of candidate evaluation with no improvement to count before stopping optimization.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to False
         to build a classifier. The model will be less concise, but will lead
         to more accurate predictions on average.
+    n_items: int, default=200
+        Number of most frequent items to consider for mining.
+        As SLIM is highly dependant from the set of symbols from which
+        it refines its codetable,
+        lowering this argument will significantly improve runtime.
+
+        Note: The reconstruction is lossless from this set of items. If the input data
+        has more than `n_items` items, then the reconstruction will be lossy w.r.t this
+        input data.
+    n_iter_no_change: int, default=100
+        Number of candidate evaluation with no improvement to count before stopping optimization.
 
 
     Examples
@@ -155,8 +164,11 @@ class SLIM(BaseMiner, MDLOptimizer):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, n_iter_no_change=100, pruning=True):
+    def __init__(
+        self, *, pruning=True, n_items=200, n_iter_no_change=100,
+    ):
         self.n_iter_no_change = n_iter_no_change
+        self.n_items = n_items
         self.tol_ = None
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
@@ -332,6 +344,7 @@ class SLIM(BaseMiner, MDLOptimizer):
         Note
         ----
         Items in an itemset must be passed as positional arguments
+
         Unseen items will throw errors
         """
         a = items[-1]
@@ -358,10 +371,13 @@ class SLIM(BaseMiner, MDLOptimizer):
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
             item_to_tids = _to_vertical(D)
-        self.standard_codetable_ = pd.Series(item_to_tids)
-        usage = self.standard_codetable_.map(len).astype(np.uint32)
+        sct = pd.Series(item_to_tids)
+        usage = sct.map(len).astype(np.uint32)
+        usage = usage.nlargest(self.n_items)
+        sct = sct[usage.index]
+        self.standard_codetable_ = sct
 
-        ct_it = ((frozenset([e]), tids) for e, tids in item_to_tids.items())
+        ct_it = ((frozenset([e]), tids) for e, tids in sct.items())
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
         codes = -_log2(usage / usage.sum())
