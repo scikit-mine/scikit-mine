@@ -4,7 +4,7 @@ import pytest
 from sortedcontainers import SortedDict
 
 from ...bitmaps import Bitmap
-from ..slim import SLIM, cover, generate_candidates
+from ..slim import SLIM, generate_candidates
 
 
 @pytest.fixture
@@ -16,7 +16,8 @@ def to_tabular_df(D):
     return D.map(list).str.join("|").str.get_dummies(sep="|")
 
 
-_id = lambda args: args
+def _id(args):
+    return args
 
 
 def test_complex_evaluate():
@@ -103,8 +104,6 @@ def test_complex_evaluate_2():
 
 
 def test_generate_candidate_1():
-    D = ["ABC"] * 5 + ["AB", "A", "B"]
-
     codetable = SortedDict(
         {
             frozenset("A"): Bitmap(range(0, 7)),
@@ -152,30 +151,11 @@ def test_prefit(preproc):
     assert list(slim.codetable_) == list(map(frozenset, ["B", "C", "A"]))
 
 
-def test_get_standard_size_1(D):
-    slim = SLIM()
-    slim._prefit(D)
-    CT_index = ["ABC", "AB", "A", "B"]
-    codes = slim._get_standard_codes(CT_index)
-    pd.testing.assert_series_equal(
-        codes, pd.Series([4.32, 4.32, 1.93], index=list("ABC")), check_less_precise=2
-    )
-
-
-def test_get_standard_size_2(D):
-    slim = SLIM()
-    slim._prefit(D)
-    CT_index = ["ABC", "A", "B"]
-    codes = slim._get_standard_codes(CT_index)
-    pd.testing.assert_series_equal(
-        codes, pd.Series([2.88, 2.88, 1.93], index=list("ABC")), check_less_precise=2
-    )
-
-
 def test_get_support(D):
     slim = SLIM()._prefit(D)
-    assert slim.get_support(frozenset("ABC")) == 5
-    assert slim.get_support(frozenset("C")) == 5
+    assert len(slim.get_support(*frozenset("ABC"))) == 5
+    assert len(slim.get_support("C")) == 5
+    assert slim.get_support.cache_info().currsize > 0
 
 
 def test_compute_sizes_1(D):
@@ -213,7 +193,7 @@ def test_fit_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=True)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
@@ -222,7 +202,7 @@ def test_fit_no_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=False)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
 
 
