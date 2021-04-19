@@ -1,11 +1,11 @@
 #pragma once
 
-#include "bitcontainer/sparse_bitset.hxx"
-#include "desc/storage/Itemset.hxx"
-#include "ndarray/ndarray.hxx"
+#include <bitcontainer/sparse_bitset.hxx>
 #include <desc/Support.hxx>
 #include <desc/distribution/StaticFactorModel.hxx>
+#include <desc/storage/Itemset.hxx>
 #include <desc/utilities/FactorPruning.hxx>
+#include <ndarray/ndarray.hxx>
 
 #include <algorithm>
 #include <vector>
@@ -93,7 +93,7 @@ void prune_individual_factors(Composition<Trait>& c, size_t max_factor_size)
     for (auto& m : c.models) prune_individual_factors(m.model.phi.factors, max_factor_size);
 }
 
-template<class T>
+template <class T>
 void erase_row(sd::ndarray<T, 2>& x, size_t row)
 {
     for (size_t k = row + 1; k < x.extent(0); ++k)
@@ -152,14 +152,13 @@ void prune_unused_patterns(Component<Trait>& c)
             c.summary.erase_row(m);
             c.frequency.erase(c.frequency.begin() + m);
             c.confidence.erase(c.confidence.begin() + m);
-        }   
+        }
         else
         {
             m++;
         }
     }
 }
-
 
 template <typename Trait, typename X>
 bool any_factor_contains(Component<Trait>& c, const X& x)
@@ -192,7 +191,6 @@ bool any_factor_contains(Composition<Trait> const& c, const X& x)
     }
     return false;
 }
-
 
 template <typename Trait>
 void assign_from_factors(Component<Trait> const&)
@@ -247,16 +245,11 @@ void prune_composition_mk1(C& c, const Config& cfg, Confidence&& f)
     }
 }
 
-
-
 template <typename C, typename Confidence>
 void prune_composition(C& c, const Config& cfg, Confidence&& f)
 {
     using dist_t = typename std::decay_t<C>::distribution_type;
-    if constexpr (is_dynamic_factor_model<dist_t>())
-    {
-        prune_unused_factors(c);
-    }
+    if constexpr (is_dynamic_factor_model<dist_t>()) { prune_unused_factors(c); }
 
     size_t before = c.summary.size();
     prune_individual_factors(c, cfg.max_factor_size);
@@ -265,61 +258,5 @@ void prune_composition(C& c, const Config& cfg, Confidence&& f)
     size_t after = c.summary.size();
     if (before != after) { prune_unused_patterns(c); }
 }
-
-
-
-// template <typename Trait>
-// void prune_unused_patterns_by_confidence(Component<Trait>& c)
-// {
-//     for (size_t j = 0; j < c.summary.size();)
-//     {
-//         bool keep = false;
-//         if (is_singleton(c.summary.point(j))) { keep = true; }
-//         else
-//         {
-//             keep = c.confidence[j] > 0;
-//         }
-//         if (!keep)
-//         {
-//             c.summary.erase_row(j);
-//             c.confidence.erase(c.confidence.begin() + j);
-//         }
-//         else
-//         {
-//             ++j;
-//         }
-//     }
-// }
-
-// template <typename Trait>
-// void prune_unused_patterns_by_confidence(Composition<Trait>& c)
-// {
-//     for (size_t j = 0; j < c.summary.size();)
-//     {
-//         const auto& x    = c.summary.point(j);
-//         bool        keep = false;
-
-//         if (is_singleton(c.summary.point(j))) keep = true;
-
-//         for (size_t k = 0; k < c.models.size() && !keep; ++k)
-//         {
-//             keep |= c.confidence(j, k) > 0;
-//         }
-
-//         if (!keep)
-//         {
-//             c.summary.erase_row(j);
-
-//             for (size_t k = j + 1; k < c.confidence.extent(0); ++k)
-//                 for (size_t l = 0; l < c.confidence.extent(1); ++l)
-//                     c.confidence(k - 1, l) = c.confidence(k, l);
-//             c.confidence.pop_back();
-//         }
-//         else
-//         {
-//             ++j;
-//         }
-//     }
-// }
 
 } // namespace sd::disc
