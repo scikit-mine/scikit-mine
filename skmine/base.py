@@ -4,8 +4,8 @@
 import inspect
 from abc import ABC, abstractmethod
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def _get_tags(self):
@@ -38,6 +38,11 @@ class BaseMiner(ABC):
     def fit(self, D, y):
         """Fit method to be implemented."""
         return self
+
+    @abstractmethod
+    def discover(self, *args, **kwargs):
+        """discover method to be implemented."""
+        return pd.Series()
 
     _get_tags = _get_tags
 
@@ -136,6 +141,12 @@ class DiscovererMixin:
         return self.fit(D, y=y).discover(**kwargs)
 
 
+class TransformerMixin:
+    def fit_transform(self, X, y=None):
+        "fit on X and y, then transform X"
+        return self.fit(X, y).transform(X)
+
+
 class MDLOptimizer(ABC):
     """
     Base interface for all models applying the `Minimum Description Length principle
@@ -183,30 +194,9 @@ class MDLOptimizer(ABC):
             0,
         )
 
-    @property
-    def codetable(self):
-        """Get a user-friendly copy of the codetable
-
-        Returns
-        -------
-        pd.Series
-            codetable containing patterns and ids of transactions in which they are used
-        """
-        ct = getattr(self, "codetable_", None)
-        if ct is not None:
-            l = {
-                iset: tids.copy()
-                for iset, tids in self.codetable_.items()
-                if len(tids) > 0
-            }
-            return pd.Series(l, dtype="object")
-        raise NotImplementedError()
-
     def _repr_html_(self):
-        ct = getattr(self, "codetable", None)
-        if ct is not None:
-            if isinstance(ct, pd.Series):
-                df = ct.to_frame(name="usage")
-                return df._repr_html_()  # pylint: disable=protected-access
-            return repr(ct)
+        s = self.discover()  # call discover with default parameters
+        df = s.to_frame(name="usage")
+        if not df.empty:
+            return df._repr_html_()  # pylint: disable=protected-access
         return repr(self)

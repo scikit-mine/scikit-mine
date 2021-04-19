@@ -13,6 +13,8 @@ def test_inst_params():
         def fit(self, D):
             self._a = 12
 
+        discover = lambda self: pd.Series(self.__dict__)
+
     kwargs = dict(eps=4)
     miner = MyMiner(**kwargs)
     assert miner.get_params() == kwargs
@@ -32,6 +34,8 @@ def test_inst_params_no_init():
         def fit(self, D, y=None):
             return self
 
+        discover = lambda self: pd.Series(self.__dict__)
+
     miner = MyMiner()
     assert miner.get_params() == dict()
 
@@ -49,6 +53,8 @@ def test_mdl_repr():
 
         def generate_candidates(self):
             return list()
+
+        discover = lambda self: pd.Series(self.__dict__)
 
     a = A()
 

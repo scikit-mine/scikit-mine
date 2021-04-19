@@ -1,12 +1,14 @@
-import pytest
-import numpy as np
-import pandas as pd
-from ..utils import _check_random_state
-from ..utils import _check_min_supp
 from ..utils import _check_growth_rate
+from ..utils import _check_min_supp
+from ..utils import _check_random_state
 from ..utils import filter_maximal
 from ..utils import filter_minimal
 from ..utils import intersect2d
+
+
+import numpy as np
+import pandas as pd
+import pytest
 
 
 def test_check_random_state():
@@ -17,7 +19,7 @@ def test_check_random_state():
 
 
 def test_check_random_state_error():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _check_random_state(object())
 
 

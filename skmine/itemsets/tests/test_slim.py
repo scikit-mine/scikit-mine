@@ -4,7 +4,7 @@ import pytest
 from sortedcontainers import SortedDict
 
 from ...bitmaps import Bitmap
-from ..slim import SLIM, cover, generate_candidates
+from ..slim import SLIM, generate_candidates
 
 
 @pytest.fixture
@@ -16,7 +16,8 @@ def to_tabular_df(D):
     return D.map(list).str.join("|").str.get_dummies(sep="|")
 
 
-_id = lambda args: args
+def _id(args):
+    return args
 
 
 def test_complex_evaluate():
@@ -103,8 +104,6 @@ def test_complex_evaluate_2():
 
 
 def test_generate_candidate_1():
-    D = ["ABC"] * 5 + ["AB", "A", "B"]
-
     codetable = SortedDict(
         {
             frozenset("A"): Bitmap(range(0, 7)),
@@ -148,8 +147,8 @@ def test_prefit(preproc):
     slim = SLIM()._prefit(D)
     np.testing.assert_almost_equal(slim.model_size_, 9.614, 3)
     np.testing.assert_almost_equal(slim.data_size_, 29.798, 3)
-    assert len(slim.codetable) == 3
-    assert slim.codetable.index.tolist() == list(map(frozenset, ["B", "C", "A"]))
+    assert len(slim.codetable_) == 3
+    assert list(slim.codetable_) == list(map(frozenset, ["B", "C", "A"]))
 
 
 def test_get_support(D):
@@ -194,7 +193,7 @@ def test_fit_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=True)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
@@ -203,7 +202,7 @@ def test_fit_no_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=False)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
 
 
