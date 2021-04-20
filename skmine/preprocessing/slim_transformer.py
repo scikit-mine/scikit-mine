@@ -15,7 +15,8 @@ class SLIMTransformer(SLIM, TransformerMixin):
     """SLIM mining, turned into a preprocessing step for sklearn
 
     `k` new itemsets (associations of one or more items) are learned at training time
-    The model (pattern set) is then applied to new data by covering it (in standard cover order).
+
+    The model (pattern set) is then used to cover new data, in order of usage.
     This is similar to one-hot-encoding, except the dimension will be much more concise,
     because the columns will be patterns learned via an MDL criterion.
 
@@ -30,12 +31,10 @@ class SLIMTransformer(SLIM, TransformerMixin):
     Notes
     -----
     This transformer does not output scipy.sparse matrices,
-    as SLIM should learn a concisedescription of the data,
+    as SLIM should learn a concise description of the data,
     and covering new data with this small set of high usage
     patterns should output matrices with very few zeros.
     """
-
-    decision_function = None
 
     def __init__(self, strategy="codes", *, k=3, **kwargs):
         self.k = k

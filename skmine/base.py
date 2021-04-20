@@ -146,6 +146,8 @@ class TransformerMixin:
         "fit on X and y, then transform X"
         return self.fit(X, y).transform(X)
 
+    decision_function = None
+
 
 class MDLOptimizer(ABC):
     """
