@@ -11,6 +11,11 @@ from ..itemsets.slim import _to_vertical, cover
 STRATEGIES = ("codes", "one-hot")
 
 
+def filter_stop_items(D, stop_items):
+    for t in D:
+        yield set(t).difference(stop_items)
+
+
 class SLIMTransformer(SLIM, TransformerMixin):
     """SLIM mining, turned into a preprocessing step for sklearn
 
@@ -36,14 +41,16 @@ class SLIMTransformer(SLIM, TransformerMixin):
     patterns should output matrices with very few zeros.
     """
 
-    def __init__(self, strategy="codes", *, k=3, **kwargs):
+    def __init__(self, strategy="codes", *, k=3, stop_items=set(), **kwargs):
         self.k = k
+        self.stop_items = stop_items
         if strategy not in STRATEGIES:
             raise ValueError(f"strategy must be one of {STRATEGIES}")
         self.strategy = strategy
         SLIM.__init__(self, **kwargs)
 
     def fit(self, D, y=None):
+        D = filter_stop_items(D, stop_items=self.stop_items)
         self._prefit(D)  # TODO : pass y ?
         seen_cands = set()
         # if self.k > len(self.standard_codetable_):
@@ -85,15 +92,20 @@ class SLIMTransformer(SLIM, TransformerMixin):
         --------
         skmine.itemsets.SLIM.cover
         """
-        D_sct = _to_vertical(D)
+        D_sct, _len = _to_vertical(D, stop_items=self.stop_items, return_len=True)
 
-        codetable = pd.Series(self.codetable_, dtype=object)
-        isets = codetable.map(len).nlargest(
-            self.k
+        f_sct = {
+            iset: tids.copy()
+            for iset, tids in self.codetable_.items()
+            if iset.issubset(D_sct)
+        }
+        codetable = pd.Series(f_sct, dtype=object)
+        isets = (
+            codetable.map(len).astype(np.uint32).nlargest(self.k)
         )  # real usages sorted in decreasing order
         covers = cover(D_sct, isets.index)
 
-        mat = np.zeros(shape=(len(D), len(covers)))
+        mat = np.zeros(shape=(_len, len(covers)))
         for idx, tids in enumerate(covers.values()):
             mat[tids, idx] = 1
         mat = pd.DataFrame(mat, columns=covers.keys())

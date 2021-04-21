@@ -4,7 +4,7 @@ import pytest
 from sortedcontainers import SortedDict
 
 from ...bitmaps import Bitmap
-from ..slim import SLIM, generate_candidates
+from ..slim import SLIM, _to_vertical, generate_candidates
 
 
 @pytest.fixture
@@ -18,6 +18,14 @@ def to_tabular_df(D):
 
 def _id(args):
     return args
+
+
+def test_to_vertical(D):
+    vert = _to_vertical(D)
+    assert list(vert.keys()) == list("ABC")
+
+    vert2 = _to_vertical(D, stop_items={"A"})
+    assert list(vert2.keys()) == list("BC")
 
 
 def test_complex_evaluate():

@@ -19,6 +19,14 @@ def test_fit_transform(strategy):
         np.testing.assert_array_equal(uniques, [0, 1])
 
 
+def test_unseen_items():
+    D = [["banana", "cookies"], ["banana", "milk"], ["banana", "milk", "cookies"]]
+    st = SLIMTransformer(k=10)
+    st.fit(D)
+    res = st.transform([["cherry", "chocolate"], ["milk", "cookies"]])
+    assert res.shape == (2, 2)
+
+
 def test_wrong_strategy():
     with pytest.raises(ValueError):
         SLIMTransformer(strategy="random")

@@ -16,11 +16,16 @@ from ..bitmaps import Bitmap
 from ..utils import _check_D, supervised_to_unsupervised
 
 
-def _to_vertical(D):
+def _to_vertical(D, stop_items=set(), return_len=False):
     res = defaultdict(Bitmap)
+    idx = 0
     for idx, transaction in enumerate(D):
         for e in transaction:
+            if e in stop_items:
+                continue
             res[e].add(idx)
+    if return_len:
+        return dict(res), idx + 1
     return dict(res)
 
 
