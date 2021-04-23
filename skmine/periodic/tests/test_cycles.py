@@ -147,7 +147,8 @@ def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
 def test_extract_triples(triples):
     minutes = pd.Index(np.array([0, 2, 4, 6, 400, 402, 404, 406]))
     delta_S = minutes[-1] - minutes[0]
-    t = extract_triples(minutes, delta_S)
+    l_max = np.log2(delta_S + 1) - 2
+    t = extract_triples(minutes, l_max)
     assert t.ndim == 2
     np.testing.assert_array_equal(triples, t)
 

@@ -1,6 +1,7 @@
+import pandas as pd
 import pytest
 
-from ..tree import Node, Tree
+from ..tree import Node, PeriodicPatternMiner, Tree, combine_vertically
 
 
 @pytest.mark.parametrize("tau", [0, 330])
@@ -23,3 +24,35 @@ def test_create_tree_3_wakeup_breakfast(tau):
     assert len(instances) == 30  # 2 events per day, 5 days for 3 weeks
 
     assert instances[0][0] == tau  # first occurence at tau
+
+    assert tree.size() == 4
+
+
+def test_prefit():
+    logs = pd.Series(["wake up", "breakfast"] * 10)
+
+    cm = PeriodicPatternMiner()
+    singletons = cm._prefit(logs)
+
+    assert all((t.r == 10 for t in singletons))
+    assert all((t.p == 2 for t in singletons))
+
+
+def test_combine_vertically():
+    """ Inspired from fig.4.b) in the original paper """
+    trees = [
+        Tree(2, r=3, p=2),  # TODO : add children
+        Tree(13, r=3, p=2),
+        Tree(35, r=3, p=2),
+        Tree(26, r=3, p=2),
+        Tree(24, r=5, p=2),  # This one should not be combined
+    ]
+    T = combine_vertically(trees)[0]
+    assert T.tau == 2
+    assert T.r == 4
+    assert T.p == 11
+    assert len(T.children) == 1
+    first_node = T.children[0]
+    assert isinstance(first_node, Node)
+    assert first_node.r == trees[0].r
+    assert first_node.p == trees[1].p
