@@ -162,7 +162,7 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     return scores, cut_points
 
 
-def extract_triples(S, dS):
+def extract_triples(S, l_max):
     """
     Extract cycles of length 3 given a list of occurences S
     Parameters
@@ -170,10 +170,10 @@ def extract_triples(S, dS):
     S: pd.Index
         input occurences
 
-    dS
-        difference between max event and min event, from original Series
+    l_max: float
+        `np.log2(dS + 1) - 2`, where dS is the difference
+        between max event and min event, from the original Series
     """
-    l_max = log(dS + 1) - 2
     triples = list()
 
     for idx, occ in enumerate(S[1:-1], 1):
@@ -278,13 +278,14 @@ def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100)
         return list()
     S_a = S_a.sort_values()
     dS = S_a[-1] - S_a[0]
+    l_max = np.log2(dS + 1) - 2
     cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
     covered = Bitmap(covered)
 
     if len(S_a) - len(covered) > 3:  # add triples if necessary
         _all = Bitmap(range(len(S_a)))
         _S_a = S_a[_all - covered]
-        triples = extract_triples(_S_a, dS)
+        triples = extract_triples(_S_a, l_max)
         merged = merge_triples(triples)
         cycles.extend(merged)
 

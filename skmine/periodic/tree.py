@@ -1,4 +1,10 @@
 # TODO : visitor
+import copy
+from itertools import zip_longest
+
+import numpy as np
+
+from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
 
 def get_occs(node, tau=0):
@@ -11,6 +17,17 @@ def get_occs(node, tau=0):
                 yield from get_occs(child, tau=shift + dist_acc)
             else:
                 yield shift + dist_acc, child  # leaf
+
+
+def prefix_visitor(tree):
+    def _inner(node):
+        for child in node.children:
+            yield child
+            if isinstance(child, Node):
+                yield from _inner(child)
+
+    yield tree
+    yield from _inner(tree)
 
 
 class Node:
@@ -27,7 +44,7 @@ class Node:
     """
 
     def __init__(self, r, p, *, children: list = list(), children_dists: list = list()):
-        if not len(children) - 1 == len(children_dists):
+        if children and (not len(children) - 1 == len(children_dists)):
             raise ValueError(
                 "There should be exactly `|children| - 1` inter-child distances"
             )
@@ -35,6 +52,21 @@ class Node:
         self.p = int(p)  # period of time
         self.children_dists = children_dists
         self.children = children
+
+    def size(self):
+        return sum((1 for _ in prefix_visitor(self)))
+
+    def __eq__(self, o):
+        if not isinstance(o, Node):
+            return False
+        return (
+            self.r == o.r
+            and self.p == o.p
+            and all(
+                (a == b for a, b in zip_longest(self.children_dists, o.children_dists))
+            )
+            and all((a == b for a, b in zip_longest(self.children, o.children)))  # rec
+        )
 
 
 class Tree(Node):
@@ -73,3 +105,73 @@ class Tree(Node):
         get the expression for this tree
         """
         pass
+
+
+def grow_vertically(*trees, presort=True):
+    if presort:
+        trees = sorted(trees, key=lambda t: t.tau)
+    T = trees[0]
+    for t in trees[1:]:
+        pass  # TODO
+
+    return T
+
+
+def combine_vertically(H: list):
+    V_prime = list()
+    while H:  # for each distinc tree
+        Tc = H[0]
+        l_max = 1000  # TODO : compute from first tree in H ?
+        C = [t for t in H if (t.r == Tc.r and t.p == Tc.p)]  # TODO Tc == t
+        taus = np.array([_.tau for _ in C])
+        cycles_tri = extract_triples(taus, l_max=l_max)
+        cycles_tri = merge_triples(cycles_tri)
+        for cycle_batch in cycles_tri:
+            p_vect = np.median(np.diff(cycle_batch, axis=1), axis=1)
+            r = cycle_batch.shape[1]
+            for tau, p in zip(cycle_batch[:, 0], p_vect):
+                # create a new tree to make sure we don't mistankenly
+                # manipulate references
+                K = Tree(tau, r=r, p=p, children=[Tc])
+                # TODO : check cost (line 8 from algorithm 4)
+                V_prime.append(K)
+                H = [
+                    _ for _ in H if _ not in C
+                ]  # FIXME : this differs from the original paper
+        else:
+            break
+
+    return V_prime
+
+
+class PeriodicPatternMiner:
+    def __init__(self, max_length=100):
+        # TODO : pass instance of PeriodicCycleMiner, check is_fitted
+        self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
+
+    def _prefit(self, D):
+        cycles = self.cycle_miner.fit_discover(D)
+        singletons = list()
+        for o in cycles.itertuples():
+            t = Tree(o.start, r=o.length, p=o.period, children=[o.Index[0]])
+            singletons.append(t)
+
+        return singletons
+
+    def fit(self, D):
+        singletons = self._prefit(D)
+        import pdb
+
+        pdb.set_trace()
+        # singletons = [Tree(tau=)]
+        H = copy.deepcopy(singletons)  # list of horizontal combinations
+        V = copy.deepcopy(singletons)  # list of vertical combinations
+
+        while V:  # TODO while H or V
+            V_prime = combine_vertically(H)
+            H_prime = H  # TODO combine_horizontally(V, P)
+            V = V_prime
+            H = H_prime
+
+        # TODO P = greedy_cover(C, S), return P
+        return H
