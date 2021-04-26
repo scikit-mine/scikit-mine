@@ -45,9 +45,12 @@ def test_combine_vertically():
         Tree(13, r=3, p=2),
         Tree(35, r=3, p=2),
         Tree(26, r=3, p=2),
-        Tree(24, r=5, p=2),  # This one should not be combined
+        Tree(24, r=5, p=2),  # should not be combined, good `tau` but bad `r`
+        Tree(96, r=3, p=2),  # should not be combined, good `r`, `p` but bad `tau`
     ]
-    T = combine_vertically(trees)[0]
+    cv = combine_vertically(trees)
+    assert len(cv) == 1
+    T = cv[0]
     assert T.tau == 2
     assert T.r == 4
     assert T.p == 11
@@ -56,3 +59,4 @@ def test_combine_vertically():
     assert isinstance(first_node, Node)
     assert first_node.r == trees[0].r
     assert first_node.p == trees[1].p
+    assert trees[0] in T.get_internal_nodes()  # assert ref is same

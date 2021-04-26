@@ -162,7 +162,7 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     return scores, cut_points
 
 
-def extract_triples(S, l_max):
+def extract_triples(S, l_max=None):
     """
     Extract cycles of length 3 given a list of occurences S
     Parameters
@@ -171,20 +171,25 @@ def extract_triples(S, l_max):
         input occurences
 
     l_max: float
-        `np.log2(dS + 1) - 2`, where dS is the difference
-        between max event and min event, from the original Series
+        maximum absolute difference between two occurences to considered
+        for inclusion in the same triple.
+        By default it will be set to the median of the
+        inter-occurence differences from S.
     """
     triples = list()
+    l_max = l_max or np.median(np.diff(S))
+
+    # TODO : precompute diffs instead of for loop inner computation
 
     for idx, occ in enumerate(S[1:-1], 1):
         righties = S[idx + 1 :]
         lefties = S[:idx]
         righties_diffs = righties - occ
         lefties_diffs = lefties - occ
-        grid = np.array(np.meshgrid(lefties_diffs, righties_diffs)).T.reshape(-1, 2)
-        # keep = (np.abs(grid[:, 1]) - np.abs(grid[:, 0])) <= l
+        dists = np.array(np.meshgrid(lefties_diffs, righties_diffs)).T.reshape(-1, 2)
+        grid = np.abs(dists)
         keep = np.abs(grid[:, 0] - grid[:, 1]) < l_max
-        t = occ + grid[keep]
+        t = occ + dists[keep]
         if t.size != 0:
             e = np.array([t[:, 0], np.array([occ] * t.shape[0]), t[:, 1]]).T
             assert np.issubdtype(e.dtype, np.number) and e.shape[1] == 3

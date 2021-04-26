@@ -272,7 +272,7 @@ def test_small_datetime():
 
 
 def test_no_candidates():
-    minutes = np.array([0, 20, 31, 40, 60, 240])
+    minutes = np.array([20, 31, 40, 60, 240])
 
     S = pd.Series("alpha", index=minutes)
     S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))

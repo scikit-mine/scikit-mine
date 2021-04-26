@@ -9,7 +9,7 @@ from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
 def get_occs(node, tau=0):
     dists = [0] + node.children_dists
-    for shift in range(tau, (node.r * node.p) + tau, node.p):
+    for shift in np.arange(tau, (node.r * node.p) + tau, node.p):
         dist_acc = 0
         for dist, child in zip(dists, node.children):
             dist_acc += dist
@@ -49,7 +49,7 @@ class Node:
                 "There should be exactly `|children| - 1` inter-child distances"
             )
         self.r = int(r)  # number of repetitions
-        self.p = int(p)  # period of time
+        self.p = float(p)  # period of tim
         self.children_dists = children_dists
         self.children = children
 
@@ -100,6 +100,9 @@ class Tree(Node):
         """Returns the tree as a list of (occurence, event) pairs"""
         return list(self.get_occs())
 
+    def get_internal_nodes(self):
+        return filter(lambda n: isinstance(n, Node), prefix_visitor(self))
+
     def __str__(self):
         """
         get the expression for this tree
@@ -107,31 +110,23 @@ class Tree(Node):
         pass
 
 
-def grow_vertically(*trees, presort=True):
-    if presort:
-        trees = sorted(trees, key=lambda t: t.tau)
-    T = trees[0]
-    for t in trees[1:]:
-        pass  # TODO
-
-    return T
-
-
 def combine_vertically(H: list):
+    """
+    combine trees verically, by detecting cycles on their `tau`s
+    """
     V_prime = list()
     while H:  # for each distinc tree
         Tc = H[0]
-        l_max = 1000  # TODO : compute from first tree in H ?
         C = [t for t in H if (t.r == Tc.r and t.p == Tc.p)]  # TODO Tc == t
         taus = np.array([_.tau for _ in C])
-        cycles_tri = extract_triples(taus, l_max=l_max)
+        cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
         cycles_tri = merge_triples(cycles_tri)
         for cycle_batch in cycles_tri:
             p_vect = np.median(np.diff(cycle_batch, axis=1), axis=1)
             r = cycle_batch.shape[1]
             for tau, p in zip(cycle_batch[:, 0], p_vect):
                 # create a new tree to make sure we don't mistankenly
-                # manipulate references
+                # manipulate references on the root
                 K = Tree(tau, r=r, p=p, children=[Tc])
                 # TODO : check cost (line 8 from algorithm 4)
                 V_prime.append(K)
@@ -160,9 +155,6 @@ class PeriodicPatternMiner:
 
     def fit(self, D):
         singletons = self._prefit(D)
-        import pdb
-
-        pdb.set_trace()
         # singletons = [Tree(tau=)]
         H = copy.deepcopy(singletons)  # list of horizontal combinations
         V = copy.deepcopy(singletons)  # list of vertical combinations
