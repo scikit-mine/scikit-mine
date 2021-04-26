@@ -271,14 +271,21 @@ def test_small_datetime():
     assert "dE" in cycles.columns
 
 
-def test_no_candidates():
-    minutes = np.array([20, 31, 40, 60, 240])
+@pytest.mark.parametrize(
+    "_input,raise_warning",
+    [([20, 31, 40, 60, 240], False), ([20, 35, 40, 240], True), ([20, 40, 50], True)],
+)
+def test_candidates(_input, raise_warning):
+    minutes = np.array(_input)
 
     S = pd.Series("alpha", index=minutes)
+
     S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
 
-    with pytest.warns(UserWarning, match="candidate"):
+    with pytest.warns(None, match="candidate") as record:
         PeriodicCycleMiner().fit(S)
+
+    assert len(record) == int(raise_warning)
 
 
 def test_get_residuals():
