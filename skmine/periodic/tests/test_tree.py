@@ -1,7 +1,14 @@
 import pandas as pd
 import pytest
 
-from ..tree import Node, PeriodicPatternMiner, Tree, combine_vertically
+from ..tree import (
+    Node,
+    PeriodicPatternMiner,
+    Tree,
+    combine_horizontally,
+    combine_vertically,
+    grow_horizontally,
+)
 
 
 @pytest.mark.parametrize("tau", [0, 330])
@@ -60,3 +67,35 @@ def test_combine_vertically():
     assert first_node.r == trees[0].r
     assert first_node.p == trees[1].p
     assert trees[0] in T.get_internal_nodes()  # assert ref is same
+
+
+def test_grow_horizontally():
+    """see fig.4 b) from the original paper"""
+    trees = [
+        Tree(2, r=6, p=7, children=["wake up"]),
+        Tree(4, r=5, p=7, children=["breakfast"]),
+        Tree(5, r=5, p=7, children=["take metro"]),
+    ]
+
+    T = grow_horizontally(*trees)
+
+    assert T.tau == 2
+    assert T.r == 5
+    assert T.p == 7
+    assert T.children_dists == [2, 1]
+    assert [t.children[0] for t in T.children] == ["wake up", "breakfast", "take metro"]
+
+
+def test_combine_horizontally():
+    V = [
+        Tree(2, r=6, p=7, children="b"),
+        Tree(4, r=5, p=7, children="a"),
+        Tree(5, r=5, p=7, children="b"),
+        Tree(7, r=8, p=10, children="a"),  # should not be included, wrong `p`
+    ]
+
+    H = combine_horizontally(V)
+    assert H[0].tau == 2
+    assert H[0].r == 5
+    assert H[0].children_dists == [2, 1]
+    assert H[0].children == V[:3]
