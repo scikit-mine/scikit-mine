@@ -1,8 +1,8 @@
-# TODO : visitor
 import copy
 from itertools import chain, combinations, groupby, zip_longest
 
 import numpy as np
+from sortedcontainers import SortedKeyList
 
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
@@ -55,11 +55,13 @@ class Node:
             )
         self.r = int(r)  # number of repetitions
         self.p = float(p)  # period of tim
-        self.children_dists = children_dists
-        self.children = children
+        self.children_dists = list(children_dists)
+        self.children = list(children)
 
     def size(self):
         return sum((1 for _ in prefix_visitor(self)))
+
+    __len__ = size
 
     def __eq__(self, o):
         if not isinstance(o, Node):
@@ -114,15 +116,32 @@ class Tree(Node):
         """
         pass
 
+    def to_node(self):
+        """remove `tau` and `E` from the current object, return a new instance of Node"""
+        return Node(
+            self.r, self.p, children=self.children, children_dists=self.children_dists
+        )
+
+
+class Forest(SortedKeyList):  # TODO
+    """A forest is a collection of trees. Trees are sorted by their `tau`s"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._key = lambda t: (t.tau, len(t))
+
+    append = SortedKeyList.add
+
 
 def combine_vertically(H: list):
     """
     combine trees verically, by detecting cycles on their `tau`s
     """
     V_prime = list()
+    H = sorted(H, key=lambda e: e.tau)
     while H:  # for each distinc tree
         Tc = H[0]
-        C = [t for t in H if (t.r == Tc.r and t.p == Tc.p)]  # TODO Tc == t
+        C = [t for t in H if t == Tc]
         taus = np.array([_.tau for _ in C])
         cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
         cycles_tri = merge_triples(cycles_tri)
@@ -132,7 +151,7 @@ def combine_vertically(H: list):
             for tau, p in zip(cycle_batch[:, 0], p_vect):
                 # create a new tree to make sure we don't mistankenly
                 # manipulate references on the root
-                K = Tree(tau, r=r, p=p, children=[Tc])
+                K = Tree(tau, r=r, p=p, children=[Tc.to_node()])
                 # TODO : check cost (line 8 from algorithm 4)
                 V_prime.append(K)
                 H = [
@@ -152,7 +171,10 @@ def grow_horizontally(*trees):
     p = p[0]
     r = min((_.r for _ in trees))
     children_dists = [b.tau - a.tau for a, b in zip(trees, trees[1:])]
-    children = list(trees)
+    children = [
+        t if any(map(lambda c: isinstance(c, Node), t.children)) else t.children[0]
+        for t in trees
+    ]
     tau = trees[0].tau
     return Tree(tau, r, p, children=children, children_dists=children_dists)
 
@@ -197,11 +219,16 @@ class PeriodicPatternMiner:
 
     A tree is defined as a 3-tuple of the form
     :math: `\tau`, `C`, `E`
+
+    See Also
+    --------
+    skmine.periodic.PeriodicCycleMiner
     """
 
     def __init__(self, max_length=100):
         # TODO : pass instance of PeriodicCycleMiner, check is_fitted
         self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
+        self.forest = list()
 
     def _prefit(self, D):
         cycles = self.cycle_miner.fit_discover(D)
@@ -210,19 +237,33 @@ class PeriodicPatternMiner:
             t = Tree(o.start, r=o.length, p=o.period, children=[o.Index[0]])
             singletons.append(t)
 
+        singletons = sorted(singletons, key=lambda s: s.tau)
+
         return singletons
 
     def fit(self, D):
+        """
+        Discover periodic patterns (in the form of trees) from a sequence of event `D`
+
+        This iteratively refines the set of trees by successive vertical/horizontal
+        combinations, starting from single-node trees describing `cycles`.
+
+        The resulting model is a list of periodic trees.
+        """
         singletons = self._prefit(D)
         # singletons = [Tree(tau=)]
         H = copy.deepcopy(singletons)  # list of horizontal combinations
         V = copy.deepcopy(singletons)  # list of vertical combinations
 
+        C = list()
+
         while V:  # TODO while H or V
             V_prime = combine_vertically(H)
-            H_prime = H  # TODO combine_horizontally(V, P)
+            H_prime = combine_horizontally(V)
             V = V_prime
             H = H_prime
+            C += H + V
 
         # TODO P = greedy_cover(C, S), return P
-        return H
+        self.forest = C
+        return self
