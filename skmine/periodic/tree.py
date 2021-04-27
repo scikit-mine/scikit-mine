@@ -1,6 +1,6 @@
 # TODO : visitor
 import copy
-from itertools import zip_longest
+from itertools import chain, combinations, groupby, zip_longest
 
 import numpy as np
 
@@ -8,6 +8,9 @@ from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
 
 def get_occs(node, tau=0):
+    """
+    get occurences covered by a node (or tree)
+    """
     dists = [0] + node.children_dists
     for shift in np.arange(tau, (node.r * node.p) + tau, node.p):
         dist_acc = 0
@@ -20,6 +23,8 @@ def get_occs(node, tau=0):
 
 
 def prefix_visitor(tree):
+    """visit tree in prefix order"""
+
     def _inner(node):
         for child in node.children:
             yield child
@@ -139,7 +144,61 @@ def combine_vertically(H: list):
     return V_prime
 
 
+def grow_horizontally(*trees):
+    """Grow trees horizontally"""
+    p = list(set((_.p for _ in trees)))
+    if len(p) != 1:
+        raise ValueError("all trees should have same p to grow horizontally")
+    p = p[0]
+    r = min((_.r for _ in trees))
+    children_dists = [b.tau - a.tau for a, b in zip(trees, trees[1:])]
+    children = list(trees)
+    tau = trees[0].tau
+    return Tree(tau, r, p, children=children, children_dists=children_dists)
+
+
+def combine_horizontally(V: list):
+    H_prime = list()
+    G = list()
+    C = [
+        (Pa, Pb)
+        for Pa, Pb in combinations(V, 2)
+        if Pa.p == Pb.p and Pb.tau <= Pa.tau + Pa.p
+    ]
+    for Pa, Pb in C:
+        K = grow_horizontally(Pa, Pb)
+        # TODO : evaluate len of K here
+        H_prime.append(K)
+        G.append((Pa, Pb))
+
+    cliques = groupby(G, key=lambda _: _[0].p)
+    for _, clique in cliques:
+        stack = set()
+        flat_clique = list()
+        for t in chain(*clique):
+            if t.tau not in stack:
+                flat_clique.append(t)
+                stack.add(t.tau)
+
+        clique_T = grow_horizontally(*flat_clique)
+        H_prime.insert(0, clique_T)
+
+    return H_prime
+
+
 class PeriodicPatternMiner:
+    """
+    Mining Periodic Pattern with a MDL criterion
+
+    Implementation of periodic tree mining.
+
+    This first extract cycles from the input data, and then combine these cycles
+    into more complex tree structures.
+
+    A tree is defined as a 3-tuple of the form
+    :math: `\tau`, `C`, `E`
+    """
+
     def __init__(self, max_length=100):
         # TODO : pass instance of PeriodicCycleMiner, check is_fitted
         self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
