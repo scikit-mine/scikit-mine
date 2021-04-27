@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -45,15 +46,23 @@ def test_prefit():
     assert all((t.p == 2 for t in singletons))
 
 
+def test_node_equal():
+    assert Node(r=3, p=2, children="b") == Node(r=3, p=2, children="b")
+    assert Node(r=3, p=2, children="bc", children_dists=[2]) != Node(
+        r=3, p=2, children="cd", children_dists=[2]
+    )
+
+
 def test_combine_vertically():
     """ Inspired from fig.4.b) in the original paper """
     trees = [
-        Tree(2, r=3, p=2),  # TODO : add children
-        Tree(13, r=3, p=2),
-        Tree(35, r=3, p=2),
-        Tree(26, r=3, p=2),
+        Tree(2, r=3, p=2, children="ce", children_dists=[1]),
+        Tree(13, r=3, p=2, children="ce", children_dists=[1]),
+        Tree(35, r=3, p=2, children="ce", children_dists=[1]),
+        Tree(26, r=3, p=2, children="ce", children_dists=[1]),
         Tree(24, r=5, p=2),  # should not be combined, good `tau` but bad `r`
         Tree(96, r=3, p=2),  # should not be combined, good `r`, `p` but bad `tau`
+        Tree(47, r=3, p=2, children="dc", children_dists=[1]),  # wrong children
     ]
     cv = combine_vertically(trees)
     assert len(cv) == 1
@@ -64,6 +73,7 @@ def test_combine_vertically():
     assert len(T.children) == 1
     first_node = T.children[0]
     assert isinstance(first_node, Node)
+    assert not isinstance(first_node, Tree)
     assert first_node.r == trees[0].r
     assert first_node.p == trees[1].p
     assert trees[0] in T.get_internal_nodes()  # assert ref is same
@@ -83,14 +93,14 @@ def test_grow_horizontally():
     assert T.r == 5
     assert T.p == 7
     assert T.children_dists == [2, 1]
-    assert [t.children[0] for t in T.children] == ["wake up", "breakfast", "take metro"]
+    assert T.children == ["wake up", "breakfast", "take metro"]
 
 
 def test_combine_horizontally():
     V = [
         Tree(2, r=6, p=7, children="b"),
         Tree(4, r=5, p=7, children="a"),
-        Tree(5, r=5, p=7, children="b"),
+        Tree(5, r=5, p=7, children=[Node(r=3, p=2, children="b")]),
         Tree(7, r=8, p=10, children="a"),  # should not be included, wrong `p`
     ]
 
@@ -98,4 +108,23 @@ def test_combine_horizontally():
     assert H[0].tau == 2
     assert H[0].r == 5
     assert H[0].children_dists == [2, 1]
-    assert H[0].children == V[:3]
+    assert H[0].children[:2] == ["b", "a"]
+    assert isinstance(H[0].children[2], Node)
+
+
+def test_discover_simple():
+    occs = [2, 5, 7, 13, 18, 21, 26, 30, 31]
+    S = pd.Series(list("bacbacbac"), index=occs)
+    ppm = PeriodicPatternMiner()
+    ppm.fit(S)
+    bigger = ppm.forest[0]
+    assert bigger.tau == 2
+    assert bigger.p == 12
+    assert bigger.r == 3
+    assert len(bigger.children) == 3
+    assert bigger.children == ["b", "a", "c"]
+
+    rec_occs, rec_events = zip(*bigger.get_occs())
+    assert list(rec_events) == S.values.tolist()
+    occs_diff = np.abs(np.array(rec_occs) - np.array(occs))
+    assert np.all(occs_diff <= 2)
