@@ -6,6 +6,10 @@ from sortedcontainers import SortedKeyList
 
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
+L_PARENTHESIS = -np.log2(
+    1 / 3
+)  # length of either `(` or `)` when encoding tree patterns
+
 
 def get_occs(node, tau=0):
     """
@@ -33,6 +37,24 @@ def prefix_visitor(tree):
 
     yield tree
     yield from _inner(tree)
+
+
+def encode_leaves(node, event_freqs: dict):
+    """MDL cost for leaves
+
+    Parameters
+    ----------
+    event_freqs: dict[object, float]
+        mapping of frequencies for every event in the input data
+    """
+    if isinstance(node, Node):
+        return (
+            L_PARENTHESIS
+            + sum([encode_leaves(child, event_freqs) for child in node.children])
+            + L_PARENTHESIS
+        )
+    freq = event_freqs[node]
+    return -np.log2(freq / 3)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -64,8 +86,12 @@ class Node:
             )
 
     def size(self):
-        """returns the number of nodes in the tree"""
+        """returns the number of nodes in the tree"""  # TODO : reuse __len__ from children
         return sum((1 for _ in prefix_visitor(self)))
+
+    @property
+    def N(self):
+        return len(get_occs(self))  # TODO : there is a more efficient way
 
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
