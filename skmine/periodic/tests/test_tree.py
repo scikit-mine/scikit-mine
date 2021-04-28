@@ -1,3 +1,5 @@
+import dataclasses
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -27,13 +29,19 @@ def test_create_tree_3_wakeup_breakfast(tau):
     )
     tree = Tree(tau, r=3, p=1440 * 7, children=[week_node])
 
-    instances = tree.tolist()
+    assert dataclasses.is_dataclass(tree)
+
+    instances = tree.to_list()
 
     assert len(instances) == 30  # 2 events per day, 5 days for 3 weeks
 
     assert instances[0][0] == tau  # first occurence at tau
 
     assert tree.size() == 4
+
+    assert tree.to_dict() == dict(
+        r=3, p=1440 * 7, children=[week_node.to_dict()], children_dists=[],
+    )
 
 
 def test_prefit():
