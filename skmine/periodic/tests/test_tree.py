@@ -1,4 +1,5 @@
 import dataclasses
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ from ..tree import (
     Tree,
     combine_horizontally,
     combine_vertically,
+    encode_leaves,
     grow_horizontally,
 )
 
@@ -136,3 +138,21 @@ def test_discover_simple():
     assert list(rec_events) == S.values.tolist()
     occs_diff = np.abs(np.array(rec_occs) - np.array(occs))
     assert np.all(occs_diff <= 2)
+
+
+def test_leaves_length():
+    events = "bacbacbbac"
+    occs = [2, 5, 7, 13, 18, 21, 26, 28, 30, 31]
+    S = pd.Series(list(events), index=occs)
+    ppm = PeriodicPatternMiner()
+    ppm.fit(S)
+    event_freqs = {k: v / len(events) for k, v in Counter(events).items()}
+    length = encode_leaves(ppm.forest[0], event_freqs)
+    assert length == pytest.approx(12.72, rel=1e-2)
+
+    # TODO try with
+    occs = [2, 5, 7, 13, 18, 21, 24, 26, 30, 31]
+    # we should extract 2 cycles for b, one with p=11 (covering 24)
+    # and one with p=12 (covering 26)
+    # the current version only extracts the first one, hence not allowing for
+    # horizontal combination to be perfomed, because the p is different
