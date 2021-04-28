@@ -1,5 +1,5 @@
-import copy
-from itertools import chain, combinations, groupby, zip_longest
+import dataclasses
+from itertools import chain, combinations, groupby
 
 import numpy as np
 from sortedcontainers import SortedKeyList
@@ -35,6 +35,7 @@ def prefix_visitor(tree):
     yield from _inner(tree)
 
 
+@dataclasses.dataclass(frozen=True)
 class Node:
     """
     base Node class for periodic elements
@@ -45,35 +46,33 @@ class Node:
         number of repetitions for this node
     p: int
         period, inter occurence delay for this node
-
+    children: list
+        list of children
+    children_dists: list
+        list of inter node distances between children
     """
 
-    def __init__(self, r, p, *, children: list = list(), children_dists: list = list()):
-        if children and (not len(children) - 1 == len(children_dists)):
+    r: int
+    p: float
+    children: list = dataclasses.field(default_factory=list)
+    children_dists: list = dataclasses.field(default_factory=list)
+
+    def __post_init__(self):
+        if self.children and (not len(self.children) - 1 == len(self.children_dists)):
             raise ValueError(
                 "There should be exactly `|children| - 1` inter-child distances"
             )
-        self.r = int(r)  # number of repetitions
-        self.p = float(p)  # period of tim
-        self.children_dists = list(children_dists)
-        self.children = list(children)
 
     def size(self):
+        """returns the number of nodes in the tree"""
         return sum((1 for _ in prefix_visitor(self)))
 
+    to_dict = dataclasses.asdict
+    to_tuple = dataclasses.astuple
     __len__ = size
 
-    def __eq__(self, o):
-        if not isinstance(o, Node):
-            return False
-        return (
-            self.r == o.r
-            and self.p == o.p
-            and all(
-                (a == b for a, b in zip_longest(self.children_dists, o.children_dists))
-            )
-            and all((a == b for a, b in zip_longest(self.children, o.children)))  # rec
-        )
+    def __eq__(self, other):
+        return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
 
 class Tree(Node):
@@ -103,11 +102,12 @@ class Tree(Node):
         """
         return get_occs(self, tau=self.tau)
 
-    def tolist(self):
+    def to_list(self):
         """Returns the tree as a list of (occurence, event) pairs"""
         return list(self.get_occs())
 
     def get_internal_nodes(self):
+        """yield interal nodes"""
         return filter(lambda n: isinstance(n, Node), prefix_visitor(self))
 
     def __str__(self):
@@ -252,8 +252,8 @@ class PeriodicPatternMiner:
         """
         singletons = self._prefit(D)
         # singletons = [Tree(tau=)]
-        H = copy.deepcopy(singletons)  # list of horizontal combinations
-        V = copy.deepcopy(singletons)  # list of vertical combinations
+        H = singletons  # list of horizontal combinations
+        V = singletons  # list of vertical combinations
 
         C = list()
 
