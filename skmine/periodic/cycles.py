@@ -278,10 +278,13 @@ def _reconstruct(start, period, dE):
     return occurences
 
 
-def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100):
+def _generate_candidates(
+    S_a: np.array, n_event_tot: int, max_length: int = 100, presort=False
+):
     if len(S_a) < 3:
         return list()
-    S_a = S_a.sort_values()
+    if presort:
+        S_a = np.sort(S_a)
     dS = S_a[-1] - S_a[0]
     l_max = np.log2(dS + 1) - 2
     cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
@@ -359,7 +362,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
     Parameters
     ----------
-    max_length: int, default=100
+    max_length: int, default=20
         maximum length for a candidate cycle, when running the dynamic programming heuristic
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single event is attributed a job
@@ -383,7 +386,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self, *, max_length=100, n_jobs=1):
+    def __init__(self, *, max_length=20, n_jobs=1):
         self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
         self.residuals_ = dict()
         self.is_datetime_ = None
@@ -554,7 +557,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         candidates = dict()
         for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length)
+            cands = _generate_candidates(S_a.index.values, n_event_tot, self.max_length)
             if cands:
                 candidates[event] = cands
 
