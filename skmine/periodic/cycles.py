@@ -9,6 +9,7 @@ from itertools import groupby
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
@@ -317,6 +318,10 @@ def evaluate(S, cands):
         hence stored in a common `numpy.ndarray`.
         Batches are sorted by decreasing order of width,
         so that we consider larger candidates first.
+    overlap: bool, default=False
+        if True, allow mutliple cycles to be accepted for a single occurence
+        eg. two cycles covering [0, 2, 4] and [0, 2, 6]
+        would be accepted in the final set of cycles
     """
     res = list()  # list of pandas DataFrame
     covered = list()
@@ -364,6 +369,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     ----------
     max_length: int, default=20
         maximum length for a candidate cycle, when running the dynamic programming heuristic
+    keep_residuals: bool, default=False
+        Either to keep track of residuals (occurences not covered by any cycle) or not.
+        Residuals are required for a lossless reconstruction of the original data.
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single event is attributed a job
         to discover potential cycles.
@@ -386,16 +394,14 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self, *, max_length=20, n_jobs=1):
+    def __init__(self, *, max_length=20, keep_residuals=False, n_jobs=1):
         self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.is_fitted = (
-            lambda: self.is_datetime_ is not None
-        )  # TODO : this make pickle broken
         self.n_jobs = n_jobs
         self.max_length = max_length
+        self.keep_residuals = keep_residuals
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -426,25 +432,38 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        candidates = self.generate_candidates(S)
+        n_event_tot = S.shape[0]
+        alpha_groups = S.groupby(S.values)
+        candidates = alpha_groups.apply(
+            lambda S_a: _generate_candidates(
+                S_a.index.values, n_event_tot, self.max_length
+            )
+        )
+        candidates = candidates[candidates.map(len) > 0]
 
-        if not candidates:
+        if candidates.empty:
             warnings.warn(
                 """could not generate candidates for the input sequence,
                 the model is left empty"""
             )
             return self
 
-        gr = S.groupby(S.values).groups
         cycles, residuals = zip(
-            *(evaluate(gr[event], cands) for event, cands in candidates.items())
+            *Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(evaluate)(alpha_groups.groups[event], cands)
+                for event, cands in candidates.items()
+            )
         )
 
+        if self.keep_residuals:
+            residuals = dict(zip(candidates.keys().tolist(), residuals))
+            self.residuals_ = {
+                **alpha_groups.groups,
+                **residuals,
+            }  # fill groups with no cands with all occurences
+
         c = dict(zip(candidates.keys(), cycles))
-        cycles = pd.concat(c.values(), keys=c.keys())
-        residuals = dict(zip(candidates.keys(), residuals))
-        residuals = {**gr, **residuals}  # fill groups with no cands with all occurences
-        self.cycles_, self.residuals_ = cycles, residuals
+        self.cycles_ = pd.concat(c.values(), keys=c.keys())
 
         return self
 
@@ -477,8 +496,6 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
              1     10       3      11
 
         """
-        if not self.is_fitted():
-            raise Exception(f"{type(self)} instance if not fitted")
         all_cols = ["start", "length", "period"]
         if shifts:
             all_cols += ["dE"]
