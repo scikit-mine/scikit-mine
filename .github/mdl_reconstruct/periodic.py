@@ -13,7 +13,7 @@ if __name__ == "__main__":
     ]
 
     for D in map(deduplicate, Ds):
-        miner = PeriodicCycleMiner(max_length=20)
+        miner = PeriodicCycleMiner(keep_residuals=True)
         print(
             f"RUN CycleMiner RECONSTRUCTION ON {D.name} WITH PARAMS {miner.get_params()}"
         )
