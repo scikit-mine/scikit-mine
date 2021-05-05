@@ -1,7 +1,11 @@
+"""
+Periodic trees
+"""
 import dataclasses
 from itertools import chain, combinations, groupby
 
 import numpy as np
+import pandas as pd
 from sortedcontainers import SortedKeyList
 
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
@@ -117,10 +121,14 @@ class Tree(Node):
      - E: a collections of shift corrections for events described by the tree
     """
 
-    def __init__(self, tau, r, p, *args, **kwargs):
+    def __init__(self, tau, r, p, E=None, *args, **kwargs):
         super(Tree, self).__init__(r, p, *args, **kwargs)
         self.tau = tau
-        self.E = list()  # TODO, np.array ??
+        if E is None:
+            self.E = np.array([0] * (len(self.children) - 1))
+        else:
+            assert hasattr(E, "__len__")
+            self.E = np.array(E)
 
     def get_occs(self):
         """
@@ -202,7 +210,8 @@ def grow_horizontally(*trees):
         for t in trees
     ]
     tau = trees[0].tau
-    return Tree(tau, r, p, children=children, children_dists=children_dists)
+    E = trees[0].E  # FIXME ?
+    return Tree(tau, r, p, E, children=children, children_dists=children_dists)
 
 
 def combine_horizontally(V: list):
@@ -254,16 +263,14 @@ class PeriodicPatternMiner:
     def __init__(self, max_length=100):
         # TODO : pass instance of PeriodicCycleMiner, check is_fitted
         self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
-        self.forest = list()
+        self.forest = Forest()
 
     def _prefit(self, D):
-        cycles = self.cycle_miner.fit_discover(D)
-        singletons = list()
+        cycles = self.cycle_miner.fit_discover(D, shifts=True)
+        singletons = Forest()
         for o in cycles.itertuples():
-            t = Tree(o.start, r=o.length, p=o.period, children=[o.Index[0]])
+            t = Tree(o.start, r=o.length, p=o.period, children=[o.Index[0]], E=o.dE)
             singletons.append(t)
-
-        singletons = sorted(singletons, key=lambda s: s.tau)
 
         return singletons
 
@@ -293,3 +300,8 @@ class PeriodicPatternMiner:
         # TODO P = greedy_cover(C, S), return P
         self.forest = C
         return self
+
+    def discover(self):
+        cols = ["tau", "root", "shifts"]
+        data = [(t.tau, t.to_node(), t.shifts) for t in self.forest]
+        return pd.DataFrame(data, columns=cols)
