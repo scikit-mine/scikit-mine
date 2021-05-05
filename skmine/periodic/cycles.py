@@ -504,6 +504,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             10 ** self.n_zeros_
         )
 
+        if shifts:
+            cycles.loc[:, "dE"] = cycles.dE.map(lambda a: a * 10 ** self.n_zeros_)
+
         if self.is_datetime_:
             cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
             cycles.loc[:, "period"] = cycles.period.astype("timedelta64[ns]")
