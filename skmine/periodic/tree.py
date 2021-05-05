@@ -2,12 +2,14 @@
 Periodic trees
 """
 import dataclasses
-from itertools import chain, combinations, groupby
+from collections import defaultdict
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedKeyList
 
+from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
 L_PARENTHESIS = -np.log2(
@@ -80,8 +82,8 @@ class Node:
 
     r: int
     p: float
-    children: list = dataclasses.field(default_factory=list)
-    children_dists: list = dataclasses.field(default_factory=list)
+    children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
+    children_dists: list = dataclasses.field(default_factory=list, hash=False)
 
     def __post_init__(self):
         if self.children and (not len(self.children) - 1 == len(self.children_dists)):
@@ -101,7 +103,7 @@ class Node:
     to_tuple = dataclasses.astuple
     __len__ = size
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # TODO remove
         return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
 
@@ -197,12 +199,11 @@ def combine_vertically(H: list):
     return V_prime
 
 
-def grow_horizontally(*trees):
+def grow_horizontally(*trees, presort=False):
     """Grow trees horizontally"""
-    p = list(set((_.p for _ in trees)))
-    if len(p) != 1:
-        raise ValueError("all trees should have same p to grow horizontally")
-    p = p[0]
+    if presort:
+        trees = sorted(trees, key=lambda t: t.tau)
+    p = np.median([t.p for t in trees])
     r = min((_.r for _ in trees))
     children_dists = [b.tau - a.tau for a, b in zip(trees, trees[1:])]
     children = [
@@ -216,28 +217,19 @@ def grow_horizontally(*trees):
 
 def combine_horizontally(V: list):
     H_prime = list()
-    G = list()
-    C = [
-        (Pa, Pb)
-        for Pa, Pb in combinations(V, 2)
-        if Pa.p == Pb.p and Pb.tau <= Pa.tau + Pa.p
-    ]
+    G = defaultdict(list)
+    C = [(Pa, Pb) for Pa, Pb in combinations(V, 2) if Pb.tau <= Pa.tau + Pa.p]
+
     for Pa, Pb in C:
         K = grow_horizontally(Pa, Pb)
         # TODO : evaluate len of K here
         H_prime.append(K)
-        G.append((Pa, Pb))
+        G[Pa].append(Pb)
+        G[Pb].append(Pa)
 
-    cliques = groupby(G, key=lambda _: _[0].p)
-    for _, clique in cliques:
-        stack = set()
-        flat_clique = list()
-        for t in chain(*clique):
-            if t.tau not in stack:
-                flat_clique.append(t)
-                stack.add(t.tau)
-
-        clique_T = grow_horizontally(*flat_clique)
+    cliques = bron_kerbosch(G)
+    for clique in cliques:
+        clique_T = grow_horizontally(*clique, presort=True)
         H_prime.insert(0, clique_T)
 
     return H_prime
