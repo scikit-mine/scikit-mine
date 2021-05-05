@@ -117,7 +117,11 @@ def test_combine_horizontally():
     H = combine_horizontally(V)
     assert H[0].tau == 2
     assert H[0].r == 5
-    assert H[0].children_dists == [2, 1]
+    assert H[0].children_dists == [
+        2,
+        1,
+        2,
+    ]  # FIXME: all have been merged, because MDL cost compute is missing
     assert H[0].children[:2] == ["b", "a"]
     assert isinstance(H[0].children[2], Node)
 

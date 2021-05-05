@@ -317,3 +317,36 @@ def sliding_window_view(x, window_shape, axis=None, *, subok=False, writeable=Fa
     return as_strided(
         x, strides=out_strides, shape=out_shape, subok=subok, writeable=writeable
     )
+
+
+def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
+    """
+    Bron-Kerbosch algorithm, from https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+
+    Parameters
+    ----------
+    candidates: dict[object, list[object]]
+        a mapping from each node to its existing neighbours
+    """
+    if not candidates and not excluded and len(clique) > 2:
+        yield [_ for _ in clique]
+        return
+
+    # pass None as default arg instead of dict()
+    # fix collisions in pytest, really obscure
+    clique = clique or dict()
+    excluded = excluded or dict()
+
+    if depth > 20:
+        return
+
+    for node, neighbours in list(candidates.items()):
+        new_clique = {**{node: neighbours}, **clique}
+        new_candidates = {k: v for k, v in candidates.items() if k in neighbours}
+        new_excluded = {k: v for k, v in excluded.items() if k in neighbours}
+
+        yield from bron_kerbosch(new_candidates, new_clique, new_excluded)
+
+        del candidates[node]
+        excluded[node] = neighbours
+
