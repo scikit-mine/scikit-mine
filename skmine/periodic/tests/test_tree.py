@@ -39,10 +39,10 @@ def test_create_tree_3_wakeup_breakfast(tau):
 
     assert instances[0][0] == tau  # first occurence at tau
 
-    assert tree.size() == 4
+    assert tree._size == len(tree) == 4
 
     assert tree.to_dict() == dict(
-        r=3, p=1440 * 7, children=[week_node.to_dict()], children_dists=[],
+        r=3, p=1440 * 7, children=[week_node.to_dict()], children_dists=[], _size=4,
     )
 
 
@@ -61,6 +61,12 @@ def test_node_equal():
     assert Node(r=3, p=2, children="bc", children_dists=[2]) != Node(
         r=3, p=2, children="cd", children_dists=[2]
     )
+
+
+def test_node_id():
+    assert id(Node(r=3, p=2, children="b")) != id(Node(r=3, p=2, children="a"))
+    n = Node(r=1, p=4)
+    assert id(n) == id(n)
 
 
 def test_combine_vertically():

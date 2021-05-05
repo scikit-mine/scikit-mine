@@ -63,7 +63,7 @@ def encode_leaves(node, event_freqs: dict):
     return -np.log2(freq / 3)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Node:
     """
     base Node class for periodic elements
@@ -82,6 +82,7 @@ class Node:
 
     r: int
     p: float
+    _size: int = dataclasses.field(init=False, repr=False)
     children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
     children_dists: list = dataclasses.field(default_factory=list, hash=False)
 
@@ -90,10 +91,9 @@ class Node:
             raise ValueError(
                 "There should be exactly `|children| - 1` inter-child distances"
             )
-
-    def size(self):
-        """returns the number of nodes in the tree"""  # TODO : reuse __len__ from children
-        return sum((1 for _ in prefix_visitor(self)))
+        self._size = 1 + sum(
+            (c._size if isinstance(c, Node) else 1 for c in self.children)
+        )
 
     @property
     def N(self):
@@ -101,9 +101,11 @@ class Node:
 
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
-    __len__ = size
 
-    def __eq__(self, other):  # TODO remove
+    def __len__(self):
+        return self._size
+
+    def __eq__(self, other):
         return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
 
@@ -224,12 +226,13 @@ def combine_horizontally(V: list):
         K = grow_horizontally(Pa, Pb)
         # TODO : evaluate len of K here
         H_prime.append(K)
-        G[Pa].append(Pb)
-        G[Pb].append(Pa)
+        G[id(Pa)].append(id(Pb))
+        G[id(Pb)].append(id(Pa))
 
     cliques = bron_kerbosch(G)
     for clique in cliques:
-        clique_T = grow_horizontally(*clique, presort=True)
+        clique_trees = [t for t in V if id(t) in clique]
+        clique_T = grow_horizontally(*clique_trees, presort=True)
         H_prime.insert(0, clique_T)
 
     return H_prime
