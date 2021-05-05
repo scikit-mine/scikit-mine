@@ -9,6 +9,7 @@ from itertools import groupby
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
@@ -162,7 +163,7 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     return scores, cut_points
 
 
-def extract_triples(S, dS):
+def extract_triples(S, l_max=None):
     """
     Extract cycles of length 3 given a list of occurences S
     Parameters
@@ -170,21 +171,26 @@ def extract_triples(S, dS):
     S: pd.Index
         input occurences
 
-    dS
-        difference between max event and min event, from original Series
+    l_max: float
+        maximum absolute difference between two occurences to considered
+        for inclusion in the same triple.
+        By default it will be set to the median of the
+        inter-occurence differences from S.
     """
-    l_max = log(dS + 1) - 2
     triples = list()
+    l_max = l_max or np.median(np.diff(S))
+
+    # TODO : precompute diffs instead of for loop inner computation
 
     for idx, occ in enumerate(S[1:-1], 1):
         righties = S[idx + 1 :]
         lefties = S[:idx]
         righties_diffs = righties - occ
         lefties_diffs = lefties - occ
-        grid = np.array(np.meshgrid(lefties_diffs, righties_diffs)).T.reshape(-1, 2)
-        # keep = (np.abs(grid[:, 1]) - np.abs(grid[:, 0])) <= l
+        dists = np.array(np.meshgrid(lefties_diffs, righties_diffs)).T.reshape(-1, 2)
+        grid = np.abs(dists)
         keep = np.abs(grid[:, 0] - grid[:, 1]) < l_max
-        t = occ + grid[keep]
+        t = occ + dists[keep]
         if t.size != 0:
             e = np.array([t[:, 0], np.array([occ] * t.shape[0]), t[:, 1]]).T
             assert np.issubdtype(e.dtype, np.number) and e.shape[1] == 3
@@ -273,18 +279,22 @@ def _reconstruct(start, period, dE):
     return occurences
 
 
-def _generate_candidates(S_a: pd.Index, n_event_tot: int, max_length: int = 100):
+def _generate_candidates(
+    S_a: np.array, n_event_tot: int, max_length: int = 100, presort=False
+):
     if len(S_a) < 3:
         return list()
-    S_a = S_a.sort_values()
+    if presort:
+        S_a = np.sort(S_a)
     dS = S_a[-1] - S_a[0]
+    l_max = np.log2(dS + 1) - 2
     cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
     covered = Bitmap(covered)
 
     if len(S_a) - len(covered) > 3:  # add triples if necessary
         _all = Bitmap(range(len(S_a)))
         _S_a = S_a[_all - covered]
-        triples = extract_triples(_S_a, dS)
+        triples = extract_triples(_S_a, l_max)
         merged = merge_triples(triples)
         cycles.extend(merged)
 
@@ -308,6 +318,10 @@ def evaluate(S, cands):
         hence stored in a common `numpy.ndarray`.
         Batches are sorted by decreasing order of width,
         so that we consider larger candidates first.
+    overlap: bool, default=False
+        if True, allow mutliple cycles to be accepted for a single occurence
+        eg. two cycles covering [0, 2, 4] and [0, 2, 6]
+        would be accepted in the final set of cycles
     """
     res = list()  # list of pandas DataFrame
     covered = list()
@@ -353,8 +367,11 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
     Parameters
     ----------
-    max_length: int, default=100
+    max_length: int, default=20
         maximum length for a candidate cycle, when running the dynamic programming heuristic
+    keep_residuals: bool, default=False
+        Either to keep track of residuals (occurences not covered by any cycle) or not.
+        Residuals are required for a lossless reconstruction of the original data.
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single event is attributed a job
         to discover potential cycles.
@@ -377,16 +394,14 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self, *, max_length=100, n_jobs=1):
+    def __init__(self, *, max_length=20, keep_residuals=False, n_jobs=1):
         self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
         self.residuals_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.is_fitted = (
-            lambda: self.is_datetime_ is not None
-        )  # TODO : this make pickle broken
         self.n_jobs = n_jobs
         self.max_length = max_length
+        self.keep_residuals = keep_residuals
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -417,25 +432,38 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        candidates = self.generate_candidates(S)
+        n_event_tot = S.shape[0]
+        alpha_groups = S.groupby(S.values)
+        candidates = alpha_groups.apply(
+            lambda S_a: _generate_candidates(
+                S_a.index.values, n_event_tot, self.max_length
+            )
+        )
+        candidates = candidates[candidates.map(len) > 0]
 
-        if not candidates:
+        if candidates.empty:
             warnings.warn(
                 """could not generate candidates for the input sequence,
                 the model is left empty"""
             )
             return self
 
-        gr = S.groupby(S.values).groups
         cycles, residuals = zip(
-            *(evaluate(gr[event], cands) for event, cands in candidates.items())
+            *Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(evaluate)(alpha_groups.groups[event], cands)
+                for event, cands in candidates.items()
+            )
         )
 
+        if self.keep_residuals:
+            residuals = dict(zip(candidates.keys().tolist(), residuals))
+            self.residuals_ = {
+                **alpha_groups.groups,
+                **residuals,
+            }  # fill groups with no cands with all occurences
+
         c = dict(zip(candidates.keys(), cycles))
-        cycles = pd.concat(c.values(), keys=c.keys())
-        residuals = dict(zip(candidates.keys(), residuals))
-        residuals = {**gr, **residuals}  # fill groups with no cands with all occurences
-        self.cycles_, self.residuals_ = cycles, residuals
+        self.cycles_ = pd.concat(c.values(), keys=c.keys())
 
         return self
 
@@ -468,8 +496,6 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
              1     10       3      11
 
         """
-        if not self.is_fitted():
-            raise Exception(f"{type(self)} instance if not fitted")
         all_cols = ["start", "length", "period"]
         if shifts:
             all_cols += ["dE"]
@@ -477,6 +503,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_
         )
+
+        if shifts:
+            cycles.loc[:, "dE"] = cycles.dE.map(lambda a: a * 10 ** self.n_zeros_)
 
         if self.is_datetime_:
             cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
@@ -548,7 +577,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         candidates = dict()
         for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index, n_event_tot, self.max_length)
+            cands = _generate_candidates(S_a.index.values, n_event_tot, self.max_length)
             if cands:
                 candidates[event] = cands
 

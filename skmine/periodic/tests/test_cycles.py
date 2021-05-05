@@ -81,7 +81,7 @@ def test_window_view(minutes, k):
 def test_cycle_length_triples(minutes):
     triples = sliding_window_view(minutes, 3)
     inter = sliding_window_view(np.diff(minutes), 2)
-    delta_S = delta_S = minutes[-1] - minutes[0]
+    delta_S = minutes[-1] - minutes[0]
     L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, inter, len(minutes), delta_S)
 
     # TODO : test L_a
@@ -147,7 +147,8 @@ def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
 def test_extract_triples(triples):
     minutes = pd.Index(np.array([0, 2, 4, 6, 400, 402, 404, 406]))
     delta_S = minutes[-1] - minutes[0]
-    t = extract_triples(minutes, delta_S)
+    l_max = np.log2(delta_S + 1) - 2
+    t = extract_triples(minutes, l_max)
     assert t.ndim == 2
     np.testing.assert_array_equal(triples, t)
 
@@ -235,7 +236,7 @@ def test_reconstruct(is_datetime):
         S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
         S.index = pd.to_datetime(S.index)
 
-    pcm = PeriodicCycleMiner().fit(S)
+    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
     pd.testing.assert_index_equal(reconstructed.index, S.index.drop_duplicates())
@@ -246,7 +247,7 @@ def test_fit_triples_and_residuals():
 
     S = pd.Series("alpha", index=minutes)
 
-    pcm = PeriodicCycleMiner().fit(S)
+    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
     pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240, 781]))
 
     rec_minutes = pcm.reconstruct()
@@ -270,22 +271,30 @@ def test_small_datetime():
     assert "dE" in cycles.columns
 
 
-def test_no_candidates():
-    minutes = np.array([0, 20, 31, 40, 60, 240])
+@pytest.mark.parametrize(
+    "_input,raise_warning",
+    [([20, 31, 40, 60, 240], False), ([20, 35, 40, 240], True), ([20, 40, 50], True)],
+)
+def test_candidates(_input, raise_warning):
+    minutes = np.array(_input)
 
     S = pd.Series("alpha", index=minutes)
+
     S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
 
-    with pytest.warns(UserWarning, match="candidate"):
+    with pytest.warns(None, match="candidate") as record:
         PeriodicCycleMiner().fit(S)
 
+    assert len(record) == int(raise_warning)
 
-def test_get_residuals():
+
+@pytest.mark.parametrize("keep_residuals", [True, False])
+def test_get_residuals(keep_residuals):
     minutes = np.array([0, 20, 31, 40, 60, 154, 240, 270, 300, 330, 358])
 
     S = pd.Series("alpha", index=minutes)
 
-    pcm = PeriodicCycleMiner().fit(S)
+    pcm = PeriodicCycleMiner(keep_residuals=keep_residuals).fit(S)
     residuals = pcm.get_residuals()
     # assert isinstance(residuals.index, pd.DatetimeIndex)
-    np.testing.assert_array_equal(residuals.index, [154])
+    np.testing.assert_array_equal(residuals.index, [154] * int(keep_residuals))
