@@ -328,7 +328,7 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
     candidates: dict[object, list[object]]
         a mapping from each node to its existing neighbours
     """
-    if not candidates and not excluded and len(clique) > 2:
+    if not candidates and not excluded and clique is not None and len(clique) > 2:
         yield [_ for _ in clique]
         return
 

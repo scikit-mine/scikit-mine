@@ -12,6 +12,7 @@ from ..tree import (
     combine_horizontally,
     combine_vertically,
     encode_leaves,
+    get_occs,
     grow_horizontally,
 )
 
@@ -35,14 +36,19 @@ def test_create_tree_3_wakeup_breakfast(tau):
 
     instances = tree.to_list()
 
-    assert len(instances) == 30  # 2 events per day, 5 days for 3 weeks
+    assert len(instances) == tree._n_occs == 30  # 2 events per day, 5 days for 3 weeks
 
     assert instances[0][0] == tau  # first occurence at tau
 
     assert tree._size == len(tree) == 4
 
     assert tree.to_dict() == dict(
-        r=3, p=1440 * 7, children=[week_node.to_dict()], children_dists=[], _size=4,
+        r=3,
+        p=1440 * 7,
+        children=[week_node.to_dict()],
+        children_dists=[],
+        _size=4,
+        _n_occs=30,
     )
 
 
@@ -110,6 +116,7 @@ def test_grow_horizontally():
     assert T.p == 7
     assert T.children_dists == [2, 1]
     assert T.children == ["wake up", "breakfast", "take metro"]
+    assert T._n_occs == 15  # merging 3 trees, minimum r is 5
 
 
 def test_combine_horizontally():
@@ -117,7 +124,7 @@ def test_combine_horizontally():
         Tree(2, r=6, p=7, children="b"),
         Tree(4, r=5, p=7, children="a"),
         Tree(5, r=5, p=7, children=[Node(r=3, p=2, children="b")]),
-        Tree(7, r=8, p=10, children="a"),  # should not be included, wrong `p`
+        Tree(7, r=8, p=10, children="a"),
     ]
 
     H = combine_horizontally(V)
@@ -130,6 +137,34 @@ def test_combine_horizontally():
     ]  # FIXME: all have been merged, because MDL cost compute is missing
     assert H[0].children[:2] == ["b", "a"]
     assert isinstance(H[0].children[2], Node)
+
+
+@pytest.mark.parametrize(
+    "E, positions",
+    [
+        ([0] * 6, tuple(range(6))),
+        ([0, 0, 1, 0, 0, 2], (0, 1, 3, 4, 4, 7)),
+        ([0, 0, 1, -2, 0, 3], (0, 1, 3, 2, 4, 8)),
+    ],
+)
+def test_get_occs(E, positions):
+    node = Node(r=3, p=2, children="ab", children_dists=[1])
+    pos, chars = zip(*get_occs(node, E, sort=False))
+    assert "".join(chars) == "ababab"
+    assert pos == positions
+
+
+@pytest.mark.parametrize(
+    "E, positions",
+    [([0, 1, 0, 0, 0, 1], (0, 4, 5, 5, 8, 10)), (None, (0, 3, 4, 5, 8, 9))],
+)
+def test_get_occs_complex(E, positions):
+    node = Node(
+        r=2, p=5, children=["b", Node(r=2, p=1, children="a")], children_dists=[3]
+    )
+    pos, chars = zip(*get_occs(node, E))
+    assert "".join(chars) == "baabaa"
+    assert pos == positions
 
 
 def test_discover_simple():

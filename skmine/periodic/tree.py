@@ -1,9 +1,11 @@
 """
 Periodic trees
 """
+import array
 import dataclasses
 from collections import defaultdict
-from itertools import combinations
+from functools import partial
+from itertools import chain, combinations, count
 
 import numpy as np
 import pandas as pd
@@ -16,20 +18,45 @@ L_PARENTHESIS = -np.log2(
     1 / 3
 )  # length of either `(` or `)` when encoding tree patterns
 
+shift_array = partial(array.array, "i")  # shifts are signed integers
 
-def get_occs(node, tau=0):
+
+def get_occs(node, E=None, tau=0, sort=True, r=None):
     """
     get occurences covered by a node (or tree)
     """
-    dists = [0] + node.children_dists
-    for shift in np.arange(tau, (node.r * node.p) + tau, node.p):
-        dist_acc = 0
-        for dist, child in zip(dists, node.children):
-            dist_acc += dist
-            if isinstance(child, Node):
-                yield from get_occs(child, tau=shift + dist_acc)
-            else:
-                yield shift + dist_acc, child  # leaf
+    if not E:
+        E = np.zeros(node._n_occs, dtype=int)
+
+    # E = np.cumsum(E)
+    if not hasattr(E, "typecode"):
+        E = shift_array(E)
+    # assert len(E) == node._n_occs  TODO
+
+    def _get_occs(node, acc, E, tau=0, dist_acc=0):
+        dists = np.cumsum([0] + node.children_dists)
+        inters = np.arange(tau, (node.r * node.p) + tau, node.p)
+        for idx, inter in zip(count(), inters):
+            dist_acc = 0
+            for idy, dist, child in zip(count(), dists, node.children):
+                if isinstance(child, Node):
+                    new_tau = inter + dist + E[len(acc)]
+                    _get_occs(child, acc, E, tau=new_tau)
+                elif r is not None and len(acc) >= r:
+                    return
+                else:
+                    e = E[len(acc)]
+                    dist_acc += e
+                    if idx + idy == 0:
+                        dist_acc = 0
+                    occ = (inter + dist + dist_acc, child)
+                    acc.append(occ)  # leaf
+
+    acc = list()
+    _get_occs(node, acc, E, tau)
+    if sort:
+        acc = sorted(acc)
+    return acc
 
 
 def prefix_visitor(tree):
@@ -83,6 +110,7 @@ class Node:
     r: int
     p: float
     _size: int = dataclasses.field(init=False, repr=False)
+    _n_occs: int = dataclasses.field(init=False, repr=False)
     children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
     children_dists: list = dataclasses.field(default_factory=list, hash=False)
 
@@ -91,13 +119,22 @@ class Node:
             raise ValueError(
                 "There should be exactly `|children| - 1` inter-child distances"
             )
+
+        d_sum = sum(self.children_dists)
+        if d_sum > self.p:
+            raise ValueError(
+                f"""
+                sum of inter children distances is equal to {d_sum}.
+                `p`, which is equal to {self.p}, must be greater.
+                """
+            )
+
         self._size = 1 + sum(
             (c._size if isinstance(c, Node) else 1 for c in self.children)
         )
-
-    @property
-    def N(self):
-        return len(get_occs(self))  # TODO : there is a more efficient way
+        self._n_occs = self.r * sum(
+            (c._n_occs if isinstance(c, Node) else 1 for c in self.children)
+        )
 
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
@@ -129,10 +166,10 @@ class Tree(Node):
         super(Tree, self).__init__(r, p, *args, **kwargs)
         self.tau = tau
         if E is None:
-            self.E = np.array([0] * (len(self.children) - 1))
+            self.E = shift_array([0] * self._n_occs)
         else:
-            assert hasattr(E, "__len__")
-            self.E = np.array(E)
+            assert hasattr(E, "__len__") and len(E) == self._n_occs
+            self.E = shift_array(E)
 
     def get_occs(self):
         """
@@ -201,7 +238,7 @@ def combine_vertically(H: list):
     return V_prime
 
 
-def grow_horizontally(*trees, presort=False):
+def grow_horizontally(*trees, presort=True):
     """Grow trees horizontally"""
     if presort:
         trees = sorted(trees, key=lambda t: t.tau)
@@ -213,8 +250,13 @@ def grow_horizontally(*trees, presort=False):
         for t in trees
     ]
     tau = trees[0].tau
-    E = trees[0].E  # FIXME ?
-    return Tree(tau, r, p, E, children=children, children_dists=children_dists)
+    T = Tree(tau, r, p, children=children, children_dists=children_dists)
+
+    occs1 = sorted(chain(*(get_occs(t, tau=t.tau, E=t.E, r=r) for t in trees)))
+    occs2 = get_occs(T, tau=tau)  # cover instances with a perfect tree
+    E = [b[0] - a[0] for a, b in zip(occs1, occs2)]  # perfect covering VS real occs
+    T.E = E
+    return T
 
 
 def combine_horizontally(V: list):
@@ -264,7 +306,9 @@ class PeriodicPatternMiner:
         cycles = self.cycle_miner.fit_discover(D, shifts=True)
         singletons = Forest()
         for o in cycles.itertuples():
-            t = Tree(o.start, r=o.length, p=o.period, children=[o.Index[0]], E=o.dE)
+            t = Tree(
+                o.start, r=o.length, p=o.period, children=[o.Index[0]], E=[0] + o.dE
+            )
             singletons.append(t)
 
         return singletons
@@ -285,7 +329,7 @@ class PeriodicPatternMiner:
 
         C = list()
 
-        while V:  # TODO while H or V
+        while V or H:
             V_prime = combine_vertically(H)
             H_prime = combine_horizontally(V)
             V = V_prime
