@@ -139,12 +139,17 @@ def test_combine_horizontally():
     assert isinstance(H[0].children[2], Node)
 
 
+def test_get_occs_singleton():
+    t = Tree(tau=2, r=3, p=12, children="b", E=[0, -1, 1])
+    assert t.get_occs() == [(2, "b"), (13, "b"), (26, "b")]
+
+
 @pytest.mark.parametrize(
     "E, positions",
     [
         ([0] * 6, tuple(range(6))),
-        ([0, 0, 1, 0, 0, 2], (0, 1, 3, 4, 4, 7)),
-        ([0, 0, 1, -2, 0, 3], (0, 1, 3, 2, 4, 8)),
+        ([0, 0, 1, 0, 0, 2], (0, 1, 3, 4, 5, 8)),
+        ([0, 0, 1, -2, 0, 3], (0, 1, 3, 2, 5, 9)),
     ],
 )
 def test_get_occs(E, positions):
@@ -162,7 +167,7 @@ def test_get_occs_complex(E, positions):
     node = Node(
         r=2, p=5, children=["b", Node(r=2, p=1, children="a")], children_dists=[3]
     )
-    pos, chars = zip(*get_occs(node, E))
+    pos, chars = zip(*get_occs(node, E=E))
     assert "".join(chars) == "baabaa"
     assert pos == positions
 
@@ -178,6 +183,7 @@ def test_discover_simple():
     assert bigger.r == 3
     assert len(bigger.children) == 3
     assert bigger.children == ["b", "a", "c"]
+    # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME
 
     rec_occs, rec_events = zip(*bigger.get_occs())
     assert list(rec_events) == S.values.tolist()

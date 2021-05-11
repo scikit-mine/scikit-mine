@@ -26,30 +26,29 @@ def get_occs(node, E=None, tau=0, sort=True, r=None):
     get occurences covered by a node (or tree)
     """
     if not E:
-        E = np.zeros(node._n_occs, dtype=int)
-
-    # E = np.cumsum(E)
-    if not hasattr(E, "typecode"):
-        E = shift_array(E)
-    # assert len(E) == node._n_occs  TODO
+        E = shift_array([0] * node._n_occs)
+    assert len(E) == node._n_occs
 
     def _get_occs(node, acc, E, tau=0, dist_acc=0):
         dists = np.cumsum([0] + node.children_dists)
-        inters = np.arange(tau, (node.r * node.p) + tau, node.p)
-        for idx, inter in zip(count(), inters):
-            dist_acc = 0
+        inters = np.arange(tau, (node.r * node.p) + tau, node.p, dtype=np.int32)
+        x_acc = 0
+        y_acc = 0
+        for inter in inters:
             for idy, dist, child in zip(count(), dists, node.children):
                 if isinstance(child, Node):
-                    new_tau = inter + dist + E[len(acc)]
+                    new_tau = inter + dist  # + E[len(acc)]
                     _get_occs(child, acc, E, tau=new_tau)
                 elif r is not None and len(acc) >= r:
                     return
                 else:
                     e = E[len(acc)]
-                    dist_acc += e
-                    if idx + idy == 0:
-                        dist_acc = 0
-                    occ = (inter + dist + dist_acc, child)
+                    if idy == 0:
+                        x_acc += e
+                        y_acc = 0
+                    else:
+                        y_acc += e
+                    occ = (inter + dist + x_acc + y_acc, child)
                     acc.append(occ)  # leaf
 
     acc = list()
@@ -175,7 +174,7 @@ class Tree(Node):
         """
         unfold the tree and retrieve all occurences of the events it describes
         """
-        return get_occs(self, tau=self.tau)
+        return get_occs(self, tau=self.tau, E=self.E)
 
     def to_list(self):
         """Returns the tree as a list of (occurence, event) pairs"""
@@ -254,7 +253,9 @@ def grow_horizontally(*trees, presort=True):
 
     occs1 = sorted(chain(*(get_occs(t, tau=t.tau, E=t.E, r=r) for t in trees)))
     occs2 = get_occs(T, tau=tau)  # cover instances with a perfect tree
-    E = [b[0] - a[0] for a, b in zip(occs1, occs2)]  # perfect covering VS real occs
+    E = shift_array(
+        [a[0] - b[0] for a, b in zip(occs1, occs2)]
+    )  # perfect cover VS real occs
     T.E = E
     return T
 
