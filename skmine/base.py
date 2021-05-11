@@ -202,3 +202,15 @@ class MDLOptimizer(ABC):
         if not df.empty:
             return df._repr_html_()  # pylint: disable=protected-access
         return repr(self)
+
+
+class InteractiveMiner(ABC):
+    @abstractmethod
+    def prefit(self, D):
+        """ingest data `D` and track basic informations to be used later"""
+        return self
+
+    @abstractmethod
+    def update(self, *args, **kwargs):
+        """inplace edition of underlying datastructures"""
+        return None

@@ -26,8 +26,8 @@ class SLIMTransformer(SLIM, TransformerMixin):
     because the columns will be patterns learned via an MDL criterion.
 
     If the chosen strategy is set to `one-hot`, non-zero cells are filled with ones
-    If the chosen `strategy` is left to `codes`, non-zero cells are filled with code length,
-    i.e the probabities of the pattern in the training data.
+    If the chosen `strategy` is left to `codes`, non-zero cells are filled with code lengths,
+    i.e the probabity of the pattern in the training data.
 
     See Also
     --------
@@ -41,39 +41,20 @@ class SLIMTransformer(SLIM, TransformerMixin):
     patterns should output matrices with very few zeros.
     """
 
-    def __init__(self, strategy="codes", *, k=3, stop_items=set(), **kwargs):
+    def __init__(
+        self, strategy="codes", *, k=5, pruning=False, stop_items=set(), **kwargs
+    ):
+        super().__init__(**kwargs)
         self.k = k
+        self.pruning = pruning
         self.stop_items = stop_items
         if strategy not in STRATEGIES:
             raise ValueError(f"strategy must be one of {STRATEGIES}")
         self.strategy = strategy
-        SLIM.__init__(self, **kwargs)
 
     def fit(self, D, y=None):
         D = filter_stop_items(D, stop_items=self.stop_items)
-        self._prefit(D)  # TODO : pass y ?
-        seen_cands = set()
-        # if self.k > len(self.standard_codetable_):
-        #    warnings.warn(f"k parameter bigger than number of single items in data")
-        while (len(self.codetable_) - len(self.standard_codetable_)) <= self.k:
-            candidates = self.generate_candidates(stack=seen_cands)
-            for cand, _ in candidates:
-                data_size, model_size, update_d, prune_set = self.evaluate(cand)
-                diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-
-                if diff > 0.01:  # underflow
-                    self.codetable_.update(update_d)
-                    if self.pruning:
-                        self.codetable_, data_size, model_size = self._prune(
-                            self.codetable_, prune_set, model_size, data_size
-                        )
-
-                    self.data_size_ = data_size
-                    self.model_size_ = model_size
-            if not candidates:  # if empty candidate generation
-                print(f"could not discover {self.k} itemsets. Early stopped")
-                break
-        return self
+        return super().fit(D)
 
     def transform(self, D, y=None):
         """Transform new data
