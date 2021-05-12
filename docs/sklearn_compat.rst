@@ -16,22 +16,23 @@ To this purpose, we sometimes need to extend scikit-learn capabilities to tightl
 of symbols in our learning processes.
 
 
-Preprocessing
--------------
-The :ref:`preprocessing` module implements a set of Transformers/Encoders
+Using data mining methods as feature extraction blocks for Machine Learning
+---------------------------------------------------------------------------
+The :ref:`feature_extraction` module implements a set of Transformers/Encoders
 to get you from raw data to a more advanced, structured kind of data : 
-the kind a data that is easily manageable and prone to give you the best performance.
+the kind of data that is easily manageable and prone to give you the best performance.
 
 Sometimes *scikit-learn* provides us the tools we exactly need, sometimes not.
-**Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
-in a fully scikit-learn compatible way**.
+**Scikit-mine addresses data ingestion by implementing its own blocks,
+which are compatible wtih scikit-learn**.
 
 
 Pipelines
 ---------
 scikit-mine models are designed for possible integration in `scikit-learn pipelines <https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html>`_.
 This makes possible to build "symbolic classifiers", using scikit-mine pattern encoding schemes
-to serve predictions. See the tutorials sections.
+to serve predictions, or just use scikit-mine as the first part of a scikit-learn pipeline, as mentioned
+in the previous section.
 
 
 Other implementation details
@@ -39,6 +40,3 @@ Other implementation details
 We use `joblib <https://joblib.readthedocs.io/en/latest/>`_ as default to parallelise our code.
 We also set the *prefer* parameter when instantiating `joblib.Parallel <https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html>`_, 
 so users don't have to manually choose between threads and processes for optimal execution.
-
-
-Finally, we also leverage `Cython <https://cython.org/>`_ code where performance matters.
