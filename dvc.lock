@@ -1,6 +1,0 @@
-slim_metrics:
-  cmd: python bench/slim_metrics.py >> metrics.json
-  outs:
-  - path: metrics.json
-    md5: 94f2a81d5b8dae8e3bb4b5724b553433
-    size: 274
