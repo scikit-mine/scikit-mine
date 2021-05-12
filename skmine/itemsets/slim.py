@@ -128,7 +128,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
     Parameters
     ----------
-    k: int, default=100
+    k: int, default=50
         Number of itemsets to mine
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
@@ -169,7 +169,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     """
 
     def __init__(
-        self, *, k=100, pruning=True, n_items=200, tol=0.5,
+        self, *, k=50, pruning=True, n_items=200, tol=0.5,
     ):
         self.n_items = n_items
         self.tol = tol
@@ -196,7 +196,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         seen_cands = set()
         k = 0
 
-        while k <= self.k:
+        while k < self.k:
             candidates = self.generate_candidates(stack=seen_cands)
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
@@ -207,11 +207,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                         usages=usages, data_size=data_size, model_size=model_size
                     )
 
+                    k = sum(map(lambda iset: len(iset) > 1, self.codetable_))
+                if k >= self.k:
+                    break
+
             if not candidates:  # if empty candidate generation
                 Warning(f"could not find `{self.k}` itemsets, try with a lower `tol`")
                 break
-
-            k = sum(map(lambda iset: len(iset) > 1, self.codetable_))
 
         return self
 
@@ -239,6 +241,11 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> slim.decision_function(new_D)
         0   -1.321928
         dtype: float32
+
+        See Also
+        --------
+        cover
+        discover
         """
         mat = self.cover(D)
         code_lengths = self.discover(singletons=True, usage_tids=False)

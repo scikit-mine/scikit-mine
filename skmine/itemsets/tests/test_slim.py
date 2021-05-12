@@ -270,6 +270,12 @@ def test_reconstruct(D):
     pd.testing.assert_series_equal(s, true_s)
 
 
+@pytest.mark.parametrize("k", [1, 2])
+def test_k(D, k):
+    slim = SLIM(pruning=False, k=k).fit(D)
+    assert len(slim.discover(singletons=False)) == k
+
+
 def test_interactive(D):
     answers = [True, False]
     est_usages = [6, 5]
