@@ -14,6 +14,7 @@ Welcome to scikit-mine's documentation!
    :caption: API Reference
 
    reference/datasets
+   reference/feature_extraction
    reference/preprocessing
    reference/itemsets
    reference/periodic

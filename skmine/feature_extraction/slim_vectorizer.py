@@ -1,5 +1,5 @@
 """
-SLIM transformer, using SLIM as a feature extraction scheme
+SLIM vectorizer, using SLIM as a feature extraction scheme
 """
 
 import numpy as np
@@ -12,13 +12,13 @@ from ..itemsets.slim import _to_vertical, cover
 STRATEGIES = ("codes", "one-hot")
 
 
-def filter_stop_items(D, stop_items):
+def _filter_stop_items(D, stop_items):
     for t in D:
         yield set(t).difference(stop_items)
 
 
-class SLIMTransformer(SLIM, TransformerMixin):
-    """SLIM mining, turned into a preprocessing step for sklearn
+class SLIMVectorizer(SLIM, TransformerMixin):
+    """SLIM mining, turned into a feature extraction step for sklearn
 
     `k` new itemsets (associations of one or more items) are learned at training time
 
@@ -49,9 +49,9 @@ class SLIMTransformer(SLIM, TransformerMixin):
 
     Examples
     --------
-    >>> from skmine.preprocessing import SLIMTransformer
+    >>> from skmine.feature_extraction import SLIMVectorizer
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIMTransformer(k=2).fit_transform(D)
+    >>> SLIMVectorizer(k=2).fit_transform(D)
        (bananas, milk)  (cookies,)
     0              0.4         0.0
     1              0.4         0.4
@@ -83,7 +83,7 @@ class SLIMTransformer(SLIM, TransformerMixin):
 
     def fit(self, D, y=None):
         if self.stop_items is not None:
-            D = filter_stop_items(D, stop_items=self.stop_items)
+            D = _filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
     def transform(self, D, y=None):

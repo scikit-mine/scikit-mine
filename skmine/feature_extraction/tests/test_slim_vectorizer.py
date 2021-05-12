@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from .. import SLIMTransformer
+from .. import SLIMVectorizer
 
 
 @pytest.mark.parametrize("strategy", ("one-hot", "codes"))
 def test_fit_transform(strategy):
     D = [["banana", "cookies"], ["banana", "milk"], ["banana", "milk", "cookies"]]
 
-    st = SLIMTransformer(k=2, strategy=strategy)
+    st = SLIMVectorizer(k=2, strategy=strategy)
     new_D = D + [["cookies", "milk", "apple"]]  # apple unseen
     mat = st.fit(D).transform(new_D)
     assert "apple" not in mat.columns
@@ -21,7 +21,7 @@ def test_fit_transform(strategy):
 
 def test_unseen_items():
     D = [["banana", "cookies"], ["banana", "milk"], ["banana", "milk", "cookies"]]
-    st = SLIMTransformer(k=10)
+    st = SLIMVectorizer(k=10)
     st.fit(D)
     res = st.transform([["cherry", "chocolate"], ["milk", "cookies"]])
     assert res.shape == (2, 2)
@@ -29,4 +29,4 @@ def test_unseen_items():
 
 def test_wrong_strategy():
     with pytest.raises(ValueError):
-        SLIMTransformer(strategy="random")
+        SLIMVectorizer(strategy="random")
