@@ -27,7 +27,6 @@ EXCLUDED_CHECKS = [
     "check_dict_unchanged",
     "check_fit_idempotent",
     "check_transformer_general",
-    "check_parameters_default_constructible",
     "check_transformer_preserve_dtypes",
     "check_methods_sample_order_invariance",
 ]

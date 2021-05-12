@@ -54,7 +54,7 @@ class SLIMTransformer(SLIM, TransformerMixin):
     """
 
     def __init__(
-        self, strategy="codes", *, k=5, pruning=False, stop_items=set(), **kwargs
+        self, strategy="codes", *, k=5, pruning=False, stop_items=None, **kwargs
     ):
         super().__init__(**kwargs)
         self.k = k
@@ -65,7 +65,8 @@ class SLIMTransformer(SLIM, TransformerMixin):
         self.strategy = strategy
 
     def fit(self, D, y=None):
-        D = filter_stop_items(D, stop_items=self.stop_items)
+        if self.stop_items is not None:
+            D = filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
     def transform(self, D, y=None):
@@ -85,7 +86,8 @@ class SLIMTransformer(SLIM, TransformerMixin):
         --------
         skmine.itemsets.SLIM.cover
         """
-        D_sct, _len = _to_vertical(D, stop_items=self.stop_items, return_len=True)
+        stop_items = self.stop_items or set()
+        D_sct, _len = _to_vertical(D, stop_items=stop_items, return_len=True)
 
         code_lengths = self.discover(
             usage_tids=False, singletons=True, drop_null_usage=False
