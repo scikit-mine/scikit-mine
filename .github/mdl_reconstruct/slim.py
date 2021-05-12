@@ -9,19 +9,20 @@ import pandas as pd
 from skmine.itemsets import SLIM
 from skmine.datasets.fimi import fetch_any
 
+import time
+
 
 if __name__ == "__main__":
     Ds = [fetch_any(k) for k in ("chess.dat", "connect.dat", "mushroom.dat")]
 
-    miners = [
-        SLIM(pruning=False, n_iter_no_change=100),
-        SLIM(pruning=True, n_iter_no_change=100)
-    ]
+    miners = [SLIM(pruning=False, k=100), SLIM(pruning=True, k=100)]
     for D in Ds:
         for miner in miners:
             print(
                 f"RUN {type(miner)} RECONSTRUCTION ON {D.name} WITH PARAMS {miner.get_params()}"
             )
+            start = time.time()
             miner.fit(D)
+            print(f"fitted in {time.time() - start} seconds")
             r_D = miner.reconstruct()
             pd.testing.assert_series_equal(D, r_D, check_names=False)
