@@ -4,8 +4,9 @@ The dataset is available here : `https://www.instacart.com/datasets/grocery-shop
 """
 import os
 import tarfile
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 try:
     from lxml import html
@@ -14,8 +15,8 @@ try:
 except ImportError:
     LXML_INSTALLED = False
 
-from .conf import urlopen
 from ._base import get_data_home
+from .conf import urlopen
 
 _IMPORT_MSG = """
 lxml is required to install the instacart dataset.
@@ -74,9 +75,9 @@ def fetch_instacart(data_home=None):
     data_path = os.path.join(data_home, "instacart_2017_05_01")
 
     if not os.path.exists(data_path):  # tarfile present but not uncompressed
-        tar = tarfile.open(tar_filename, "r:gz")
-        tar.extractall(data_home)
-        tar.close()
+        with tarfile.open(tar_filename, "r:gz") as tar:
+            tar.extractall(data_home)
+            tar.close()
 
     final_path = os.path.join(data_path, "transactions.pkl")
     if os.path.exists(final_path):

@@ -142,6 +142,8 @@ class DiscovererMixin:
 
 
 class TransformerMixin:
+    """Base Mixin for transformers in scikit-mine"""
+
     def fit_transform(self, X, y=None):
         "fit on X and y, then transform X"
         return self.fit(X, y).transform(X)
@@ -205,6 +207,15 @@ class MDLOptimizer(ABC):
 
 
 class InteractiveMiner(ABC):
+    """Base class for interactive mining
+
+    Interactive miners should allow us to
+    1. ingest some input data, by calling `prefit`
+    2. generate candidates
+    3. loop over generated candidate, and call `update` with this candidate as argument,
+    depending on some external input (like a positive answer from a user in CLI mode)
+    """
+
     @abstractmethod
     def prefit(self, D):
         """ingest data `D` and track basic informations to be used later"""

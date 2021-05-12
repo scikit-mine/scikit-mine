@@ -1,5 +1,6 @@
-# import warnings
-# from itertools import islice
+"""
+SLIM transformer, using SLIM as a feature extraction scheme
+"""
 
 import numpy as np
 import pandas as pd
