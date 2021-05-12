@@ -4,7 +4,7 @@ import pytest
 from sortedcontainers import SortedDict
 
 from ...bitmaps import Bitmap
-from ..slim import SLIM, cover, generate_candidates
+from ..slim import SLIM, _to_vertical, generate_candidates
 
 
 @pytest.fixture
@@ -16,7 +16,16 @@ def to_tabular_df(D):
     return D.map(list).str.join("|").str.get_dummies(sep="|")
 
 
-_id = lambda args: args
+def _id(args):
+    return args
+
+
+def test_to_vertical(D):
+    vert = _to_vertical(D)
+    assert list(vert.keys()) == list("ABC")
+
+    vert2 = _to_vertical(D, stop_items={"A"})
+    assert list(vert2.keys()) == list("BC")
 
 
 def test_complex_evaluate():
@@ -30,7 +39,7 @@ def test_complex_evaluate():
     """
     slim = SLIM()
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
-    slim._prefit(D)
+    slim.prefit(D)
 
     u = {
         frozenset("ABC"): {0, 5},
@@ -49,11 +58,11 @@ def test_complex_evaluate():
     slim.codetable_.update(u)
 
     cand = frozenset("CDE")
-    data_size, model_size, updated, decreased = slim.evaluate(cand)
+    _, _, updated = slim.evaluate(cand)
 
-    assert decreased == {frozenset("BC"), frozenset("DE")}
+    diff = {k: v for k, v in updated.items() if k in u and u[k] != v}
 
-    assert len(updated) == 4
+    assert len(diff) == 3
     assert len(updated[cand]) == 1  # {4}
     assert len(updated[frozenset("BC")]) == 0  # {4} -> {}
     assert len(updated[frozenset("B")]) == 2  # {3} -> {3, 4}
@@ -69,9 +78,9 @@ def test_complex_evaluate_2():
         B   C   D   E
     A   B   C   D   E
     """
-    slim = SLIM()
+    slim = SLIM(pruning=False)
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
-    slim._prefit(D)
+    slim.prefit(D)
 
     u = {
         frozenset("CDE"): {4, 5},
@@ -90,11 +99,11 @@ def test_complex_evaluate_2():
     slim.codetable_.update(u)
 
     cand = frozenset("ABC")
-    data_size, model_size, updated, decreased = slim.evaluate(cand)
+    _, _, updated = slim.evaluate(cand)
 
-    assert decreased == {frozenset("CDE"), frozenset("AB"), frozenset("C")}
+    diff = {k: v for k, v in updated.items() if k in u and u[k] != v}
 
-    assert len(updated) == 5
+    assert len(diff) == 4
     assert len(updated[cand]) == 2
     assert len(updated[frozenset("CDE")]) == 1  # {4, 5} -> {4}
     assert len(updated[frozenset("DE")]) == 1  # {} -> {5}
@@ -103,8 +112,6 @@ def test_complex_evaluate_2():
 
 
 def test_generate_candidate_1():
-    D = ["ABC"] * 5 + ["AB", "A", "B"]
-
     codetable = SortedDict(
         {
             frozenset("A"): Bitmap(range(0, 7)),
@@ -145,15 +152,15 @@ def test_generate_candidate_stack():
 def test_prefit(preproc):
     D = pd.Series(["ABC"] * 5 + ["BC", "B", "C"])
     D = preproc(D)
-    slim = SLIM()._prefit(D)
+    slim = SLIM().prefit(D)
     np.testing.assert_almost_equal(slim.model_size_, 9.614, 3)
     np.testing.assert_almost_equal(slim.data_size_, 29.798, 3)
-    assert len(slim.codetable) == 3
-    assert slim.codetable.index.tolist() == list(map(frozenset, ["B", "C", "A"]))
+    assert len(slim.codetable_) == 3
+    assert list(slim.codetable_) == list(map(frozenset, ["B", "C", "A"]))
 
 
 def test_get_support(D):
-    slim = SLIM()._prefit(D)
+    slim = SLIM().prefit(D)
     assert len(slim.get_support(*frozenset("ABC"))) == 5
     assert len(slim.get_support("C")) == 5
     assert slim.get_support.cache_info().currsize > 0
@@ -161,7 +168,7 @@ def test_get_support(D):
 
 def test_compute_sizes_1(D):
     slim = SLIM()
-    slim._prefit(D)
+    slim.prefit(D)
     CT = {
         frozenset("ABC"): Bitmap(range(0, 5)),
         frozenset("AB"): Bitmap([5]),
@@ -176,7 +183,7 @@ def test_compute_sizes_1(D):
 
 def test_compute_sizes_2(D):
     slim = SLIM()
-    slim._prefit(D)
+    slim.prefit(D)
     CT = {
         frozenset("ABC"): Bitmap(range(0, 5)),
         frozenset("A"): Bitmap([5, 6]),
@@ -194,7 +201,7 @@ def test_fit_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=True)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
@@ -203,7 +210,7 @@ def test_fit_no_pruning(D, preproc, pass_y):
     slim = SLIM(pruning=False)
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
-    self = slim.fit(D)
+    self = slim.fit(D, y=y)
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
 
 
@@ -249,8 +256,37 @@ def test_decision_function(D):
     )
 
 
+def test_cover_discover_compat(D):
+    s = SLIM()
+    s.fit(D)
+    mat = s.discover(usage_tids=False, singletons=True) * s.cover(D)
+    assert mat.notna().sum().all()
+
+
 def test_reconstruct(D):
     slim = SLIM().fit(D)
     s = slim.reconstruct().map("".join)  # originally a string so we have to join
     true_s = pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
     pd.testing.assert_series_equal(s, true_s)
+
+
+@pytest.mark.parametrize("k", [1, 2])
+def test_k(D, k):
+    slim = SLIM(pruning=False, k=k).fit(D)
+    assert len(slim.discover(singletons=False)) == k
+
+
+def test_interactive(D):
+    answers = [True, False]
+    est_usages = [6, 5]
+    slim = SLIM(pruning=False)
+    slim.prefit(D)
+    candidates = slim.generate_candidates()
+    for true_est_usage, (cand, est_usage), answer in zip(
+        est_usages, candidates, answers
+    ):
+        assert est_usage == true_est_usage
+        if answer:
+            slim.update(cand)
+
+    assert len(slim.discover(singletons=False)) == sum(answers)

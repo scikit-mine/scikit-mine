@@ -11,7 +11,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from scipy.stats import entropy
 
-from skmine.base import MDLOptimizer, BaseMiner
+from skmine.base import BaseMiner, MDLOptimizer
 from skmine.utils import _check_random_state
 
 
@@ -182,7 +182,7 @@ class MDLPDiscretizer(BaseMiner):
 
     def __init__(self, random_state=None, n_jobs=1):
         self.cut_points_ = dict()
-        self.random_state = _check_random_state(random_state)
+        self.random_state = random_state
         self.n_jobs = n_jobs
         self.discretizers_ = []
 
@@ -199,7 +199,8 @@ class MDLPDiscretizer(BaseMiner):
             The label vector used to discretize ``X``
         """
         assert y is not None and np.issubdtype(y.dtype, np.integer)
-        permutation = self.random_state.permutation(len(X))
+        random_state = _check_random_state(self.random_state)
+        permutation = random_state.permutation(len(X))
         _X = X.values if isinstance(X, pd.DataFrame) else X
         _y = y.values if isinstance(y, pd.Series) else y
         _X = _X[permutation]
@@ -221,10 +222,9 @@ class MDLPDiscretizer(BaseMiner):
 
         return self
 
-    @property
-    def codetable(self):  # FIXME : this should be inherited from MDL
+    def discover(self):
         """user-friendly view on cut points"""
-        return pd.Series(self.cut_points_)
+        return pd.Series(self.cut_points_, dtype=object)
 
     def transform(self, X, y=None):  # pylint: disable=unused-argument
         """Discretizes the input matrix X
