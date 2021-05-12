@@ -29,6 +29,18 @@ class SLIMTransformer(SLIM, TransformerMixin):
     If the chosen `strategy` is left to `codes`, non-zero cells are filled with code lengths,
     i.e the probabity of the pattern in the training data.
 
+
+    Examples
+    --------
+    >>> from skmine.preprocessing import SLIMTransformer
+    >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    >>> SLIMTransformer(k=2).fit_transform(D)
+       (bananas, milk)  (cookies,)
+    0              0.4         0.0
+    1              0.4         0.4
+    2              0.0         0.4
+
+
     See Also
     --------
     skmine.itemsets.SLIM
@@ -75,26 +87,20 @@ class SLIMTransformer(SLIM, TransformerMixin):
         """
         D_sct, _len = _to_vertical(D, stop_items=self.stop_items, return_len=True)
 
-        f_sct = {
-            iset: tids.copy()
-            for iset, tids in self.codetable_.items()
-            if iset.issubset(D_sct)
-        }
-        codetable = pd.Series(f_sct, dtype=object)
-        isets = (
-            codetable.map(len).astype(np.uint32).nlargest(self.k)
-        )  # real usages sorted in decreasing order
+        code_lengths = self.discover(
+            usage_tids=False, singletons=True, drop_null_usage=False
+        )
+        code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]
+
+        isets = code_lengths.nlargest(self.k)  # real usages sorted in decreasing order
         covers = cover(D_sct, isets.index)
 
         mat = np.zeros(shape=(_len, len(covers)))
         for idx, tids in enumerate(covers.values()):
             mat[tids, idx] = 1
-        mat = pd.DataFrame(mat, columns=covers.keys())
+        mat = pd.DataFrame(mat, columns=list(covers.keys()))
 
         if self.strategy == "codes":
-            code_lengths = codetable.map(
-                len
-            )  # TODO : keep self._usage_sum as internal attribute ?
             ct_codes = code_lengths[isets.index] / code_lengths.sum()
             mat = (mat * ct_codes).astype(np.float32)
 

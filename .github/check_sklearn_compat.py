@@ -26,6 +26,7 @@ EXCLUDED_CHECKS = [
     "check_methods_subset_invariance",
     "check_dict_unchanged",
     "check_fit_idempotent",
+    "check_transformer_general",
 ]
 
 OK = "\x1b[42m[ OK ]\x1b[0m"

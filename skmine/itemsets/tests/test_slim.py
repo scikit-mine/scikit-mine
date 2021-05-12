@@ -256,6 +256,13 @@ def test_decision_function(D):
     )
 
 
+def test_cover_discover_compat(D):
+    s = SLIM()
+    s.fit(D)
+    mat = s.discover(usage_tids=False, singletons=True) * s.cover(D)
+    assert mat.notna().sum().all()
+
+
 def test_reconstruct(D):
     slim = SLIM().fit(D)
     s = slim.reconstruct().map("".join)  # originally a string so we have to join
