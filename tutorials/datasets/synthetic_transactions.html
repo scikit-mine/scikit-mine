@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Generate synthetic data to train on &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Generate synthetic data to train on &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../itemsets/index.html" />
-    <link rel="prev" title="fetch FIMI datasets" href="fetch_fimi_datasets.html" /> 
+    <link rel="prev" title="fetch FIMI datasets" href="fetch_fimi_datasets.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Generate synthetic data to train on</a><ul>
@@ -115,7 +119,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
@@ -459,7 +463,7 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Generate-synthetic-data-to-train-on">
+<section id="Generate-synthetic-data-to-train-on">
 <h1>Generate synthetic data to train on<a class="headerlink" href="#Generate-synthetic-data-to-train-on" title="Permalink to this headline">¶</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -482,7 +486,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">
+<section id="A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">
 <h2>A simple plot allow us to check the distrution of our transactions lenghts<a class="headerlink" href="#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts" title="Permalink to this headline">¶</a></h2>
 <p><strong>Transaction lengths should be centered</strong> around 2 as density has been set to 20% and there are 10 items in total</p>
 <div class="nbinput docutils container">
@@ -540,9 +544,9 @@ div.rendered_html tbody tr:hover {
  &#39;density&#39;: 0.20800000000000002}
 </pre></div></div>
 </div>
-</div>
+</section>
 <hr class="docutils" />
-<div class="section" id="Now-let’s-generate-associated-labels,-for-multiclass-classification">
+<section id="Now-let’s-generate-associated-labels,-for-multiclass-classification">
 <h2>Now let’s generate associated labels, for multiclass classification<a class="headerlink" href="#Now-let’s-generate-associated-labels,-for-multiclass-classification" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -589,8 +593,8 @@ class
 Name: transaction, dtype: float64
 </pre></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

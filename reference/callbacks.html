@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Callback API &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
-    <link rel="prev" title="Base" href="base.html" /> 
+    <link rel="prev" title="Base" href="base.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -111,7 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -207,7 +211,7 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="callback-api">
+<section id="callback-api">
 <span id="callbacks"></span><h1>Callback API<a class="headerlink" href="#callback-api" title="Permalink to this headline">¶</a></h1>
 <p>scikit-mine allows to define custom callbacks to <strong>track metrics and artifacts
 during exploration</strong>.
@@ -270,7 +274,7 @@ only if <code class="docutils literal notranslate"><span class="pre">verbose</sp
 </div>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

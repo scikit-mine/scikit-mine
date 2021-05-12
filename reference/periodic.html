@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Periodic &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Periodic &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Emerging" href="emerging.html" />
-    <link rel="prev" title="Itemsets" href="itemsets.html" /> 
+    <link rel="prev" title="Itemsets" href="itemsets.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Periodic</a><ul>
@@ -105,7 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -114,7 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -210,10 +214,10 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="periodic">
+<section id="periodic">
 <span id="id1"></span><h1>Periodic<a class="headerlink" href="#periodic" title="Permalink to this headline">¶</a></h1>
 <p>Models and functions to mine periodic patterns</p>
-<div class="section" id="periodiccycleminer">
+<section id="periodiccycleminer">
 <h2>PeriodicCycleMiner<a class="headerlink" href="#periodiccycleminer" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.periodic.PeriodicCycleMiner">
@@ -300,26 +304,8 @@ so that we consider larger candidates first.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.periodic.PeriodicCycleMiner.generate_candidates">
-<code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.generate_candidates" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>S</strong> (<em>pd.Index</em><em> or </em><em>numpy.ndarray</em>) – Series of occurences for a specific event</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A dict, where each key is an event and each value a list of batch of candidates.
-Batches are sorted in inverse order of width,
-so that we consider larger candidate cycles first.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict[object, list[np.ndarray]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="skmine.periodic.PeriodicCycleMiner.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shifts</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return cycles as a pandas DataFrame, with 3 columns,
 with a 2-level multi-index: the first level mapping events,
 and the second level being positional</p>
@@ -340,6 +326,9 @@ and the second level being positional</p>
 </tr>
 <tr class="row-odd"><td><p>period</p></td>
 <td><p>inter-occurence delay</p></td>
+</tr>
+<tr class="row-even"><td><p>dE</p></td>
+<td><p>shift corrections, if shifts=True</p></td>
 </tr>
 </tbody>
 </table>
@@ -384,10 +373,43 @@ Residuals will also be included, as the compression scheme is lossless</p>
 <p>The index of the resulting pd.Series will not be sorted</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.generate_candidates">
+<code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.generate_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>S</strong> (<em>pd.Index</em><em> or </em><em>numpy.ndarray</em>) – Series of occurences for a specific event</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dict, where each key is an event and each value a list of batch of candidates.
+Batches are sorted in inverse order of width,
+so that we consider larger candidate cycles first.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict[object, list[np.ndarray]]</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-</div>
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicCycleMiner.get_residuals">
+<code class="sig-name descname">get_residuals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.get_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.get_residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the residual events, i.e events not covered by any cycle</p>
+<p>It is the complementary function to <cite>discover</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>residual events</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
 
 
            </div>

@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Datasets &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Datasets &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -38,8 +39,10 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Preprocessing" href="preprocessing.html" />
-    <link rel="prev" title="Installation from pypi" href="../installation.html" /> 
+    <link rel="next" title="Feature Extraction" href="feature_extraction.html" />
+    <link rel="prev" title="Installation from pypi" href="../installation.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,20 +90,22 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#standard-datasets">Standard datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#standard-datasets-for-itemset-mining">Standard datasets for itemset mining</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logs-datasets-for-periodic-pattern-mining">Logs datasets for periodic pattern mining</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#instacart-market-basket-analysis">Instacart Market Basket Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#synthetic-data-generation">Synthetic data generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils">utils</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="periodic.html">Periodic</a></li>
@@ -108,7 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -117,7 +122,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -213,11 +218,11 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="datasets">
+<section id="datasets">
 <span id="id1"></span><h1>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h1>
 <p>Methods to fetch, generate, and describe datasets.</p>
-<div class="section" id="standard-datasets">
-<h2>Standard datasets<a class="headerlink" href="#standard-datasets" title="Permalink to this headline">¶</a></h2>
+<section id="standard-datasets-for-itemset-mining">
+<h2>Standard datasets for itemset mining<a class="headerlink" href="#standard-datasets-for-itemset-mining" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_any">
 <code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_any</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_any" title="Permalink to this definition">¶</a></dt>
@@ -587,8 +592,99 @@ Each unique transaction is represented as a Python list.</p>
 </dl>
 </dd></dl>
 
+</section>
+<section id="logs-datasets-for-periodic-pattern-mining">
+<h2>Logs datasets for periodic pattern mining<a class="headerlink" href="#logs-datasets-for-periodic-pattern-mining" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="skmine.datasets.fetch_health_app">
+<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">fetch_health_app</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">'health_app.csv'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/periodic.html#fetch_health_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fetch_health_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch and return the health app log dataset</p>
+<p>see: <a class="reference external" href="https://github.com/logpai/loghub">https://github.com/logpai/loghub</a></p>
+<p>HealthApp is a mobile application for Android devices.
+Logs were collected from an Android smartphone after 10+ days of use.</p>
+<p>Logs have been grouped by their types, hence resulting
+in only 20 different events.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 46%" />
+<col style="width: 54%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Number of events</p></td>
+<td><p>20</p></td>
+</tr>
+<tr class="row-even"><td><p>Average delta per event</p></td>
+<td><p>Timedelta(‘0 days 00:53:24.984000’)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Average nb of points per event</p></td>
+<td><p>100.0</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
+all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>System logs from the health app dataset, as an in-memory pandas Series.
+Events are indexed by timestamps.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skmine.datasets.fetch_canadian_tv">
+<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">fetch_canadian_tv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">'canadian_tv.txt'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/periodic.html#fetch_canadian_tv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fetch_canadian_tv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch and return canadian TV logs from August 2020</p>
+<p>see: <a class="reference external" href="https://zenodo.org/record/4671512">https://zenodo.org/record/4671512</a></p>
+<p>If the dataset has never been downloaded before, it will be downloaded and stored.</p>
+<p>The returned dataset contains only TV series programs indexed by their associated timestamps.
+Adverts are ignored when loading the dataset.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 57%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Number of events</p></td>
+<td><p>98</p></td>
+</tr>
+<tr class="row-even"><td><p>Average delta per event</p></td>
+<td><p>Timedelta(‘19 days 02:13:36.122448979’)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Average nb of points per event</p></td>
+<td><p>21.35714285714285</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
+all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>TV series events from canadian TV, as an in-memory pandas Series.
+Events are indexed by timestamps.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.Series</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>For now the entire .zip file is downloaded, being ~90mb on disk
+Downloading preprocessd dataset from zenodo.org is something we consider.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#skmine.datasets.get_data_home" title="skmine.datasets.get_data_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skmine.datasets.get_data_home</span></code></a></p>
 </div>
-<div class="section" id="instacart-market-basket-analysis">
+</dd></dl>
+
+</section>
+<section id="instacart-market-basket-analysis">
 <h2>Instacart Market Basket Analysis<a class="headerlink" href="#instacart-market-basket-analysis" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.fetch_instacart">
@@ -639,8 +735,8 @@ and <code class="docutils literal notranslate"><span class="pre">fetch_instacart
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="synthetic-data-generation">
+</section>
+<section id="synthetic-data-generation">
 <h2>Synthetic data generation<a class="headerlink" href="#synthetic-data-generation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.make_transactions">
@@ -743,8 +839,8 @@ for reproducible output across multiple function calls.</p></li>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="utils">
+</section>
+<section id="utils">
 <h2>utils<a class="headerlink" href="#utils" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.utils.describe">
@@ -840,8 +936,8 @@ variable or programmatically by giving an explicit folder path.</p>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -851,7 +947,7 @@ variable or programmatically by giving an explicit folder path.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="preprocessing.html" class="btn btn-neutral float-right" title="Preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="feature_extraction.html" class="btn btn-neutral float-right" title="Feature Extraction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../installation.html" class="btn btn-neutral float-left" title="Installation from pypi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

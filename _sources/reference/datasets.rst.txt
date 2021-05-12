@@ -6,8 +6,8 @@ Datasets
 Methods to fetch, generate, and describe datasets.
 
 
-Standard datasets
------------------
+Standard datasets for itemset mining
+------------------------------------
 .. autofunction:: skmine.datasets.fimi.fetch_any
 
 .. autofunction:: skmine.datasets.fimi.fetch_chess
@@ -25,6 +25,13 @@ Standard datasets
 .. autofunction:: skmine.datasets.fimi.fetch_retail
 
 .. autofunction:: skmine.datasets.fimi.fetch_accidents
+
+
+Logs datasets for periodic pattern mining
+-----------------------------------------
+.. autofunction:: skmine.datasets.fetch_health_app
+
+.. autofunction:: skmine.datasets.fetch_canadian_tv
 
 
 Instacart Market Basket Analysis

@@ -1,0 +1,780 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## inspired by https://pbpython.com/categorical-encoding.html"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 231,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import SGDClassifier\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.preprocessing import FunctionTransformer\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "from skmine.preprocessing import SLIMTransformer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 232,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The autoreload extension is already loaded. To reload it, use:\n",
+      "  %reload_ext autoreload\n"
+     ]
+    }
+   ],
+   "source": [
+    "%load_ext autoreload\n",
+    "%autoreload 2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 233,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>symboling</th>\n",
+       "      <th>normalized_losses</th>\n",
+       "      <th>make</th>\n",
+       "      <th>fuel_type</th>\n",
+       "      <th>aspiration</th>\n",
+       "      <th>num_doors</th>\n",
+       "      <th>body_style</th>\n",
+       "      <th>drive_wheels</th>\n",
+       "      <th>engine_location</th>\n",
+       "      <th>wheel_base</th>\n",
+       "      <th>...</th>\n",
+       "      <th>engine_size</th>\n",
+       "      <th>fuel_system</th>\n",
+       "      <th>bore</th>\n",
+       "      <th>stroke</th>\n",
+       "      <th>compression_ratio</th>\n",
+       "      <th>horsepower</th>\n",
+       "      <th>peak_rpm</th>\n",
+       "      <th>city_mpg</th>\n",
+       "      <th>highway_mpg</th>\n",
+       "      <th>price</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2</td>\n",
+       "      <td>164.0</td>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>99.8</td>\n",
+       "      <td>...</td>\n",
+       "      <td>109</td>\n",
+       "      <td>mpfi</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>10.0</td>\n",
+       "      <td>102.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>24</td>\n",
+       "      <td>30</td>\n",
+       "      <td>13950.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2</td>\n",
+       "      <td>164.0</td>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>4wd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>99.4</td>\n",
+       "      <td>...</td>\n",
+       "      <td>136</td>\n",
+       "      <td>mpfi</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>115.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>18</td>\n",
+       "      <td>22</td>\n",
+       "      <td>17450.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>1</td>\n",
+       "      <td>158.0</td>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>105.8</td>\n",
+       "      <td>...</td>\n",
+       "      <td>136</td>\n",
+       "      <td>mpfi</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.5</td>\n",
+       "      <td>110.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>19</td>\n",
+       "      <td>25</td>\n",
+       "      <td>17710.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>1</td>\n",
+       "      <td>158.0</td>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>turbo</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>105.8</td>\n",
+       "      <td>...</td>\n",
+       "      <td>131</td>\n",
+       "      <td>mpfi</td>\n",
+       "      <td>3.13</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.3</td>\n",
+       "      <td>140.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>17</td>\n",
+       "      <td>20</td>\n",
+       "      <td>23875.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>2</td>\n",
+       "      <td>192.0</td>\n",
+       "      <td>bmw</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>two</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>rwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>101.2</td>\n",
+       "      <td>...</td>\n",
+       "      <td>108</td>\n",
+       "      <td>mpfi</td>\n",
+       "      <td>3.50</td>\n",
+       "      <td>2.8</td>\n",
+       "      <td>8.8</td>\n",
+       "      <td>101.0</td>\n",
+       "      <td>5800.0</td>\n",
+       "      <td>23</td>\n",
+       "      <td>29</td>\n",
+       "      <td>16430.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 26 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    symboling  normalized_losses  make fuel_type aspiration num_doors  \\\n",
+       "3           2              164.0  audi       gas        std      four   \n",
+       "4           2              164.0  audi       gas        std      four   \n",
+       "6           1              158.0  audi       gas        std      four   \n",
+       "8           1              158.0  audi       gas      turbo      four   \n",
+       "10          2              192.0   bmw       gas        std       two   \n",
+       "\n",
+       "   body_style drive_wheels engine_location  wheel_base  ...  engine_size  \\\n",
+       "3       sedan          fwd           front        99.8  ...          109   \n",
+       "4       sedan          4wd           front        99.4  ...          136   \n",
+       "6       sedan          fwd           front       105.8  ...          136   \n",
+       "8       sedan          fwd           front       105.8  ...          131   \n",
+       "10      sedan          rwd           front       101.2  ...          108   \n",
+       "\n",
+       "    fuel_system  bore  stroke compression_ratio horsepower  peak_rpm city_mpg  \\\n",
+       "3          mpfi  3.19     3.4              10.0      102.0    5500.0       24   \n",
+       "4          mpfi  3.19     3.4               8.0      115.0    5500.0       18   \n",
+       "6          mpfi  3.19     3.4               8.5      110.0    5500.0       19   \n",
+       "8          mpfi  3.13     3.4               8.3      140.0    5500.0       17   \n",
+       "10         mpfi  3.50     2.8               8.8      101.0    5800.0       23   \n",
+       "\n",
+       "    highway_mpg    price  \n",
+       "3            30  13950.0  \n",
+       "4            22  17450.0  \n",
+       "6            25  17710.0  \n",
+       "8            20  23875.0  \n",
+       "10           29  16430.0  \n",
+       "\n",
+       "[5 rows x 26 columns]"
+      ]
+     },
+     "execution_count": 233,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "# Define the headers since the data does not have any\n",
+    "headers = [\"symboling\", \"normalized_losses\", \"make\", \"fuel_type\", \"aspiration\",\n",
+    "           \"num_doors\", \"body_style\", \"drive_wheels\", \"engine_location\",\n",
+    "           \"wheel_base\", \"length\", \"width\", \"height\", \"curb_weight\",\n",
+    "           \"engine_type\", \"num_cylinders\", \"engine_size\", \"fuel_system\",\n",
+    "           \"bore\", \"stroke\", \"compression_ratio\", \"horsepower\", \"peak_rpm\",\n",
+    "           \"city_mpg\", \"highway_mpg\", \"price\"]\n",
+    "\n",
+    "# Read in the CSV file and convert \"?\" to NaN\n",
+    "df = pd.read_csv(\"https://archive.ics.uci.edu/ml/machine-learning-databases/autos/imports-85.data\",\n",
+    "                  header=None, names=headers, na_values=\"?\" )\n",
+    "df = df.dropna(how=\"any\", axis=0)\n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 234,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "y = df[\"price\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 235,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>make</th>\n",
+       "      <th>fuel_type</th>\n",
+       "      <th>aspiration</th>\n",
+       "      <th>num_doors</th>\n",
+       "      <th>body_style</th>\n",
+       "      <th>drive_wheels</th>\n",
+       "      <th>engine_location</th>\n",
+       "      <th>engine_type</th>\n",
+       "      <th>num_cylinders</th>\n",
+       "      <th>fuel_system</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>ohc</td>\n",
+       "      <td>four</td>\n",
+       "      <td>mpfi</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>4wd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>ohc</td>\n",
+       "      <td>five</td>\n",
+       "      <td>mpfi</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>ohc</td>\n",
+       "      <td>five</td>\n",
+       "      <td>mpfi</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>audi</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>turbo</td>\n",
+       "      <td>four</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>fwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>ohc</td>\n",
+       "      <td>five</td>\n",
+       "      <td>mpfi</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>bmw</td>\n",
+       "      <td>gas</td>\n",
+       "      <td>std</td>\n",
+       "      <td>two</td>\n",
+       "      <td>sedan</td>\n",
+       "      <td>rwd</td>\n",
+       "      <td>front</td>\n",
+       "      <td>ohc</td>\n",
+       "      <td>four</td>\n",
+       "      <td>mpfi</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    make fuel_type aspiration num_doors body_style drive_wheels  \\\n",
+       "3   audi       gas        std      four      sedan          fwd   \n",
+       "4   audi       gas        std      four      sedan          4wd   \n",
+       "6   audi       gas        std      four      sedan          fwd   \n",
+       "8   audi       gas      turbo      four      sedan          fwd   \n",
+       "10   bmw       gas        std       two      sedan          rwd   \n",
+       "\n",
+       "   engine_location engine_type num_cylinders fuel_system  \n",
+       "3            front         ohc          four        mpfi  \n",
+       "4            front         ohc          five        mpfi  \n",
+       "6            front         ohc          five        mpfi  \n",
+       "8            front         ohc          five        mpfi  \n",
+       "10           front         ohc          four        mpfi  "
+      ]
+     },
+     "execution_count": 235,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cats = df.select_dtypes(include=[\"object\"])\n",
+    "cats.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 236,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def tolist(df):\n",
+    "    l = list()\n",
+    "    for line in df.itertuples(index=False, name=None):\n",
+    "        l.append(list(zip(df.columns, line)))\n",
+    "    return l"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 212,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import LinearRegression\n",
+    "from sklearn.model_selection import cross_val_score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 224,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "could not discover 30 itemsets. Early stopped\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 224,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "st = SLIMTransformer(k=30)\n",
+    "X_cats = st.fit_transform(list(tolist(cats)))\n",
+    "X_cats.isna().sum().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 214,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>symboling</th>\n",
+       "      <th>normalized_losses</th>\n",
+       "      <th>wheel_base</th>\n",
+       "      <th>length</th>\n",
+       "      <th>width</th>\n",
+       "      <th>height</th>\n",
+       "      <th>curb_weight</th>\n",
+       "      <th>engine_size</th>\n",
+       "      <th>bore</th>\n",
+       "      <th>stroke</th>\n",
+       "      <th>compression_ratio</th>\n",
+       "      <th>horsepower</th>\n",
+       "      <th>peak_rpm</th>\n",
+       "      <th>city_mpg</th>\n",
+       "      <th>highway_mpg</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2</td>\n",
+       "      <td>164.0</td>\n",
+       "      <td>99.8</td>\n",
+       "      <td>176.6</td>\n",
+       "      <td>66.2</td>\n",
+       "      <td>54.3</td>\n",
+       "      <td>2337</td>\n",
+       "      <td>109</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>10.0</td>\n",
+       "      <td>102.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>24</td>\n",
+       "      <td>30</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2</td>\n",
+       "      <td>164.0</td>\n",
+       "      <td>99.4</td>\n",
+       "      <td>176.6</td>\n",
+       "      <td>66.4</td>\n",
+       "      <td>54.3</td>\n",
+       "      <td>2824</td>\n",
+       "      <td>136</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>115.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>18</td>\n",
+       "      <td>22</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>1</td>\n",
+       "      <td>158.0</td>\n",
+       "      <td>105.8</td>\n",
+       "      <td>192.7</td>\n",
+       "      <td>71.4</td>\n",
+       "      <td>55.7</td>\n",
+       "      <td>2844</td>\n",
+       "      <td>136</td>\n",
+       "      <td>3.19</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.5</td>\n",
+       "      <td>110.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>19</td>\n",
+       "      <td>25</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>1</td>\n",
+       "      <td>158.0</td>\n",
+       "      <td>105.8</td>\n",
+       "      <td>192.7</td>\n",
+       "      <td>71.4</td>\n",
+       "      <td>55.9</td>\n",
+       "      <td>3086</td>\n",
+       "      <td>131</td>\n",
+       "      <td>3.13</td>\n",
+       "      <td>3.4</td>\n",
+       "      <td>8.3</td>\n",
+       "      <td>140.0</td>\n",
+       "      <td>5500.0</td>\n",
+       "      <td>17</td>\n",
+       "      <td>20</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>2</td>\n",
+       "      <td>192.0</td>\n",
+       "      <td>101.2</td>\n",
+       "      <td>176.8</td>\n",
+       "      <td>64.8</td>\n",
+       "      <td>54.3</td>\n",
+       "      <td>2395</td>\n",
+       "      <td>108</td>\n",
+       "      <td>3.50</td>\n",
+       "      <td>2.8</td>\n",
+       "      <td>8.8</td>\n",
+       "      <td>101.0</td>\n",
+       "      <td>5800.0</td>\n",
+       "      <td>23</td>\n",
+       "      <td>29</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    symboling  normalized_losses  wheel_base  length  width  height  \\\n",
+       "3           2              164.0        99.8   176.6   66.2    54.3   \n",
+       "4           2              164.0        99.4   176.6   66.4    54.3   \n",
+       "6           1              158.0       105.8   192.7   71.4    55.7   \n",
+       "8           1              158.0       105.8   192.7   71.4    55.9   \n",
+       "10          2              192.0       101.2   176.8   64.8    54.3   \n",
+       "\n",
+       "    curb_weight  engine_size  bore  stroke  compression_ratio  horsepower  \\\n",
+       "3          2337          109  3.19     3.4               10.0       102.0   \n",
+       "4          2824          136  3.19     3.4                8.0       115.0   \n",
+       "6          2844          136  3.19     3.4                8.5       110.0   \n",
+       "8          3086          131  3.13     3.4                8.3       140.0   \n",
+       "10         2395          108  3.50     2.8                8.8       101.0   \n",
+       "\n",
+       "    peak_rpm  city_mpg  highway_mpg  \n",
+       "3     5500.0        24           30  \n",
+       "4     5500.0        18           22  \n",
+       "6     5500.0        19           25  \n",
+       "8     5500.0        17           20  \n",
+       "10    5800.0        23           29  "
+      ]
+     },
+     "execution_count": 214,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "conts = df.select_dtypes(\"number\").drop(\"price\", axis=1)\n",
+    "conts.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 225,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(159, 45)"
+      ]
+     },
+     "execution_count": 225,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X = np.concatenate([X_cats, conts], axis=1)\n",
+    "X.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 229,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "-2493.8059488169665"
+      ]
+     },
+     "execution_count": 229,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lr = LinearRegression()\n",
+    "cross_val_score(lr, conts, y, scoring=\"neg_mean_absolute_error\").mean()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### pipeline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.compose import make_column_transformer\n",
+    "from sklearn.preprocessing import OrdinalEncoder\n",
+    "from sklearn.pipeline import make_pipeline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 113,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cat_pipe = Pipeline([\n",
+    "        (\"to_list_of_list\", FunctionTransformer(tolist)), \n",
+    "        (\"mdl_vect\", SLIMTransformer(k=15)),\n",
+    "])\n",
+    "preprocessor = make_column_transformer(\n",
+    "    (cat_pipe, df.dtypes[df.dtypes == object].index.tolist()),\n",
+    "    #(OrdinalEncoder(), ['aspiration']),\n",
+    "    remainder=\"passthrough\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 114,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(201, 31)"
+      ]
+     },
+     "execution_count": 114,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "preprocessor.fit_transform(df).shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 110,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pipe = make_pipeline(preprocessor, LinearRegression())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## TODO\n",
+    "1. take linear regression with only continuous variables as a baseline\n",
+    "2. try different strategies of covering\n",
+    "  * standard cover order\n",
+    "  * standard candidate order\n",
+    "3. discuss interpretability\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3.8.1 64-bit ('skmine': conda)",
+   "language": "python",
+   "name": "python38164bitskmineconda3789c8cb22f842768473342c0ee32d2f"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

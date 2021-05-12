@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.periodic.cycles &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>skmine.periodic.cycles &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -37,7 +37,9 @@
 
     
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href="../../../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,14 +87,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/periodic.html">Periodic</a></li>
@@ -100,7 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -109,7 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing</a></li>
@@ -182,6 +185,8 @@
   <h1>Source code for skmine.periodic.cycles</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Periodic pattern mining with a MDL criterion&quot;&quot;&quot;</span>
 <span class="c1"># Authors: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
+<span class="c1">#          Esther Galbrun &lt;esther.galbrun@inria.fr&gt;</span>
+<span class="c1">#</span>
 <span class="c1"># License: BSD 3 clause</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -558,7 +563,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">,</span> <span class="s2">&quot;dE&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="mi">0</span>
@@ -591,13 +596,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;found duplicates in S, removing them&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;found duplicates in input sequence, removing them&quot;</span><span class="p">)</span>
             <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
 
         <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">_remove_zeros</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">))</span>
 
         <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_candidates</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;could not generate candidates for the input sequence,</span>
+<span class="sd">                the model is left empty&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
 
         <span class="n">gr</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
         <span class="n">cycles</span><span class="p">,</span> <span class="n">residuals</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span>
@@ -614,32 +626,7 @@
 
     <span class="n">evaluate</span> <span class="o">=</span> <span class="n">evaluate</span>
 
-<div class="viewcode-block" id="PeriodicCycleMiner.generate_candidates"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.generate_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        S: pd.Index or numpy.ndarray</span>
-<span class="sd">            Series of occurences for a specific event</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict[object, list[np.ndarray]]</span>
-<span class="sd">            A dict, where each key is an event and each value a list of batch of candidates.</span>
-<span class="sd">            Batches are sorted in inverse order of width,</span>
-<span class="sd">            so that we consider larger candidate cycles first.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">n_event_tot</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">alpha_groups</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-
-        <span class="n">candidates</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">S_a</span> <span class="ow">in</span> <span class="n">alpha_groups</span><span class="p">:</span>
-            <span class="n">cands</span> <span class="o">=</span> <span class="n">_generate_candidates</span><span class="p">(</span><span class="n">S_a</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">n_event_tot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">cands</span><span class="p">:</span>
-                <span class="n">candidates</span><span class="p">[</span><span class="n">event</span><span class="p">]</span> <span class="o">=</span> <span class="n">cands</span>
-
-        <span class="k">return</span> <span class="n">candidates</span></div>
-
-<div class="viewcode-block" id="PeriodicCycleMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicCycleMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shifts</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return cycles as a pandas DataFrame, with 3 columns,</span>
 <span class="sd">        with a 2-level multi-index: the first level mapping events,</span>
 <span class="sd">        and the second level being positional</span>
@@ -652,6 +639,7 @@
 <span class="sd">                start       when the cycle starts</span>
 <span class="sd">                length      number of occurences in the event</span>
 <span class="sd">                period      inter-occurence delay</span>
+<span class="sd">                dE          shift corrections, if shifts=True</span>
 <span class="sd">                ==========  =================================</span>
 
 <span class="sd">        Example</span>
@@ -667,7 +655,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_fitted</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> instance if not fitted&quot;</span><span class="p">)</span>
-        <span class="n">cycles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">all_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">shifts</span><span class="p">:</span>
+            <span class="n">all_cols</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;dE&quot;</span><span class="p">]</span>
+        <span class="n">cycles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span><span class="p">[</span><span class="n">all_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">cycles</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span>
             <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
         <span class="p">)</span>
@@ -701,18 +692,16 @@
         <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="n">cycles_groups</span> <span class="o">=</span> <span class="n">cycles</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">cycles_groups</span><span class="p">:</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">alpha_occurences</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">dE</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
                 <span class="n">occurences</span> <span class="o">=</span> <span class="n">_reconstruct</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">dE</span><span class="p">)</span>
-                <span class="n">l</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">occurences</span><span class="p">)</span>
+                <span class="n">alpha_occurences</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">occurences</span><span class="p">)</span>
             <span class="n">residuals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">residuals</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">l</span><span class="p">)])</span>
-            <span class="c1"># S.index = S.index.sort_values()</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">residuals</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">alpha_occurences</span><span class="p">)])</span>
             <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">cycles_groups</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="p">):</span>  <span class="c1"># add unfrequent events</span>
+        <span class="c1"># add unfrequent events</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">cycles_groups</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="p">[</span><span class="n">event</span><span class="p">]))</span>
 
         <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -723,7 +712,52 @@
         <span class="c1"># TODO : this is due to duplicate event in the cycles, handle this in .evaluate()</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">S</span></div></div>
+        <span class="k">return</span> <span class="n">S</span></div>
+
+<div class="viewcode-block" id="PeriodicCycleMiner.generate_candidates"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.generate_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        S: pd.Index or numpy.ndarray</span>
+<span class="sd">            Series of occurences for a specific event</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[object, list[np.ndarray]]</span>
+<span class="sd">            A dict, where each key is an event and each value a list of batch of candidates.</span>
+<span class="sd">            Batches are sorted in inverse order of width,</span>
+<span class="sd">            so that we consider larger candidate cycles first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_event_tot</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">alpha_groups</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="n">candidates</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">S_a</span> <span class="ow">in</span> <span class="n">alpha_groups</span><span class="p">:</span>
+            <span class="n">cands</span> <span class="o">=</span> <span class="n">_generate_candidates</span><span class="p">(</span><span class="n">S_a</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">n_event_tot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cands</span><span class="p">:</span>
+                <span class="n">candidates</span><span class="p">[</span><span class="n">event</span><span class="p">]</span> <span class="o">=</span> <span class="n">cands</span>
+
+        <span class="k">return</span> <span class="n">candidates</span></div>
+
+<div class="viewcode-block" id="PeriodicCycleMiner.get_residuals"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.get_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the residual events, i.e events not covered by any cycle</span>
+
+<span class="sd">        It is the complementary function to `discover`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.Series</span>
+<span class="sd">            residual events</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
+        <span class="n">residuals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">occs</span><span class="p">)</span> <span class="k">for</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">occs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="p">)</span>
+        <span class="n">residuals</span><span class="o">.</span><span class="n">index</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+            <span class="n">residuals</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">residuals</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">residuals</span></div></div>
 </pre></div>
 
            </div>

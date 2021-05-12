@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API demo &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Compatibility with Scikit-Learn" href="../../sklearn_compat.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -115,7 +119,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
@@ -459,7 +463,7 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Callback-API-demo">
+<section id="Callback-API-demo">
 <h1>Callback API demo<a class="headerlink" href="#Callback-API-demo" title="Permalink to this headline">¶</a></h1>
 <p>In this demo we are going to use the callback API to <strong>track some useful information while training</strong> a SLIM miner</p>
 <p>We simply define custom python functions, and submit them to create an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code>.</p>
@@ -512,7 +516,7 @@ Name: mushroom, dtype: object
 </div>
 </div>
 <hr class="docutils" />
-<div class="section" id="Define-your-own-callbacks">
+<section id="Define-your-own-callbacks">
 <h2>Define your own callbacks<a class="headerlink" href="#Define-your-own-callbacks" title="Permalink to this headline">¶</a></h2>
 <p>We define custom functions, that will take the result of the function they target as input. Those results will be ingested for later reuse</p>
 <p>Here we define two methods:</p>
@@ -643,8 +647,8 @@ Wall time: 3.8 s
 <p>236 rows × 1 columns</p>
 </div></div>
 </div>
-</div>
-<div class="section" id="Inner-view-of-MDL-learning">
+</section>
+<section id="Inner-view-of-MDL-learning">
 <h2>Inner view of MDL learning<a class="headerlink" href="#Inner-view-of-MDL-learning" title="Permalink to this headline">¶</a></h2>
 <p>The plot below clearly shows <strong>how SLIM performs compression</strong>.</p>
 <p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
@@ -695,8 +699,8 @@ Wall time: 3.8 s
 <img alt="../../_images/tutorials_callbacks_callbacks_12_1.png" src="../../_images/tutorials_callbacks_callbacks_12_1.png" />
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

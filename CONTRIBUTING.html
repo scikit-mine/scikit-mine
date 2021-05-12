@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributing &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Contributing &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="History" href="HISTORY.html" />
-    <link rel="prev" title="Compatibility with Scikit-Learn" href="sklearn_compat.html" /> 
+    <link rel="prev" title="Compatibility with Scikit-Learn" href="sklearn_compat.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -111,7 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
@@ -221,37 +225,37 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="contributing">
+<section id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
 <p>Contributions are welcome, and greatly appreciated !
 You can contribute in many ways</p>
-<div class="section" id="report-bugs">
+<section id="report-bugs">
 <h2>Report Bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h2>
 <p>Report bugs at <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/issues">https://github.com/scikit-mine/scikit-mine/issues</a>.</p>
 <p>Please use the issue templates when submitting new issues.</p>
-</div>
-<div class="section" id="write-notebooks">
+</section>
+<section id="write-notebooks">
 <h2>Write Notebooks<a class="headerlink" href="#write-notebooks" title="Permalink to this headline">¶</a></h2>
 <p>scikit-mine could always include more showcase notebooks. We often concentrate
 on implementation details and lack of materials to show how useful our algorithms
 can be in real-life situations.
 Don’t hesitate to bring a little more story telling to scikit-mine !!</p>
-</div>
-<div class="section" id="fix-bugs">
+</section>
+<section id="fix-bugs">
 <h2>Fix Bugs<a class="headerlink" href="#fix-bugs" title="Permalink to this headline">¶</a></h2>
 <p>Look through the GitHub issues for bugs. Anything tagged with “bug” and “help
 wanted” is open to whoever wants to implement it.</p>
-</div>
-<div class="section" id="implement-features">
+</section>
+<section id="implement-features">
 <h2>Implement Features<a class="headerlink" href="#implement-features" title="Permalink to this headline">¶</a></h2>
 <p>Look through the GitHub projects. Anything listed in the projects is a feature
 to be implemented.</p>
 <p>You can also look through GitHub issues for features. Anything tagged with “enhancement”
 and “help wanted” is open to whoever wants to implement it.</p>
 <p>For more details check the “Inclusion criteria” section below</p>
-</div>
-</div>
-<div class="section" id="inclusion-criteria">
+</section>
+</section>
+<section id="inclusion-criteria">
 <h1>Inclusion criteria<a class="headerlink" href="#inclusion-criteria" title="Permalink to this headline">¶</a></h1>
 <p>Scikit-mine is a library for descriptive analysis, and implements pattern mining algorithms.
 Only algorithms belonging to this family of algorithms will be accepted.</p>
@@ -266,8 +270,8 @@ Only algorithms belonging to this family of algorithms will be accepted.</p>
 </dl>
 <p>A technique that provides a clear improvement (enhanced datastructures, etc …) on a widely-used method will
 also be condidered for inclusion.</p>
-</div>
-<div class="section" id="development-process">
+</section>
+<section id="development-process">
 <h1>Development process<a class="headerlink" href="#development-process" title="Permalink to this headline">¶</a></h1>
 <ol class="arabic">
 <li><p>If you are a first-time contributor:</p>
@@ -342,7 +346,7 @@ button - click it.</p></li>
 </ul>
 </li>
 </ol>
-<div class="section" id="test-coverage">
+<section id="test-coverage">
 <h2>Test coverage<a class="headerlink" href="#test-coverage" title="Permalink to this headline">¶</a></h2>
 <p>To measure the test coverage, install
 <a class="reference external" href="https://pytest-cov.readthedocs.io/en/latest/">pytest-cov</a>
@@ -358,8 +362,8 @@ detailing the test coverage:</p>
 <span class="n">skmine</span><span class="o">/</span><span class="n">base</span><span class="o">.</span><span class="n">py</span>                                   <span class="mi">46</span>      <span class="mi">4</span>     <span class="mi">16</span>      <span class="mi">2</span>    <span class="mi">90</span><span class="o">%</span>   <span class="mi">154</span><span class="p">,</span> <span class="mi">176</span><span class="p">,</span> <span class="mi">202</span><span class="o">-&gt;</span><span class="mi">207</span><span class="p">,</span> <span class="mi">203</span><span class="o">-&gt;</span><span class="mi">206</span><span class="p">,</span> <span class="mi">206</span><span class="o">-</span><span class="mi">207</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="writing-a-benchmark">
+</section>
+<section id="writing-a-benchmark">
 <h2>Writing a benchmark<a class="headerlink" href="#writing-a-benchmark" title="Permalink to this headline">¶</a></h2>
 <p>While not mandatory for most pull requests, we ask that performance related
 PRs include a benchmark in order to clearly depict the use-case that is being
@@ -410,7 +414,7 @@ development to another.</p>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slim</span><span class="o">.</span><span class="n">data_size_</span>
 </pre></div>
 </div>
-<div class="section" id="testing-the-benchmarks-locally">
+<section id="testing-the-benchmarks-locally">
 <h3>Testing the benchmarks locally<a class="headerlink" href="#testing-the-benchmarks-locally" title="Permalink to this headline">¶</a></h3>
 <p>Prior to running the true benchmark, it is often worthwhile to test that the
 code is free of typos. To do so, you may use the command:</p>
@@ -419,8 +423,8 @@ code is free of typos. To do so, you may use the command:</p>
 </div>
 <p>Where the <code class="docutils literal notranslate"><span class="pre">SLIM</span></code> above will be run once in your current environment
 to test that everything is in order.</p>
-</div>
-<div class="section" id="comparing-results-to-master">
+</section>
+<section id="comparing-results-to-master">
 <h3>Comparing results to master<a class="headerlink" href="#comparing-results-to-master" title="Permalink to this headline">¶</a></h3>
 <p>Often, the goal of a PR is to compare the results of the modifications in terms
 speed to a snapshot of the code that is in the master branch of the
@@ -444,9 +448,9 @@ speed to a snapshot of the code that is in the master branch of the
             ================ ============= ============ ============= ============
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

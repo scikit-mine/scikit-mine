@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Building a symbolic classifier &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Building a symbolic classifier &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="../callbacks/index.html" />
-    <link rel="prev" title="SLIM for market basket analysis" href="SLIM.html" /> 
+    <link rel="prev" title="SLIM for market basket analysis" href="SLIM.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -116,7 +120,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing</a></li>
@@ -460,7 +464,7 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Building-a-symbolic-classifier">
+<section id="Building-a-symbolic-classifier">
 <h1>Building a symbolic classifier<a class="headerlink" href="#Building-a-symbolic-classifier" title="Permalink to this headline">¶</a></h1>
 <p>MDL based algorithms encode data according to a given codetable</p>
 <p>When calling <code class="docutils literal notranslate"><span class="pre">.fit</span></code>, we iteratively look for the codetable that compress the training data the best</p>
@@ -640,7 +644,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>We keep this <strong>codetable</strong> in mind, as we will later use it <strong>to interpret our predictions</strong></p>
 <hr class="docutils" />
-<div class="section" id="First-“predictions”">
+<section id="First-“predictions”">
 <h2>First “predictions”<a class="headerlink" href="#First-“predictions”" title="Permalink to this headline">¶</a></h2>
 <p>We define a new transactional dataset, and can call our <code class="docutils literal notranslate"><span class="pre">decision_function</span></code> on it. This will yield <code class="docutils literal notranslate"><span class="pre">distances</span></code> w.r.t the encoding scheme provided by our codetable</p>
 <div class="nbinput docutils container">
@@ -819,9 +823,9 @@ div.rendered_html tbody tr:hover {
 </table>
 </div></div>
 </div>
-</div>
+</section>
 <hr class="docutils" />
-<div class="section" id="Built-in-interpretations">
+<section id="Built-in-interpretations">
 <h2>Built-in interpretations<a class="headerlink" href="#Built-in-interpretations" title="Permalink to this headline">¶</a></h2>
 <p>Now we can interpret codes for the new data, directly by <strong>looking at the codetable inferred from training data</strong></p>
 <p>First observations</p>
@@ -829,9 +833,9 @@ div.rendered_html tbody tr:hover {
 <li><p>Entry 1 has the highest distance w.r.t the encoding scheme. You can see it contains <code class="docutils literal notranslate"><span class="pre">milk</span></code>, <code class="docutils literal notranslate"><span class="pre">sirup</span></code> and <code class="docutils literal notranslate"><span class="pre">cookies</span></code>. From the codetable we see <code class="docutils literal notranslate"><span class="pre">milk</span></code> and <code class="docutils literal notranslate"><span class="pre">cookies</span></code> are not grouped together, while <code class="docutils literal notranslate"><span class="pre">sirup</span></code> has never been seen</p></li>
 <li><p>Entry 4 has the lowest distance. It contains <code class="docutils literal notranslate"><span class="pre">bananas</span></code> and <code class="docutils literal notranslate"><span class="pre">milk</span></code>, which are grouped together in the codetable and have high occurence in the training data.</p></li>
 </ul>
-</div>
+</section>
 <hr class="docutils" />
-<div class="section" id="Shortest-code-wins-!!">
+<section id="Shortest-code-wins-!!">
 <h2>Shortest code wins !!<a class="headerlink" href="#Shortest-code-wins-!!" title="Permalink to this headline">¶</a></h2>
 <p>Next, we are going to use an ensemble of SLIM encoding schemes, and utilize them via a <code class="docutils literal notranslate"><span class="pre">OneVsRest</span></code> methodology, to perform <strong>multi-class classification</strong>. The methodology is very simple</p>
 <ol class="arabic simple">
@@ -1147,8 +1151,8 @@ array([&#39;foodstore&#39;, &#39;foodstore&#39;, &#39;newspaper&#39;, &#39;newsp
        &#39;bakery&#39;, &#39;foodstore&#39;], dtype=&#39;&lt;U9&#39;)
 </pre></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compatibility with Scikit-Learn &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Compatibility with Scikit-Learn &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing" href="CONTRIBUTING.html" />
-    <link rel="prev" title="Callback API demo" href="tutorials/callbacks/callbacks.html" /> 
+    <link rel="prev" title="Callback API demo" href="tutorials/callbacks/callbacks.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -111,10 +115,10 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Compatibility with Scikit-Learn</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-data-mining-methods-as-feature-extraction-blocks-for-machine-learning">Using data mining methods as feature extraction blocks for Machine Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pipelines">Pipelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#other-implementation-details">Other implementation details</a></li>
 </ul>
@@ -212,7 +216,7 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="compatibility-with-scikit-learn">
+<section id="compatibility-with-scikit-learn">
 <h1>Compatibility with Scikit-Learn<a class="headerlink" href="#compatibility-with-scikit-learn" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn</a> is the golden standard for general
 puprose machine learning. As a rule of thumb, we follow scikit-learn functional definitions.</p>
@@ -223,32 +227,29 @@ puprose machine learning. As a rule of thumb, we follow scikit-learn functional 
 <em>scikit-mine</em> gives more attention to discrete values, because <strong>it looks for co-occuring symbols in the data</strong>.
 To this purpose, we sometimes need to extend scikit-learn capabilities to tightly integrate the notion
 of symbols in our learning processes.</p>
-<div class="section" id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="reference/preprocessing.html#preprocessing"><span class="std std-ref">Preprocessing</span></a> module implements a set of Transformers/Encoders
+<section id="using-data-mining-methods-as-feature-extraction-blocks-for-machine-learning">
+<h2>Using data mining methods as feature extraction blocks for Machine Learning<a class="headerlink" href="#using-data-mining-methods-as-feature-extraction-blocks-for-machine-learning" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="reference/feature_extraction.html#feature-extraction"><span class="std std-ref">Feature Extraction</span></a> module implements a set of Transformers/Encoders
 to get you from raw data to a more advanced, structured kind of data :
-the kind a data that is easily manageable and prone to give you the best performance.</p>
+the kind of data that is easily manageable and prone to give you the best performance.</p>
 <p>Sometimes <em>scikit-learn</em> provides us the tools we exactly need, sometimes not.
-<strong>Scikit-mine addresses data ingestion by implementing its own preprocessing blocks,
-in a fully scikit-learn compatible way</strong>.</p>
-<p>As an example, consider <a class="reference internal" href="tutorials/itemsets/SLIM.html"><span class="doc">this tutorial</span></a>
-in which we use a <strong>TransactionEncoder</strong> to easily ingest raw data,
-presented in the form of Python iterators.</p>
-</div>
-<div class="section" id="pipelines">
+<strong>Scikit-mine addresses data ingestion by implementing its own blocks,
+which are compatible wtih scikit-learn</strong>.</p>
+</section>
+<section id="pipelines">
 <h2>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this headline">¶</a></h2>
 <p>scikit-mine models are designed for possible integration in <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html">scikit-learn pipelines</a>.
 This makes possible to build “symbolic classifiers”, using scikit-mine pattern encoding schemes
-to serve predictions. See the tutorials sections.</p>
-</div>
-<div class="section" id="other-implementation-details">
+to serve predictions, or just use scikit-mine as the first part of a scikit-learn pipeline, as mentioned
+in the previous section.</p>
+</section>
+<section id="other-implementation-details">
 <h2>Other implementation details<a class="headerlink" href="#other-implementation-details" title="Permalink to this headline">¶</a></h2>
 <p>We use <a class="reference external" href="https://joblib.readthedocs.io/en/latest/">joblib</a> as default to parallelise our code.
 We also set the <em>prefer</em> parameter when instantiating <a class="reference external" href="https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html">joblib.Parallel</a>,
 so users don’t have to manually choose between threads and processes for optimal execution.</p>
-<p>Finally, we also leverage <a class="reference external" href="https://cython.org/">Cython</a> code where performance matters.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

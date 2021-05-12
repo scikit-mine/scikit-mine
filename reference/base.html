@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Base &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Base &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -39,7 +40,9 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Callback API" href="callbacks.html" />
-    <link rel="prev" title="Emerging" href="emerging.html" /> 
+    <link rel="prev" title="Emerging" href="emerging.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,14 +90,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="periodic.html">Periodic</a></li>
@@ -102,7 +106,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -111,7 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
@@ -207,7 +211,7 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="base">
+<section id="base">
 <span id="id1"></span><h1>Base<a class="headerlink" href="#base" title="Permalink to this headline">¶</a></h1>
 <p>Base methods and classes for scikit-mine</p>
 <dl class="py class">
@@ -252,20 +256,6 @@ usage of <a class="reference external" href="https://en.wikipedia.org/wiki/Minim
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="skmine.base.MDLOptimizer.codetable">
-<em class="property">property </em><code class="sig-name descname">codetable</code><a class="headerlink" href="#skmine.base.MDLOptimizer.codetable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a user-friendly copy of the codetable</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>codetable containing patterns and ids of transactions in which they are used</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>pd.Series</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -276,6 +266,12 @@ usage of <a class="reference external" href="https://en.wikipedia.org/wiki/Minim
 <dt id="skmine.base.BaseMiner.fit">
 <em class="property">abstract </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit method to be implemented.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.base.BaseMiner.discover">
+<em class="property">abstract </em><code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>discover method to be implemented.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -338,7 +334,7 @@ component of a nested object.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

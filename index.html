@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 0.0.5 documentation</title>
+  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 0.0.6 documentation</title>
   
 
   
@@ -38,7 +39,9 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation from pypi" href="installation.html" /> 
+    <link rel="next" title="Installation from pypi" href="installation.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,14 +89,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/feature_extraction.html">Feature Extraction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/periodic.html">Periodic</a></li>
@@ -101,7 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
@@ -110,7 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 </ul>
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
@@ -206,34 +210,35 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="welcome-to-scikit-mine-s-documentation">
+<section id="welcome-to-scikit-mine-s-documentation">
 <h1>Welcome to scikit-mine’s documentation!<a class="headerlink" href="#welcome-to-scikit-mine-s-documentation" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://pypi.python.org/pypi/scikit-mine/"><img alt="https://img.shields.io/pypi/v/scikit-mine.svg" src="https://img.shields.io/pypi/v/scikit-mine.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/remiadon/scikit-mine"><img alt="https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg" src="https://codecov.io/gh/remiadon/scikit-mine/branch/master/graph/badge.svg" /></a>
 <a class="reference external image-reference" href="https://www.inria.fr/en"><img alt="https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&amp;colorA=384257&amp;colorB=E23324" src="https://img.shields.io/badge/powered%20by-INRIA-orange.svg?style=flat&amp;colorA=384257&amp;colorB=E23324" /></a>
 <a class="reference external image-reference" href="https://pepy.tech/project/scikit-mine"><img alt="https://pepy.tech/badge/scikit-mine" src="https://pepy.tech/badge/scikit-mine" /></a>
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/scikit-mine/scikit-mine/HEAD?filepath=docs%2Ftutorials%2Fperiodic%2Fperiodic_canadian_tv.ipynb"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" /></a>
 <p>Scikit-mine : pattern mining in Python</p>
 <ul class="simple">
 <li><p><strong>Descriptive analysis</strong>, leading to <strong>interpretable</strong>, concise descriptions using the <a class="reference external" href="https://en.wikipedia.org/wiki/Minimum_description_length">Minimum Description Length Principle</a></p></li>
 <li><p><strong>Fast</strong> Algorithms</p></li>
 <li><p><strong>Simple, extendable API</strong>, inspired by <a class="reference external" href="https://scikit-learn.org/">scikit-learn</a></p></li>
 </ul>
-<div class="section" id="resources">
+<section id="resources">
 <h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Free software: BSD license</p></li>
 <li><p>GitHub: <a class="reference external" href="https://github.com/scikit-mine/scikit-mine">https://github.com/scikit-mine/scikit-mine</a></p></li>
 <li><p>Documentation: <a class="reference external" href="https://scikit-mine.github.io/scikit-mine/">https://scikit-mine.github.io/scikit-mine/</a></p></li>
 </ul>
-</div>
-<div class="section" id="quickstart">
+</section>
+<section id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>scikit-mine is a Python module for pattern mining built on top of
 Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.</p>
 <p>It is currently maintained by a team of volunteers.</p>
 <p>See examples in the tutorials; the notebooks are available <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/tree/master/docs/tutorials">here</a>.</p>
-</div>
-<div class="section" id="dependencies">
+</section>
+<section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>scikit-mine requires Python&gt;=3.6,
 and some extra dependencies</p>
@@ -245,13 +250,13 @@ and some extra dependencies</p>
 <li><p>joblib&gt;=0.11.1</p></li>
 </ul>
 <p><strong>scikit-learn</strong> is not a dependency. However, scikit-mine is <strong>contiuously tested for interactions with scikit-learn</strong></p>
-</div>
-<div class="section" id="development">
+</section>
+<section id="development">
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
 <p>This project is funded by the <a class="reference external" href="https://www.inria.fr/fr/centre-inria-rennes-bretagne-atlantique">INRIA center in Rennes, Brittany, France</a>.</p>
 <p>We welcome new contributors of all experience levels.</p>
-</div>
-<div class="section" id="internal-contributors">
+</section>
+<section id="internal-contributors">
 <h2>Internal Contributors<a class="headerlink" href="#internal-contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Rémi Adon (<a class="reference external" href="https://github.com/remiadon">https://github.com/remiadon</a>)</p></li>
@@ -260,20 +265,25 @@ and some extra dependencies</p>
 <li><p>Esther Galbrun (<a class="reference external" href="https://github.com/nurblageij">https://github.com/nurblageij</a>)</p></li>
 </ul>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Installation</span></p>
+<p><span class="caption-text">Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation from pypi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#installation-from-sources">Installation from sources</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">API Reference</span></p>
+<p><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/datasets.html">Datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#standard-datasets">Standard datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#standard-datasets-for-itemset-mining">Standard datasets for itemset mining</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#logs-datasets-for-periodic-pattern-mining">Logs datasets for periodic pattern mining</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#instacart-market-basket-analysis">Instacart Market Basket Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#synthetic-data-generation">Synthetic data generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/datasets.html#utils">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/feature_extraction.html">Feature Extraction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/feature_extraction.html#slimvectorizer">SLIMVectorizer</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/preprocessing.html">Preprocessing</a><ul>
@@ -298,7 +308,7 @@ and some extra dependencies</p>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Tutorials</span></p>
+<p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#load-datasets-separately">load datasets separately</a></li>
@@ -330,7 +340,7 @@ and some extra dependencies</p>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">About</span></p>
+<p><span class="caption-text">About</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
@@ -339,8 +349,8 @@ and some extra dependencies</p>
 <li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
 </ul>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -2,6 +2,11 @@
 History
 =======
 
+0.0.6 (2021-05-12)
+------------------
+* SLIM has a k-parameters
+* add skmine.feature_extraction.SLIMVectorizer
+
 0.0.5 (2021-03-02)
 ------------------
 * PeriodicCycleMiner
