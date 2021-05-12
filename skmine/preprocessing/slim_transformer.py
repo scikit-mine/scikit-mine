@@ -25,9 +25,25 @@ class SLIMTransformer(SLIM, TransformerMixin):
     This is similar to one-hot-encoding, except the dimension will be much more concise,
     because the columns will be patterns learned via an MDL criterion.
 
-    If the chosen strategy is set to `one-hot`, non-zero cells are filled with ones
-    If the chosen `strategy` is left to `codes`, non-zero cells are filled with code lengths,
-    i.e the probabity of the pattern in the training data.
+    Parameters
+    ----------
+    strategy: str, default="codes"
+        If the chosen strategy is set to `one-hot`, non-zero cells are filled with ones.
+
+        If the chosen `strategy` is left to `codes`, non-zero cells are filled with code lengths,
+        i.e the probabity of the pattern in the training data.
+
+    k: int, default=5
+        Number of non-singleton itemsets to mine.
+        A singleton is an itemset containing a single item.
+
+        Calls to `.transform` will output pandas.DataFrame with `k` columns
+
+    pruning: bool, default=False
+        Either to activate pruning or not.
+
+    stop_items: iterable, default=None
+        Set of items to filter out while ingesting the input data.
 
 
     Examples

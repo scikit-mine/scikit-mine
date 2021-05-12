@@ -129,7 +129,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     Parameters
     ----------
     k: int, default=50
-        Number of itemsets to mine
+        Number of non-singleton itemsets to mine.
+        A singleton is an itemset containing a single item.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to `False`
