@@ -135,6 +135,16 @@ class Node:
             (c._n_occs if isinstance(c, Node) else 1 for c in self.children)
         )
 
+    def mdl_cost_A(self, **event_frequencies):
+        return 2 * L_PARENTHESIS + sum(
+            (
+                c.mdl_cost_A(**event_frequencies)
+                if isinstance(c, Node)
+                else -np.log2(event_frequencies[c])
+                for c in self.children  # TODO: store leaves and internal nodes
+            )
+        )
+
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
 
@@ -163,7 +173,7 @@ class Tree(Node):
 
     def __init__(self, tau, r, p, E=None, *args, **kwargs):
         super(Tree, self).__init__(r, p, *args, **kwargs)
-        self.tau = tau
+        self.tau = tau  # TODO : add tau in repr
         if E is None:
             self.E = shift_array([0] * self._n_occs)
         else:

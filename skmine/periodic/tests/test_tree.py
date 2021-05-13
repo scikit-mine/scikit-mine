@@ -207,3 +207,8 @@ def test_leaves_length():
     # and one with p=12 (covering 26)
     # the current version only extracts the first one, hence not allowing for
     # horizontal combination to be perfomed, because the p is different
+
+
+def test_mdl_cost_A():
+    T = Node(3, 2, children=[Node(10, 2, children="a"), "b"], children_dists=[0])
+    assert round(T.mdl_cost_A(a=0.5, b=0.3), 2) == 9.08
