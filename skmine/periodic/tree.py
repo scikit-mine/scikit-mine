@@ -112,6 +112,8 @@ class Node:
     _n_occs: int = dataclasses.field(init=False, repr=False)
     children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
     children_dists: list = dataclasses.field(default_factory=list, hash=False)
+    _leaves: list = dataclasses.field(init=False)
+    _nodes: list = dataclasses.field(init=False)
 
     def __post_init__(self):
         if self.children and (not len(self.children) - 1 == len(self.children_dists)):
@@ -128,21 +130,25 @@ class Node:
                 """
             )
 
-        self._size = 1 + sum(
-            (c._size if isinstance(c, Node) else 1 for c in self.children)
-        )
-        self._n_occs = self.r * sum(
-            (c._n_occs if isinstance(c, Node) else 1 for c in self.children)
+        self._leaves = [c for c in self.children if not isinstance(c, Node)]
+        self._nodes = [c for c in self.children if isinstance(c, Node)]
+        # assert len(n_t) == 2
+
+        self._size = 1 + len(self._leaves) + sum((c._size for c in self._nodes))
+        self._n_occs = self.r * (
+            len(self._leaves) + sum((c._n_occs) for c in self._nodes)
         )
 
+    def mdl_cost_R(self, **event_frequencies):
+        occs_min = -np.log2(min(map(event_frequencies.__getitem__, self._leaves)))
+        return occs_min + sum((c.mdl_cost_R(**event_frequencies) for c in self._nodes))
+
     def mdl_cost_A(self, **event_frequencies):
-        return 2 * L_PARENTHESIS + sum(
-            (
-                c.mdl_cost_A(**event_frequencies)
-                if isinstance(c, Node)
-                else -np.log2(event_frequencies[c])
-                for c in self.children  # TODO: store leaves and internal nodes
-            )
+        leaves_cost = list(map(event_frequencies.__getitem__, self._leaves))
+        return (
+            2 * L_PARENTHESIS
+            + sum((c.mdl_cost_A(**event_frequencies) for c in self._nodes))
+            - sum(map(np.log2, leaves_cost))
         )
 
     to_dict = dataclasses.asdict

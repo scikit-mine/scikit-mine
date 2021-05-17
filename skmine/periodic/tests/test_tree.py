@@ -42,14 +42,7 @@ def test_create_tree_3_wakeup_breakfast(tau):
 
     assert tree._size == len(tree) == 4
 
-    assert tree.to_dict() == dict(
-        r=3,
-        p=1440 * 7,
-        children=[week_node.to_dict()],
-        children_dists=[],
-        _size=4,
-        _n_occs=30,
-    )
+    assert {"r", "p"}.issubset(tree.to_dict().keys())
 
 
 def test_prefit():
@@ -212,3 +205,14 @@ def test_leaves_length():
 def test_mdl_cost_A():
     T = Node(3, 2, children=[Node(10, 2, children="a"), "b"], children_dists=[0])
     assert round(T.mdl_cost_A(a=0.5, b=0.3), 2) == 9.08
+
+
+def test_mdl_cost_R():
+    T = Node(
+        3,
+        2,
+        children=[Node(5, 2, children=["a", "b"], children_dists=[1]), "c"],
+        children_dists=[2],
+    )
+    R = T.mdl_cost_R(a=0.5, b=0.3, c=0.8)
+    assert round(R, 2) == 2.06
