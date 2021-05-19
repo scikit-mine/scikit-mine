@@ -151,6 +151,22 @@ class Node:
             - sum(map(np.log2, leaves_cost))
         )
 
+    def mdl_cost_tau(self, dS):
+        """
+        Parameters
+        ----------
+        dS: int
+            difference between first and last occurence from the original data
+        """
+        first_node = self._nodes[0]
+        maxv = dS - (first_node.r - 1) * first_node.p + 1
+        return np.log2(maxv)
+
+    def mdl_cost_p0(self, dS, eps_oza=0):
+        first_node = self._nodes[0]
+        maxv = np.floor((dS - eps_oza) / (first_node.r - 1))
+        return np.log2(maxv)
+
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
 
@@ -210,6 +226,18 @@ class Tree(Node):
         """remove `tau` and `E` from the current object, return a new instance of Node"""
         return Node(
             self.r, self.p, children=self.children, children_dists=self.children_dists
+        )
+
+    def mdl_cost_E(self):
+        return np.sum(np.abs(self.E))  # TODO : make this a precomputed attribute
+
+    def mdl_cost(self, dS, **event_frequencies):
+        return (
+            self.mdl_cost_A(**event_frequencies)
+            + self.mdl_cost_R(**event_frequencies)
+            + self.mdl_cost_p0(dS)
+            + self.mdl_cost_tau(dS)
+            + self.mdl_cost_E()
         )
 
 
