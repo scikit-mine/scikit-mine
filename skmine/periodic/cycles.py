@@ -398,9 +398,9 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
     >>> pcm = PeriodicCycleMiner().fit(S)
     >>> pcm.discover()
-                   start  length  period
-    ring_a_bell 0     40       4      20
-                1     10       3      11
+                   start  length  period       cost
+    ring_a_bell 0     40       4      20  24.665780
+                1     10       3      11  23.552849
 
     References
     ----------
@@ -484,7 +484,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
     evaluate = evaluate
 
-    def discover(self, shifts=False):
+    def discover(self, shifts=False, tids=False):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
@@ -493,12 +493,14 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         -------
         pd.DataFrame
             DataFrame with the following columns
-                ==========  ==================================
+                ==========  ======================================
                 start       when the cycle starts
                 length      number of occurrences in the event
                 period      inter-occurrence delay
                 dE          shift corrections, if shifts=True
-                ==========  ==================================
+                tids        Transactions ids covered, if tids=True
+                cost        MDL cost
+                ==========  ======================================
 
         Example
         -------
@@ -506,21 +508,22 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         >>> S = pd.Series("ring", [10, 20, 32, 40, 60, 79, 100, 240])
         >>> pcm = PeriodicCycleMiner().fit(S)
         >>> pcm.discover()
-                start  length  period
-        ring 0     40       4      20
-             1     10       3      11
-
+                start  length  period       cost
+        ring 0     40       4      20  24.665780
+             1     10       3      11  23.552849
         """
-        all_cols = ["start", "length", "period"]
+        all_cols = ["start", "length", "period", "cost"]
+        if tids:
+            all_cols.extend(["tids"])
         if shifts:
-            all_cols += ["dE"]
+            all_cols.extend(["dE"])
         cycles = self.cycles_[all_cols].copy()
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_
         )
 
         if shifts:
-            cycles.loc[:, "dE"] = cycles.dE.map(lambda a: a * 10 ** self.n_zeros_)
+            cycles.loc[:, "dE"] = cycles.dE * (10 ** self.n_zeros_)
 
         if self.is_datetime_:
             cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
