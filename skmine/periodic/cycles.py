@@ -53,7 +53,7 @@ def cycle_length(S, inter, n_event_tot, dS):
         The width of S is then r
 
     inter: np.array of type int64
-        a collection of inter occurences, all having the same length: r - 1
+        a collection of inter occurrence gaps, all having the same length: r - 1
 
     n_event_tot: int
         number of events in the original events
@@ -67,7 +67,7 @@ def cycle_length(S, inter, n_event_tot, dS):
         lengths for (a, r, p, tau, E)
     """
     r = S.shape[1]
-    assert inter.shape[1] == r - 1  # check inter occurences compliant with events
+    assert inter.shape[1] == r - 1  # check inter occurrences compliant with events
     p = np.median(inter, axis=1)
     E = inter - p.reshape((-1, 1))
     dE = E.sum(axis=1)
@@ -87,9 +87,9 @@ def compute_cycles_dyn(S, n_tot, max_length=100):
     Parameters
     ----------
     S: pd.Index or np.array
-        a Series of occurences
+        a Series of occurrences
     n_tot: int
-        total number of occurences in the original events
+        total number of occurrences in the original events
     """
     _, cut_points = get_table_dyn(S, n_tot, max_length)
     splits = _recover_splits_rec(cut_points, 0, len(S) - 1)
@@ -112,11 +112,11 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     Parameters
     ----------
     S: pd.Index or np.ndarray
-        a Series of occurences
+        a Series of occurrences
     n_tot: int
-        total number of occurences in the original events
+        total number of occurrences in the original events
     max_length: int, default=None
-        maximum number of occurences for a cycle to cover,
+        maximum number of occurrences for a cycle to cover,
         by default it will be set to :math:`\log_{2}\left(|S|\right)`
     """
     diffs = np.diff(S)
@@ -165,17 +165,17 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
 
 def extract_triples(S, l_max=None):
     """
-    Extract cycles of length 3 given a list of occurences S
+    Extract cycles of length 3 given a list of occurrences S
     Parameters
     ----------
     S: pd.Index
-        input occurences
+        input occurrences
 
     l_max: float
-        maximum absolute difference between two occurences to considered
+        maximum absolute difference between two occurrences to considered
         for inclusion in the same triple.
         By default it will be set to the median of the
-        inter-occurence differences from S.
+        inter-occurrence differences from S.
     """
     triples = list()
     l_max = l_max or np.median(np.diff(S))
@@ -256,27 +256,27 @@ def _remove_zeros(numbers: pd.Series):
 
 def _reconstruct(start, period, dE):
     """
-    Reconstruct occurences,
+    Reconstruct occurrences,
     starting from `start`, and
     correcting `period` with a delta for all deltas in `dE`,
-    `len(dE)` occurences are reconstructed
+    `len(dE)` occurrences are reconstructed
 
     Parameters
     ----------
     start: int or datetime
         starting point for the event
     period: int or timedelta
-        period between two occurences
+        period between two occurrences
     d_E: np.array of [int|timedelta]
-        inters occurences deltas
+        inters occurrences deltas
     """
-    occurences = [start]
+    occurrences = [start]
     current = start
     for d_e in dE:
         e = current + period + d_e
-        occurences.append(e)
+        occurrences.append(e)
         current = e
-    return occurences
+    return occurrences
 
 
 def _generate_candidates(
@@ -301,28 +301,28 @@ def _generate_candidates(
     return list(sorted(cycles, key=lambda _: _.shape[1], reverse=True))
 
 
-def evaluate(S, cands):
+def evaluate(S, cands, n_occs_tot):
     """
     Evaluate candidates `cands`, given S
 
     Unlike the original implementation by Galbrun & Al.,
-    if an occurence is present in more than one candidate cycle, we keep the cycle
+    if an occurrence is present in more than one candidate cycle, we keep the cycle
     with the greatest length.
 
     Parameters
     ----------
     S: pd.Index
-        Series of occurences for a specific event
+        Series of occurrences for a specific event
     cands: list[np.ndarray]
-        A list of candidate batches. Each batch contains candidates occurences of the same length,
+        A list of candidate batches. Each batch contains candidates occurrences of the same length,
         hence stored in a common `numpy.ndarray`.
         Batches are sorted by decreasing order of width,
         so that we consider larger candidates first.
-    overlap: bool, default=False
-        if True, allow mutliple cycles to be accepted for a single occurence
-        eg. two cycles covering [0, 2, 4] and [0, 2, 6]
-        would be accepted in the final set of cycles
     """
+    # TODO : return cycles in `generate_candidates`, instead of having batch of
+    # occurrences to evaluate and return as cycles
+    # TODO : add overlap keyword
+
     res = list()  # list of pandas DataFrame
     covered = list()
 
@@ -333,8 +333,23 @@ def evaluate(S, cands):
         E = np.diff(cand_batch, axis=1)
         period = np.floor(np.median(E, axis=1)).astype("int64")
         dE = (E.T - period).T
+        tids = [
+            Bitmap(_)
+            for _ in np.searchsorted(S, cand_batch.reshape(-1)).reshape(
+                cand_batch.shape
+            )
+        ]
+
+        mdl_cost = sum(cycle_length(cand_batch, E, n_occs_tot, S[-1] - S[0]))
         df = pd.DataFrame(
-            dict(start=cand_batch[:, 0], length=length, period=period, dE=dE.tolist())
+            dict(
+                start=cand_batch[:, 0],
+                length=length,
+                period=period,
+                dE=dE.tolist(),
+                tids=tids,
+                cost=mdl_cost,
+            )
         )
         res.append(df)
         covered.extend(np.unique(cand_batch))
@@ -360,8 +375,8 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
     - :math:`\\alpha` is the `repeating event`
     - :math:`r` is the number of repetitions of the event, called the `cycle length`
-    - :math:`p` is the inter-occurence distance, called the `cycle period`
-    - :math:`\\tau` is the index of the first occurence, called the `cycle starting point`
+    - :math:`p` is the inter-occurrence distance, called the `cycle period`
+    - :math:`\\tau` is the index of the first occurrence, called the `cycle starting point`
     - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`
 
 
@@ -370,7 +385,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     max_length: int, default=20
         maximum length for a candidate cycle, when running the dynamic programming heuristic
     keep_residuals: bool, default=False
-        Either to keep track of residuals (occurences not covered by any cycle) or not.
+        Either to keep track of residuals (occurrences not covered by any cycle) or not.
         Residuals are required for a lossless reconstruction of the original data.
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single event is attributed a job
@@ -407,7 +422,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         """fit PeriodicCycleMiner on data logs
 
         This generate new candidate cycles and evaluate them.
-        Residual occurences are stored as an internal attribute,
+        Residual occurrences are stored as an internal attribute,
         for later reconstruction (MDL is lossless)
 
         Parameters
@@ -432,11 +447,11 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
-        n_event_tot = S.shape[0]
+        n_occs_tot = S.shape[0]
         alpha_groups = S.groupby(S.values)
         candidates = alpha_groups.apply(
             lambda S_a: _generate_candidates(
-                S_a.index.values, n_event_tot, self.max_length
+                S_a.index.values, n_occs_tot, self.max_length
             )
         )
         candidates = candidates[candidates.map(len) > 0]
@@ -450,7 +465,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         cycles, residuals = zip(
             *Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(evaluate)(alpha_groups.groups[event], cands)
+                delayed(evaluate)(alpha_groups.groups[event], cands, n_occs_tot)
                 for event, cands in candidates.items()
             )
         )
@@ -460,7 +475,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             self.residuals_ = {
                 **alpha_groups.groups,
                 **residuals,
-            }  # fill groups with no cands with all occurences
+            }  # fill groups with no cands with all occurrences
 
         c = dict(zip(candidates.keys(), cycles))
         self.cycles_ = pd.concat(c.values(), keys=c.keys())
@@ -478,12 +493,12 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         -------
         pd.DataFrame
             DataFrame with the following columns
-                ==========  =================================
+                ==========  ==================================
                 start       when the cycle starts
-                length      number of occurences in the event
-                period      inter-occurence delay
+                length      number of occurrences in the event
+                period      inter-occurrence delay
                 dE          shift corrections, if shifts=True
-                ==========  =================================
+                ==========  ==================================
 
         Example
         -------
@@ -514,7 +529,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         return cycles
 
     def reconstruct(self):
-        """Reconstruct the original occurences from the current cycles.
+        """Reconstruct the original occurrences from the current cycles.
         Residuals will also be included, as the compression scheme is lossless
 
         Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle
@@ -536,12 +551,12 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         result = list()
         cycles_groups = cycles.groupby(level=0)
         for alpha, df in cycles_groups:
-            alpha_occurences = list()
+            alpha_occurrences = list()
             for start, period, dE in df.values:
-                occurences = _reconstruct(start, period, dE)
-                alpha_occurences.extend(occurences)
+                occurrences = _reconstruct(start, period, dE)
+                alpha_occurrences.extend(occurrences)
             residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
-            S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurences)])
+            S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurrences)])
             result.append(S)
 
         # add unfrequent events
@@ -563,7 +578,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         Parameters
         ----------
         S: pd.Index or numpy.ndarray
-            Series of occurences for a specific event
+            Series of occurrences for a specific event
 
         Returns
         -------

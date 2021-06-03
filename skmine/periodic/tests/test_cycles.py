@@ -173,10 +173,10 @@ def test_evaluate():
         np.array([[0, 2, 4], [6, 8, 10]]),
     ]
     minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cycles, residuals = evaluate(minutes, cands)
+    cycles, residuals = evaluate(minutes, cands, len(minutes))
     assert residuals.size == 0
     _types = np.unique(cycles.dtypes)
-    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
     assert np.issubdtype(_types[0], np.number)
     assert cycles.length.tolist() == [6, 3, 3]
     assert (cycles.period == 2).all()
@@ -190,10 +190,10 @@ def test_evaluate_overlapping_candidates():
         np.array([[0, 2, 4], [6, 8, 10]]),
     ]
     minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cycles, residuals = evaluate(minutes, cands)
+    cycles, residuals = evaluate(minutes, cands, len(minutes))
     assert residuals.tolist() == [6, 10]
     _types = np.unique(cycles.dtypes)
-    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
     assert np.issubdtype(_types[0], np.number)
     assert cycles.length.tolist() == [6, 4]
     assert (cycles.period == 2).all()
