@@ -9,7 +9,6 @@ from itertools import groupby
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
@@ -24,24 +23,26 @@ INDEX_TYPES = (
 )
 
 
-def residual_length(S, n_event_tot, dS):
+def residual_length(S_alpha, n_occs_tot, dS):
     """
-    compute L(o) = L(t) + L(a) for all (a, t) in S
+    compute L(o) = L(t) + L(a) for all (a, t) in S_alpha
     i.e the length from a block of residual events
 
     Parameters
     ----------
-    S: np.ndarray of shape or scalar
-        array containing indices for events to consider
+    S_a: np.ndarray of shape or scalar
+        array containing indices for the event `alpha` to consider
 
-    n_event_tot: int
-        number of events in the original events
+    n_occs_tot: int
+        total number of occurrences in the original data
 
     dS: int
         max - min from original events
     """
-    card = S.shape[0] if isinstance(S, np.ndarray) else 1
-    return log(dS + 1) - log(card / float(n_event_tot))
+    card = (
+        S_alpha.shape[0] if isinstance(S_alpha, np.ndarray) else 1
+    )  # TODO : remove me
+    return log(dS + 1) - log(card / float(n_occs_tot))
 
 
 def cycle_length(S, inter, n_event_tot, dS):
@@ -118,13 +119,14 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
     max_length: int, default=None
         maximum number of occurrences for a cycle to cover,
         by default it will be set to :math:`\log_{2}\left(|S|\right)`
+
     """
     diffs = np.diff(S)
     triples = sliding_window_view(S, 3)
     diff_pairs = sliding_window_view(diffs, 2)
     dS = S.max() - S.min()
 
-    score_one = residual_length(1, n_tot, dS)
+    score_one = residual_length(1, n_tot, dS)  # 1 really ?
 
     scores = sum(cycle_length(triples, diff_pairs, len(S), dS))
     change = scores > 3 * score_one
@@ -279,16 +281,20 @@ def _reconstruct(start, period, dE):
     return occurrences
 
 
-def _generate_candidates(
-    S_a: np.array, n_event_tot: int, max_length: int = 100, presort=False
+def _generate_candidates_batch(
+    S_a: np.array, n_occs_tot: int, max_length=100, presort=False
 ):
+    """
+    Generate occurrences to be merged together for form a cycle
+    The result if a list of np.array, sorted by decreasing order of width
+    """
     if len(S_a) < 3:
         return list()
     if presort:
         S_a = np.sort(S_a)
     dS = S_a[-1] - S_a[0]
     l_max = np.log2(dS + 1) - 2
-    cycles, covered = compute_cycles_dyn(S_a, n_event_tot, max_length)
+    cycles, covered = compute_cycles_dyn(S_a, n_occs_tot, max_length)
     covered = Bitmap(covered)
 
     if len(S_a) - len(covered) > 3:  # add triples if necessary
@@ -301,46 +307,29 @@ def _generate_candidates(
     return list(sorted(cycles, key=lambda _: _.shape[1], reverse=True))
 
 
-def evaluate(S, cands, n_occs_tot):
+def generate_candidates(S_a, n_occs_tot, max_length=100):
     """
-    Evaluate candidates `cands`, given S
-
-    Unlike the original implementation by Galbrun & Al.,
-    if an occurrence is present in more than one candidate cycle, we keep the cycle
-    with the greatest length.
-
-    Parameters
-    ----------
-    S: pd.Index
-        Series of occurrences for a specific event
-    cands: list[np.ndarray]
-        A list of candidate batches. Each batch contains candidates occurrences of the same length,
-        hence stored in a common `numpy.ndarray`.
-        Batches are sorted by decreasing order of width,
-        so that we consider larger candidates first.
+    Returns
+    -------
+    A list of candidate batches. Each batch contains candidates occurrences of the same length,
+    hence stored in a common `numpy.ndarray`.
+    Batches are sorted by decreasing order of width, so that we consider larger candidates first.
     """
-    # TODO : return cycles in `generate_candidates`, instead of having batch of
-    # occurrences to evaluate and return as cycles
-    # TODO : add overlap keyword
-
-    res = list()  # list of pandas DataFrame
-    covered = list()
-
-    for cand_batch in cands:
-        seen_occs = np.isin(cand_batch, covered).any(axis=1)
-        cand_batch = cand_batch[~seen_occs]  # larger candidates already seen
+    occ_batches = _generate_candidates_batch(S_a, n_occs_tot, max_length=max_length)
+    res = list()
+    for cand_batch in occ_batches:
         length = cand_batch.shape[1]
         E = np.diff(cand_batch, axis=1)
         period = np.floor(np.median(E, axis=1)).astype("int64")
         dE = (E.T - period).T
         tids = [
             Bitmap(_)
-            for _ in np.searchsorted(S, cand_batch.reshape(-1)).reshape(
+            for _ in np.searchsorted(S_a, cand_batch.reshape(-1)).reshape(
                 cand_batch.shape
             )
         ]
 
-        mdl_cost = sum(cycle_length(cand_batch, E, n_occs_tot, S[-1] - S[0]))
+        mdl_cost = sum(cycle_length(cand_batch, E, n_occs_tot, S_a[-1] - S_a[0]))
         df = pd.DataFrame(
             dict(
                 start=cand_batch[:, 0],
@@ -352,11 +341,110 @@ def evaluate(S, cands, n_occs_tot):
             )
         )
         res.append(df)
-        covered.extend(np.unique(cand_batch))
 
-    res = pd.concat(res, ignore_index=True)
-    residual_pos = Bitmap(range(len(S))) - Bitmap(np.searchsorted(S, sorted(covered)))
-    return res, S[residual_pos]
+    res = pd.concat(res, ignore_index=True) if res else pd.DataFrame()
+    return res
+
+
+def evaluate(cands: pd.DataFrame, k: int):
+    """
+    Evaluate candidates `cands`, given S
+
+    Unlike the original implementation by Galbrun & Al.,
+    if an occurrence is present in more than one candidate cycle, we keep the cycle
+    with the greatest length.
+
+    Parameters
+    ----------
+    cands: pd.DataFrame
+        a dataframe containing the candidates, as well-formed cycles
+    k: int
+        number of cycles to keep for the same occurence covered
+    """
+    idx = cands.explode("tids").groupby("tids").cost.nsmallest(k).index.unique()
+    return cands.loc[idx]
+
+
+class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
+    """
+    Miner periodic cycles, but in the scope of a single event
+
+    To this end, we only accept 1 dimensional arrays as input
+    PeriodicCycleMiner will operate by instantiating one SingleEventPeriodicMiner per event.
+    """
+
+    def __init__(self, max_length=20, keep_residuals=False, n_occs_tot=None, k=2):
+        self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
+        self.residuals_ = list()
+        self.max_length = max_length
+        self.keep_residuals = keep_residuals
+        if n_occs_tot:
+            assert isinstance(n_occs_tot, int)
+        self.n_occs_tot = n_occs_tot
+        self._dS = None  # difference between the last occurrence and the first
+        self.k = k
+        # TODO : set self.n_zeros_ at the scale of an event-projected miner like this one ?
+
+    def fit(self, X):
+        """
+        Parameters
+        ----------
+        X: np.array of shape (n_occs, )
+        """
+        X = np.array(X)  # COPY
+        X = np.sort(X.reshape(-1))
+        n_occs_tot = self.n_occs_tot or len(X)
+        candidates = generate_candidates(X, n_occs_tot, max_length=self.max_length)
+
+        if candidates.empty:
+            warnings.warn(
+                """could not generate candidates for the input sequence,
+                the model is left empty"""
+            )
+            if self.keep_residuals:
+                self.residuals_ = X
+            return self
+
+        self.cycles_ = evaluate(candidates, self.k)
+        if self.keep_residuals:
+            # careful with `~`
+            uncovered = Bitmap(range(len(X))) - Bitmap.union(*self.cycles_.tids)
+            self.residuals_ = X[uncovered]
+        return self
+
+    def discover(self):
+        """
+        Expose cycles as a brand new dataframe
+        """
+        return self.cycles_.copy(deep=True)
+
+    evaluate = evaluate
+
+    def reconstruct(self):
+        """Reconstruct the original occurrences from the current cycles.
+        Residuals will also be included, as the compression scheme is lossless
+
+        Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle
+        :math:`C`, we have
+
+        .. math::
+            \Delta(C)=(r-1) p+\sigma(E)
+
+        Returns
+        -------
+        pd.Series
+            The reconstructed dataset
+
+        Notes
+        -----
+        The index of the resulting pd.Series will not be sorted
+        """
+        alpha_occurrences = list()
+        for start, period, dE in self.cycles_[["start", "period", "dE"]].values:
+            occurrences = _reconstruct(start, period, dE)
+            alpha_occurrences.extend(occurrences)
+        alpha_occurrences.extend(self.residuals_)
+        return np.array(alpha_occurrences)
 
 
 class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
@@ -410,8 +498,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     """
 
     def __init__(self, *, max_length=20, keep_residuals=False, n_jobs=1):
-        self.cycles_ = pd.DataFrame(columns=["start", "length", "period", "dE"])
-        self.residuals_ = dict()
+        self.miners_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
         self.n_jobs = n_jobs
@@ -446,43 +533,21 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         S = S.copy()
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+        # TODO : do this in SingleEventCycleMiner?
 
         n_occs_tot = S.shape[0]
-        alpha_groups = S.groupby(S.values)
-        candidates = alpha_groups.apply(
-            lambda S_a: _generate_candidates(
-                S_a.index.values, n_occs_tot, self.max_length
+        alpha_groups = S.groupby(S.values).groups
+        miners = {
+            k: SingleEventPeriodicMiner(
+                self.max_length, self.keep_residuals, n_occs_tot
             )
-        )
-        candidates = candidates[candidates.map(len) > 0]
-
-        if candidates.empty:
-            warnings.warn(
-                """could not generate candidates for the input sequence,
-                the model is left empty"""
-            )
-            return self
-
-        cycles, residuals = zip(
-            *Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(evaluate)(alpha_groups.groups[event], cands, n_occs_tot)
-                for event, cands in candidates.items()
-            )
-        )
-
-        if self.keep_residuals:
-            residuals = dict(zip(candidates.keys().tolist(), residuals))
-            self.residuals_ = {
-                **alpha_groups.groups,
-                **residuals,
-            }  # fill groups with no cands with all occurrences
-
-        c = dict(zip(candidates.keys(), cycles))
-        self.cycles_ = pd.concat(c.values(), keys=c.keys())
+            for k in alpha_groups.keys()
+        }
+        self.miners_ = {k: miners[k].fit(v) for k, v in alpha_groups.items()}
 
         return self
 
-    evaluate = evaluate
+    evaluate = SingleEventPeriodicMiner.evaluate
 
     def discover(self, shifts=False, tids=False):
         """Return cycles as a pandas DataFrame, with 3 columns,
@@ -517,13 +582,15 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             all_cols.extend(["tids"])
         if shifts:
             all_cols.extend(["dE"])
-        cycles = self.cycles_[all_cols].copy()
+
+        series = [miner.discover() for miner in self.miners_.values()]
+        cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_
         )
 
         if shifts:
-            cycles.loc[:, "dE"] = cycles.dE * (10 ** self.n_zeros_)
+            cycles.loc[:, "dE"] = cycles.dE.map(np.array) * (10 ** self.n_zeros_)
 
         if self.is_datetime_:
             cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
@@ -550,23 +617,11 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         -----
         The index of the resulting pd.Series will not be sorted
         """
-        cycles = self.cycles_[["start", "period", "dE"]]
-        result = list()
-        cycles_groups = cycles.groupby(level=0)
-        for alpha, df in cycles_groups:
-            alpha_occurrences = list()
-            for start, period, dE in df.values:
-                occurrences = _reconstruct(start, period, dE)
-                alpha_occurrences.extend(occurrences)
-            residuals = pd.Series(alpha, index=self.residuals_.get(alpha, list()))
-            S = pd.concat([residuals, pd.Series(alpha, index=alpha_occurrences)])
-            result.append(S)
-
-        # add unfrequent events
-        for event in self.residuals_.keys() - cycles_groups.groups.keys():
-            result.append(pd.Series(event, index=self.residuals_[event]))
-
-        S = pd.concat(result)
+        series = [
+            pd.Series(event, index=miner.reconstruct())
+            for event, miner in self.miners_.items()
+        ]
+        S = pd.concat(series)
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
             S.index = S.index.astype("datetime64[ns]")
@@ -590,16 +645,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             Batches are sorted in inverse order of width,
             so that we consider larger candidate cycles first.
         """
-        n_event_tot = S.shape[0]
-        alpha_groups = S.groupby(S.values)
-
-        candidates = dict()
-        for event, S_a in alpha_groups:
-            cands = _generate_candidates(S_a.index.values, n_event_tot, self.max_length)
-            if cands:
-                candidates[event] = cands
-
-        return candidates
+        pass  # TODO only for InteractiveMode
 
     def get_residuals(self):
         """Get the residual events, i.e events not covered by any cycle
@@ -611,12 +657,13 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         pd.Series
             residual events
         """
-        if not self.residuals_:
-            return pd.Series()
-        residuals = pd.concat(
-            [pd.Series(alpha, index=occs) for alpha, occs in self.residuals_.items()]
-        )
-        residuals.index *= 10 ** self.n_zeros_
+        series = [
+            pd.Series(event, index=miner.residuals_)
+            for event, miner in self.miners_.items()
+        ]
+        residuals = pd.concat(series)
+        if not residuals.empty:
+            residuals.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
             residuals.index = residuals.index.astype("datetime64[ns]")
         return residuals
