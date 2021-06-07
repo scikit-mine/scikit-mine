@@ -12,7 +12,7 @@ import pandas as pd
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
-from ..utils import intersect2d, sliding_window_view
+from ..utils import intersect2d, series_first_value_pos, sliding_window_view
 
 log = np.log2
 
@@ -371,6 +371,18 @@ class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
 
     To this end, we only accept 1 dimensional arrays as input
     PeriodicCycleMiner will operate by instantiating one SingleEventPeriodicMiner per event.
+
+    Parameters
+    ----------
+    max_length: int, default=20
+        maximum length for a cycle
+    keep_residuals: bool, default=False
+        either to keep residuals (lossless compression) or not (lossy compression)
+    n_occs_tot: int, default=None
+        Number of total occurrences. When instanciating this class on a subset of the original
+        data, this can be useful to pass the number of occurrences in this original data.
+    k: int, default=2
+        Maximum number of cycles covering the same occurrence
     """
 
     def __init__(self, max_length=20, keep_residuals=False, n_occs_tot=None, k=2):
@@ -383,6 +395,7 @@ class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
         self.n_occs_tot = n_occs_tot
         self._dS = None  # difference between the last occurrence and the first
         self.k = k
+        self.tid_pad = 0
         # TODO : set self.n_zeros_ at the scale of an event-projected miner like this one ?
 
     def fit(self, X):
@@ -390,6 +403,11 @@ class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
         Parameters
         ----------
         X: np.array of shape (n_occs, )
+            Input occurrences
+
+        Notes
+        -----
+        X will be reshaped to a 1-d vector in any case
         """
         X = np.array(X)  # COPY
         X = np.sort(X.reshape(-1))
@@ -405,11 +423,14 @@ class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
                 self.residuals_ = X
             return self
 
-        self.cycles_ = evaluate(candidates, self.k)
+        cycles = evaluate(candidates, self.k)
+        self.cycles_ = cycles
         if self.keep_residuals:
             # careful with `~`
             uncovered = Bitmap(range(len(X))) - Bitmap.union(*self.cycles_.tids)
             self.residuals_ = X[uncovered]
+
+        # cycles.dE = cycles.dE.map(np.array) ?
         return self
 
     def discover(self):
@@ -544,6 +565,13 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             for k in alpha_groups.keys()
         }
         self.miners_ = {k: miners[k].fit(v) for k, v in alpha_groups.items()}
+
+        paddings = series_first_value_pos(S)  # positions are relative, make them global
+        for (event, miner,) in self.miners_.items():
+            if "tids" in miner.cycles_.columns:
+                miner.cycles_.tids = miner.cycles_.tids.map(
+                    lambda tids: tids >> paddings[event]
+                )
 
         return self
 
