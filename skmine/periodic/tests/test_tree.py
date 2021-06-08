@@ -50,7 +50,7 @@ def test_prefit():
     logs = pd.Series(["wake up", "breakfast"] * 10)
 
     cm = PeriodicPatternMiner()
-    singletons = cm._prefit(logs)
+    singletons = cm.prefit(logs)
 
     assert all((t.r == 10 for t in singletons))
     assert all((t.p == 2 for t in singletons))
@@ -252,3 +252,19 @@ def test_str():
     assert node_str.count("(") == node_str.count(")")
     assert "repeat every 7, 5 times" in node_str
     assert "repeat every 2, 3 times" in node_str
+
+
+def test_interactive():
+    events = "bacbacbbac"
+    occs = [2, 5, 7, 13, 18, 21, 26, 28, 30, 31]
+    S = pd.Series(list(events), index=occs)
+    answers = [True, False, True, True]
+
+    ppm = PeriodicPatternMiner(k=2)
+    candidates = ppm.generate_candidates(ppm.prefit(S))
+    with pytest.warns(UserWarning):
+        for cand, answer in zip(candidates, answers):
+            if answer:
+                ppm.update(cand)
+
+    assert len(ppm.discover()) == sum(answers)

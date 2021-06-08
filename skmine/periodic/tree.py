@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from sortedcontainers import SortedKeyList
 
+from ..base import BaseMiner, DiscovererMixin, InteractiveMiner
 from ..bitmaps import Bitmap
 from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
@@ -385,7 +386,7 @@ def greedy_cover(candidates: List[Tree], dS, k=10, **event_frequencies):
     return big_P
 
 
-class PeriodicPatternMiner:
+class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
     """
     Mining Periodic Pattern with a MDL criterion
 
@@ -417,7 +418,7 @@ class PeriodicPatternMiner:
         self.k = k
         self.dS = 1
 
-    def _prefit(self, S):  # TODO rename to .prefit and inherit InteractiveMiner
+    def prefit(self, S):
         cycles = self.cycle_miner.fit_discover(S, shifts=True, tids=True)
         singletons = list()
         for o in cycles.itertuples():
@@ -437,25 +438,16 @@ class PeriodicPatternMiner:
         self.dS = S.index.max() - S.index.min()
         return singletons
 
-    def evaluate(self, trees):
+    def generate_candidates(self, singletons, S=None):
         """
-        Evaluate candidate trees
+        Generate candidate trees be successive vertical/horizontal combinations
 
-        See the "greedy cover" method described at the top of page 30 from
-        the original paper
+        Starting from singleton trees (~ cycles)
+
+        See Also
+        --------
+        prefit
         """
-        return greedy_cover(trees, self.dS, k=self.k, **self.event_frequencies)
-
-    def fit(self, S):
-        """
-        Discover periodic patterns (in the form of trees) from a sequence of event `D`
-
-        This iteratively refines the set of trees by successive vertical/horizontal
-        combinations, starting from single-node trees describing `cycles`.
-
-        The resulting model is a list of periodic trees.
-        """
-        singletons = self._prefit(S)
         H = singletons  # list of horizontal combinations
         V = singletons  # list of vertical combinations
 
@@ -466,8 +458,37 @@ class PeriodicPatternMiner:
             H_prime = combine_horizontally(V, S=S)
             V = V_prime
             H = H_prime
-            C += H + V
+            C += H + V  # TODO yield ?
 
+        return C
+
+    def evaluate(self, trees):
+        """
+        Evaluate candidate trees
+
+        See the "greedy cover" method described at the top of page 30 from
+        the original paper
+        """
+        return greedy_cover(trees, self.dS, k=self.k, **self.event_frequencies)
+
+    def update(self, t: Tree):
+        import warnings
+
+        self.trees.append(t)
+        if len(self.trees) > self.k:
+            warnings.warn("current number of trees exceeds the `k` parameter")
+
+    def fit(self, S):
+        """
+        Discover periodic patterns (in the form of trees) from a sequence of event `D`
+
+        This iteratively refines the set of trees by successive vertical/horizontal
+        combinations, starting from single-node trees describing `cycles`.
+
+        The resulting model is a list of periodic trees.
+        """
+        singletons = self.prefit(S)
+        C = self.generate_candidates(singletons, S)
         self.trees = self.evaluate(C)
         return self
 
