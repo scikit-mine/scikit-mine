@@ -361,7 +361,10 @@ def evaluate(cands: pd.DataFrame, k: int):
     k: int
         number of cycles to keep for the same occurence covered
     """
-    idx = cands.explode("tids").groupby("tids").cost.nsmallest(k).index.unique()
+    idx = cands.explode("tids").groupby("tids").cost.nsmallest(k).index
+    if isinstance(idx, pd.MultiIndex):
+        idx = idx.get_level_values(1)
+    idx = idx.unique()
     return cands.loc[idx]
 
 
