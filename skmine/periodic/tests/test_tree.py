@@ -171,7 +171,7 @@ def test_discover_simple():
     S = pd.Series(list("bacbacbac"), index=occs)
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
-    bigger = ppm.forest[0]
+    bigger = ppm.trees[0]
     assert bigger.tau == 2
     assert bigger.p == 12
     assert bigger.r == 3
@@ -185,6 +185,12 @@ def test_discover_simple():
     occs_diff = np.abs(np.array(rec_occs) - np.array(occs))
     assert np.all(occs_diff <= 2)
 
+    disc = ppm.discover()
+    assert disc.dtypes.to_dict() == {
+        "description": pd.np.dtype("object"),
+        "cost": pd.np.dtype("float64"),
+    }
+
 
 def test_leaves_length():
     events = "bacbacbbac"
@@ -193,7 +199,7 @@ def test_leaves_length():
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
     event_freqs = {k: v / len(events) for k, v in Counter(events).items()}
-    length = encode_leaves(ppm.forest[0], event_freqs)
+    length = encode_leaves(ppm.trees[0], event_freqs)
     assert length == pytest.approx(12.72, rel=1e-2)
 
     # TODO try with
@@ -231,3 +237,18 @@ def test_greedy_cover(monkeypatch):
     # T2 should be the first inserted, followed by T3, and finally T1
     cover = greedy_cover([T1, T2, T3, T4], dS=None, k=3)
     assert cover == [T2, T3, T1]  # no T4 because k=3
+
+
+def test_str():
+    """check string formatting works correctly with a nested structure"""
+    node = Node(
+        r=5,
+        p=7,
+        children=[Node(r=3, p=2, children=["b", "c"], children_dists=[2]), "a"],
+        children_dists=[4],
+    )
+    node_str = str(node)
+    assert node_str[:2] == "(("  # two open parenthesis for a depth of 2
+    assert node_str.count("(") == node_str.count(")")
+    assert "repeat every 7, 5 times" in node_str
+    assert "repeat every 2, 3 times" in node_str

@@ -184,6 +184,16 @@ class Node:
     def __eq__(self, other):
         return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
+    def __str__(self):
+        dists_str = [f"{d} later" for d in self.children_dists]
+        children_str = list(map(str, self.children))  # recursive call here
+        event_str = [val for pair in zip(children_str, dists_str) for val in pair] + [
+            children_str[-1]
+        ]
+        event_str = ", ".join(event_str)
+        repeat = f"repeat every {self.p}, {self.r} times"
+        return f"({event_str} | {repeat})"
+
 
 class Tree(Node):
     """
@@ -226,12 +236,6 @@ class Tree(Node):
         """yield interal nodes"""
         return filter(lambda n: isinstance(n, Node), prefix_visitor(self))
 
-    def __str__(self):
-        """
-        get the expression for this tree
-        """
-        pass
-
     def to_node(self):
         """remove `tau` and `E` from the current object, return a new instance of Node"""
         return Node(
@@ -249,6 +253,13 @@ class Tree(Node):
             + self.mdl_cost_tau(dS)
             + self.mdl_cost_E()
         )
+
+    def __str__(self):
+        """Express this tree in a human-readable language"""
+        start_str = f"On {self.tau}"
+        repeat_str = f"repeat this every {self.p}, {self.r} times"
+        node_str = str(self.to_node())
+        return f"{start_str}, {node_str} | {repeat_str}"
 
 
 class Forest(SortedKeyList):  # TODO
@@ -445,7 +456,6 @@ class PeriodicPatternMiner:
         The resulting model is a list of periodic trees.
         """
         singletons = self._prefit(S)
-        # singletons = [Tree(tau=)]
         H = singletons  # list of horizontal combinations
         V = singletons  # list of vertical combinations
 
@@ -458,13 +468,15 @@ class PeriodicPatternMiner:
             H = H_prime
             C += H + V
 
-        self.forest = self.evaluate(C)
+        self.trees = self.evaluate(C)
         return self
 
     def discover(self):
         """
         Overview on the discovered trees
         """
-        cols = ["tau", "root", "shifts"]
-        data = [(t.tau, t.to_node(), t.shifts) for t in self.forest]
-        return pd.DataFrame(data, columns=cols)
+        data = [
+            dict(description=str(t), cost=t.mdl_cost(self.dS, **self.event_frequencies))
+            for t in self.trees
+        ]
+        return pd.DataFrame(data)
