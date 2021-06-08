@@ -1,3 +1,5 @@
+from itertools import compress
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -282,11 +284,10 @@ def test_interactive(D):
     slim = SLIM(pruning=False)
     slim.prefit(D)
     candidates = slim.generate_candidates()
-    for true_est_usage, (cand, est_usage), answer in zip(
-        est_usages, candidates, answers
+    for true_est_usage, (cand, est_usage) in compress(
+        zip(est_usages, candidates), answers
     ):
         assert est_usage == true_est_usage
-        if answer:
-            slim.update(cand)
+        slim.update(cand)
 
     assert len(slim.discover(singletons=False)) == sum(answers)

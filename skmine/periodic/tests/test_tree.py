@@ -1,5 +1,6 @@
 import dataclasses
 from collections import Counter
+from itertools import compress
 
 import numpy as np
 import pandas as pd
@@ -263,8 +264,7 @@ def test_interactive():
     ppm = PeriodicPatternMiner(k=2)
     candidates = ppm.generate_candidates(ppm.prefit(S))
     with pytest.warns(UserWarning):
-        for cand, answer in zip(candidates, answers):
-            if answer:
-                ppm.update(cand)
+        for cand in compress(candidates, answers):
+            ppm.update(cand)
 
     assert len(ppm.discover()) == sum(answers)
