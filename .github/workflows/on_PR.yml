@@ -20,12 +20,4 @@ jobs:
       - name: Generate coverage report
         run: |
           pytest --cov-report xml --cov=skmine --cov-config=.coveragerc skmine
-          coverage report --fail-under=92
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+          coverage report --fail-under=94
