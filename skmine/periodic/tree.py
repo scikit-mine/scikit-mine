@@ -6,6 +6,7 @@ import dataclasses
 from collections import defaultdict
 from functools import partial
 from itertools import chain, combinations, count
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -160,14 +161,19 @@ class Node:
         dS: int
             difference between first and last occurence from the original data
         """
-        first_node = self._nodes[0]
-        maxv = dS - (first_node.r - 1) * first_node.p + 1
-        return np.log2(maxv)
+        if self._nodes:
+            first_node = self._nodes[0]
+            maxv = dS - (first_node.r - 1) * first_node.p + 1
+            return np.log2(maxv)
+        return 0.0
 
     def mdl_cost_p0(self, dS, eps_oza=0):
-        first_node = self._nodes[0]
-        maxv = np.floor((dS - eps_oza) / (first_node.r - 1))
-        return np.log2(maxv)
+        """compute mdl cost for p0"""
+        if self._nodes:
+            first_node = self._nodes[0]
+            maxv = np.floor((dS - eps_oza) / (first_node.r - 1))
+            return np.log2(maxv)
+        return 0.0
 
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
@@ -335,6 +341,39 @@ def combine_horizontally(V: list, S=None):
     return H_prime
 
 
+def greedy_cover(candidates: List[Tree], dS, k=10, **event_frequencies):
+    """
+    Greedy cover, as described at the top of page 30 in the original paper
+
+    the set P of selected patterns is empty. Let O be the set of event
+    occurrences covered so far, also initially empty.
+
+    In each roud; the pattern p with smallest value of L(P) / |occs(P) \ O|
+    among remaining candidates is selected.
+
+    p is added to P, O is updated and the selection proceeds to the next round,
+    until the `k` round is reached (at most).
+    """
+    big_P = list()
+    big_O = Bitmap()  # set of event occurences covered so far
+    candidates = candidates.copy()
+
+    for _ in range(k):
+        p = min(
+            candidates,
+            key=lambda p: p.mdl_cost(dS, **event_frequencies)
+            / (len(p.tids - big_O) or 0.001),
+        )
+        big_O |= p.tids
+        big_P.append(p)
+        candidates.remove(p)
+
+        if not candidates:
+            break
+
+    return big_P
+
+
 class PeriodicPatternMiner:
     """
     Mining Periodic Pattern with a MDL criterion
@@ -347,19 +386,29 @@ class PeriodicPatternMiner:
     A tree is defined as a 3-tuple of the form
     :math: `\tau`, `C`, `E`
 
+
+    Parameters
+    ----------
+    k: int, default=20
+        Number of trees to keep from the set of candidates.
+        Trees will be evaluated based on their
+
     See Also
     --------
     skmine.periodic.PeriodicCycleMiner
     """
 
-    def __init__(self, max_length=100):
+    def __init__(self, k=20, **cycle_miner_kwargs):
         # TODO : pass instance of PeriodicCycleMiner, check is_fitted
-        self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
-        self.forest = Forest()
+        self.cycle_miner = PeriodicCycleMiner(**cycle_miner_kwargs)
+        self.trees = list()
+        self.event_frequencies = defaultdict(int)  # throw 1 by default
+        self.k = k
+        self.dS = 1
 
     def _prefit(self, S):  # TODO rename to .prefit and inherit InteractiveMiner
         cycles = self.cycle_miner.fit_discover(S, shifts=True, tids=True)
-        singletons = Forest()
+        singletons = list()
         for o in cycles.itertuples():
             t = Tree(
                 o.start,
@@ -370,7 +419,21 @@ class PeriodicPatternMiner:
                 tids=o.tids,
             )
             singletons.append(t)
+
+        singletons = sorted(singletons, key=lambda t: t.tau)
+
+        self.event_frequencies = (S.value_counts() / len(S)).to_dict()
+        self.dS = S.index.max() - S.index.min()
         return singletons
+
+    def evaluate(self, trees):
+        """
+        Evaluate candidate trees
+
+        See the "greedy cover" method described at the top of page 30 from
+        the original paper
+        """
+        return greedy_cover(trees, self.dS, k=self.k, **self.event_frequencies)
 
     def fit(self, S):
         """
@@ -395,8 +458,7 @@ class PeriodicPatternMiner:
             H = H_prime
             C += H + V
 
-        # TODO P = greedy_cover(C, S), return P
-        self.forest = C
+        self.forest = self.evaluate(C)
         return self
 
     def discover(self):

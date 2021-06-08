@@ -13,6 +13,7 @@ from ..tree import (
     combine_vertically,
     encode_leaves,
     get_occs,
+    greedy_cover,
     grow_horizontally,
 )
 
@@ -217,3 +218,16 @@ def test_mdl_cost_R():
     )
     R = T.mdl_cost_R(a=0.5, b=0.3, c=0.8)
     assert round(R, 2) == 2.06
+
+
+def test_greedy_cover(monkeypatch):
+    # set a fixed mdl cost for easier testing
+    monkeypatch.setattr(Tree, "mdl_cost", lambda self, dS, **_: 4)
+    T1 = Tree(0, r=3, p=5, tids={0, 4, 8})  # _n_occs is 3
+    T2 = Tree(0, r=5, p=1, tids={0, 5, 10, 15, 20})
+    T3 = Tree(5, r=4, p=1, tids={5, 9, 13, 17})
+    T4 = Tree(2, r=1, p=1, tids={0, 5})  # 0 and 5 will be covered by T2
+
+    # T2 should be the first inserted, followed by T3, and finally T1
+    cover = greedy_cover([T1, T2, T3, T4], dS=None, k=3)
+    assert cover == [T2, T3, T1]  # no T4 because k=3
