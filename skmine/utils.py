@@ -350,12 +350,3 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
 
         del candidates[node]
         excluded[node] = neighbours
-
-
-def series_first_value_pos(S: pd.Series):
-    """for a pandas.Series, get a dictionary containing the first position for every value"""
-    values_to_pos = dict()
-    for idx, v in zip(count(), S.values):
-        if v not in values_to_pos:
-            values_to_pos[v] = idx
-    return values_to_pos

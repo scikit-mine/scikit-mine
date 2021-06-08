@@ -133,16 +133,16 @@ def test_combine_horizontally():
 
 
 def test_get_occs_singleton():
-    t = Tree(tau=2, r=3, p=12, children="b", E=[0, -1, 1])
+    t = Tree(tau=2, r=3, p=12, children="b", E=[-1, 1])
     assert t.get_occs() == [(2, "b"), (13, "b"), (26, "b")]
 
 
 @pytest.mark.parametrize(
     "E, positions",
     [
-        ([0] * 6, tuple(range(6))),
-        ([0, 0, 1, 0, 0, 2], (0, 1, 3, 4, 5, 8)),
-        ([0, 0, 1, -2, 0, 3], (0, 1, 3, 2, 5, 9)),
+        ([0] * 5, tuple(range(6))),
+        ([0, 1, 0, 0, 2], (0, 1, 3, 4, 5, 8)),
+        ([0, 1, -2, 0, 3], (0, 1, 3, 2, 5, 9)),
     ],
 )
 def test_get_occs(E, positions):
@@ -154,7 +154,7 @@ def test_get_occs(E, positions):
 
 @pytest.mark.parametrize(
     "E, positions",
-    [([0, 1, 0, 0, 0, 1], (0, 4, 5, 5, 8, 10)), (None, (0, 3, 4, 5, 8, 9))],
+    [([1, 0, 0, 0, 1], (0, 4, 5, 5, 8, 10)), (None, (0, 3, 4, 5, 8, 9))],
 )
 def test_get_occs_complex(E, positions):
     node = Node(
@@ -176,10 +176,11 @@ def test_discover_simple():
     assert bigger.r == 3
     assert len(bigger.children) == 3
     assert bigger.children == ["b", "a", "c"]
-    # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME
+    # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME page 21
 
     rec_occs, rec_events = zip(*bigger.get_occs())
     assert list(rec_events) == S.values.tolist()
+    # np.testing.assert_array_equal(S.index[bigger.tids], rec_occs)  # FIXME page 21
     occs_diff = np.abs(np.array(rec_occs) - np.array(occs))
     assert np.all(occs_diff <= 2)
 

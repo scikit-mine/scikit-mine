@@ -12,7 +12,7 @@ import pandas as pd
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..bitmaps import Bitmap
-from ..utils import intersect2d, series_first_value_pos, sliding_window_view
+from ..utils import intersect2d, sliding_window_view
 
 log = np.log2
 
@@ -566,11 +566,13 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         }
         self.miners_ = {k: miners[k].fit(v) for k, v in alpha_groups.items()}
 
-        paddings = series_first_value_pos(S)  # positions are relative, make them global
         for (event, miner,) in self.miners_.items():
             if "tids" in miner.cycles_.columns:
+                # FIXME: this is highly inefficient
                 miner.cycles_.tids = miner.cycles_.tids.map(
-                    lambda tids: tids >> paddings[event]
+                    lambda tids: Bitmap(
+                        np.searchsorted(S.index, alpha_groups[event][tids])
+                    )
                 )
 
         return self
@@ -673,7 +675,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             Batches are sorted in inverse order of width,
             so that we consider larger candidate cycles first.
         """
-        pass  # TODO only for InteractiveMode
+        # TODO only for InteractiveMode
 
     def get_residuals(self):
         """Get the residual events, i.e events not covered by any cycle

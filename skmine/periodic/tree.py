@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from sortedcontainers import SortedKeyList
 
+from ..bitmaps import Bitmap
 from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
@@ -24,12 +25,12 @@ shift_array = partial(array.array, "i")  # shifts are signed integers
 def get_occs(node, E=None, tau=0, sort=True, r=None):
     """
     get occurences covered by a node (or tree)
-    """
+    """  # TODO just check isinstance(Tree)
     if not E:
-        E = shift_array([0] * node._n_occs)
-    assert len(E) == node._n_occs
+        E = shift_array([0] * (node._n_occs - 1))
+    assert len(E) == node._n_occs - 1
 
-    def _get_occs(node, acc, E, tau=0, dist_acc=0):
+    def _get_occs(node, acc, E, tau=0):
         dists = np.cumsum([0] + node.children_dists)
         inters = np.arange(tau, (node.r * node.p) + tau, node.p, dtype=np.int32)
         x_acc = 0
@@ -42,7 +43,8 @@ def get_occs(node, E=None, tau=0, sort=True, r=None):
                 elif r is not None and len(acc) >= r:
                     return
                 else:
-                    e = E[len(acc)]
+                    # first one has no shift correction
+                    e = E[len(acc) - 1] if acc else 0
                     if idy == 0:
                         x_acc += e
                         y_acc = 0
@@ -191,18 +193,20 @@ class Tree(Node):
     The tree datastructure also holds specific attributes, like:
      - tau: the starting offset, i.e the position of the very first event described by the tree
      - E: a collections of shift corrections for events described by the tree
+     - tids
     """
 
-    def __init__(self, tau, r, p, E=None, *args, **kwargs):
+    def __init__(self, tau, r, p, tids=None, E=None, *args, **kwargs):
         super(Tree, self).__init__(r, p, *args, **kwargs)
         self.tau = tau  # TODO : add tau in repr
+        self.tids = tids or Bitmap()  # set _n_occs to len(tids) ??
         if E is None:
-            self.E = shift_array([0] * self._n_occs)
+            self.E = shift_array([0] * (self._n_occs - 1))
         else:
-            assert hasattr(E, "__len__") and len(E) == self._n_occs
+            assert hasattr(E, "__len__") and len(E) == self._n_occs - 1
             self.E = shift_array(E)
 
-    def get_occs(self):
+    def get_occs(self, apply_shifts: bool = True):
         """
         unfold the tree and retrieve all occurences of the events it describes
         """
@@ -262,55 +266,61 @@ def combine_vertically(H: list):
         C = [t for t in H if t == Tc]
         taus = np.array([_.tau for _ in C])
         cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
-        cycles_tri = merge_triples(cycles_tri)
+        cycles_tri = merge_triples(cycles_tri)  # TODO: check if this step is mandatory
         for cycle_batch in cycles_tri:
             p_vect = np.median(np.diff(cycle_batch, axis=1), axis=1)
             r = cycle_batch.shape[1]
-            for tau, p in zip(cycle_batch[:, 0], p_vect):
+            for idx, tau, p in zip(count(), cycle_batch[:, 0], p_vect):
                 # create a new tree to make sure we don't mistankenly
                 # manipulate references on the root
-                K = Tree(tau, r=r, p=p, children=[Tc.to_node()])
+                tids = Bitmap.union(*(_.tids for _ in C if _.tau in cycle_batch[idx]))
+                K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids)
                 # TODO : check cost (line 8 from algorithm 4)
                 V_prime.append(K)
-                H = [
-                    _ for _ in H if _ not in C
-                ]  # FIXME : this differs from the original paper
+                H = [_ for _ in H if _ not in C]
         else:
             break
 
     return V_prime
 
 
-def grow_horizontally(*trees, presort=True):
+def grow_horizontally(*trees, presort=True, S=None):
     """Grow trees horizontally"""
     if presort:
         trees = sorted(trees, key=lambda t: t.tau)
-    p = np.median([t.p for t in trees])
+    p = trees[0].p
+    # p = np.median([t.p for t in trees])
     r = min((_.r for _ in trees))
     children_dists = [b.tau - a.tau for a, b in zip(trees, trees[1:])]
-    children = [
-        t if any(map(lambda c: isinstance(c, Node), t.children)) else t.children[0]
-        for t in trees
-    ]
+    children = list(chain(*(_.children for _ in trees)))
     tau = trees[0].tau
-    T = Tree(tau, r, p, children=children, children_dists=children_dists)
+    tids = Bitmap.union(*(_.tids for _ in trees))
+    T = Tree(tau, r, p, children=children, children_dists=children_dists, tids=tids)
+    E = list()
 
-    occs1 = sorted(chain(*(get_occs(t, tau=t.tau, E=t.E, r=r) for t in trees)))
-    occs2 = get_occs(T, tau=tau)  # cover instances with a perfect tree
-    E = shift_array(
-        [a[0] - b[0] for a, b in zip(occs1, occs2)]
-    )  # perfect cover VS real occs
+    trees = list(trees)
+
+    if S is None:
+        occs1 = sorted(chain(*(get_occs(t, tau=t.tau, E=t.E) for t in trees))) * r
+        occs1 = occs1[1:]
+    else:
+        occs1 = S.iloc[tids[1:]].items()  # faster and safer
+    occs2 = get_occs(T, tau=tau)[1:]  # cover instances with a perfect tree
+    # E = shift_array([v for tup in zip(*[t.E for t in trees]) for v in tup])
+    E = shift_array([a[0] - b[0] for a, b in zip(occs1, occs2)])  # FIXME page 21
+    assert len(E) == T._n_occs - 1
     T.E = E
     return T
 
 
-def combine_horizontally(V: list):
+def combine_horizontally(V: list, S=None):
+    """Grow trees vertically"""
     H_prime = list()
     G = defaultdict(list)
     C = [(Pa, Pb) for Pa, Pb in combinations(V, 2) if Pb.tau <= Pa.tau + Pa.p]
 
     for Pa, Pb in C:
-        K = grow_horizontally(Pa, Pb)
+        K = grow_horizontally(Pa, Pb, S=S)
         # TODO : evaluate len of K here
         H_prime.append(K)
         G[id(Pa)].append(id(Pb))
@@ -347,18 +357,22 @@ class PeriodicPatternMiner:
         self.cycle_miner = PeriodicCycleMiner(max_length=max_length)
         self.forest = Forest()
 
-    def _prefit(self, D):
-        cycles = self.cycle_miner.fit_discover(D, shifts=True)
+    def _prefit(self, S):  # TODO rename to .prefit and inherit InteractiveMiner
+        cycles = self.cycle_miner.fit_discover(S, shifts=True, tids=True)
         singletons = Forest()
         for o in cycles.itertuples():
             t = Tree(
-                o.start, r=o.length, p=o.period, children=[o.Index[0]], E=[0] + o.dE
+                o.start,
+                r=o.length,
+                p=o.period,
+                children=[o.Index[0]],
+                E=o.dE,
+                tids=o.tids,
             )
             singletons.append(t)
-
         return singletons
 
-    def fit(self, D):
+    def fit(self, S):
         """
         Discover periodic patterns (in the form of trees) from a sequence of event `D`
 
@@ -367,7 +381,7 @@ class PeriodicPatternMiner:
 
         The resulting model is a list of periodic trees.
         """
-        singletons = self._prefit(D)
+        singletons = self._prefit(S)
         # singletons = [Tree(tau=)]
         H = singletons  # list of horizontal combinations
         V = singletons  # list of vertical combinations
@@ -376,7 +390,7 @@ class PeriodicPatternMiner:
 
         while V or H:
             V_prime = combine_vertically(H)
-            H_prime = combine_horizontally(V)
+            H_prime = combine_horizontally(V, S=S)
             V = V_prime
             H = H_prime
             C += H + V
@@ -386,6 +400,9 @@ class PeriodicPatternMiner:
         return self
 
     def discover(self):
+        """
+        Overview on the discovered trees
+        """
         cols = ["tau", "root", "shifts"]
         data = [(t.tau, t.to_node(), t.shifts) for t in self.forest]
         return pd.DataFrame(data, columns=cols)

@@ -216,16 +216,17 @@ def test_fit():
 
 
 def test_discover():
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+    minutes = np.array([0, 2, 4, 6, 25, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
     S = S.append(pd.Series("beta", index=[10, 17, 24, 31]))
     S.index = index_to_datetime(S.index)
+    S.sort_index(inplace=True)
     pcm = PeriodicCycleMiner()
     cycles = pcm.fit_discover(S)
     assert (cycles.dtypes != "object").all()  # only output structured data
     cycles = pcm.discover(tids=True)  # now pull out tids
-    assert cycles.tids.loc["beta"].iloc[0].min() == 8
+    assert list(cycles.tids.loc["beta"].iloc[0]) == [4, 5, 6, 8]
 
 
 @pytest.mark.parametrize("is_datetime", (True, False))
