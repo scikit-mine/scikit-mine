@@ -217,15 +217,28 @@ def test_mdl_cost_A():
     assert round(T.mdl_cost_A(a=0.5, b=0.3), 2) == 9.08
 
 
-def test_mdl_cost_R():
+def test_mdl_costs():
     T = Node(
         3,
         2,
         children=[Node(5, 2, children=["a", "b"], children_dists=[1]), "c"],
         children_dists=[2],
     )
-    R = T.mdl_cost_R(a=0.5, b=0.3, c=0.8)
-    assert round(R, 2) == 2.06
+    event_frequencies = dict(a=0.2, b=0.3, c=0.5)
+    dS = 10  # difference between max occurence and min occurence
+    cost_R = T.mdl_cost_R(**event_frequencies)
+    assert round(cost_R, 2) == 3.32
+
+    cost_A = T.mdl_cost_A(**event_frequencies)
+    assert round(cost_A, 2) == 11.4
+
+    cost_tau = T.mdl_cost_tau(dS)
+    assert round(cost_tau, 2) == 1.58
+
+    cost_p0 = T.mdl_cost_p0(dS)
+    assert round(cost_p0, 2) == 1.0
+
+    # TODO : cost of D
 
 
 def test_greedy_cover(monkeypatch):
