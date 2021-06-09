@@ -3,6 +3,7 @@ Periodic trees
 """
 import array
 import dataclasses
+import warnings
 from collections import defaultdict
 from functools import partial
 from itertools import chain, combinations, count
@@ -176,6 +177,31 @@ class Node:
             return np.log2(maxv)
         return 0.0
 
+    def mdl_cost_D(self, spanned, interleaving=False):
+        """
+        spanned is big_delta_star in page 16 and 17
+        """
+        # TODO : check we can do this kinf of arithmetic with datetimes
+        if self._nodes:
+            """ TODO What to to of the following lines ? see page 16/17
+            first_node = self._nodes[0]
+            delta_star_max = (
+                (spanned - self.r + 1)
+                if interleaving
+                else min(self.p, np.floor(spanned / self.r))
+            )
+            """
+        dists_cumsum = np.cumsum([0] + self.children_dists)
+        res = np.log2(np.floor(spanned / (self.r - 1)))  # see bottom of page 16
+        for idx, child in enumerate(self.children):
+            if isinstance(child, Node):
+                child_spanned = spanned - dists_cumsum[:idx]
+                res += child.mdl_cost_D(child_spanned, interleaving=interleaving)
+            else:
+                res -= dists_cumsum[idx]  # FIXME this can give negative costs
+
+        return res
+
     to_dict = dataclasses.asdict
     to_tuple = dataclasses.astuple
 
@@ -216,7 +242,7 @@ class Tree(Node):
     def __init__(self, tau, r, p, tids=None, E=None, *args, **kwargs):
         super(Tree, self).__init__(r, p, *args, **kwargs)
         self.tau = tau  # TODO : add tau in repr
-        self.tids = tids or Bitmap()  # set _n_occs to len(tids) ??
+        self.tids = tids or Bitmap()
         if E is None:
             self.E = shift_array([0] * (self._n_occs - 1))
         else:
@@ -246,13 +272,26 @@ class Tree(Node):
     def mdl_cost_E(self):
         return np.sum(np.abs(self.E))  # TODO : make this a precomputed attribute
 
-    def mdl_cost(self, dS, **event_frequencies):
+    def mdl_cost_D(self, S):
+        """compute the cost of D given S
+        # TODO rename S in D to avoid confusion
+
+        compute the time spanned by this tree (the root node) and make recursive
+        call on inner blocks (children)
+        """
+        if not self.tids:
+            raise ValueError("we need tids to compute the time spanned by a block")
+        spanned = S.index[self.tids[-1]] - S.index[self.tids[0]]
+        return super().mdl_cost_D(spanned)
+
+    def mdl_cost(self, D, dS, **event_frequencies):
         return (
             self.mdl_cost_A(**event_frequencies)
             + self.mdl_cost_R(**event_frequencies)
             + self.mdl_cost_p0(dS)
             + self.mdl_cost_tau(dS)
             + self.mdl_cost_E()
+            + self.mdl_cost_D(D)
         )
 
     def __str__(self):
@@ -353,7 +392,7 @@ def combine_horizontally(V: list, S=None):
     return H_prime
 
 
-def greedy_cover(candidates: List[Tree], dS, k=10, **event_frequencies):
+def greedy_cover(candidates: List[Tree], D, dS, k=10, **event_frequencies):
     """
     Greedy cover, as described at the top of page 30 in the original paper
 
@@ -373,7 +412,7 @@ def greedy_cover(candidates: List[Tree], dS, k=10, **event_frequencies):
     for _ in range(k):
         p = min(
             candidates,
-            key=lambda p: p.mdl_cost(dS, **event_frequencies)
+            key=lambda p: p.mdl_cost(D, dS, **event_frequencies)
             / (len(p.tids - big_O) or 0.001),
         )
         big_O |= p.tids
@@ -413,7 +452,7 @@ class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
     def __init__(self, k=20, **cycle_miner_kwargs):
         # TODO : pass instance of PeriodicCycleMiner, check is_fitted
         self.cycle_miner = PeriodicCycleMiner(**cycle_miner_kwargs)
-        self.trees = list()
+        self.codetable = list()  # list of (tree, cost) pairs
         self.event_frequencies = defaultdict(int)  # throw 1 by default
         self.k = k
         self.dS = 1
@@ -462,23 +501,28 @@ class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
 
         return C
 
-    def evaluate(self, trees):
+    def evaluate(self, trees, D):
         """
         Evaluate candidate trees
 
         See the "greedy cover" method described at the top of page 30 from
         the original paper
         """
-        return greedy_cover(trees, self.dS, k=self.k, **self.event_frequencies)
+        # TODO keep event_frequencies as an attribute
+        # TODO avoid calling mdl_cost here, this is already done in greedy_cover
+        dS = D.index.max() - D.index.min()
+        trees = greedy_cover(trees, D, dS, k=self.k, **self.event_frequencies)
+        costs = [t.mdl_cost(D, dS, **self.event_frequencies) for t in trees]
+        return list(zip(trees, costs))
 
     def update(self, t: Tree):
-        import warnings
-
-        self.trees.append(t)
-        if len(self.trees) > self.k:
+        self.codetable.append(
+            (t, 0)
+        )  # FIXME cost of 0 here, just for interactive mining, but to be fixed
+        if len(self.codetable) > self.k:
             warnings.warn("current number of trees exceeds the `k` parameter")
 
-    def fit(self, S):
+    def fit(self, D):
         """
         Discover periodic patterns (in the form of trees) from a sequence of event `D`
 
@@ -487,17 +531,14 @@ class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
 
         The resulting model is a list of periodic trees.
         """
-        singletons = self.prefit(S)
-        C = self.generate_candidates(singletons, S)
-        self.trees = self.evaluate(C)
+        singletons = self.prefit(D)
+        C = self.generate_candidates(singletons, D)
+        self.codetable = self.evaluate(C, D)
         return self
 
     def discover(self):
         """
         Overview on the discovered trees
         """
-        data = [
-            dict(description=str(t), cost=t.mdl_cost(self.dS, **self.event_frequencies))
-            for t in self.trees
-        ]
+        data = [dict(description=str(t[0]), cost=t[1]) for t in self.codetable]
         return pd.DataFrame(data)

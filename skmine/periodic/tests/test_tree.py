@@ -172,12 +172,13 @@ def test_discover_simple():
     S = pd.Series(list("bacbacbac"), index=occs)
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
-    bigger = ppm.trees[0]
+    bigger, cost = ppm.codetable[0]
     assert bigger.tau == 2
     assert bigger.p == 12
     assert bigger.r == 3
     assert len(bigger.children) == 3
     assert bigger.children == ["b", "a", "c"]
+    assert pytest.approx(cost, 14.51, abs=0.1)
     # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME page 21
 
     rec_occs, rec_events = zip(*bigger.get_occs())
@@ -200,7 +201,7 @@ def test_leaves_length():
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
     event_freqs = {k: v / len(events) for k, v in Counter(events).items()}
-    length = encode_leaves(ppm.trees[0], event_freqs)
+    length = encode_leaves(ppm.codetable[0][0], event_freqs)
     assert length == pytest.approx(12.72, rel=1e-2)
 
     # TODO try with
@@ -229,14 +230,14 @@ def test_mdl_cost_R():
 
 def test_greedy_cover(monkeypatch):
     # set a fixed mdl cost for easier testing
-    monkeypatch.setattr(Tree, "mdl_cost", lambda self, dS, **_: 4)
+    monkeypatch.setattr(Tree, "mdl_cost", lambda self, D, dS, **_: 4)
     T1 = Tree(0, r=3, p=5, tids={0, 4, 8})  # _n_occs is 3
     T2 = Tree(0, r=5, p=1, tids={0, 5, 10, 15, 20})
     T3 = Tree(5, r=4, p=1, tids={5, 9, 13, 17})
     T4 = Tree(2, r=1, p=1, tids={0, 5})  # 0 and 5 will be covered by T2
 
     # T2 should be the first inserted, followed by T3, and finally T1
-    cover = greedy_cover([T1, T2, T3, T4], dS=None, k=3)
+    cover = greedy_cover([T1, T2, T3, T4], D=pd.Series(), dS=None, k=3)
     assert cover == [T2, T3, T1]  # no T4 because k=3
 
 
