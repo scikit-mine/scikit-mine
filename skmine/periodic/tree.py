@@ -117,8 +117,8 @@ class Node:
     _n_occs: int = dataclasses.field(init=False, repr=False)
     children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
     children_dists: list = dataclasses.field(default_factory=list, hash=False)
-    _leaves: list = dataclasses.field(init=False)
-    _nodes: list = dataclasses.field(init=False)
+    _leaves: list = dataclasses.field(init=False, repr=False)
+    _nodes: list = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
         if self.children and (not len(self.children) - 1 == len(self.children_dists)):
@@ -212,14 +212,14 @@ class Node:
         return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
     def __str__(self):
-        dists_str = [f"{d} later" for d in self.children_dists]
         children_str = list(map(str, self.children))  # recursive call here
+        dists_str = map(str, self.children_dists)
         event_str = [val for pair in zip(children_str, dists_str) for val in pair] + [
             children_str[-1]
         ]
-        event_str = ", ".join(event_str)
-        repeat = f"repeat every {self.p}, {self.r} times"
-        return f"({event_str} | {repeat})"
+        event_str = " - ".join(event_str)
+        repeat = "{" + f"r={self.r}, p={self.p}" + "}"
+        return f"{repeat} ({event_str})"
 
 
 class Tree(Node):
@@ -296,10 +296,12 @@ class Tree(Node):
 
     def __str__(self):
         """Express this tree in a human-readable language"""
-        start_str = f"On {self.tau}"
-        repeat_str = f"repeat this every {self.p}, {self.r} times"
-        node_str = str(self.to_node())
-        return f"{start_str}, {node_str} | {repeat_str}"
+        return f"{self.tau} {super().__str__()}"
+
+    def __repr__(self):
+        repres = super(Tree, self).__repr__()
+        pos = len(type(self).__name__) + 1
+        return f"{repres[:pos]}tau={self.tau}, {repres[pos:]}"
 
 
 class Forest(SortedKeyList):  # TODO

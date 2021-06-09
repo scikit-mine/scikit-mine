@@ -263,10 +263,15 @@ def test_str():
         children_dists=[4],
     )
     node_str = str(node)
-    assert node_str[:2] == "(("  # two open parenthesis for a depth of 2
-    assert node_str.count("(") == node_str.count(")")
-    assert "repeat every 7, 5 times" in node_str
-    assert "repeat every 2, 3 times" in node_str
+    assert node_str == "{r=5, p=7} ({r=3, p=2} (b - 2 - c) - 4 - a)"
+
+    tree = Tree(
+        tau=3, **{k: v for k, v in node.__dict__.items() if not k.startswith("_")}
+    )
+    assert str(tree).endswith(node_str)
+
+    assert eval(repr(node)) == node
+    assert eval(repr(tree)) == tree
 
 
 def test_interactive():
