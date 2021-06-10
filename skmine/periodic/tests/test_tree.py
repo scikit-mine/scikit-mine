@@ -100,12 +100,9 @@ def test_grow_horizontally():
 
     T = grow_horizontally(*trees)
 
-    assert T.tau == 2
-    assert T.r == 5
-    assert T.p == 7
-    assert T.children_dists == [2, 1]
-    assert T.children == ["wake up", "breakfast", "take metro"]
+    assert str(T) == "2 {r=5, p=7} (wake up - 2 - breakfast - 1 - take metro)"
     assert T._n_occs == 15  # merging 3 trees, minimum r is 5
+    # TODO : check E
 
 
 def test_combine_horizontally():
@@ -117,15 +114,9 @@ def test_combine_horizontally():
     ]
 
     H = combine_horizontally(V)
-    assert H[0].tau == 2
-    assert H[0].r == 5
-    assert H[0].children_dists == [
-        2,
-        1,
-        2,
-    ]  # FIXME: all have been merged, because MDL cost compute is missing
-    assert H[0].children[:2] == ["b", "a"]
-    assert isinstance(H[0].children[2], Node)
+    # FIXME: all have been merged, because MDL cost compute is missing
+    # last a should not be there
+    assert str(H[0]) == "2 {r=5, p=7} (b - 2 - a - 1 - {r=3, p=2} (b) - 2 - a)"
 
 
 def test_get_occs_singleton():
@@ -167,11 +158,8 @@ def test_discover_simple():
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
     bigger, cost = ppm.codetable[0]
-    assert bigger.tau == 2
-    assert bigger.p == 12
-    assert bigger.r == 3
-    assert len(bigger.children) == 3
-    assert bigger.children == ["b", "a", "c"]
+
+    assert str(bigger) == "2 {r=3, p=12} (b - 3 - a - 2 - c)"
     assert pytest.approx(cost, 14.51, abs=0.1)
     # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME page 21
 
