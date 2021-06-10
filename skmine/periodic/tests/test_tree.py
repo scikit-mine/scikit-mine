@@ -84,15 +84,9 @@ def test_combine_vertically():
     cv = combine_vertically(trees)
     assert len(cv) == 1
     T = cv[0]
-    assert T.tau == 2
-    assert T.r == 4
-    assert T.p == 11
-    assert len(T.children) == 1
+    assert str(T) == "2 {r=4, p=11.0} ({r=3, p=2} (c - 1 - e))"
     first_node = T.children[0]
-    assert isinstance(first_node, Node)
-    assert not isinstance(first_node, Tree)
-    assert first_node.r == trees[0].r
-    assert first_node.p == trees[1].p
+    assert str(first_node) == "{r=3, p=2} (c - 1 - e)"
     assert trees[0] in T.get_internal_nodes()  # assert ref is same
 
 
