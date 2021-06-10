@@ -321,21 +321,31 @@ def combine_vertically(H: list):
     combine trees verically, by detecting cycles on their `tau`s
     """
     V_prime = list()
-    H = sorted(H, key=lambda e: e.tau)
+    H = sorted(H, key=lambda e: e.tau)  # TODO : use Forest class and no need for this
     while H:  # for each distinc tree
         Tc = H[0]
         C = [t for t in H if t == Tc]
         taus = np.array([_.tau for _ in C])
         cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
         cycles_tri = merge_triples(cycles_tri)  # TODO: check if this step is mandatory
+
         for cycle_batch in cycles_tri:
-            p_vect = np.median(np.diff(cycle_batch, axis=1), axis=1)
+            p_vect = np.floor(np.median(np.diff(cycle_batch, axis=1), axis=1)).astype(
+                int  # TODO make call to median to just return an int
+            )
             r = cycle_batch.shape[1]
             for idx, tau, p in zip(count(), cycle_batch[:, 0], p_vect):
                 # create a new tree to make sure we don't mistankenly
                 # manipulate references on the root
-                tids = Bitmap.union(*(_.tids for _ in C if _.tau in cycle_batch[idx]))
-                K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids)
+                sub_C = [_ for _ in C if _.tau in cycle_batch[idx]]
+                tids = Bitmap.union(*(_.tids for _ in sub_C))
+                taus_diffs = np.diff(taus) - p
+                E = [
+                    sub_C[idx].E.tolist() + [taus_diffs[idx]]
+                    for idx in range(len(taus_diffs))
+                ] + [sub_C[-1].E.tolist()]
+                E = list(chain(*E))
+                K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids, E=E)
                 # TODO : check cost (line 8 from algorithm 4)
                 V_prime.append(K)
                 H = [_ for _ in H if _ not in C]

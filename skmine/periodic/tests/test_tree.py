@@ -73,10 +73,10 @@ def test_node_id():
 def test_combine_vertically():
     """ Inspired from fig.4.b) in the original paper """
     trees = [
-        Tree(2, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(13, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(35, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(26, r=3, p=2, children="ce", children_dists=[1]),
+        Tree(2, r=3, p=2, children="ce", children_dists=[1], E=[1, 0, 0, 1, 0]),
+        Tree(13, r=3, p=2, children="ce", children_dists=[1], E=[0, 0, -2, 2, 0]),
+        Tree(35, r=3, p=2, children="ce", children_dists=[1], E=[1, -1, 0, 1, -1]),
+        Tree(26, r=3, p=2, children="ce", children_dists=[1], E=[0, 0, 0, 0, 0]),
         Tree(24, r=5, p=2),  # should not be combined, good `tau` but bad `r`
         Tree(96, r=3, p=2),  # should not be combined, good `r`, `p` but bad `tau`
         Tree(47, r=3, p=2, children="dc", children_dists=[1]),  # wrong children
@@ -84,10 +84,25 @@ def test_combine_vertically():
     cv = combine_vertically(trees)
     assert len(cv) == 1
     T = cv[0]
-    assert str(T) == "2 {r=4, p=11.0} ({r=3, p=2} (c - 1 - e))"
+    assert str(T) == "2 {r=4, p=11} ({r=3, p=2} (c - 1 - e))"
     first_node = T.children[0]
     assert str(first_node) == "{r=3, p=2} (c - 1 - e)"
     assert trees[0] in T.get_internal_nodes()  # assert ref is same
+
+    assert T.E.tolist() == (
+        trees[0].E.tolist()
+        + [0]
+        + trees[1].E.tolist()
+        + [2]
+        + trees[3].E.tolist()
+        + [-2]
+        + trees[2].E.tolist()
+    )
+
+    """
+    assert [_[0] for _ in get_occs(T, tau=T.tau, E=T.E, sort=False)[::6]] == sorted(
+        [t.tau for t in trees[:4]]
+    )"""  # FIXME get_occs seems to be broken
 
 
 def test_grow_horizontally():
