@@ -272,7 +272,7 @@ def test_str():
     assert eval(repr(tree)) == tree
 
     assert Node.from_str(node_str) == node
-    # assert Tree.from_str(tree_str) == tree  # TODO
+    assert Tree.from_str(tree_str) == tree
 
 
 def test_interactive():

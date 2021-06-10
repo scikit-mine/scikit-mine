@@ -225,17 +225,20 @@ class Node:
 
     @classmethod
     def from_str(cls, string, parse_dates=False):
+        """
+        Construct a node from a string of the form
+        {r=5, p=7} ({r=3, p=2} (b - 2 - c) - 4 - a)
+        """
         date_cons = dt.datetime if parse_dates else int
 
         r, p = re.search(r"\s*r=\s*(\d+),\s*p=\s*(\w+)", string).groups()
         r, p = int(r), date_cons(p)
 
-        nodes_str = string[:-1].split("(", 1)[
-            1
-        ]  # TODO: use pos from previous extraction
-        idx = 0
+        # TODO: use pos from previous extraction
+        nodes_str = string[:-1].split("(", 1)[1]
+        idx, dash_counter = 0, 0
         children, children_dists = list(), list()
-        dash_counter = 0
+
         while idx < len(nodes_str):
             if nodes_str[idx] == "{":
                 end = nodes_str[idx:].find(")") + 1
@@ -287,8 +290,8 @@ class Tree(Node):
      - tids
     """
 
-    def __init__(self, tau, r, p, tids=None, E=None, *args, **kwargs):
-        super(Tree, self).__init__(r, p, *args, **kwargs)
+    def __init__(self, tau, tids=None, E=None, *args, **kwargs):
+        super(Tree, self).__init__(*args, **kwargs)
         self.tau = tau  # TODO : add tau in repr
         self.tids = tids or Bitmap()
         if E is None:
@@ -354,12 +357,19 @@ class Tree(Node):
         return f"{repres[:pos]}tau={self.tau}, {repres[pos:]}"
 
     @classmethod
-    def from_str(self, s, datetime=False):
-        import pdb
-
-        pdb.set_trace()
-        tau, node = s.split("{", 1)
-        tau = tau.replace(" ", "")
+    def from_str(cls, string, parse_dates=False):
+        tau_constructor = dt.datetime if parse_dates else int
+        tau_match = re.search(r"\w+", string)
+        node_str = string[tau_match.end() :]
+        tau = tau_constructor(tau_match.group())
+        node = Node.from_str(node_str)
+        return cls(
+            tau,
+            r=node.r,
+            p=node.p,
+            children=node.children,
+            children_dists=node.children_dists,
+        )
 
 
 class Forest(SortedKeyList):  # TODO
@@ -422,7 +432,7 @@ def grow_horizontally(*trees, presort=True, S=None):
     children = list(chain(*(_.children for _ in trees)))
     tau = trees[0].tau
     tids = Bitmap.union(*(_.tids for _ in trees))
-    T = Tree(tau, r, p, children=children, children_dists=children_dists, tids=tids)
+    T = Tree(tau, r=r, p=p, children=children, children_dists=children_dists, tids=tids)
     E = list()
 
     trees = list(trees)
