@@ -245,9 +245,14 @@ class Tree(Node):
         self.tids = tids or Bitmap()
         if E is None:
             self.E = shift_array([0] * (self._n_occs - 1))
+            self.mdl_cost_E = 0
         else:
             assert hasattr(E, "__len__") and len(E) == self._n_occs - 1
             self.E = shift_array(E)
+            self.mdl_cost_E = np.sum(np.abs(self.E))
+
+        if self.tids:
+            assert len(self.tids) == self._n_occs
 
     def get_occs(self, apply_shifts: bool = True):
         """
@@ -269,9 +274,6 @@ class Tree(Node):
             self.r, self.p, children=self.children, children_dists=self.children_dists
         )
 
-    def mdl_cost_E(self):
-        return np.sum(np.abs(self.E))  # TODO : make this a precomputed attribute
-
     def mdl_cost_D(self, S):
         """compute the cost of D given S
         # TODO rename S in D to avoid confusion
@@ -290,7 +292,7 @@ class Tree(Node):
             + self.mdl_cost_R(**event_frequencies)
             + self.mdl_cost_p0(dS)
             + self.mdl_cost_tau(dS)
-            + self.mdl_cost_E()
+            + self.mdl_cost_E
             + self.mdl_cost_D(D)
         )
 
