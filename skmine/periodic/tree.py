@@ -3,6 +3,8 @@ Periodic trees
 """
 import array
 import dataclasses
+import datetime as dt
+import re
 import warnings
 from collections import defaultdict
 from functools import partial
@@ -221,6 +223,52 @@ class Node:
         repeat = "{" + f"r={self.r}, p={self.p}" + "}"
         return f"{repeat} ({event_str})"
 
+    @classmethod
+    def from_str(cls, string, parse_dates=False):
+        date_cons = dt.datetime if parse_dates else int
+
+        r, p = re.search(r"\s*r=\s*(\d+),\s*p=\s*(\w+)", string).groups()
+        r, p = int(r), date_cons(p)
+
+        nodes_str = string[:-1].split("(", 1)[
+            1
+        ]  # TODO: use pos from previous extraction
+        idx = 0
+        children, children_dists = list(), list()
+        dash_counter = 0
+        while idx < len(nodes_str):
+            if nodes_str[idx] == "{":
+                end = nodes_str[idx:].find(")") + 1
+                child = cls.from_str(nodes_str[idx:end], parse_dates=parse_dates)
+                children.append(child)
+                idx = end
+            if nodes_str[idx] == " ":
+                idx += 1
+                continue
+            if nodes_str[idx] == "(":
+                buf = nodes_str[idx]
+                while nodes_str[idx] != ")":
+                    idx += 1
+                    buf += nodes_str[idx]
+                node = cls.from_str(buf)
+                children.append(node)
+                dash_counter += node._n_occs
+            if nodes_str[idx] == "-":
+                dash_counter += 1
+            else:
+                next_item_match = re.search("\w+", nodes_str[idx:])
+                next_item = next_item_match.group()
+                if dash_counter % 2:
+                    dist = date_cons(next_item)
+                    children_dists.append(dist)
+                else:
+                    children.append(next_item)
+                idx += next_item_match.end() - 1
+
+            idx += 1
+
+        return cls(r, p, children, children_dists)
+
 
 class Tree(Node):
     """
@@ -304,6 +352,14 @@ class Tree(Node):
         repres = super(Tree, self).__repr__()
         pos = len(type(self).__name__) + 1
         return f"{repres[:pos]}tau={self.tau}, {repres[pos:]}"
+
+    @classmethod
+    def from_str(self, s, datetime=False):
+        import pdb
+
+        pdb.set_trace()
+        tau, node = s.split("{", 1)
+        tau = tau.replace(" ", "")
 
 
 class Forest(SortedKeyList):  # TODO

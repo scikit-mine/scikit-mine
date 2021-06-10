@@ -265,10 +265,14 @@ def test_str():
     tree = Tree(
         tau=3, **{k: v for k, v in node.__dict__.items() if not k.startswith("_")}
     )
-    assert str(tree).endswith(node_str)
+    tree_str = str(tree)
+    assert tree_str.endswith(node_str)
 
     assert eval(repr(node)) == node
     assert eval(repr(tree)) == tree
+
+    assert Node.from_str(node_str) == node
+    # assert Tree.from_str(tree_str) == tree  # TODO
 
 
 def test_interactive():
