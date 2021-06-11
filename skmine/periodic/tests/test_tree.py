@@ -274,6 +274,11 @@ def test_str():
     assert Node.from_str(node_str) == node
     assert Tree.from_str(tree_str) == tree
 
+    node.p = 120
+    assert Node.from_str(node_str) != node
+    tree.tau = 2
+    assert Tree.from_str(tree_str) != tree
+
 
 def test_interactive():
     events = "bacbacbbac"

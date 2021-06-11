@@ -210,8 +210,14 @@ class Node:
     def __len__(self):
         return self._size
 
-    def __eq__(self, other):
-        return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, Node) and all(
+            getattr(self, attr) == getattr(o, attr)
+            for attr in ("r", "p", "children", "children_dists")
+        )
+
+    def __ne__(self, o: object) -> bool:
+        return not self.__eq__(o)
 
     def __str__(self):
         children_str = list(map(str, self.children))  # recursive call here
@@ -370,6 +376,14 @@ class Tree(Node):
             children=node.children,
             children_dists=node.children_dists,
         )
+
+    def __eq__(self, o):
+        """Comparing trees, transactions ids are not checked, on purpose."""
+        this_eq = isinstance(o, Tree) and self.tau == o.tau and self.E == o.E
+        return this_eq and super().__eq__(o)
+
+    def __ne__(self, o: object) -> bool:
+        return not self.__eq__(o)
 
 
 class Forest(SortedKeyList):  # TODO
