@@ -404,7 +404,7 @@ def combine_vertically(H: list):
     H = sorted(H, key=lambda e: e.tau)  # TODO : use Forest class and no need for this
     while H:  # for each distinc tree
         Tc = H[0]
-        C = [t for t in H if t == Tc]
+        C = [t for t in H if Node.__eq__(t, Tc)]
         taus = np.array([_.tau for _ in C])
         cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
         cycles_tri = merge_triples(cycles_tri)  # TODO: check if this step is mandatory

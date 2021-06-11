@@ -87,7 +87,7 @@ def test_combine_vertically():
     assert str(T) == "2 {r=4, p=11} ({r=3, p=2} (c - 1 - e))"
     first_node = T.children[0]
     assert str(first_node) == "{r=3, p=2} (c - 1 - e)"
-    assert trees[0] in T.get_internal_nodes()  # assert ref is same
+    assert trees[0].to_node() in T.get_internal_nodes()  # assert ref is same
 
     assert T.E.tolist() == (
         trees[0].E.tolist()
