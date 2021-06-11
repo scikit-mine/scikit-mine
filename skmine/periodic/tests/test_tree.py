@@ -73,10 +73,10 @@ def test_node_id():
 def test_combine_vertically():
     """ Inspired from fig.4.b) in the original paper """
     trees = [
-        Tree(2, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(13, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(35, r=3, p=2, children="ce", children_dists=[1]),
-        Tree(26, r=3, p=2, children="ce", children_dists=[1]),
+        Tree(2, r=3, p=2, children="ce", children_dists=[1], E=[1, 0, 0, 1, 0]),
+        Tree(13, r=3, p=2, children="ce", children_dists=[1], E=[0, 0, -2, 2, 0]),
+        Tree(35, r=3, p=2, children="ce", children_dists=[1], E=[1, -1, 0, 1, -1]),
+        Tree(26, r=3, p=2, children="ce", children_dists=[1], E=[0, 0, 0, 0, 0]),
         Tree(24, r=5, p=2),  # should not be combined, good `tau` but bad `r`
         Tree(96, r=3, p=2),  # should not be combined, good `r`, `p` but bad `tau`
         Tree(47, r=3, p=2, children="dc", children_dists=[1]),  # wrong children
@@ -84,16 +84,25 @@ def test_combine_vertically():
     cv = combine_vertically(trees)
     assert len(cv) == 1
     T = cv[0]
-    assert T.tau == 2
-    assert T.r == 4
-    assert T.p == 11
-    assert len(T.children) == 1
+    assert str(T) == "2 {r=4, p=11} ({r=3, p=2} (c - 1 - e))"
     first_node = T.children[0]
-    assert isinstance(first_node, Node)
-    assert not isinstance(first_node, Tree)
-    assert first_node.r == trees[0].r
-    assert first_node.p == trees[1].p
+    assert str(first_node) == "{r=3, p=2} (c - 1 - e)"
     assert trees[0] in T.get_internal_nodes()  # assert ref is same
+
+    assert T.E.tolist() == (
+        trees[0].E.tolist()
+        + [0]
+        + trees[1].E.tolist()
+        + [2]
+        + trees[3].E.tolist()
+        + [-2]
+        + trees[2].E.tolist()
+    )
+
+    """
+    assert [_[0] for _ in get_occs(T, tau=T.tau, E=T.E, sort=False)[::6]] == sorted(
+        [t.tau for t in trees[:4]]
+    )"""  # FIXME get_occs seems to be broken
 
 
 def test_grow_horizontally():
@@ -106,12 +115,9 @@ def test_grow_horizontally():
 
     T = grow_horizontally(*trees)
 
-    assert T.tau == 2
-    assert T.r == 5
-    assert T.p == 7
-    assert T.children_dists == [2, 1]
-    assert T.children == ["wake up", "breakfast", "take metro"]
+    assert str(T) == "2 {r=5, p=7} (wake up - 2 - breakfast - 1 - take metro)"
     assert T._n_occs == 15  # merging 3 trees, minimum r is 5
+    # TODO : check E
 
 
 def test_combine_horizontally():
@@ -123,15 +129,9 @@ def test_combine_horizontally():
     ]
 
     H = combine_horizontally(V)
-    assert H[0].tau == 2
-    assert H[0].r == 5
-    assert H[0].children_dists == [
-        2,
-        1,
-        2,
-    ]  # FIXME: all have been merged, because MDL cost compute is missing
-    assert H[0].children[:2] == ["b", "a"]
-    assert isinstance(H[0].children[2], Node)
+    # FIXME: all have been merged, because MDL cost compute is missing
+    # last a should not be there
+    assert str(H[0]) == "2 {r=5, p=7} (b - 2 - a - 1 - {r=3, p=2} (b) - 2 - a)"
 
 
 def test_get_occs_singleton():
@@ -173,11 +173,8 @@ def test_discover_simple():
     ppm = PeriodicPatternMiner()
     ppm.fit(S)
     bigger, cost = ppm.codetable[0]
-    assert bigger.tau == 2
-    assert bigger.p == 12
-    assert bigger.r == 3
-    assert len(bigger.children) == 3
-    assert bigger.children == ["b", "a", "c"]
+
+    assert str(bigger) == "2 {r=3, p=12} (b - 3 - a - 2 - c)"
     assert pytest.approx(cost, 14.51, abs=0.1)
     # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME page 21
 
@@ -244,10 +241,10 @@ def test_mdl_costs():
 def test_greedy_cover(monkeypatch):
     # set a fixed mdl cost for easier testing
     monkeypatch.setattr(Tree, "mdl_cost", lambda self, D, dS, **_: 4)
-    T1 = Tree(0, r=3, p=5, tids={0, 4, 8})  # _n_occs is 3
-    T2 = Tree(0, r=5, p=1, tids={0, 5, 10, 15, 20})
-    T3 = Tree(5, r=4, p=1, tids={5, 9, 13, 17})
-    T4 = Tree(2, r=1, p=1, tids={0, 5})  # 0 and 5 will be covered by T2
+    T1 = Tree(0, r=3, p=5, tids={0, 4, 8}, children="a")  # _n_occs is 3
+    T2 = Tree(0, r=5, p=1, tids={0, 5, 10, 15, 20}, children="b")
+    T3 = Tree(5, r=4, p=1, tids={5, 9, 13, 17}, children="c")
+    T4 = Tree(2, r=2, p=1, tids={0, 5}, children="d")  # 0 and 5 will be covered by T2
 
     # T2 should be the first inserted, followed by T3, and finally T1
     cover = greedy_cover([T1, T2, T3, T4], D=pd.Series(), dS=None, k=3)
@@ -263,10 +260,19 @@ def test_str():
         children_dists=[4],
     )
     node_str = str(node)
-    assert node_str[:2] == "(("  # two open parenthesis for a depth of 2
-    assert node_str.count("(") == node_str.count(")")
-    assert "repeat every 7, 5 times" in node_str
-    assert "repeat every 2, 3 times" in node_str
+    assert node_str == "{r=5, p=7} ({r=3, p=2} (b - 2 - c) - 4 - a)"
+
+    tree = Tree(
+        tau=3, **{k: v for k, v in node.__dict__.items() if not k.startswith("_")}
+    )
+    tree_str = str(tree)
+    assert tree_str.endswith(node_str)
+
+    assert eval(repr(node)) == node
+    assert eval(repr(tree)) == tree
+
+    assert Node.from_str(node_str) == node
+    assert Tree.from_str(tree_str) == tree
 
 
 def test_interactive():

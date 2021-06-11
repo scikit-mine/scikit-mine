@@ -3,6 +3,8 @@ Periodic trees
 """
 import array
 import dataclasses
+import datetime as dt
+import re
 import warnings
 from collections import defaultdict
 from functools import partial
@@ -117,8 +119,8 @@ class Node:
     _n_occs: int = dataclasses.field(init=False, repr=False)
     children: list = dataclasses.field(default_factory=list, hash=False)  # tuple ?
     children_dists: list = dataclasses.field(default_factory=list, hash=False)
-    _leaves: list = dataclasses.field(init=False)
-    _nodes: list = dataclasses.field(init=False)
+    _leaves: list = dataclasses.field(init=False, repr=False)
+    _nodes: list = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
         if self.children and (not len(self.children) - 1 == len(self.children_dists)):
@@ -212,14 +214,63 @@ class Node:
         return isinstance(other, Node) and self.to_tuple() == other.to_tuple()
 
     def __str__(self):
-        dists_str = [f"{d} later" for d in self.children_dists]
         children_str = list(map(str, self.children))  # recursive call here
+        dists_str = map(str, self.children_dists)
         event_str = [val for pair in zip(children_str, dists_str) for val in pair] + [
             children_str[-1]
         ]
-        event_str = ", ".join(event_str)
-        repeat = f"repeat every {self.p}, {self.r} times"
-        return f"({event_str} | {repeat})"
+        event_str = " - ".join(event_str)
+        repeat = "{" + f"r={self.r}, p={self.p}" + "}"
+        return f"{repeat} ({event_str})"
+
+    @classmethod
+    def from_str(cls, string, parse_dates=False):
+        """
+        Construct a node from a string of the form
+        {r=5, p=7} ({r=3, p=2} (b - 2 - c) - 4 - a)
+        """
+        date_cons = dt.datetime if parse_dates else int
+
+        r, p = re.search(r"\s*r=\s*(\d+),\s*p=\s*(\w+)", string).groups()
+        r, p = int(r), date_cons(p)
+
+        # TODO: use pos from previous extraction
+        nodes_str = string[:-1].split("(", 1)[1]
+        idx, dash_counter = 0, 0
+        children, children_dists = list(), list()
+
+        while idx < len(nodes_str):
+            if nodes_str[idx] == "{":
+                end = nodes_str[idx:].find(")") + 1
+                child = cls.from_str(nodes_str[idx:end], parse_dates=parse_dates)
+                children.append(child)
+                idx = end
+            if nodes_str[idx] == " ":
+                idx += 1
+                continue
+            if nodes_str[idx] == "(":
+                buf = nodes_str[idx]
+                while nodes_str[idx] != ")":
+                    idx += 1
+                    buf += nodes_str[idx]
+                node = cls.from_str(buf)
+                children.append(node)
+                dash_counter += node._n_occs
+            if nodes_str[idx] == "-":
+                dash_counter += 1
+            else:
+                next_item_match = re.search("\w+", nodes_str[idx:])
+                next_item = next_item_match.group()
+                if dash_counter % 2:
+                    dist = date_cons(next_item)
+                    children_dists.append(dist)
+                else:
+                    children.append(next_item)
+                idx += next_item_match.end() - 1
+
+            idx += 1
+
+        return cls(r, p, children, children_dists)
 
 
 class Tree(Node):
@@ -239,15 +290,20 @@ class Tree(Node):
      - tids
     """
 
-    def __init__(self, tau, r, p, tids=None, E=None, *args, **kwargs):
-        super(Tree, self).__init__(r, p, *args, **kwargs)
+    def __init__(self, tau, tids=None, E=None, *args, **kwargs):
+        super(Tree, self).__init__(*args, **kwargs)
         self.tau = tau  # TODO : add tau in repr
         self.tids = tids or Bitmap()
         if E is None:
             self.E = shift_array([0] * (self._n_occs - 1))
+            self.mdl_cost_E = 0
         else:
             assert hasattr(E, "__len__") and len(E) == self._n_occs - 1
             self.E = shift_array(E)
+            self.mdl_cost_E = np.sum(np.abs(self.E))
+
+        if self.tids:
+            assert len(self.tids) == self._n_occs
 
     def get_occs(self, apply_shifts: bool = True):
         """
@@ -269,9 +325,6 @@ class Tree(Node):
             self.r, self.p, children=self.children, children_dists=self.children_dists
         )
 
-    def mdl_cost_E(self):
-        return np.sum(np.abs(self.E))  # TODO : make this a precomputed attribute
-
     def mdl_cost_D(self, S):
         """compute the cost of D given S
         # TODO rename S in D to avoid confusion
@@ -290,16 +343,33 @@ class Tree(Node):
             + self.mdl_cost_R(**event_frequencies)
             + self.mdl_cost_p0(dS)
             + self.mdl_cost_tau(dS)
-            + self.mdl_cost_E()
+            + self.mdl_cost_E
             + self.mdl_cost_D(D)
         )
 
     def __str__(self):
         """Express this tree in a human-readable language"""
-        start_str = f"On {self.tau}"
-        repeat_str = f"repeat this every {self.p}, {self.r} times"
-        node_str = str(self.to_node())
-        return f"{start_str}, {node_str} | {repeat_str}"
+        return f"{self.tau} {super().__str__()}"
+
+    def __repr__(self):
+        repres = super(Tree, self).__repr__()
+        pos = len(type(self).__name__) + 1
+        return f"{repres[:pos]}tau={self.tau}, {repres[pos:]}"
+
+    @classmethod
+    def from_str(cls, string, parse_dates=False):
+        tau_constructor = dt.datetime if parse_dates else int
+        tau_match = re.search(r"\w+", string)
+        node_str = string[tau_match.end() :]
+        tau = tau_constructor(tau_match.group())
+        node = Node.from_str(node_str)
+        return cls(
+            tau,
+            r=node.r,
+            p=node.p,
+            children=node.children,
+            children_dists=node.children_dists,
+        )
 
 
 class Forest(SortedKeyList):  # TODO
@@ -317,21 +387,31 @@ def combine_vertically(H: list):
     combine trees verically, by detecting cycles on their `tau`s
     """
     V_prime = list()
-    H = sorted(H, key=lambda e: e.tau)
+    H = sorted(H, key=lambda e: e.tau)  # TODO : use Forest class and no need for this
     while H:  # for each distinc tree
         Tc = H[0]
         C = [t for t in H if t == Tc]
         taus = np.array([_.tau for _ in C])
         cycles_tri = extract_triples(taus)  # TODO : pass `l_max`
         cycles_tri = merge_triples(cycles_tri)  # TODO: check if this step is mandatory
+
         for cycle_batch in cycles_tri:
-            p_vect = np.median(np.diff(cycle_batch, axis=1), axis=1)
+            p_vect = np.floor(np.median(np.diff(cycle_batch, axis=1), axis=1)).astype(
+                int  # TODO make call to median to just return an int
+            )
             r = cycle_batch.shape[1]
             for idx, tau, p in zip(count(), cycle_batch[:, 0], p_vect):
                 # create a new tree to make sure we don't mistankenly
                 # manipulate references on the root
-                tids = Bitmap.union(*(_.tids for _ in C if _.tau in cycle_batch[idx]))
-                K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids)
+                sub_C = [_ for _ in C if _.tau in cycle_batch[idx]]
+                tids = Bitmap.union(*(_.tids for _ in sub_C))
+                taus_diffs = np.diff(taus) - p
+                E = [
+                    sub_C[idx].E.tolist() + [taus_diffs[idx]]
+                    for idx in range(len(taus_diffs))
+                ] + [sub_C[-1].E.tolist()]
+                E = list(chain(*E))
+                K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids, E=E)
                 # TODO : check cost (line 8 from algorithm 4)
                 V_prime.append(K)
                 H = [_ for _ in H if _ not in C]
@@ -352,7 +432,7 @@ def grow_horizontally(*trees, presort=True, S=None):
     children = list(chain(*(_.children for _ in trees)))
     tau = trees[0].tau
     tids = Bitmap.union(*(_.tids for _ in trees))
-    T = Tree(tau, r, p, children=children, children_dists=children_dists, tids=tids)
+    T = Tree(tau, r=r, p=p, children=children, children_dists=children_dists, tids=tids)
     E = list()
 
     trees = list(trees)
