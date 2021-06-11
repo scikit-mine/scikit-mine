@@ -368,12 +368,12 @@ def evaluate(cands: pd.DataFrame, k: int):
     return cands.loc[idx]
 
 
-class SingleEventPeriodicMiner(BaseMiner, DiscovererMixin):
+class SingleEventCycleMiner(BaseMiner, DiscovererMixin):
     """
     Miner periodic cycles, but in the scope of a single event
 
     To this end, we only accept 1 dimensional arrays as input
-    PeriodicCycleMiner will operate by instantiating one SingleEventPeriodicMiner per event.
+    PeriodicCycleMiner will operate by instantiating one SingleEventCycleMiner per event.
 
     Parameters
     ----------
@@ -562,9 +562,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         n_occs_tot = S.shape[0]
         alpha_groups = S.groupby(S.values).groups
         miners = {
-            k: SingleEventPeriodicMiner(
-                self.max_length, self.keep_residuals, n_occs_tot
-            )
+            k: SingleEventCycleMiner(self.max_length, self.keep_residuals, n_occs_tot)
             for k in alpha_groups.keys()
         }
         self.miners_ = {k: miners[k].fit(v) for k, v in alpha_groups.items()}
@@ -580,7 +578,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
 
         return self
 
-    evaluate = SingleEventPeriodicMiner.evaluate
+    evaluate = SingleEventCycleMiner.evaluate
 
     def discover(self, shifts=False, tids=False):
         """Return cycles as a pandas DataFrame, with 3 columns,
@@ -616,7 +614,14 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         if shifts:
             all_cols.extend(["dE"])
 
-        series = [miner.discover() for miner in self.miners_.values()]
+        series = list()
+        for miner in self.miners_.values():
+            disc = miner.discover()
+            if not disc.empty:
+                series.append(disc)
+
+        if not series:
+            return pd.DataFrame()  # FIXME
         cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
         cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
             10 ** self.n_zeros_

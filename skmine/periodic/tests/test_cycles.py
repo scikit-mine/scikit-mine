@@ -7,7 +7,7 @@ import pytest
 from .. import cycles
 from ..cycles import (
     PeriodicCycleMiner,
-    SingleEventPeriodicMiner,
+    SingleEventCycleMiner,
     _generate_candidates_batch,
     _recover_splits_rec,
     compute_cycles_dyn,
@@ -284,7 +284,7 @@ def test_candidates(_input, raise_warning):
     minutes = np.array(_input)
 
     with pytest.warns(None, match="candidate") as record:
-        SingleEventPeriodicMiner().fit(minutes)
+        SingleEventCycleMiner().fit(minutes)
 
     assert len(record) == int(raise_warning)
 
