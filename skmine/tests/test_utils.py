@@ -5,6 +5,16 @@ from ..utils import filter_maximal
 from ..utils import filter_minimal
 from ..utils import intersect2d
 
+from ..utils import (
+    _check_growth_rate,
+    _check_min_supp,
+    _check_random_state,
+    bron_kerbosch,
+    filter_maximal,
+    filter_minimal,
+    intersect2d,
+)
+
 
 import numpy as np
 import pandas as pd
@@ -52,30 +62,14 @@ def test_growth_rate():
 
 
 def test_filter_max():
-    D = pd.Series(
-        [
-            {2, 3},
-            {2},
-            {4, 1},
-            {4, 7},
-            {4, 1, 8},
-        ]
-    )
+    D = pd.Series([{2, 3}, {2}, {4, 1}, {4, 7}, {4, 1, 8}])
     maximums = list(filter_maximal(D))
 
     assert maximums == D.iloc[[0, 3, 4]].tolist()
 
 
 def test_filter_min():
-    D = pd.Series(
-        [
-            {2, 3},
-            {2},
-            {4, 1},
-            {4, 7},
-            {4, 1, 8},
-        ]
-    )
+    D = pd.Series([{2, 3}, {2}, {4, 1}, {4, 7}, {4, 1, 8}])
     maximums = list(filter_minimal(D))
 
     assert maximums == D.iloc[[1, 2, 3]].tolist()
@@ -88,3 +82,21 @@ def test_intersect2d():
     np.testing.assert_array_equal(ab, np.array([a[1]]))
     np.testing.assert_array_equal(a_ind, np.array([1]))
     np.testing.assert_array_equal(b_ind, np.array([2]))
+
+
+def test_bron_kerbosch():
+    candidates = {
+        "A": "BCE",
+        "B": "ACDF",
+        "C": "ABDF",
+        "D": "CBEF",
+        "E": "AD",
+        "F": "BCD",
+    }
+
+    cliques = list(bron_kerbosch(candidates))
+
+    assert cliques == [
+        list("CBA"),
+        list("FDCB"),
+    ]

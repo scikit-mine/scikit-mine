@@ -7,12 +7,14 @@ import pytest
 from .. import cycles
 from ..cycles import (
     PeriodicCycleMiner,
-    _generate_candidates,
+    SingleEventCycleMiner,
+    _generate_candidates_batch,
     _recover_splits_rec,
     compute_cycles_dyn,
     cycle_length,
     evaluate,
     extract_triples,
+    generate_candidates,
     get_table_dyn,
     merge_triples,
     residual_length,
@@ -25,6 +27,12 @@ def minutes():
     cuts = np.arange(3) * 400
     smalls = np.arange(0, 20, 2).reshape((10, 1))
     return (cuts + smalls).T.reshape(-1)
+
+
+def index_to_datetime(index, scale="minutes"):
+    now = dt.datetime(2021, 4, 20, 12, 15, 00)
+    index = index.map(lambda e: dt.timedelta(minutes=e))  # TODO minutes as scale
+    return pd.to_datetime(index + now)
 
 
 @pytest.fixture
@@ -81,7 +89,7 @@ def test_window_view(minutes, k):
 def test_cycle_length_triples(minutes):
     triples = sliding_window_view(minutes, 3)
     inter = sliding_window_view(np.diff(minutes), 2)
-    delta_S = delta_S = minutes[-1] - minutes[0]
+    delta_S = minutes[-1] - minutes[0]
     L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, inter, len(minutes), delta_S)
 
     # TODO : test L_a
@@ -147,7 +155,8 @@ def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
 def test_extract_triples(triples):
     minutes = pd.Index(np.array([0, 2, 4, 6, 400, 402, 404, 406]))
     delta_S = minutes[-1] - minutes[0]
-    t = extract_triples(minutes, delta_S)
+    l_max = np.log2(delta_S + 1) - 2
+    t = extract_triples(minutes, l_max)
     assert t.ndim == 2
     np.testing.assert_array_equal(triples, t)
 
@@ -159,42 +168,33 @@ def test_merge_triples(triples):
     np.testing.assert_array_equal(np.unique(merged[0]), np.unique(triples))
 
 
-def test_generate_candidate():
+def test_generate_candidate_batch():
     minutes = pd.Index([0, 20, 31, 40, 60, 240, 400, 420, 440, 460])
-    cands = _generate_candidates(minutes, len(minutes))
+    cands = _generate_candidates_batch(minutes, len(minutes))
     widths = [_.shape[1] for _ in cands]
     assert all(x > y for x, y in zip(widths, widths[1:]))  # monotonic but decreasing
 
 
-def test_evaluate():
-    cands = [
-        np.array([[400, 402, 404, 406, 408, 410]]),
-        np.array([[0, 2, 4], [6, 8, 10]]),
-    ]
+def test_generate_candidates():
     minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cycles, residuals = evaluate(minutes, cands)
-    assert residuals.size == 0
+    cycles = generate_candidates(minutes, len(minutes))
+    assert cycles.length.sum() == len(minutes)
     _types = np.unique(cycles.dtypes)
-    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
     assert np.issubdtype(_types[0], np.number)
-    assert cycles.length.tolist() == [6, 3, 3]
+    assert cycles.length.tolist() == [6, 6]  # [6, 3, 3] ?
     assert (cycles.period == 2).all()
     assert cycles.index.is_monotonic_increasing
 
 
 def test_evaluate_overlapping_candidates():
-    cands = [
-        np.array([[400, 402, 404, 406, 408, 410]]),
-        np.array([[0, 2, 4, 8]]),
-        np.array([[0, 2, 4], [6, 8, 10]]),
-    ]
     minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cycles, residuals = evaluate(minutes, cands)
-    assert residuals.tolist() == [6, 10]
+    cands = generate_candidates(minutes, len(minutes))
+    cycles = evaluate(cands, k=2)
     _types = np.unique(cycles.dtypes)
-    assert cycles.columns.to_list() == ["start", "length", "period", "dE"]
+    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
     assert np.issubdtype(_types[0], np.number)
-    assert cycles.length.tolist() == [6, 4]
+    assert cycles.length.tolist() == [6, 6]
     assert (cycles.period == 2).all()
 
 
@@ -202,24 +202,31 @@ def test_fit():
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    S.index = index_to_datetime(S.index)
     S.index = pd.to_datetime(S.index)
+
     pcm = PeriodicCycleMiner()
     pcm.fit(S)
 
-    assert pcm.cycles_.index.to_series().nunique() == 2
-    assert "dE" in pcm.cycles_.columns
+    assert len(pcm.miners_) == 1
+    assert sum(map(len, (m.cycles_ for m in pcm.miners_.values()))) == 2
+    assert all(
+        "dE" in c.columns for c in map(lambda m: m.cycles_, pcm.miners_.values())
+    )
 
 
 def test_discover():
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
+    minutes = np.array([0, 2, 4, 6, 25, 400, 402, 404, 406])
 
     S = pd.Series("alpha", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
-    S.index = pd.to_datetime(S.index)
+    S = S.append(pd.Series("beta", index=[10, 17, 24, 31]))
+    S.index = index_to_datetime(S.index)
+    S.sort_index(inplace=True)
     pcm = PeriodicCycleMiner()
     cycles = pcm.fit_discover(S)
     assert (cycles.dtypes != "object").all()  # only output structured data
+    cycles = pcm.discover(tids=True)  # now pull out tids
+    assert list(cycles.tids.loc["beta"].iloc[0]) == [4, 5, 6, 8]
 
 
 @pytest.mark.parametrize("is_datetime", (True, False))
@@ -232,10 +239,9 @@ def test_reconstruct(is_datetime):
     S.sort_index(inplace=True)
 
     if is_datetime:
-        S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
-        S.index = pd.to_datetime(S.index)
+        S.index = index_to_datetime(S.index)
 
-    pcm = PeriodicCycleMiner().fit(S)
+    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
     assert pcm.is_datetime_ == is_datetime
     reconstructed = pcm.reconstruct()
     pd.testing.assert_index_equal(reconstructed.index, S.index.drop_duplicates())
@@ -246,8 +252,8 @@ def test_fit_triples_and_residuals():
 
     S = pd.Series("alpha", index=minutes)
 
-    pcm = PeriodicCycleMiner().fit(S)
-    pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240, 781]))
+    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
+    # pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240, 781]))
 
     rec_minutes = pcm.reconstruct()
 
@@ -264,28 +270,32 @@ def test_small_datetime():
     minutes = [10, 20, 32, 40, 60, 79, 100, 240]
     # just check it does not break
     S = pd.Series("ring_a_bell", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    S.index = index_to_datetime(S.index)
     pcm = PeriodicCycleMiner().fit(S)
     cycles = pcm.discover(shifts=True)
     assert "dE" in cycles.columns
 
 
-def test_no_candidates():
-    minutes = np.array([0, 20, 31, 40, 60, 240])
+@pytest.mark.parametrize(
+    "_input,raise_warning",
+    [([20, 31, 40, 60, 240], False), ([20, 35, 40, 240], True), ([20, 40, 50], False)],
+)
+def test_candidates(_input, raise_warning):
+    minutes = np.array(_input)
 
-    S = pd.Series("alpha", index=minutes)
-    S.index = S.index.map(lambda e: dt.datetime.now() + dt.timedelta(minutes=e))
+    with pytest.warns(None, match="candidate") as record:
+        SingleEventCycleMiner().fit(minutes)
 
-    with pytest.warns(UserWarning, match="candidate"):
-        PeriodicCycleMiner().fit(S)
+    assert len(record) == int(raise_warning)
 
 
-def test_get_residuals():
+@pytest.mark.parametrize("keep_residuals", [True, False])
+def test_get_residuals(keep_residuals):
     minutes = np.array([0, 20, 31, 40, 60, 154, 240, 270, 300, 330, 358])
 
     S = pd.Series("alpha", index=minutes)
 
-    pcm = PeriodicCycleMiner().fit(S)
+    pcm = PeriodicCycleMiner(keep_residuals=keep_residuals).fit(S)
     residuals = pcm.get_residuals()
     # assert isinstance(residuals.index, pd.DatetimeIndex)
-    np.testing.assert_array_equal(residuals.index, [154])
+    np.testing.assert_array_equal(residuals.index, [154] * int(keep_residuals))

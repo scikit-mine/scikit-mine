@@ -1,5 +1,5 @@
 [flake8]
-ignore=W605,E203
+ignore=W605,E203,W503
 max-line-length = 100
-exclude = tests/*
+exclude = tests/*, **/__init__.py
 max-complexity = 10
