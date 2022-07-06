@@ -9,31 +9,74 @@ from .cond import Cond
 from .description import Description
 
 
-def get_cut_points(min: float, max: float, num_cut_points: int) -> List[float]:
+def _get_cut_points(lo: float, hi: float, num_cut_points: int) -> List[float]:
     """
-    Return a list of cutpoints obtained after binning the (start, end) 
-        each of amplitude equals to (max - min) / (num_cut_points + 1)
-
-
-    Example: get_cut_points(0, 8, 4)
-        Each bin is of size 8 - 0 / 4 = 2
+    Return a list of cutpoints obtained after binning the interval [start, end]
+    into subbins each of amplitude equals to (max - min) / (num_cut_points + 1)
+    Explanation: get_cut_points(0, 8, 4)
+        Each bin is of size (8 - 0) / 4 = 2
         so we have the following bins: (0, 2) (2, 4) (4, 6) (6, 8)
-        and among the bounds of those bins only 2, 4, 6 are usefull 
-        as later setting a condition on either 0 or 8 will result in 
-        selecting the whole interval or nothing from the interval
+        and among the bounds of those bins only 2, 4, 6 are useful 
+        as any condition on either 0 or 8 is useless cause selection entire interval or nothing
 
+    Parameters
+    ----------
+    lo: float
+        The lower bound of the interval
+    hi: float
+        The upper bound of the interval 
+    num_cut_points: int
+        The number of cut points that we want for the interval 
 
-    Returns:
-        List[float]:
+    Returns
+    -------
+    List[float]
+
+    Examples
+    --------
+    >>> from skmine.dssd.utils import _get_cut_points
+    >>> _get_cut_points(lo=0, hi=10, num_cut_points=4) 
+    [2.0, 4.0, 6.0, 8.0]
     """
 
     if num_cut_points <= 0:
         raise ValueError("The bins_count argument has to greater than 0")
-    result = list(np.arange(min, max, (max - min) / (num_cut_points + 1)))
+    result = list(np.arange(lo, hi, (hi - lo) / (num_cut_points + 1)))
     return result[1:]
 
 
-def get_cut_points_smart(values: List[float], num_cut_points: int):
+def _get_cut_points_smart(values: List[float], num_cut_points: int):
+    """
+    Compute and return a number of cut points for the specified values.
+    This method aims to generate cut points that are all useful 
+    meaning they actually take into account the distribution of 
+    the values.
+    Explanation:
+        First a bin_size = len(values) / num_cut_points is computed and
+        for i in 1 to num_cut_points, the actual cut point is computed by
+        doing (values[bin_size * i - 1] + values[bin_size * i]) / 2.
+        This way all the cut points generated actually cut the values
+        in a usefull manner as this method does not only use lower and 
+        upper bound of the values
+
+    Parameters
+    ----------
+    values: List[float]: 
+        The values for which to create cutpoints. Values need to be sorted ascending and 
+        may be modified during the function execution 
+    num_cut_points: int 
+        The number of cut points that we want for the values 
+
+    Returns:
+    List[float]
+
+    Examples
+    --------
+    >>> from skmine.dssd.utils import _get_cut_points_smart
+    >>> list(_get_cut_points_smart([1, 5, 6, 6, 8], 2)) # [(5 + 6) / 2, (6 + 8)/2]
+    [5.5, 7.0]
+    """
+    
     if len(values) <= num_cut_points:
         bin_size = 1
         num_cut_points = len(values) - 1

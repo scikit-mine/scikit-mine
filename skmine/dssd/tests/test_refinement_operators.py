@@ -5,7 +5,7 @@ from ..cond import Cond
 from ..custom_types import ColumnType
 from ..description import Description
 from ..table import Table
-from ..utils import get_cut_points_smart
+from ..utils import _get_cut_points_smart
 from .. import refinement_operators as ro
 
 
@@ -57,7 +57,7 @@ extra_parameters = {
 
 
 def test_dssd_paper_refinements():
-    assert set(get_cut_points_smart(sorted(df["num"]), num_cut_points=2)) == {3.75, 6}
+    assert set(_get_cut_points_smart(sorted(df["num"]), num_cut_points=2)) == {3.75, 6}
 
     numeric_conditions = [Cond("num", "<", 3.75), Cond("num", ">", 3.75), Cond("num", "<", 6.0), Cond("num", ">", 6.0)]
     nominal_conditions = [Cond("a", "==", "one"), Cond("a", "!=", "one"), Cond("a", "==", "two"), Cond("a", "!=", "two")]

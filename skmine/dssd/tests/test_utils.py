@@ -2,11 +2,11 @@ import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
-from ..utils import column_shares, diff_items_count, get_cut_points, get_cut_points_smart, pattern_to_string, remove_duplicates, sort_candidates, sub_dict, subgroup
+from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, pattern_to_string, remove_duplicates, sort_candidates, sub_dict, subgroup
 from ..cond import Cond
 
 def test_get_cut_points():
-    res = get_cut_points(min=0, max=10, num_cut_points=4)
+    res = _get_cut_points(lo=0, hi=10, num_cut_points=4)
     # ensure the number of cut points is 1 less than the number of bins count
     assert len(res) == 4
 
@@ -14,14 +14,14 @@ def test_get_cut_points():
 
     with pytest.raises(ValueError):
         # make sure a bin count of zero raises an exception
-        get_cut_points(0, 5, num_cut_points=0)
+        _get_cut_points(0, 5, num_cut_points=0)
 
 
 def test_get_cut_points_smart():
     # ensure the number of cut points is 1 less than the number of bins count
-    assert list(get_cut_points_smart(values=[1, 5, 6, 6, 8], num_cut_points=2)) == [(5 + 6) / 2, (6 + 8)/2]
+    assert list(_get_cut_points_smart(values=[1, 5, 6, 6, 8], num_cut_points=2)) == [(5 + 6) / 2, (6 + 8)/2]
 
-    assert list(get_cut_points_smart(values=[5, 6], num_cut_points=2)) == [(5 + 6) / 2]
+    assert list(_get_cut_points_smart(values=[5, 6], num_cut_points=2)) == [(5 + 6) / 2]
 
 
 def test_diff_items_count():

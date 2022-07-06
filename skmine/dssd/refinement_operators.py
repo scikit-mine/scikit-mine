@@ -6,7 +6,7 @@ from .description import Description
 from .table import Table
 from .cond import Cond
 from .custom_types import ColumnType, FuncCover, FuncQuality
-from .utils import get_cut_points, get_cut_points_smart
+from .utils import _get_cut_points, _get_cut_points_smart
 
 class RefinementOperator(ABC):
     def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
@@ -66,7 +66,7 @@ class RefinementOperatorOfficial(RefinementOperator):
         # having values be taken from here is what makes the cow patterns reach higher quality
         # values = self.dataset.df[col].values
 
-        for val in get_cut_points_smart(values, self.num_cut_points[col]):
+        for val in _get_cut_points_smart(values, self.num_cut_points[col]):
             self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, "<", val)), cand_list)
             self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, ">", val)), cand_list)
 
@@ -115,7 +115,7 @@ def generate_numeric_conditions(attribute: str, lower_bound: float, upper_bound:
     Returns:
         List[Cond]
     """
-    cut_points = get_cut_points(lower_bound, upper_bound, num_cut_points)
+    cut_points = _get_cut_points(lower_bound, upper_bound, num_cut_points)
     # cut_points = np.arange(left_bound, right_bound, (right_bound - left_bound) / bins_count)[1:]
     # make conditions
     conds: List[Cond] = []
