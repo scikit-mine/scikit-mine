@@ -3,7 +3,7 @@ from ..subgroup import Subgroup
 from ..cond import Cond
 from ..description import Description
 
-def test_candidate_creation():
+def test_subgroup_creation():
     cand1 = Subgroup(Description(), 0.0, pandas.Index([]))
 
     # ensuring default arguments are set properly
@@ -12,8 +12,17 @@ def test_candidate_creation():
     assert cand1.parent is None
     assert cand1.cover.identical(pandas.Index([]))
 
+    cand1 = Subgroup(Description(), 2.0, pandas.Index([1, 5]))
 
-def test_candidate_comparison():
+    # test the properties of the newly birthed candidate to make sure they fit the specification/description
+    cand_child = cand1.child_with_new_condition(Cond("a", "<", 2.0))
+    assert cand_child != cand1
+    assert cand_child.quality == 0
+    assert cand_child.parent == cand1
+    assert cand_child.description == Description([Cond("a", "<", 2.0)])
+    assert cand_child.cover.identical(pandas.Index([]))
+
+def test_subgroup_comparison():
     cand1 = Subgroup(Description(), 1.0, pandas.Index([]))
     cand2 = Subgroup(Description([Cond("a", "==", "one")]), 2.0, pandas.Index([1, 5]))
     cand3 = Subgroup(Description([Cond("a", "==", "one")]), .5, pandas.Index([1, 5]))
@@ -35,7 +44,7 @@ def test_candidate_comparison():
     assert cand2 == cand3
 
 
-def test_candidate_hash():
+def test_subgroup_hash():
     cand1 = Subgroup(Description(), 2.0, pandas.Index([1, 5]))
     cand2 = Subgroup(Description(), 2.0, pandas.Index([1, 5]))
 
@@ -50,24 +59,6 @@ def test_candidate_hash():
     assert cand2 in cands_set
     assert len(cands_set) == 1
 
-# from emm.candidate import Candidate
-# from emm.description import Description
-# import numpy as np
-# import pandas
-# np.unique([Candidate(Description(), 2.0, pandas.Index([1, 5])) ,  Candidate(Description(), 2.0, pandas.Index([1, 5]))])
-
-def test_subgroup_creation():
-    cand1 = Subgroup(Description(), 2.0, pandas.Index([1, 5]))
-
-    # test the properties of the newly birthed candidate to make sure they fit the specification/description
-    cand_child = cand1.child_with_new_condition(Cond("a", "<", 2.0))
-    assert cand_child != cand1
-    assert cand_child.quality == 0
-    assert cand_child.parent == cand1
-    assert cand_child.description == Description([Cond("a", "<", 2.0)])
-    assert cand_child.cover is None
-
 
 def test_subgroup_to_string():
-    #
     assert str(Subgroup(Description())) is not None
