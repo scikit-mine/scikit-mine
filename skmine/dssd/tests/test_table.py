@@ -15,8 +15,6 @@ def test_table_creation():
     })
 
     my_table = Table(df, {"A": ColumnType.NUMERIC, "C": ColumnType.NUMERIC, "D": ColumnType.NUMERIC, "E": ColumnType.NOMINAL, "F": ColumnType.NOMINAL})
-
-    assert len(my_table) == len(df)
     
     # B is not part of the column types given during table creation so that column was simply discarded
     assert "B" not in my_table.df.columns
