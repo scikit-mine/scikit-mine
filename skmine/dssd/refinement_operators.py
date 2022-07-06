@@ -167,17 +167,17 @@ class RefinementOperatorBasic(RefinementOperator):
                 if self.dataset.column_types[cond.attribute] == ColumnType.BINARY:
                     if not cand.description.is_attribute_used(cond.attribute):
                         # add a new candidate that has this condition as an additional condition
-                        new_candidate = Subgroup(Description([*cand.description.conditions, cond], cand.description.op), parent=cand)
+                        new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
                 
                 elif self.dataset.column_types[cond.attribute] == ColumnType.NOMINAL:
                     # if there is no condition that says nominal_attribute = "val" yet then we can add the current condition as it does not create any absurdity
                     if not any(c.attribute == cond.attribute and c.op == "=" for c in cand.description.conditions):
                         # add the new candidate with this condition in its pattern
-                        new_candidate = Subgroup(Description([*cand.description.conditions, cond], cand.description.op), parent=cand)
+                        new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
 
                 elif self.dataset.column_types[cond.attribute] == ColumnType.NUMERIC:
                     # we add this right away cause we know that we can have multiple conditions on the same numeric attribute even if it introdues redundant conditions they will be pruned later during dominance pruning
-                    new_candidate = Subgroup(Description([*cand.description.conditions, cond], cand.description.op), parent=cand)
+                    new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
 
                 if new_candidate is not None:
                     # update the candidate cover

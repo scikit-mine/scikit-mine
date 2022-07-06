@@ -6,13 +6,11 @@ def test_description_default_creation():
     # ensure default arguments work as expected
     desc = Description()
     assert desc.conditions == []
-    assert desc.op == "&"
 
     # ensure speicified arguments are taken into account
     conds = [Cond("a", "<", 2), Cond("b", ">", 5)]
-    desc = Description(conds, "|")
+    desc = Description(conds)
     assert desc.conditions == conds
-    assert desc.op == "|"
 
 
 def test_description_contains():
@@ -23,7 +21,7 @@ def test_description_contains():
     absent_cond = Cond("4", "4", 0.)
     conds = [cond1, cond2]
 
-    desc = Description(conds, "&")
+    desc = Description(conds)
 
 
     assert len(desc) == len(desc.conditions) == 2

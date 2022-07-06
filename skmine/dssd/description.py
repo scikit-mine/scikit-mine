@@ -5,25 +5,22 @@ from .cond import Cond
 
 class Description:
     """
-    
-    Attributes:
-    -----------
+    A subgroup description that consists of conditions on the descriptive attributes
 
-    conditions: list[Cond]
-    op: str
-        a string value representing the logic operator & or | used to link together the conditions.
-        It default to "&" which is what is proposed in the dssd paper.
-        It is the only operator that makes sense here
+    Parameters
+    ----------
+    conditions: List[Cond], default=[]
+        The list of conditions in the description
+
+    Examples
+    --------
+    >>> from skmine.dssd import Description, Cond
+    >>> condition1 = Cond("age", ">", 18)
+    >>> pattern = Description([condition1])
     """
-    def __init__(self, conditions: List[Cond] = None, op: str = "&"):
-        """_summary_
 
-        Args:
-            conditions (list[Cond], optional): conditions to set on this pattern/description. Defaults to [].
-            op (str, optional): logic operator between conditions in. Defaults to "&".
-        """
+    def __init__(self, conditions: List[Cond] = None):
         self.conditions = conditions or []
-        self.op = op
 
 
     def __len__(self):
@@ -32,11 +29,11 @@ class Description:
 
     def __str__(self):
         """Return a string that can be used to query a pandas dataframe using the df.query() method"""
-        return f" {self.op} ".join(str(cond) for cond in self.conditions)
+        return f" & ".join(str(cond) for cond in self.conditions)
 
 
     def __eq__(self, other: 'Description'):
-        return self.op == other.op and set(self.conditions) == set(other.conditions)
+        return id(self) == id(other) or set(self.conditions) == set(other.conditions)
         
 
     def __contains__(self, cond: Cond):
@@ -44,10 +41,33 @@ class Description:
 
 
     def is_attribute_used(self, attr: str) -> bool:
-        """Checks if any of the conditions use the the specified attribute"""
+        """
+        Checks if any of the conditions in this description use the the specified attribute
+        
+        Parameters
+        ----------
+        attr: str
+            The name of the attribute to look for in this description's conditions
+
+        Returns
+        -------
+        bool
+        """
         return any(c.attribute == attr for c in self.conditions)
 
 
     def has_equal_condition_on_attr(self, attr: str) -> bool:
-        """Checks if any of the conditions on the specified attribute is an EQUAL one"""
+        """
+        Checks if any of the conditions in this description on 
+        the specified is an equal condition is an equal condition
+
+        Parameters
+        ----------
+        attr: str
+            The name of the attribute to look for in this description's conditions
+
+        Returns
+        -------
+        bool
+        """
         return any(c.attribute == attr and c.op == "==" for c in self.conditions)
