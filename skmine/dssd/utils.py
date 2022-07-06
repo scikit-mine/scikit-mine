@@ -10,7 +10,8 @@ from .description import Description
 
 
 def get_cut_points(min: float, max: float, num_cut_points: int) -> List[float]:
-    """Return a list of cutpoints obtained after binning the (start, end) 
+    """
+    Return a list of cutpoints obtained after binning the (start, end) 
         each of amplitude equals to (max - min) / (num_cut_points + 1)
 
 
@@ -38,15 +39,12 @@ def get_cut_points_smart(values: List[float], num_cut_points: int):
         num_cut_points = len(values) - 1
     else:
         bin_size = int(len(values) / num_cut_points)
-    # print(f"{len(values)=}, {bin_size=}")
+
     if bin_size * num_cut_points == len(values):
         # extend the values by the largest in order to prevent index error when the split point reaches the last value
-        # values.append(0)
         values.append(values[-1])
 
     return ((values[bin_size * i - 1] + values[bin_size * i]) / 2 for i in range(1, num_cut_points + 1))
-    #                                                    vvv bin_size * 1 instead of one and that resulted somehow in subgroups with a better quality overall I guess very likely because the subgroups were likely bigger as some conditions were highly likely to be kindof redundant
-    # return ((values[bin_size * i - 1] + values[bin_size * 1]) / 2 for i in range(1, num_cut_points + 1))
 
 
 def diff_items_count(l1: Collection[Cond], l2: Collection[Cond]) -> int:
@@ -62,16 +60,6 @@ def diff_items_count(l1: Collection[Cond], l2: Collection[Cond]) -> int:
 def sort_candidates(candidates: List[Subgroup], descending: bool = True):
     candidates.sort(key = lambda c: c.quality, reverse=descending)
     return candidates
-
-
-def is_number_type(o: Any):
-    return isinstance(o, (int, float))
-
-
-def remove_keys_from_dict(d: dict, keys: Collection):
-    for k in keys:
-        del d[k]
-    return d
 
 
 def remove_duplicates(elements: list):

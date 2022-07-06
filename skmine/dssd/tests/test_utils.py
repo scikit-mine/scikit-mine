@@ -2,7 +2,7 @@ import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
-from ..utils import column_shares, diff_items_count, get_cut_points, get_cut_points_smart, is_number_type, pattern_to_string, remove_duplicates, remove_keys_from_dict, sort_candidates, subgroup
+from ..utils import column_shares, diff_items_count, get_cut_points, get_cut_points_smart, pattern_to_string, remove_duplicates, sort_candidates, sub_dict, subgroup
 from ..cond import Cond
 
 def test_get_cut_points():
@@ -56,24 +56,6 @@ def test_sort_candidates():
     assert cands == cands_ascending 
 
 
-def test_is_number_type():
-    assert not is_number_type("")
-
-    assert not is_number_type({})
-
-    assert is_number_type(1)
-
-    assert is_number_type(float(".6"))
-
-
-def test_remove_keys_from_dict():
-    init_dict = lambda : {"a": 1, "b": 2, "c": 3}
-
-    assert remove_keys_from_dict(init_dict(), []) == init_dict()
-    assert remove_keys_from_dict(init_dict(), ["a", "b"]) == {"c": 3}
-    assert remove_keys_from_dict(init_dict(), ["a", "b", "c"]) == {}
-
-
 def test_remove_duplicates():
     assert set(remove_duplicates([])) == set()
     assert set(remove_duplicates([1, 1])) == {1}
@@ -87,6 +69,7 @@ def test_remove_duplicates():
     assert cand1 in cands_set
     assert cand2 in cands_set
     assert len(cands_set) == 1
+
 
 def test_column_shares():
     df = pandas.DataFrame({
