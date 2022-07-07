@@ -59,9 +59,9 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         return dssd.fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
 
 
-class VarDescriptionBasedSelectionStrategy(SelectionStrategy):
+class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
     """
-    Variable size description selection strategy\n
+    Variable size description selection strategy[fast variant better suited for phase 1 of the dssd algorithm]\n
     Explanation:
         An alternative way to achieve diversity is to allow each description attribute to occur 
         only c times in a condition in a subgroup set. Because the number of occurrences of 
@@ -85,15 +85,29 @@ class VarDescriptionBasedSelectionStrategy(SelectionStrategy):
         super().__init__()
         self.max_attribute_occ = max_attribute_occ
 
-    def current_depth(self, cands: List[Subgroup]) -> int:
+    def _current_depth(self, cands: List[Subgroup]) -> int:
+        """
+        Return the depth (or l) to be used for a set of candidates among.
+        This version makes the assumption that all candidates in the cands
+        list have the same description length.
+        """
         return len(cands[0].description.conditions)
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
-        return dssd.var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self.current_depth(cands))
+        return dssd.var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
 
 
-class VarDescriptionBasedPostSelectionStrategy(VarDescriptionBasedSelectionStrategy):
-    def current_depth(self, cands: List[Subgroup]) -> int:
+class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelectionStrategy):
+    """
+    Variable size description selection strategy[standard version with no optimization and is better suited for phase 3 of the dssd algorithm]
+
+    See `VarDescriptionBasedSelectionStrategy` for full documentation on this strategy
+    """
+    def _current_depth(self, cands: List[Subgroup]) -> int:
+        """
+        Return the depth (or l) to be used for a set of candidates among and makes no 
+        assumtion of the depth of the various candidates
+        """
         return max(len(cand.description.conditions) for cand in cands)
 
 
@@ -120,8 +134,8 @@ _builders: Dict[str, Callable[..., SelectionStrategy]] = None
 if _builders is None: 
     _builders = {
         "description": FixedDescriptionBasedSelectionStrategy,
-        "description-var": VarDescriptionBasedSelectionStrategy,
-        "description-var-post": VarDescriptionBasedPostSelectionStrategy,
+        "description-var": VarDescriptionBasedFastSelectionStrategy,
+        "description-var-post": VarDescriptionBasedStandardSelectionStrategy,
         "cover": FixedCoverBasedSelectionStrategy,
         "cover-var": VarCoverBasedSelectionStrategy,
         "compression": None

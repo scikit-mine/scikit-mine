@@ -69,7 +69,7 @@ def test_fixed_size_description_selection():
 
 
 def test_var_size_description_selection():
-    s: ss.VarDescriptionBasedSelectionStrategy = ss.create("description-var", {"max_attribute_occ": 1})
+    s: ss.VarDescriptionBasedFastSelectionStrategy = ss.create("description-var", {"max_attribute_occ": 1})
 
     # c is the number of times an attribute is allowed to appear in a description
     # l is the maximum number of conditions that a single candidate can have
