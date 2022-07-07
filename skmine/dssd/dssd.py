@@ -14,13 +14,10 @@ from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
 # Create a custom logger
 logger = logging.getLogger("dssd")
-# from __future__ import annotations
 
 
-def fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2) -> List[Subgroup]:
+def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2) -> List[Subgroup]:
     def is_candidate_diverse(candidate: Subgroup, beam: List[Subgroup], min_diff_conditions: int) -> bool:
-        # return not any(c.quality == candidate.quality and diff_items_count(c.description.conditions, candidate.description.conditions) < min_diff_conditions for c in beam)
-        """not working well cause of how the difference is computed, it should just say how differnt two lists are regardless of order otherwise that is not good and strange things can happen so change it back to be orderless"""
         return all(c.quality != candidate.quality or diff_items_count(c.description.conditions, candidate.description.conditions) >= min_diff_conditions for c in beam)
 
     logger.debug(f"desc: beam_width={beam_width}")
@@ -40,7 +37,7 @@ def fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subg
     return beam
 
 
-def var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int) -> List[Subgroup]:
+def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int) -> List[Subgroup]:
     def is_candidate_diverse(candidate: Subgroup, attributes_usage: DefaultDict[str, int], max_occ: int) -> bool:
         for cond in candidate.description.conditions:
             if attributes_usage[cond.attribute] >= max_occ: # discard this candidate as it has at least an attribute already overused
@@ -123,12 +120,12 @@ def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: Default
 
 
 def update_counts(cand: Subgroup, counts: Dict[int, int]):
-    """Increase by 1 the counts of every tuple from the specified candidate"""
+    """Increase by 1 the counts of every transaction in the specified candidate's cover"""
     for t in cand.cover:
         counts[t] += 1
 
 
-def fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
+def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
     counts = defaultdict(int, {})
     score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
 
@@ -151,7 +148,7 @@ def fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup],
     return beam
 
 
-def var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
+def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
     counts = defaultdict(int, {})
     score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
 
@@ -180,14 +177,6 @@ def var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], b
         (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
 
     return beam
-
-
-def fixed_size_compression_beam_selection(candidates: List[Subgroup], beam: List[Subgroup]):
-    raise NotImplementedError("Not implemented yet")
-
-
-def var_size_compression_beam_selection(candidates: List[Subgroup]):
-    raise NotImplementedError("Not implemented yet")
 
 
 def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover):
@@ -234,7 +223,22 @@ def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cove
     
 
 def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
-    """Insert the new candidate to keep the new list sorted descending and having at maximum the specified size"""
+    """
+    Insert the new candidate to keep the result list sorted descending with at most the maximum specified size
+
+    Parameters
+    ----------
+    result: List[Subgroup]
+        The destination list where the candidate is to be inserted
+    candidate: Subgroup
+        The candidate to be inserted
+    max_size: int, default=0
+        The maximum size allowed for the result list
+
+    Returns
+    -------
+    List[Subgroup]: The same list received in argument is returned for convenience purposes
+    """
     
     # highly inspired by the bisect insort method in python 3.8
     def __insort(a: List, x, lo=0, hi=None, key=None):

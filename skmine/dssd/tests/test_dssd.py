@@ -5,7 +5,7 @@ import pytest
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
-from ..dssd import apply_dominance_pruning, fixed_size_compression_beam_selection, fixed_size_cover_selection, fixed_size_description_selection, multiplicative_weighted_covering_score_smart, update_topk, var_size_compression_beam_selection, var_size_cover_selection, var_size_description_selection, mine
+from ..dssd import apply_dominance_pruning, _fixed_size_cover_selection, _fixed_size_description_selection, multiplicative_weighted_covering_score_smart, update_topk, _var_size_cover_selection, _var_size_description_selection, mine
 from ..custom_types import ColumnType
 
 
@@ -81,14 +81,6 @@ def test_multiplicative_weighted_covering_score():
     # candidate size is taken into account while computing the score 
     cand2 = Subgroup(Description([]), cover=pandas.Index([0, 5, 6]))
     assert multiplicative_weighted_covering_score_smart(cand2, defaultdict(int, {0: 2}), 0.9) == (.9 ** 2 + 1 + 1) / len(cand2.cover)
-
-
-def test_unimplemented_methods():
-    with pytest.raises(NotImplementedError):
-        fixed_size_compression_beam_selection([], [])
-
-    with pytest.raises(NotImplementedError):
-        var_size_compression_beam_selection([])
 
 
 res = None

@@ -56,7 +56,7 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         self.min_diff_conditions = min_diff_conditions
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd.fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
+        return dssd._fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
 
 
 class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
@@ -94,7 +94,7 @@ class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
         return len(cands[0].description.conditions)
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd.var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
+        return dssd._var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
 
 
 class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelectionStrategy):
@@ -138,7 +138,7 @@ class FixedCoverBasedSelectionStrategy(SelectionStrategy):
         self.weight = weight
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd.fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
+        return dssd._fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
 
 
 class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
@@ -168,7 +168,7 @@ class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
         self.fraction = fraction
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd.var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
+        return dssd._var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
 
 
 _builders: Dict[str, Callable[..., SelectionStrategy]] = None

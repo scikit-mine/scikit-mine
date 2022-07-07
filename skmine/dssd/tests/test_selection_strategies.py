@@ -3,7 +3,7 @@ import pandas
 import pytest
 
 from ..cond import Cond
-from ..dssd import fixed_size_cover_selection, var_size_cover_selection, var_size_description_selection, multiplicative_weighted_covering_score_smart
+from ..dssd import _fixed_size_cover_selection, _var_size_cover_selection, _var_size_description_selection, multiplicative_weighted_covering_score_smart
 from ..subgroup import Subgroup
 from ..description import Description
 from .. import selection_strategies as ss
@@ -87,8 +87,8 @@ def test_var_size_description_selection():
     cands1 = [cand1,cand2,cand3,cand4]
 
     # testing edge case beam_width = 0, c or l = 0
-    assert var_size_description_selection(cands1, [], 0, 1, 1) == []
-    assert var_size_description_selection(cands1, [], 5, 1, 0) == []
+    assert _var_size_description_selection(cands1, [], 0, 1, 1) == []
+    assert _var_size_description_selection(cands1, [], 5, 1, 0) == []
     # the result is only the highest quality candidate as the beam width is 1
     assert s.select(cands1, beam=[], beam_width=1)  == [cand1]
 
@@ -166,10 +166,10 @@ def test_var_size_cover_selection():
 
     # empty candidates list
     with pytest.raises(ValueError):
-        var_size_cover_selection([], [], 4, weight, 0)
+        _var_size_cover_selection([], [], 4, weight, 0)
 
     # fixed size version is the same as variable size version but with 0 as the fraction argument
-    assert var_size_cover_selection(cands.copy(), [], 4, weight, 0) == fixed_size_cover_selection(cands.copy(), [], 4, weight)
+    assert _var_size_cover_selection(cands.copy(), [], 4, weight, 0) == _fixed_size_cover_selection(cands.copy(), [], 4, weight)
 
     # ensure that the result is equal to the beam width provided that the initial list of candidates if large enough
     res = s.select(cands.copy(), beam=[], beam_width=beam_width)
