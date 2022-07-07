@@ -11,7 +11,7 @@ class SelectionStrategy(ABC):
     """
 
     @abstractmethod
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
         """
         Select a number of subgroups from the specified list into the received beam list
 
@@ -55,7 +55,7 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         super().__init__()
         self.min_diff_conditions = min_diff_conditions
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
         return dssd.fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
 
 
@@ -93,7 +93,7 @@ class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
         """
         return len(cands[0].description.conditions)
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
         return dssd.var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
 
 
@@ -137,7 +137,7 @@ class FixedCoverBasedSelectionStrategy(SelectionStrategy):
         super().__init__()
         self.weight = weight
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
         return dssd.fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
 
 
@@ -167,7 +167,7 @@ class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
         super().__init__(weight)
         self.fraction = fraction
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
         return dssd.var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
 
 
