@@ -183,7 +183,14 @@ def column_shares(df: DataFrame, columns: List[str] = None) -> ColumnShares:
     })
 
 
-def eval_pattern_conditions(base_df: DataFrame, conditions: List[Cond]):
+def sub_dict(d: dict, keys: list):
+    return {k: d[k] for k in keys}
+
+
+def subgroup(base_df: DataFrame, description: Description, only_check_last_cond: bool = False) -> DataFrame:
+    """Return a subgroup of elements that match the specified description"""
+    conditions = description.conditions if not only_check_last_cond else [description.conditions[-1]]
+
     res = base_df # simply grab a reference to the data frame
     for cond in conditions:
         if cond.op == "<=":
@@ -199,17 +206,7 @@ def eval_pattern_conditions(base_df: DataFrame, conditions: List[Cond]):
         elif cond.op == "!=":
             res = res[res[cond.attribute] != cond.val]
     return res
-    # return base_df.query(pattern_to_string(conditions))
-
-
-def sub_dict(d: dict, keys: list):
-    return {k: d[k] for k in keys}
-
-
-def subgroup(base_df: DataFrame, description: Description, only_check_last_cond: bool = False) -> DataFrame:
-    """Return a subgroup of elements that match the specified description"""
-    conditions = description.conditions if not only_check_last_cond else [description.conditions[-1]]
-    return eval_pattern_conditions(base_df, conditions)
+    # return base_df.query(str(conditions))
 
 
 def min_max_avg(ar: list):
