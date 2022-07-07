@@ -2,7 +2,7 @@ import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
-from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, pattern_to_string, remove_duplicates, sort_candidates, sub_dict, subgroup
+from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, pattern_to_string, remove_duplicates, sort_subgroups, sub_dict, subgroup
 from ..cond import Cond
 
 def test_get_cut_points():
@@ -40,7 +40,7 @@ def test_diff_items_count():
     # testing different length non empty collections
     assert diff_items_count(l1, l2) == diff_items_count(l2, l1) == 3
 
-def test_sort_candidates():
+def test_sort_subgroups():
     cand1 = Subgroup(Description(), .5, pandas.Index([])) 
     cand2 = Subgroup(Description(),  5, pandas.Index([]))
     cand3 = Subgroup(Description(), 65, pandas.Index([]))
@@ -48,11 +48,11 @@ def test_sort_candidates():
     cands_descending = [cand3, cand2, cand1]
     cands_ascending  = [cand1, cand2, cand3]
 
-    sort_candidates(cands, descending=True)
+    sort_subgroups(cands, descending=True)
     assert cands == cands_descending
 
     cands = [cand2, cand3, cand1]
-    sort_candidates(cands, descending=False)
+    sort_subgroups(cands, descending=False)
     assert cands == cands_ascending 
 
 

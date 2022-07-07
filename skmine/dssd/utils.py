@@ -122,7 +122,7 @@ def diff_items_count(l1: Collection, l2: Collection) -> int:
     return sum(1 for i in l2 if i not in l1)
 
 
-def sort_candidates(subgroups: List[Subgroup], descending: bool = True):
+def sort_subgroups(subgroups: List[Subgroup], descending: bool = True):
     """
     Sort subgroups inplace based on their quality and for convenience,
     returns the subgroups list as a result 

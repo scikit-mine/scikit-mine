@@ -8,7 +8,7 @@ import logging
 from typing import Any, DefaultDict, List, Dict
 from pandas import DataFrame
 from .table import Table
-from .utils import sub_dict, min_max_avg_quality_string, sort_candidates, remove_duplicates, subgroup, diff_items_count, sort_candidates, func_get_quality, subgroup, to_csv
+from .utils import sub_dict, min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, to_csv
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
@@ -27,7 +27,7 @@ def fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subg
     selected_candidates_count = 0
     candidate_index = 0
     # Make sure candidates are ordered in quality descending order, this might not be required if we assume an ordering pre-condition
-    sort_candidates(candidates)
+    sort_subgroups(candidates)
     
     while candidate_index < len(candidates) and selected_candidates_count < beam_width:
         candidate = candidates[candidate_index]
@@ -61,7 +61,7 @@ def var_size_description_selection(candidates: List[Subgroup], beam: List[Subgro
     selected_candidates_count = 0
     candidate_index = 0
     # Make sure candidates are ordered in quality descending order
-    sort_candidates(candidates)
+    sort_subgroups(candidates)
     # candidates = sorted(candidates, key = lambda c: c.quality, reverse=True)
     attributes_usage = defaultdict(int, {})
     max_occ = c * l
@@ -390,7 +390,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     if not skip_phase3:
         logger.info(f"Phase 3: Post selecting {k} candidates out of {len(result)}...")
         result = post_selector.select(result, beam_width=k, beam=[])
-        sort_candidates(result)
+        sort_subgroups(result)
 
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
     logger.info(f"Final selection\n{len(result)} candidate(s)\n{min_max_avg_quality_string(result, ' ')}")
