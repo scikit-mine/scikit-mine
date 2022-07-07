@@ -93,6 +93,7 @@ def test_unimplemented_methods():
 res = None
 def test_mining():
     df = pandas.DataFrame({
+        'bin': [True, True, True, False,False,False,False,False,False,False],
         'num': [1, 1, 1.9, 2, 2, 3, 3, 4, 4, 4],
         'cat': ["find_me", "find_me", "find_me_too_please", *(["regular", "regular-kindof"] * 3), "regular"],
         'ts': [
@@ -109,10 +110,10 @@ def test_mining():
                 ]
     })
 
-    column_types = {"num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
+    column_types = {"bin": ColumnType.BINARY, "num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
     # d = DSSDEMM(df, column_types)
     global res
-    res = mine(df, column_types, descriptive_attributes=["cat", "num"], model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1, num_cut_points={"num": 5}, #{}, 
+    res = mine(df, column_types, descriptive_attributes=["bin", "cat", "num"], model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1, num_cut_points={"num": 5}, #{}, 
     quality_measure="ts_quality", 
     quality_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"},
     selection_strategy="cover",

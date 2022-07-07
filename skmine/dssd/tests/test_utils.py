@@ -119,3 +119,16 @@ def test_subgroup():
     print(found_subgroup)
     # ensure subgroup selection is accurate according to conditions
     assert res_df.equals(found_subgroup)
+
+    df = pandas.DataFrame({
+        "a": [1, 2, 3, 4, 5], 
+        "bin": [True, False, False, False, True],
+        "cat": ["t", "t", "t", "T", "T"]
+    })
+
+    res_df = pandas.DataFrame({"a": [5], "bin": [True], "cat": ["T"]}, index=[4])
+    found_subgroup = subgroup(df, Description([Cond("a", ">", 3), Cond("a", "<", 10), Cond("bin", "==", True), Cond("cat", "==", "T")] ))
+    print(res_df)
+    print(found_subgroup)
+    assert res_df.equals(found_subgroup)
+

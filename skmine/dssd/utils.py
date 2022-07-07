@@ -188,25 +188,42 @@ def sub_dict(d: dict, keys: list):
 
 
 def subgroup(base_df: DataFrame, description: Description, only_check_last_cond: bool = False) -> DataFrame:
-    """Return a subgroup of elements that match the specified description"""
-    conditions = description.conditions if not only_check_last_cond else [description.conditions[-1]]
+    """
+    Return a pandas dataframe of elements that match the specified description
 
-    res = base_df # simply grab a reference to the data frame
-    for cond in conditions:
-        if cond.op == "<=":
-            res = res[res[cond.attribute] <= cond.val]
-        elif cond.op == ">=":
-            res = res[res[cond.attribute] >= cond.val]
-        elif cond.op == "<":
-            res = res[res[cond.attribute] < cond.val]
-        elif cond.op == ">":
-            res = res[res[cond.attribute] > cond.val]
-        elif cond.op == "==":
-            res = res[res[cond.attribute] == cond.val]
-        elif cond.op == "!=":
-            res = res[res[cond.attribute] != cond.val]
-    return res
-    # return base_df.query(str(conditions))
+    Parameters
+    ----------
+    base_df: DataFrame
+        The base dataframe from which selection is performed
+    description: Description
+        The description containing the conditions to be evaluated on the dataframe
+    only_check_last_conditin: bool, default=False
+        Whether or not to chech only the last condition in the description.
+        This is particulary useful when one is sure that from the base dataframe
+        is a direct parent of the subgroup which description is received as argument.
+        That way as we know only one condition was added from the base_df to the
+        current description, only that last condition should be evaluated
+
+    Returns
+    -------
+    DataFrame
+
+    Examples
+    --------
+    >>> from skmine.dssd import subgroup
+    >>> import pandas
+    >>> df = pandas.DataFrame({"a": [2, 3, 4, 5], "bin": [1, 0, 0, 1], "cat": ["t", "t", "T", "T"]})
+    >>> subgroup(df, Description([Cond("a", ">", 3), Cond("a", "<", 10), Cond("bin", "==", True), Cond("cat", "==", "T")] ))
+       a  bin cat
+    3  5    1   T
+    """
+    if len(description) == 0:
+        return base_df
+    
+    if only_check_last_cond and len(description) > 1:
+        description = Description([description.conditions[-1]])
+
+    return base_df.query(str(description))
 
 
 def min_max_avg(ar: list):

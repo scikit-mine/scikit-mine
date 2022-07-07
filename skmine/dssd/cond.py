@@ -34,7 +34,13 @@ class Cond:
 
     def __str__(self):
         """Return a pandas like string that can be used to query a pandas DataFrame by using the df.query() method"""
-        return f"({self.attribute} {self.op} {str(self.val) if isinstance(self.val, (int, float)) else str(self.val)})"
+        if isinstance(self.val, (int, float,)):
+            val_str = str(self.val)
+        elif isinstance(self.val, str):
+            val_str = f'"{self.val}"'
+        else: # bool cases included
+            val_str = self.val
+        return f"({self.attribute} {self.op} {val_str})"
 
 
     def __repr__(self):
