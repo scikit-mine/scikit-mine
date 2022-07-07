@@ -50,6 +50,7 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         [1] Page 222
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
+
     def __init__(self, min_diff_conditions: int = 2) -> None:
         super().__init__()
         self.min_diff_conditions = min_diff_conditions
@@ -59,7 +60,28 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
 
 
 class VarDescriptionBasedSelectionStrategy(SelectionStrategy):
-    def __init__(self, max_attribute_occ: int) -> None:
+    """
+    Variable size description selection strategy\n
+    Explanation:
+        An alternative way to achieve diversity is to allow each description attribute to occur 
+        only c times in a condition in a subgroup set. Because the number of occurrences of 
+        an attribute depends on the number of conditions per description, each attribute is allowed 
+        to occur c * l times, where l is the (maximum) length of the  descriptions in the candidate set. 
+        The beam width now depends on the number of description attributes |D|, c and l.
+        This effectively results in a (more or less) static beam width per experiment
+
+    Parameters
+    ----------
+    max_attribute_occ: int, default=2
+        The maximum occurence of an attribute or c as per the exaplanation
+
+    References
+    ----------
+        [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+
+    def __init__(self, max_attribute_occ: int = 2) -> None:
         super().__init__()
         self.max_attribute_occ = max_attribute_occ
 
