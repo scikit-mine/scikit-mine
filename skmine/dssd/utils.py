@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Any, Collection, List
+from numbers import Number
+from typing import Any, Collection, List, Tuple, Union
 import numpy as np
 from pandas import DataFrame
 
@@ -226,11 +227,11 @@ def subgroup(base_df: DataFrame, description: Description, only_check_last_cond:
     return base_df.query(str(description))
 
 
-def min_max_avg(ar: list):
-    """Return a tuple of thress values for the minimum, maximum and average quality for the considered candidates"""
+def min_max_avg(col: Collection[Union[int, float]]):
+    """Return a tuple of three values:  minimum, maximum and average for the specified collection"""
     (_min,_max,_avg) = (None, None, None)
     count = 0
-    for i in ar:
+    for i in col:
         if count == 0:
             (_min,_max,_avg) = (i,i,i)
         if i < _min:
