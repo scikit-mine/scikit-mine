@@ -5,11 +5,29 @@ from . import dssd
 
 
 class SelectionStrategy(ABC):
-    def __init__(self) -> None:
-        pass
+    """
+    A class representing a selection strategy used to select subgroups from a pool.
+    This is a class instead of just a function to allow holding additional values used during the selection
+    """
 
     @abstractmethod
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup] = []) -> List[Subgroup]:
+        """
+        Select a number of subgroups from the specified list into the received beam list
+
+        Parameters
+        ----------
+        cands: List[Subgroup]
+            The list to select from
+        beam_width: int
+            The number of subgroups to be selected
+        beam: List[Subgroup]
+            The destination of the selection
+
+        Returns
+        -------
+        List[Subgroup]: Return the beam object received for convenience purposes
+        """
         pass
 
 
