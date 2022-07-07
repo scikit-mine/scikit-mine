@@ -8,7 +8,7 @@ import logging
 from typing import Any, DefaultDict, List, Dict
 from pandas import DataFrame
 from .table import Table
-from .utils import sub_dict, min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, to_csv
+from .utils import sub_dict, _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, to_csv
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
@@ -362,7 +362,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
             candidates += refinement_operator.refine_candidate(cand, [])
 
         logger.info(f"depth={depth} : generated {len(candidates)} candidates")
-        logger.info(f"depth={depth} : {min_max_avg_quality_string(candidates, ' ')}")
+        logger.info(f"depth={depth} : {_min_max_avg_quality_string(candidates, ' ')}")
         for cand in candidates:
             update_topk(result, cand, j)
         if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-generated-candidates.csv", [to_csv(candidates)])
@@ -393,7 +393,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         sort_subgroups(result)
 
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
-    logger.info(f"Final selection\n{len(result)} candidate(s)\n{min_max_avg_quality_string(result, ' ')}")
+    logger.info(f"Final selection\n{len(result)} candidate(s)\n{_min_max_avg_quality_string(result, ' ')}")
     logger.info(f"Results stored in the folder: {os.getcwd()}/{output_folder}")
     write_file(f"{output_folder}/stats3-final-results.csv", [to_csv(result)])
     return result

@@ -247,7 +247,7 @@ def min_max_avg(col: Collection[Union[int, float]]):
     return (_min,_max,_avg/count)
 
 
-def min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
+def _min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
     """Return a string version of the minimum, maximum and average quality for the considered candidates list"""
     (min_quality, max_quality, avg_quality) = min_max_avg(c.quality for c in cands)
     return f"min_quality={min_quality}{sep}max_quality={max_quality}{sep}avg_quality={avg_quality}"
