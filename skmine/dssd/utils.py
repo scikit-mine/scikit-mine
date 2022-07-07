@@ -3,7 +3,7 @@ from typing import Any, Collection, List
 import numpy as np
 from pandas import DataFrame
 
-from .custom_types import FuncQuality
+from .custom_types import ColumnShares, FuncQuality
 from .subgroup import Subgroup
 from .cond import Cond
 from .description import Description
@@ -127,7 +127,6 @@ def sort_subgroups(subgroups: List[Subgroup], descending: bool = True):
     Sort subgroups inplace based on their quality and for convenience,
     returns the subgroups list as a result 
 
-
     Parameters
     ----------
     subgroups: List[Subgroup])
@@ -151,30 +150,37 @@ def remove_duplicates(l: list):
 func_get_quality: FuncQuality = lambda c: c.quality
 
 
-def column_shares(df: DataFrame, columns: List[str] = None):
-    """Compute and return a default dictionnary containing the shares/percentage for each unique value 
-    for the specified columns in the dataframe
+def column_shares(df: DataFrame, columns: List[str] = None) -> ColumnShares:
+    """
+    Compute and return a default dictionnary containing the shares/percentage for 
+    each unique value for the specified columns in the dataframe
 
-    Args:
-        df (DataFrame): the dataframe to extract unique values from
-        columns (List[str], optional): the columns to compute shares for. All columns of the dataframe are used if this parameter is not specified. Defaults to None.
+    Parameters
+    ----------
+    df: DataFrame
+        The dataframe to extract unique values from
+    columns: List[str], default=None
+        The columns to compute shares for. All columns of the dataframe are used if this parameter is not specified. Defaults to None.
 
-    Returns:
-        ColumnShares: a default dictionnary containing the shares.
-        This function returns a default dictionnary in order to allow natural writing like
-        d = defaultdict(...)
-        d["maybe_cola"]["unique_value_1"] and still get an actual result(0 if the column or value is not actually present in the result)
+    Returns
+    -------
+    ColumnShares: a nested default dictionnary containing the shares
+
+    Examples
+    --------
+    >>> from skmine.dssd.utils import column_shares
+    >>> import pandas
+    >>> df = pandas.DataFrame({"a": ["train", "train", "test", "train"], "b": [True, False, False, True]})
+    >>> column_shares(df, ["a", "b"]) == {"a": {"train": 0.75, "test": 0.25 }, "b": {True: 0.5, False: 0.5}}
+    True
     """
     columns = columns if columns is not None else df.columns
     return defaultdict(lambda: defaultdict(int, {}), {
-        col: defaultdict(int, {val: val_count / len(df) 
-            for (val, val_count) in df[col].value_counts().items()}) 
-                for col in columns
+        col: defaultdict(int, {
+            val: val_count / len(df)
+                for (val, val_count) in df[col].value_counts().items()}) 
+                    for col in columns
     })
-
-
-def pattern_to_string(conditions: List[Cond]):
-    return " & ".join([str(c) for c in conditions])
 
 
 def eval_pattern_conditions(base_df: DataFrame, conditions: List[Cond]):
@@ -235,6 +241,6 @@ def min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
 def to_csv(cands: List[Subgroup]) -> str:
     return ("index,quality,size,#conditions,description\n" + \
         "\n".join(
-        f"{index + 1},{cand.quality},{len(cand.cover)},{len(cand.description.conditions)},{pattern_to_string(cand.description.conditions)}"
+        f"{index + 1},{cand.quality},{len(cand.cover)},{len(cand.description)},{cand.description}"
             for (index, cand) in enumerate(cands)
     )).replace(r"'", "")

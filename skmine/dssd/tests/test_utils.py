@@ -2,7 +2,7 @@ import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
-from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, pattern_to_string, remove_duplicates, sort_subgroups, sub_dict, subgroup
+from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, remove_duplicates, sort_subgroups, sub_dict, subgroup
 from ..cond import Cond
 
 def test_get_cut_points():
@@ -96,13 +96,6 @@ def test_column_shares():
     assert res["c"] == {} # first level default dictionnary
     assert res["c"]["non-existent"] == 0 # second level dictionnary
 
-
-def test_pattern_to_string():
-    conds = [Cond("a", "<", 2.0), Cond("a", ">", 2.0)]
-
-    assert pattern_to_string([conds[0]]) == "(a < 2.0)"
-    assert pattern_to_string(conds) == "(a < 2.0) & (a > 2.0)"
-    
 
 def test_subgroup():
     df = pandas.DataFrame({
