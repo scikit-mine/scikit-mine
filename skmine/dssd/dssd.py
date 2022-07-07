@@ -79,52 +79,6 @@ def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgr
     return beam
 
 
-def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
-    """
-    Compute and return the weighted covering score for the current candidate based on 
-    how often its cover overlaps with already selected candidates
-
-    Requirement
-    -----------
-    len(cand.cover) > 0
-
-    Parameters
-    ----------
-    cand: Subgroup
-        The candidate to rank
-    counts: DefaultDict[int, int]
-        The counts of every transaction(index in the original entire dataset) 
-        from already selected candidates
-    weight: float
-        The initial weight of every transaction
-
-    Returns
-    -------
-    float
-
-    References
-    ----------
-    [1] Page 222
-        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
-    """
-    if len(cand.cover) <= 0: 
-        raise ValueError("Can not compute the score for a candidate which cover is empty")
-
-    if not (0 < weight <= 1): 
-        raise ValueError("Value needs be in (0, 1] ")
-
-    result = 0.
-    for transaction in cand.cover:
-        result += pow(weight, counts[transaction])
-    return result / len(cand.cover)
-
-
-def update_counts(cand: Subgroup, counts: Dict[int, int]):
-    """Increase by 1 the counts of every transaction in the specified candidate's cover"""
-    for t in cand.cover:
-        counts[t] += 1
-
-
 def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
     counts = defaultdict(int, {})
     score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
@@ -177,6 +131,52 @@ def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], 
         (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
 
     return beam
+
+
+def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
+    """
+    Compute and return the weighted covering score for the current candidate based on 
+    how often its cover overlaps with already selected candidates
+
+    Requirement
+    -----------
+    len(cand.cover) > 0
+
+    Parameters
+    ----------
+    cand: Subgroup
+        The candidate to rank
+    counts: DefaultDict[int, int]
+        The counts of every transaction(index in the original entire dataset) 
+        from already selected candidates
+    weight: float
+        The initial weight of every transaction
+
+    Returns
+    -------
+    float
+
+    References
+    ----------
+    [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    if len(cand.cover) <= 0: 
+        raise ValueError("Can not compute the score for a candidate which cover is empty")
+
+    if not (0 < weight <= 1): 
+        raise ValueError("Value needs be in (0, 1] ")
+
+    result = 0.
+    for transaction in cand.cover:
+        result += pow(weight, counts[transaction])
+    return result / len(cand.cover)
+
+
+def update_counts(cand: Subgroup, counts: Dict[int, int]):
+    """Increase by 1 the counts of every transaction in the specified candidate's cover"""
+    for t in cand.cover:
+        counts[t] += 1
 
 
 def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover):
@@ -294,32 +294,60 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
 from . import selection_strategies, quality_measures, refinement_operators
 def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attributes: List[str], model_attributes: List[str], max_depth: int, k: int, j: int = math.inf, min_cov: int = 2, beam_width: int = 0, num_cut_points: Dict[str, int] = defaultdict(lambda: 5), 
     quality_measure: str = "", quality_parameters: Dict[str, Any] = {}, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator_name: str = "official", experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
-    """Mine and return mined subgroups
+    """
+    Mine and return mined subgroups
 
-    Args:
-        data (DataFrame): The dataset that mining operating will be made on
-        column_types (Dict[str, ColumnType], optional): A mapping of every column in the dataset and their type.
-        descriptive_attributes (List[str]): descriptive attributes used for mining (they obviously need to be a subset of all the attributes present in the dataset)
-        model_attributes (List[str]): model attribute(s) depending on the quality measure that is selected
-        max_depth (int): maximum number of conditions per subgroup pattern
-        k (int): the number of subgroups to be returned as a result of the experiment
-        j (int, optional): the maximum number of subgroups to be kept in memory at all time during the process. Defaults to math.inf.
-        min_cov (int, optional): minimum coverage of selected subgroups. Defaults to 2.
-        beam_width (int, optional): beam width. Defaults to 2.
-        num_cut_points (Dict[str, int], optional): a map associating each numeric attribute with the number of cutpoints to use when discretizing that argument. Defaults to {}.
-        quality_measure (str, optional): quality measure to be used. Defaults to "".
-        quality_parameters (Dict[str, Any], optional): specific arguments required to instantiate the selection quality measure. Defaults to {}.
-        selection_strategy (str, optional): selection strategy to be used. Defaults to "".
-        selection_params (Dict[str, Any], optional): specific arguments required to instantiate the selected selection strategy. Defaults to {}.
-        refinement_operator_name (str, optional): "name" of the refinement operator to be used. Defaults to "official".
-        save_intermediate_results (bool, optional): whether or not to save intermediate results at each depth of the search phase (experimental for the moment, the purpose of this is to return an object that will allow to run only parts of the dssd algorithm step by step). Defaults to False.
-        post_selection_strategy (str, optional): selection strategy to be used during post processing of the actual mining phase. Defaults to "".
-        post_selection_params (Dict[str, Any], optional): specific arguments required to instantiate the selected post selection strategy. Defaults to {}.
-        skip_phase2(bool): whether or not to skip phase 2. Defaults to False
-        skip_phase3(bool): whether or not to skip phase 3. Defaults to False
+    Parameters
+    ----------
+    data: DataFrame
+        The dataset that mining operating will be made on
+    column_types: Dict[str, ColumnType] 
+        A mapping of every column in the dataset and their type.
+    descriptive_attributes: List[str]
+        Descriptive attributes used for mining. They should be a subset of all the attributes present in the dataset.
+    model_attributes: List[str]
+        Model attribute(s) depending on the quality measure that is selected
+    max_depth: int
+        Maximum number of conditions per subgroup description
+    k: int
+        The number of subgroups to be returned as a result of the experiment
+    j: int 
+        The maximum number of subgroups to be kept in memory at all time during the process. Defaults to math.inf.
+    min_cov: int, default=2
+        : minimum coverage of selected subgroups.
+    beam_width: int, default=k
+        The beam width to use during phase 1.
+    num_cut_points: Dict[str, int], default={*:5}
+        a map associating each numeric attribute with the number of cutpoints to use when discretizing that argument.
+    quality_measure: str
+        quality measure to be used.
+    quality_parameters: Dict[str, Any], default={}
+        specific arguments required to instantiate the selection quality measure.
+    selection_strategy: str, default=""
+        selection strategy to be used.
+    selection_params: Dict[str, Any], default={}
+        specific arguments required to instantiate the selected selection strategy.
+    refinement_operator_name: str, default="official"
+        The name of the refinement operator to be used.
+    save_intermediate_results: bool, default=True
+        whether or not to save intermediate results at each depth of the search phase
+    post_selection_strategy: str, default=""
+        selection strategy to be used during post processing of the actual mining phase.
+    post_selection_params: Dict[str, Any], default={}
+        specific arguments required to instantiate the selected post selection strategy.
+    skip_phase2: bool, default=False
+        Whether or not to skip phase 2. Defaults to False
+    skip_phase3: bool, default=False
+        Whether or not to skip phase 3. Defaults to False
 
-    Returns:
-        List[Candidate]:
+    Returns
+    -------
+    List[Subgroup]
+
+    References
+    ----------
+    [1] Page 224-225
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
 
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
