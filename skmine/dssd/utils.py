@@ -184,10 +184,6 @@ def column_shares(df: DataFrame, columns: List[str] = None) -> ColumnShares:
     })
 
 
-def sub_dict(d: dict, keys: list):
-    return {k: d[k] for k in keys}
-
-
 def subgroup(base_df: DataFrame, description: Description, only_check_last_cond: bool = False) -> DataFrame:
     """
     Return a pandas dataframe of elements that match the specified description

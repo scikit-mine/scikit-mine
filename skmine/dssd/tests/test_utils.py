@@ -2,7 +2,7 @@ import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
-from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, remove_duplicates, sort_subgroups, sub_dict, subgroup
+from ..utils import column_shares, diff_items_count, _get_cut_points, _get_cut_points_smart, remove_duplicates, sort_subgroups, subgroup
 from ..cond import Cond
 
 def test_get_cut_points():

@@ -8,7 +8,7 @@ import logging
 from typing import Any, DefaultDict, List, Dict
 from pandas import DataFrame
 from .table import Table
-from .utils import sub_dict, _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
+from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
@@ -341,7 +341,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     selector = selection_strategies.create(selection_strategy, extra_parameters=selection_params)
     post_selector = selection_strategies.create(post_selection_strategy, extra_parameters=post_selection_params)
     refinement_operator = refinement_operators.create(refinement_operator_name, extra_parameters={
-        "dataset": Table(dataset.df[descriptive_attributes], column_types=sub_dict(dataset.column_types, descriptive_attributes)),
+        "dataset": Table(dataset.df[descriptive_attributes], column_types={k: dataset.column_types[k] for k in descriptive_attributes}),
         "num_cut_points": num_cut_points,
         "min_cov": min_cov, 
         "cover_func": cover_func_optimized,
