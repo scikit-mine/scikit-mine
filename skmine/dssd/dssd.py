@@ -190,7 +190,28 @@ def var_size_compression_beam_selection(candidates: List[Subgroup]):
     raise NotImplementedError("Not implemented yet")
 
 
-def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover = None):
+def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover):
+    """
+    Apply dominance pruning to the candidate which consits of removing 
+    conditions which absence doesn't descrease the subgroup quality
+
+    Parameters
+    ----------
+    candidate: Subgroup
+        The subgroup to prune
+    quality_func: FuncQuality
+        A function to be used to re-compute subgroup quality while some 
+        of its conditions are being removed 
+    cover_func: FuncCover
+        A function to be used to re-compute subgroup cover in order 
+        to have accurate cover while computing quality
+    
+    References
+    ----------
+    [1] Page 226
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    
     # consider the conditions in each subgroup one by one and if removing a condition from a subgroup does not decrease its quality remove that condition permanently
     highest_quality = candidate.quality
     highest_cover = candidate.cover
