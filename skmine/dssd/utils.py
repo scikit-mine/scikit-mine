@@ -143,8 +143,9 @@ def sort_subgroups(subgroups: List[Subgroup], descending: bool = True):
     return subgroups
 
 
-def remove_duplicates(elements: list):
-    return list(set(elements))
+def remove_duplicates(l: list):
+    """Return a new list containing the unique elements of the specified list"""
+    return list(set(l))
 
 
 func_get_quality: FuncQuality = lambda c: c.quality
