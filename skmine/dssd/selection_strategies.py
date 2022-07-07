@@ -32,6 +32,24 @@ class SelectionStrategy(ABC):
 
 
 class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
+    """
+    Fixed description selection strategy\n
+    Explanation:
+        This strategy greedily selects sub-groups by comparing each candidate to the subgroups
+        already selected. If there is a selected subgroup that has equal quality and the same
+        conditions except for one, the candidate is skipped.
+
+    Parameters
+    ----------
+    min_diff_conditions: int, default=2
+        The number of conditions that have to differ for same quality candidate to be 
+        included in the selection
+
+    References
+    ----------
+        [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
     def __init__(self, min_diff_conditions: int = 2) -> None:
         super().__init__()
         self.min_diff_conditions = min_diff_conditions
