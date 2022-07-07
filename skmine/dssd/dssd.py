@@ -8,7 +8,7 @@ import logging
 from typing import Any, DefaultDict, List, Dict
 from pandas import DataFrame
 from .table import Table
-from .utils import sub_dict, _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, to_csv
+from .utils import sub_dict, _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
@@ -365,15 +365,15 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         logger.info(f"depth={depth} : {_min_max_avg_quality_string(candidates, ' ')}")
         for cand in candidates:
             update_topk(result, cand, j)
-        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-generated-candidates.csv", [to_csv(candidates)])
+        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-generated-candidates.csv", [subgroups_to_csv(candidates)])
 
         beam = selector.select(candidates, beam_width=beam_width, beam = [])
         logger.info(f"depth={depth} : selected {len(beam)} candidates\n")
-        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-selected-candidates.csv", [to_csv(beam)])
+        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-selected-candidates.csv", [subgroups_to_csv(beam)])
         depth += 1
 
     # prune each candidate's pattern to only keep the actually useful conditions
-    if save_intermediate_results: write_file(f"{output_folder}/stats1-after-mining-and-before-pruning.csv", [to_csv(result)])
+    if save_intermediate_results: write_file(f"{output_folder}/stats1-after-mining-and-before-pruning.csv", [subgroups_to_csv(result)])
     if not skip_phase2:
         logger.info(f"Phase 2: Dominance pruning & deduplication")
         logger.info(f"Dominance pruning {len(result)} candidates...")
@@ -384,7 +384,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         logger.info(f"Removing duplicates...")
         result = remove_duplicates(result)
         logger.info(f"{len(result)} remaining after candidates deduplication...")
-        if save_intermediate_results: write_file(f"{output_folder}/stats2-after-duplicates-removal.csv", [to_csv(result)])
+        if save_intermediate_results: write_file(f"{output_folder}/stats2-after-duplicates-removal.csv", [subgroups_to_csv(result)])
 
     # final candidates selection / post selection phase
     if not skip_phase3:
@@ -395,5 +395,5 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
     logger.info(f"Final selection\n{len(result)} candidate(s)\n{_min_max_avg_quality_string(result, ' ')}")
     logger.info(f"Results stored in the folder: {os.getcwd()}/{output_folder}")
-    write_file(f"{output_folder}/stats3-final-results.csv", [to_csv(result)])
+    write_file(f"{output_folder}/stats3-final-results.csv", [subgroups_to_csv(result)])
     return result

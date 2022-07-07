@@ -253,9 +253,10 @@ def _min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
     return f"min_quality={min_quality}{sep}max_quality={max_quality}{sep}avg_quality={avg_quality}"
     
     
-def to_csv(cands: List[Subgroup]) -> str:
+def subgroups_to_csv(subgroups: List[Subgroup]) -> str:
+    """Return a csv(like) representation of the specified subgroups"""
     return ("index,quality,size,#conditions,description\n" + \
         "\n".join(
-        f"{index + 1},{cand.quality},{len(cand.cover)},{len(cand.description)},{cand.description}"
-            for (index, cand) in enumerate(cands)
+        f"{index + 1},{sg.quality},{len(sg.cover)},{len(sg.description)},{sg.description}"
+            for (index, sg) in enumerate(subgroups)
     )).replace(r"'", "")
