@@ -1,7 +1,9 @@
+from collections import defaultdict
 import pandas
 import pytest
+
 from ..cond import Cond
-from ..dssd import fixed_size_cover_selection, multiplicative_weighted_covering_score, var_size_cover_selection, var_size_description_selection
+from ..dssd import fixed_size_cover_selection, var_size_cover_selection, var_size_description_selection, multiplicative_weighted_covering_score_smart
 from ..subgroup import Subgroup
 from ..description import Description
 from .. import selection_strategies as ss
@@ -144,8 +146,8 @@ def test_fixed_size_cover_selection():
     # score(cand3) = 1/3 * (0.5 * 3) * 5 = 2.5
     # score(cand4) = 1/3 * (1 * 3) * 4.4 = 4.4
     # cand4 has the highest score so it is selected and as the beam width is reached the procedure stops
-    assert multiplicative_weighted_covering_score(cand3, [cand1], s.weight) * cand3.quality == 2.5
-    assert multiplicative_weighted_covering_score(cand4, [cand1], s.weight) * cand4.quality == 4.4
+    assert multiplicative_weighted_covering_score_smart(cand3, defaultdict(int, {k: 1 for k in cand1.cover}), s.weight) * cand3.quality == 2.5
+    assert multiplicative_weighted_covering_score_smart(cand4, defaultdict(int, {k: 1 for k in cand1.cover}), s.weight) * cand4.quality == 4.4
     assert res[1] == cand4
 
 

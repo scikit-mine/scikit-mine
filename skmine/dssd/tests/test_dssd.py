@@ -1,10 +1,11 @@
+from collections import defaultdict
 import numpy as np
 import pandas
 import pytest
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
-from ..dssd import apply_dominance_pruning, fixed_size_compression_beam_selection, fixed_size_cover_selection, fixed_size_description_selection,  multiplicative_weighted_covering_score, update_topk, var_size_compression_beam_selection, var_size_cover_selection, var_size_description_selection, mine
+from ..dssd import apply_dominance_pruning, fixed_size_compression_beam_selection, fixed_size_cover_selection, fixed_size_description_selection, multiplicative_weighted_covering_score_smart, update_topk, var_size_compression_beam_selection, var_size_cover_selection, var_size_description_selection, mine
 from ..custom_types import ColumnType
 
 
@@ -58,28 +59,28 @@ def test_multiplicative_weighted_covering_score():
 
     # ensure only non empty candidates can be given as argument
     with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score(empty_cand, [], 0.9)
+        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0.9)
 
     # ensure a non empty candidate is given as an argument
     with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score(empty_cand, [], 0)
+        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0)
 
     # ensure invalid weigh raises an exception
     with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score(Subgroup(Description([]), cover=pandas.Index([0])), [], 1.5)
+        multiplicative_weighted_covering_score_smart(Subgroup(Description([]), cover=pandas.Index([0])), {}, 1.5)
 
     # non empty cover with empty selection
-    assert multiplicative_weighted_covering_score(Subgroup(Description([]), 0.0, cover=pandas.Index([0, 2])), [], .9) == 1
+    assert multiplicative_weighted_covering_score_smart(Subgroup(Description([]), 0.0, cover=pandas.Index([0, 2])), defaultdict(int), .9) == 1
 
     # watch score decrease as the selection already contains transactions covered by the candidate
     cand1 = Subgroup(Description([]), cover=pandas.Index([0]))
-    assert multiplicative_weighted_covering_score(cand1, [cand1], 0.9) == .9
-    assert multiplicative_weighted_covering_score(cand1, [cand1, cand1], 0.9) == .9 ** 2
+    assert multiplicative_weighted_covering_score_smart(cand1, {0: 1}, 0.9) == .9
+    assert multiplicative_weighted_covering_score_smart(cand1, {0: 2}, 0.9) == .9 ** 2
 
     # candidate with a cover size different that those already in the selection
     # candidate size is taken into account while computing the score 
     cand2 = Subgroup(Description([]), cover=pandas.Index([0, 5, 6]))
-    assert multiplicative_weighted_covering_score(cand2, [cand1, cand1], 0.9) == (.9 ** 2 + 1 + 1) / len(cand2.cover)
+    assert multiplicative_weighted_covering_score_smart(cand2, defaultdict(int, {0: 2}), 0.9) == (.9 ** 2 + 1 + 1) / len(cand2.cover)
 
 
 def test_unimplemented_methods():

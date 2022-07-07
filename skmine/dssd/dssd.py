@@ -82,52 +82,33 @@ def var_size_description_selection(candidates: List[Subgroup], beam: List[Subgro
     return beam
 
 
-def multiplicative_weighted_covering_score(cand: Subgroup, selection: List[Subgroup], weight: float) -> float:
-    """Compute and return the score for the current candidate based on how often the transactions 
-    in its cover are already covered by the candidates in the selection
-    Requirement:
-        | cand.cover | > 0
-
-    Args:
-        cand (Candidate): the candidate to rank
-        selection (List[Candidate]): the list of already selected candidates
-        weight (float): the initial weight of every transaction
-
-    Returns:
-        float
+def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
     """
-    if len(cand.cover) <= 0: 
-        raise ValueError("Can not compute the score for a candidate which cover is empty")
+    Compute and return the weighted covering score for the current candidate based on 
+    how often its cover overlaps with already selected candidates
 
-    if not (0 < weight <= 1): 
-        raise ValueError("Value needs be in (0, 1] ")
+    Requirement
+    -----------
+    len(cand.cover) > 0
 
-    result = 0.
-    for transaction in cand.cover:
-        count = 0
-        # count how many times the current transaction/tuple is already present in the selection:  c(t, sel)
-        for candidate in selection:
-            if transaction in candidate.cover:
-                count += 1
+    Parameters
+    ----------
+    cand: Subgroup
+        The candidate to rank
+    counts: DefaultDict[int, int]
+        The counts of every transaction(index in the original entire dataset) 
+        from already selected candidates
+    weight: float
+        The initial weight of every transaction
 
-        # Add the weighted result; alpha ^ c(t, sel)
-        result += pow(weight, count)
-    return result / (1 if cand.cover.size == 0 else cand.cover.size)
+    Returns
+    -------
+    float
 
-
-def multiplicative_weighted_covering_score_smart(cand: Subgroup, weight: float, counts: Dict[int, int]) -> float:
-    """Compute and return the score for the current candidate based on how often the transactions 
-    in its cover are already covered by the candidates in the selection
-    Requirement:
-        | cand.cover | > 0
-
-    Args:
-        cand (Candidate): the candidate to rank
-        selection (List[Candidate]): the list of already selected candidates
-        weight (float): the initial weight of every transaction
-
-    Returns:
-        float
+    References
+    ----------
+    [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
     if len(cand.cover) <= 0: 
         raise ValueError("Can not compute the score for a candidate which cover is empty")
@@ -149,7 +130,7 @@ def update_counts(cand: Subgroup, counts: Dict[int, int]):
 
 def fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
     counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, weight, counts) * c.quality
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
 
     # in case there are less candidates than the beam width
     # just retrun the candidates list
@@ -172,7 +153,7 @@ def fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup],
 
 def var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
     counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, weight, counts) * c.quality
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
 
     if len(candidates) == 0:
         raise ValueError("The candidates list can not be empty")
