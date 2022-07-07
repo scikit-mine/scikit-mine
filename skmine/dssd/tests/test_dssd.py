@@ -111,6 +111,6 @@ def test_mining():
     quality_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"},
     selection_strategy="cover",
     selection_params={"weight": .9},
-    refinement_operator_name="basic", save_intermediate_results=True)
+    refinement_operator_name="official", save_intermediate_results=True)
 
     print(res)

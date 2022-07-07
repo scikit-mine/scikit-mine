@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List
-from pandas import DataFrame
 from .subgroup import Subgroup
-from .description import Description
 from .table import Table
 from .cond import Cond
 from .custom_types import ColumnType, FuncCover, FuncQuality
-from .utils import _get_cut_points, _get_cut_points_smart
+from .utils import _get_cut_points_smart
 
 class RefinementOperator(ABC):
     def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
@@ -101,96 +99,10 @@ class RefinementOperatorOfficialImproved(RefinementOperatorOfficial):
         return cand_list
 
 
-### basic refinement operator ###
-def generate_numeric_conditions(attribute: str, lower_bound: float, upper_bound: float, num_cut_points: int, operators_list: List[str]) -> List[Cond]:
-    """Generate conditions to discretize the specified numeric attributes using the numeric operators specified on the current instance
-
-    Args:
-        attribute (str): the attribute to discretize
-        lower_bound (float): the lowest value for the attribute
-        upper_bound (float): the highest value for the attribute
-        bins_count (int): the number of bins to create
-        operators_list (List[str]): operators used for numeric conditions
-
-    Returns:
-        List[Cond]
-    """
-    cut_points = _get_cut_points(lower_bound, upper_bound, num_cut_points)
-    # cut_points = np.arange(left_bound, right_bound, (right_bound - left_bound) / bins_count)[1:]
-    # make conditions
-    conds: List[Cond] = []
-    # for (_, end) in intervals:
-    for point in cut_points:
-        for op in operators_list:
-            conds.append(Cond(attribute, op, point))  # new cond
-    return conds
-
-
-def generate_conditions(df: DataFrame, columns: List[str], column_types: Dict[str, str], discretization: Dict[str, int], operators_list: List[str] = [">", "<"]) -> List[Cond]:
-    """Compute and return a list of conditions on the specified descriptive columns
-
-    Args:
-        columns (List[str]): attributes for which to generate conditions
-        discretization (Dict[str, int]): number of bins to create per numeric attribute during discretization
-
-    Returns:
-        List[Cond]
-    """
-    conditions: List[Cond] = []
-    for column_name in columns:  # Discretise pour chaque attribut numerique
-        if column_types[column_name] == ColumnType.BINARY:
-            # generate equal true/false condition for current attribute
-            conditions.append(Cond(column_name, "==", True))
-            conditions.append(Cond(column_name, "==", False))
-        elif column_types[column_name] == ColumnType.NOMINAL:
-            # create eq and not eq conditions for the unique values of the current attribute
-            for val in df[column_name].unique():
-                conditions.append(Cond(column_name, "==", val))
-                conditions.append(Cond(column_name, "!=", val))
-        elif column_types[column_name] == ColumnType.NUMERIC:
-            lb = min(df[column_name].values)
-            rb = max(df[column_name].values)
-            conditions += generate_numeric_conditions(column_name, lb, rb, discretization[column_name], operators_list)
-    return conditions
-
-
-class RefinementOperatorBasic(RefinementOperator):
-    def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
-        super().__init__(dataset, num_cut_points, min_cov, cover_func, quality_func)
-        self.conditions: List[Cond] = generate_conditions(self.dataset.df, self.dataset.column_types.keys(), self.dataset.column_types,self.num_cut_points, ["<", ">"])
-
-
-    def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
-        for cond in self.conditions:
-            if cond not in cand.description.conditions:  # in DSSD paper
-                new_candidate: Subgroup = None
-                if self.dataset.column_types[cond.attribute] == ColumnType.BINARY:
-                    if not cand.description.is_attribute_used(cond.attribute):
-                        # add a new candidate that has this condition as an additional condition
-                        new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
-                
-                elif self.dataset.column_types[cond.attribute] == ColumnType.NOMINAL:
-                    # if there is no condition that says nominal_attribute = "val" yet then we can add the current condition as it does not create any absurdity
-                    if not any(c.attribute == cond.attribute and c.op == "=" for c in cand.description.conditions):
-                        # add the new candidate with this condition in its pattern
-                        new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
-
-                elif self.dataset.column_types[cond.attribute] == ColumnType.NUMERIC:
-                    # we add this right away cause we know that we can have multiple conditions on the same numeric attribute even if it introdues redundant conditions they will be pruned later during dominance pruning
-                    new_candidate = Subgroup(Description([*cand.description.conditions, cond]), parent=cand)
-
-                if new_candidate is not None:
-                    # update the candidate cover
-                    self.check_and_append_candidate(new_candidate, cand_list)
-
-        return cand_list
-
-
 _builders: Dict[str, Callable[..., RefinementOperator]] = None
 
 if _builders is None: 
     _builders = {
-        "basic": RefinementOperatorBasic,
         "official": RefinementOperatorOfficial,
         "official_improved": RefinementOperatorOfficialImproved,
         "powerfull": None
