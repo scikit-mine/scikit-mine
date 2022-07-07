@@ -90,8 +90,30 @@ def _get_cut_points_smart(values: List[float], num_cut_points: int):
     return ((values[bin_size * i - 1] + values[bin_size * i]) / 2 for i in range(1, num_cut_points + 1))
 
 
-def diff_items_count(l1: Collection[Cond], l2: Collection[Cond]) -> int:
-    """Return the number of items in the largest collection but not in the shorter one"""
+def diff_items_count(l1: Collection, l2: Collection) -> int:
+    """
+    Return the number of items in the larger collection but not in the shorter one
+    NB: This method doesn't handle duplicate values in the collections
+
+    Parameters
+    ----------
+    l1: Collection
+        The first collection
+    l2: Collection
+        The other collection
+
+    Returns
+    -------
+    int
+
+    Examples
+    --------
+    >>> from skmine.dssd.utils import diff_items_count
+    >>> l1 = [1, 5, 6, 2]
+    >>> l2 = [5, 7, 4, 2, 3]
+    >>> diff_items_count(l1, l2)
+    3
+    """
 
     # always have l1 be the shorter list
     if len(l2) < len(l1):
