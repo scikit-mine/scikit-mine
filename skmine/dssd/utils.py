@@ -122,9 +122,25 @@ def diff_items_count(l1: Collection, l2: Collection) -> int:
     return sum(1 for i in l2 if i not in l1)
 
 
-def sort_candidates(candidates: List[Subgroup], descending: bool = True):
-    candidates.sort(key = lambda c: c.quality, reverse=descending)
-    return candidates
+def sort_candidates(subgroups: List[Subgroup], descending: bool = True):
+    """
+    Sort subgroups inplace based on their quality and for convenience,
+    returns the subgroups list as a result 
+
+
+    Parameters
+    ----------
+    subgroups: List[Subgroup])
+        The list of subgroup to sort
+    descending: bool, default=True
+        Whether to sort descending or not
+
+    Returns
+    -------
+    List[Subgroup]
+    """
+    subgroups.sort(key = func_get_quality, reverse=descending)
+    return subgroups
 
 
 def remove_duplicates(elements: list):
