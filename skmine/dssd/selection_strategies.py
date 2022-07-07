@@ -112,7 +112,28 @@ class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelect
 
 
 class FixedCoverBasedSelectionStrategy(SelectionStrategy):
-    def __init__(self, weight: float) -> None:
+    """
+    Fixed size cover based selection strategy\n
+    Explanation:
+        A score based on multiplicative weighted covering (Lavraˇc et al 2004) is used to weigh 
+        the quality of each subgroup, aiming to minimise the overlap between the selected subgroups.
+        The less often tuples in subgroup G are already covered by subgroups in the selection, 
+        the larger the score. If the cover contains only previously uncovered tuples, wscore(G, Sel) = 1.
+        In k iterations, k subgroups are selected. In each iteration, the subgroup that maximises 
+        weighted_score(G, Sel) · quality(subgroup) is selected.
+
+    Parameters
+    ----------
+    weight: float, default=0.9
+        The weight to use for computing covering score. Should be in [0, 1[
+
+    References
+    ----------
+        [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    
+    def __init__(self, weight: float = .9) -> None:
         super().__init__()
         self.weight = weight
 
@@ -121,6 +142,27 @@ class FixedCoverBasedSelectionStrategy(SelectionStrategy):
 
 
 class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
+    """
+    Variable size cover based selection strategy\n
+    Explanation:
+        This selection procedure is equivalent to the fixed-size version, except for the stopping criterion. 
+        Subgroups are iteratively selected until no candidate subgroup meets the minimum score specified by param-
+        eter f. The minimum score is defined as fraction x quality of the top-ranking candidate. 
+        Selection stops when there is no subgroup which weighted covering score is greater or equal to the min score
+
+    Parameters
+    ----------
+    weight: float, default=0.9
+        The weight to use for computing covering score. Should be in [0, 1[
+    fraction: float, default=0.5
+        The fraction to use for computing the min_score. Should be in [0, 1[
+
+    References
+    ----------
+        [1] Page 223
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    
     def __init__(self, weight: float, fraction: float) -> None:
         super().__init__(weight)
         self.fraction = fraction
