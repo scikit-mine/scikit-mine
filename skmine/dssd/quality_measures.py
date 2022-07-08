@@ -129,7 +129,7 @@ class QualityMeasure(ABC):
 
 class WRACCQuality(QualityMeasure):
     """
-    Compute the quality of a subgroup with regards to a single target binary attribute
+    Compute the weighted relative accuracy quality of a subgroup with regards to a single target binary attribute
 
     Parameters
     ----------
@@ -151,6 +151,31 @@ class WRACCQuality(QualityMeasure):
 
 
 class KLQuality(QualityMeasure):
+    """
+    Compute the Kullback and Lieber quality of a subgroup with regards to
+    a single or multiple target binary or nominal attributes.
+    Notes: As described in the article from the references, this version does not 
+    take into account the size of the subgroup while computing the quality.
+    As such, smaller subgroups tend to have higher quality so you might end up 
+    with unexpected results if you don't fully understand this measure. It is generaly
+    recommended to use the `skmine.dssd.WKLQuality` for more predictable results.
+
+    Parameters
+    ----------
+    dataset: DataFrame
+        A dataframe representing the entire dataset
+    model_attributes: List[str]
+        The names of the target attributes
+
+    See also
+    --------
+    skmine.dssd.WKLQuality
+
+    References
+    ----------
+    [1] Page 217-218 (3 Quality measures)
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
     def __init__(self, dataset: DataFrame, model_attributes: List[str]) -> None:
         super().__init__(dataset, model_attributes)
         self.df_column_shares =  column_shares(dataset)
@@ -161,6 +186,24 @@ class KLQuality(QualityMeasure):
 
 
 class WKLQuality(KLQuality):
+    """
+    Compute the Weighted Kullback and Lieber quality of a subgroup with regards to
+    a single or multiple target binary or nominal attributes.
+    This version is tagged weighted as it takes into account the size of 
+    the subgroup while computing the quality, thus gives more predictable results.
+
+    Parameters
+    ----------
+    dataset: DataFrame
+        A dataframe representing the entire dataset
+    model_attributes: List[str]
+        The names of the target attributes
+
+    References
+    ----------
+    [1] Page 217-218 (3 Quality measures)
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
     def compute_quality(self, sg: DataFrame):
         return super().compute_quality(sg) * len(sg)
 
