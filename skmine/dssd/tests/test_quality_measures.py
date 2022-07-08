@@ -36,17 +36,16 @@ def test_wracc():
     assert q.compute_quality(sg) == (4 / 8) * abs(1 - 3 * 2 / 8)
 
 
-def test_smart_kl():
+
+def test_kl_quality():
     subset_correct_distribution = defaultdict(int, {"one": .75, "two": .25})
     entire_dataset_distribution = defaultdict(int, {"one": .5, "two": .5})
 
-    assert qa.smart_kl(defaultdict(int), entire_dataset_distribution) == 0
+    assert qa.KLQuality.kl(defaultdict(int), entire_dataset_distribution) == 0
     res = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
-    assert qa.smart_kl(subset_correct_distribution, entire_dataset_distribution) == res
-    
+    assert qa.KLQuality.kl(subset_correct_distribution, entire_dataset_distribution) == res
 
 
-def test_kl_quality():
     df = pandas.DataFrame({
         "a": ["one","one","two","two"] * 2,
         "bin": [True, True, False, False] * 2
@@ -58,18 +57,19 @@ def test_kl_quality():
     })
     
 
-    assert qa.smart_kl_sums(column_shares(df), column_shares(sg), []) == 0
+    assert qa.KLQuality(df, []).compute_quality(sg) == 0
+
     kl_a = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
-    assert qa.smart_kl_sums(column_shares(df), column_shares(sg), ["a"]) == kl_a
+    assert qa.KLQuality(df, ["a"]).compute_quality(sg) == kl_a
 
     kl_b = .5 * math.log2(.5/.5) + .5 * math.log2(.5/.5)
-    assert qa.smart_kl_sums(column_shares(df), column_shares(sg), ["a", "bin"]) == kl_a + kl_b
+    assert qa.KLQuality(df, ["a", "bin"]).compute_quality(sg) == kl_a + kl_b
 
 
     kl: qa.KLQuality = qa.create("kl", entire_df=df, extra_parameters={"model_attributes": ["a", "bin"] })
-    wkl: qa.KLQuality = qa.create("wkl", entire_df=df, extra_parameters={"model_attributes": ["a", "bin"] })
     assert kl.compute_quality(sg) == kl_a + kl_b
 
+    wkl: qa.KLQuality = qa.create("wkl", entire_df=df, extra_parameters={"model_attributes": ["a", "bin"] })
     assert wkl.compute_quality(sg) == (kl_a + kl_b) * len(sg)
 
 

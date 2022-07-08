@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import math
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, DefaultDict, Dict, List
 from pandas import DataFrame
 from tslearn.metrics import dtw
 from tslearn.barycenters import dtw_barycenter_averaging as dba
@@ -10,43 +10,6 @@ from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 from .utils import column_shares
 from .custom_types import ColumnShares
-
-
-def smart_kl(p: Dict[Any, float], q: Dict[Any, float]):
-    """Compute the Kullback and Lieber difference as proposed in the paper
-
-    Args:
-        s (Series): The series of values of the target attribute that is inherently used by the two probability distributions
-        p (Dict[Any, float]): Correct probability distribution 
-        q (Dict[Any, float]): Wrong probability distribution
-
-    Returns:
-        float
-    """
-    result = 0.
-    # print("INSIDE KL COMPUTING")
-    for x in q:
-        # print(f"x={x}, p[x]={p[x]}, q[x]={q[x]}")
-        if (p[x] != 0 and q[x] != 0):
-            result += p[x] * math.log2(p[x] / q[x])
-
-    return result
-
-
-def smart_kl_sums(entire_df_column_shares: ColumnShares, candidate_df_column_shares: ColumnShares, model_attributes: List[str]):
-    """again simple translation of the formula but tried to use the create hat function in order to keep the whole function as similar as possible to the code presented in the paper"""
-
-    kl_sums = 0
-    for mi in model_attributes:
-        # print(f"COMPUTING KL_SUMS FOR ATTRIBUTE {mi}")
-        # print(f"{mi=candidate_df_column_shares[mi=} {mi=entire_df_column_shares[mi=}")
-        kl_sums += smart_kl(
-            p=candidate_df_column_shares[mi], 
-            q=entire_df_column_shares[mi]
-        )
-
-    return kl_sums
-    # print(f"COMPUTING WKL FOR model_attributes={model_attributes}, result={result}")
 
 
 def measure_distance(c1: np.ndarray, c2: np.ndarray, distance_measure: str) -> float:
@@ -129,7 +92,7 @@ class WRACCQuality(QualityMeasure):
     """
     def __init__(self, dataset: DataFrame, binary_model_attribute: str) -> None:
         super().__init__(dataset, [binary_model_attribute])
-        self.dataset_ones = WRACCQuality.ones_fraction(dataset, binary_model_attribute)
+        self.dataset_ones = self.ones_fraction(dataset, binary_model_attribute)
 
     @property
     def bin_attr(self) -> str:
@@ -143,7 +106,7 @@ class WRACCQuality(QualityMeasure):
         return len(df[(df[attr] == 1) | (df[attr] == True)]) / len(df)
             
     def compute_quality(self, sg: DataFrame):
-        candidate_ones = WRACCQuality.ones_fraction(sg, self.bin_attr)
+        candidate_ones = self.ones_fraction(sg, self.bin_attr)
         result = (len(sg) / len(self.dataset)) * abs(candidate_ones - self.dataset_ones)
         print(f"COMPUTING WRACC FOR target_attr={self.bin_attr}, result={result}")
         return result
@@ -151,7 +114,7 @@ class WRACCQuality(QualityMeasure):
 
 class KLQuality(QualityMeasure):
     """
-    Compute the Kullback and Lieber quality of a subgroup with regards to
+    Compute the Kullback-Leibler quality of a subgroup with regards to
     a single or multiple target binary or nominal attributes.
     Notes: As described in the article from the references, this version does not 
     take into account the size of the subgroup while computing the quality.
@@ -180,14 +143,45 @@ class KLQuality(QualityMeasure):
         self.df_column_shares =  column_shares(dataset)
 
 
+    @classmethod
+    def kl(cls, p: DefaultDict[Any, float], q: DefaultDict[Any, float]) -> float:
+        """Compute the Kullback-Leibler difference as proposed in the paper
+
+        Parameters
+        ----------
+        p: DefaultDict[Any, float]
+            Correct probability distribution 
+        q: DefaultDict[Any, float]
+            Wrong probability distribution
+
+        Returns
+        -------
+        float
+
+        References
+        ----------
+        [1] Page 217 (Section on Weighted Kullback–Leibler divergence)
+            Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+        """
+        result = 0.
+        for x in q:
+            if (p[x] != 0 and q[x] != 0):
+                result += p[x] * math.log2(p[x] / q[x])
+        return result
+
+
     def compute_quality(self, sg: DataFrame):
-        res = smart_kl_sums(self.df_column_shares, column_shares(sg, self.model_attributes), self.model_attributes)
-        return res
+        sg_shares = column_shares(sg, self.model_attributes)
+        result = 0
+        for attr in self.model_attributes:
+            result += self.kl(p=sg_shares[attr], q=self.df_column_shares[attr])
+
+        return result
 
 
 class WKLQuality(KLQuality):
     """
-    Compute the Weighted Kullback and Lieber quality of a subgroup with regards to
+    Compute the Weighted Kullback and Leibler quality of a subgroup with regards to
     a single or multiple target binary or nominal attributes.
     This version is tagged weighted as it takes into account the size of 
     the subgroup while computing the quality, thus gives more predictable results.
