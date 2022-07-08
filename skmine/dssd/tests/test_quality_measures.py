@@ -19,23 +19,20 @@ def test_quality_measures_factory():
         qa.create("undefined_quality_measure", pandas.DataFrame(), {})
 
 
-def test_ones_fraction():
+def test_wracc():
     df = pandas.DataFrame({"a": [True, True, True, False] * 2})
 
     with pytest.raises(ValueError):
-        qa.ones_fraction(pandas.DataFrame(), "example_attribute")
+        qa.WRACCQuality._ones_fraction(pandas.DataFrame(), "example_attribute")
 
-    assert qa.ones_fraction(df, "a") == (3 * 2) / 8
+    assert qa.WRACCQuality._ones_fraction(df, "a") == (3 * 2) / 8
 
-
-def test_wracc():
-    df = pandas.DataFrame({ "a": [True, True, True, False] * 2 })
     sg = pandas.DataFrame({ "a": [True, True, True, True] })
     q = qa.create("wracc", entire_df=df, extra_parameters={"binary_model_attribute": "a"})
 
     assert q.compute_quality(df) == 0
 
-    assert qa.ones_fraction(sg, "a") == 4 / 4
+    assert qa.WRACCQuality._ones_fraction(sg, "a") == 4 / 4
     assert q.compute_quality(sg) == (4 / 8) * abs(1 - 3 * 2 / 8)
 
 

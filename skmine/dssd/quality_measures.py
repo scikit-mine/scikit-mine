@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import math
 from typing import Any, Callable, Dict, List
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from tslearn.metrics import dtw
 from tslearn.barycenters import dtw_barycenter_averaging as dba
 from tslearn.barycenters import euclidean_barycenter as eub
@@ -10,22 +10,6 @@ from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 from .utils import column_shares
 from .custom_types import ColumnShares
-
-def ones_fraction(df: DataFrame, target_attr: str):
-    """Compute the fraction of ones or true value for the target attribute in the dataset"""
-    if len(df) == 0:
-        raise ValueError("The dataframe can not be empty")
-
-    return len(df[(df[target_attr] == 1) | (df[target_attr] == True)]) / len(df)
-
-
-def wracc(dataset: DataFrame, candidate_df: DataFrame, target_attr: str):
-    """Compute the weighted relative accuracy for """
-    dataset_ones = ones_fraction(dataset, target_attr)
-    candidate_ones = ones_fraction(candidate_df, target_attr)
-    result = (len(candidate_df) / len(dataset)) * abs(candidate_ones - dataset_ones)
-    print(f"COMPUTING WRACC FOR target_attr={target_attr}, result={result}")
-    return result
 
 
 def smart_kl(p: Dict[Any, float], q: Dict[Any, float]):
@@ -145,9 +129,24 @@ class WRACCQuality(QualityMeasure):
     """
     def __init__(self, dataset: DataFrame, binary_model_attribute: str) -> None:
         super().__init__(dataset, [binary_model_attribute])
+        self.dataset_ones = WRACCQuality._ones_fraction(dataset, binary_model_attribute)
 
+    @property
+    def bin_attr(self) -> str:
+        return self.model_attributes[0]
+
+    @classmethod
+    def _ones_fraction(cls, df: DataFrame, attr: str):
+        """Compute the fraction of ones or true values for an attribute in the dataframe"""
+        if len(df) == 0:
+            raise ValueError("The dataframe can not be empty")
+        return len(df[(df[attr] == 1) | (df[attr] == True)]) / len(df)
+            
     def compute_quality(self, sg: DataFrame):
-        return wracc(self.dataset, sg, self.model_attributes[0])
+        candidate_ones = WRACCQuality._ones_fraction(sg, self.bin_attr)
+        result = (len(sg) / len(self.dataset)) * abs(candidate_ones - self.dataset_ones)
+        print(f"COMPUTING WRACC FOR target_attr={self.bin_attr}, result={result}")
+        return result
 
 
 class KLQuality(QualityMeasure):
