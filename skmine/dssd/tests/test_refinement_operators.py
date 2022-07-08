@@ -111,4 +111,4 @@ def test_dssd_paper_refinements():
     # the mock cover_func return a cover of size 1 for all candidate with two conditions in their description
     assert len(cands_step2) == 0
 
-    assert official_ro.refine_binary(Subgroup(Description([Cond("bin", "==", True)])), "bin", []) == None
+    assert official_ro._refine_binary(Subgroup(Description([Cond("bin", "==", True)])), "bin", []) == None

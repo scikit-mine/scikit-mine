@@ -7,7 +7,29 @@ from .custom_types import ColumnType, FuncCover, FuncQuality
 from .utils import _get_cut_points_smart
 
 class RefinementOperator(ABC):
+    """
+    An operator which is used to generate newer valid subgroups 
+    with longer descriptions based on one subgroup
+    """
+
     def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
+        """
+        Create a new refinement operator
+
+        Parameters
+        ----------
+        dataset: Table
+            The dataset used in the experiment of the
+        num_cut_points: Dict[str, int]
+            The number of cut points desired to disretize every single numeric attribute in the dataset
+        min_cov: int
+            The minimum coverage newer valid subgroups should have 
+        cover_func: FuncCover
+            A function to compute the cover of generated subgroup in order to be valid
+        quality_func: FuncQuality
+            A quality function to compute quality of the generated subgroups
+
+        """
         super().__init__()
         self.dataset = dataset
         self.column_types = dataset.column_types
@@ -18,6 +40,20 @@ class RefinementOperator(ABC):
 
 
     def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
+        """
+        This function is the one deciding the validity of a subgroup before including it in the result
+
+        Parameters
+        ----------
+        cand: Subgroup
+            The candidate subgroup to be evaluated
+        cand_list: List[Subgroup]
+            The list where to append the candidate if valid
+
+        Returns
+        -------
+        List[Subgroup]: returns the same result list received in parameter just for convenience purposes
+        """
         sg = self.cover_func(cand)
         if self.min_cov <= len(sg.index) < len(cand.parent.cover):
         # if self.min_cov <= len(sg.index) < len(self.dataset.df):
@@ -29,23 +65,63 @@ class RefinementOperator(ABC):
 
     @abstractmethod
     def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]) -> List[Subgroup]:
+        """
+        Generate candidates off of the specified cand and add the valid ones to the cand_list
+
+        Parameters
+        ----------
+        cand: Subgroup
+            The base candidate subgroup to refine
+        cand_list: List[Subgroup]
+            The list where to add the valid candidates generated
+
+        Returns:
+        List[Subgroup]: return the same cand_list just for convenience purposes
+        """
         pass
 
 
 ### official refinement operator ###
 class RefinementOperatorOfficial(RefinementOperator):
+    """
+    Refinement operator as described in the official DSSD paper.
+
+    Explanation
+    -----------
+    Given a subgroup G, generates all valid subgroup descriptions that extend G’s description 
+    with one condition. We distinguish three types of description attributes, each with its own specifics.
+    * Binary attribute {==}
+    The only allowed condition type is ==, and consequently only a single condi-
+    tion on any binary attribute can be part of a subgroup description.
+    * Nominal attribute {==, !=}
+    Both == and != are allowed. For any nominal attribute, either a single
+    = or multiple != conditions are allowed in a description.
+    * Numeric attribute {<, >}
+    Both < and > are allowed. Due to the large cardinality of numeric data, generating all 
+    possible conditions is infeasible. Thus, to prevent the search space from exploding, the values 
+    of a numeric attribute that occur within a subgroup are binned into six equal-sized bins 
+    and {<, >}-conditions are generated for the five cut points obtained this way. This ‘on-the-fly’ 
+    discretisation, performed upon refinement of a subgroup, results in a much more fine-grained
+    binning than a priori discretisation. Multiple conditions on the same attribute are
+    allowed, even though this may lead to redundant conditions in a description (e.g.D x < 10 ∧ D x < 5).
+
+    References
+    ----------
+    [1] Page 225 (6.2 Refining subgroups)
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
     def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
         super().__init__(dataset, num_cut_points, min_cov, cover_func, quality_func)
 
 
-    def refine_binary(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
+    def _refine_binary(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         if cand.description.is_attribute_used(col):
             return
         self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, "==", True)), cand_list)
         self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, "==", False)), cand_list)
 
 
-    def refine_nominal(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
+    def _refine_nominal(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         unique_values = self.dataset.unique_df[col]
         if cand.description.is_attribute_used(col):
             if not cand.description.has_equal_condition_on_attr(col):
@@ -57,7 +133,7 @@ class RefinementOperatorOfficial(RefinementOperator):
                 self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, "!=", val)), cand_list)
 
 
-    def refine_numerical(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
+    def _refine_numerical(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         # the way it is implemented in the dssd official source code
         values = sorted(self.dataset.df.loc[cand.cover][col].values)
 
@@ -69,18 +145,18 @@ class RefinementOperatorOfficial(RefinementOperator):
             self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, ">", val)), cand_list)
 
 
-    def refine_column(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
+    def _refine_column(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         if self.dataset.column_types[col] == ColumnType.BINARY:
-            self.refine_binary(cand, col, cand_list)
+            self._refine_binary(cand, col, cand_list)
         elif self.dataset.column_types[col] == ColumnType.NOMINAL:
-            self.refine_nominal(cand, col, cand_list)
+            self._refine_nominal(cand, col, cand_list)
         elif self.dataset.column_types[col] == ColumnType.NUMERIC:
-            self.refine_numerical(cand, col, cand_list)
+            self._refine_numerical(cand, col, cand_list)
 
 
     def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
         for col_name in self.dataset.column_types:
-            self.refine_column(cand, col_name, cand_list)
+            self._refine_column(cand, col_name, cand_list)
         return cand_list
 
 
