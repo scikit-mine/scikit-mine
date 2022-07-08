@@ -102,16 +102,47 @@ def ts_model(subgroup: DataFrame, attr: str, target_model: str = "eub") -> np.nd
 
 
 class QualityMeasure(ABC):
+    """
+    A class representing a method to compute the quality of a subgroup
+    based on the target attribute(s).
+    """
     def __init__(self, dataset: DataFrame, model_attributes: List[str]) -> None:
         self.dataset = dataset
         self.model_attributes = model_attributes
 
     @abstractmethod
     def compute_quality(self, sg: DataFrame) -> float:
+        """
+        Return the quality of the given subgroup
+
+        Parameters
+        ----------
+        sg: DataFrame
+            The cover/content of the subgroup
+
+        Returns
+        -------
+        float: The actual quality of the subgroup 
+        """
         pass
 
 
 class WRACCQuality(QualityMeasure):
+    """
+    Compute the quality of a subgroup with regards to a single target binary attribute
+
+    Parameters
+    ----------
+    dataset: DataFrame
+        A dataframe representing the entire dataset
+    binary_model_attribute: str
+        The name of the target attriute. This attribute should be a binary one 
+
+    References
+    ----------
+    [1] Page 215-216 (3 Quality measures)
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
     def __init__(self, dataset: DataFrame, binary_model_attribute: str) -> None:
         super().__init__(dataset, [binary_model_attribute])
 
