@@ -3,12 +3,12 @@ import numpy as np
 import pandas
 import pytest
 
+from ..selection_strategies import FixedCoverBasedSelectionStrategy
 from ..refinement_operators import RefinementOperatorOfficial
-from ..table import Table
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
-from ..dssd import apply_dominance_pruning, _fixed_size_cover_selection, _fixed_size_description_selection, multiplicative_weighted_covering_score_smart, update_topk, _var_size_cover_selection, _var_size_description_selection, mine
+from ..dssd import apply_dominance_pruning, update_topk, mine
 from ..custom_types import ColumnType
 from ..quality_measures import EuclideanEubTSQuality
 
@@ -57,35 +57,6 @@ def test_dominance_pruning():
     assert candidate.description == Subgroup(Description([Cond("num", ">", 4.0)])).description
 
 
-def test_multiplicative_weighted_covering_score():
-    empty_cand = Subgroup(Description([]), cover=pandas.Index([]))
-
-    # ensure only non empty candidates can be given as argument
-    with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0.9)
-
-    # ensure a non empty candidate is given as an argument
-    with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0)
-
-    # ensure invalid weigh raises an exception
-    with pytest.raises(ValueError):
-        multiplicative_weighted_covering_score_smart(Subgroup(Description([]), cover=pandas.Index([0])), {}, 1.5)
-
-    # non empty cover with empty selection
-    assert multiplicative_weighted_covering_score_smart(Subgroup(Description([]), 0.0, cover=pandas.Index([0, 2])), defaultdict(int), .9) == 1
-
-    # watch score decrease as the selection already contains transactions covered by the candidate
-    cand1 = Subgroup(Description([]), cover=pandas.Index([0]))
-    assert multiplicative_weighted_covering_score_smart(cand1, {0: 1}, 0.9) == .9
-    assert multiplicative_weighted_covering_score_smart(cand1, {0: 2}, 0.9) == .9 ** 2
-
-    # candidate with a cover size different that those already in the selection
-    # candidate size is taken into account while computing the score 
-    cand2 = Subgroup(Description([]), cover=pandas.Index([0, 5, 6]))
-    assert multiplicative_weighted_covering_score_smart(cand2, defaultdict(int, {0: 2}), 0.9) == (.9 ** 2 + 1 + 1) / len(cand2.cover)
-
-
 res = None
 def test_mining():
     df = pandas.DataFrame({
@@ -112,8 +83,7 @@ def test_mining():
     desc_attrs = ["bin", "cat", "num"]
     res = mine(df, column_types, descriptive_attributes=desc_attrs, model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1,
     quality_measure=EuclideanEubTSQuality(df, "ts"),
-    selection_strategy="cover",
-    selection_params={"weight": .9},
+    selection_strategy=FixedCoverBasedSelectionStrategy(.9),
     refinement_operator=RefinementOperatorOfficial()
     )
     # "official", save_intermediate_results=True)

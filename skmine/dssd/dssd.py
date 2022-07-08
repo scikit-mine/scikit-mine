@@ -1,11 +1,10 @@
-from bisect import insort
 from collections import defaultdict
 from distutils.file_util import write_file
 import math
 import os
 import time
 import logging
-from typing import Any, DefaultDict, List, Dict
+from typing import List, Dict
 from pandas import DataFrame
 
 from .refinement_operators import RefinementOperator, RefinementOperatorOfficial
@@ -14,171 +13,11 @@ from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicate
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import ColumnType, FuncCover, FuncQuality
+from .selection_strategies import FixedDescriptionBasedSelectionStrategy, SelectionStrategy
+from .quality_measures import QualityMeasure
+
 # Create a custom logger
 logger = logging.getLogger("dssd")
-
-
-def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2) -> List[Subgroup]:
-    def is_candidate_diverse(candidate: Subgroup, beam: List[Subgroup], min_diff_conditions: int) -> bool:
-        return all(c.quality != candidate.quality or diff_items_count(c.description.conditions, candidate.description.conditions) >= min_diff_conditions for c in beam)
-
-    logger.debug(f"desc: beam_width={beam_width}")
-    selected_candidates_count = 0
-    candidate_index = 0
-    # Make sure candidates are ordered in quality descending order, this might not be required if we assume an ordering pre-condition
-    sort_subgroups(candidates)
-    
-    while candidate_index < len(candidates) and selected_candidates_count < beam_width:
-        candidate = candidates[candidate_index]
-        candidate_diverse = is_candidate_diverse(candidate, beam, min_diff_conditions)
-        if candidate_diverse:
-            beam.append(candidate)
-            selected_candidates_count += 1
-            logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count}")
-        candidate_index += 1
-    return beam
-
-
-def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int) -> List[Subgroup]:
-    def is_candidate_diverse(candidate: Subgroup, attributes_usage: DefaultDict[str, int], max_occ: int) -> bool:
-        for cond in candidate.description.conditions:
-            if attributes_usage[cond.attribute] >= max_occ: # discard this candidate as it has at least an attribute already overused
-                return False
-        return True
-
-    def update_beam(beam: List[Subgroup], attributes_usage: Dict[str, int], candidate: Subgroup):
-        beam.append(candidate)
-        # Update the usage count of the attributes present in the selected candidate
-        for cond in candidate.description.conditions:
-            # realize that this can cause some attributes reach a usage count higher that max_occ as if 
-            # a description contains multiple conditions on the same attribute and that attribute had 
-            # just one more legal possible usage. Might wanna check for a way to aggregate the number 
-            # of usages before processing to the diversity computing strategy
-            attributes_usage[cond.attribute] += 1
-
-
-    selected_candidates_count = 0
-    candidate_index = 0
-    # Make sure candidates are ordered in quality descending order
-    sort_subgroups(candidates)
-    # candidates = sorted(candidates, key = lambda c: c.quality, reverse=True)
-    attributes_usage = defaultdict(int, {})
-    max_occ = c * l
-    logger.debug(f"var_desc: beam_width={beam_width}, max_occ={max_occ}")
-
-    while candidate_index < len(candidates) and selected_candidates_count < beam_width:
-        candidate = candidates[candidate_index]
-        candidate_diverse = is_candidate_diverse(candidate, attributes_usage, max_occ)
-        
-        if candidate_diverse:
-            selected_candidates_count += 1
-            update_beam(beam, attributes_usage, candidate)
-            logger.debug(f"SELECTED CANDIDATE {selected_candidates_count}")
-
-        candidate_index += 1 
-
-    logger.debug(f"attributes_usage={attributes_usage}")
-    return beam
-
-
-def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
-    counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
-
-    # in case there are less candidates than the beam width
-    # just retrun the candidates list
-    if len(candidates) <= beam_width:
-        beam.extend(candidates)
-        return beam
-
-    logger.debug(f"cover: beam_width={beam_width}")
-
-    for i in range(beam_width):
-        logger.debug(f"SELECTED CANDIDATE {i + 1}")
-        max_scoring_candidate = max(candidates, key = score)
-        # Select the the candidate with the highest score for beam_width times
-        candidates.remove(max_scoring_candidate)
-        beam.append(max_scoring_candidate)
-        update_counts(max_scoring_candidate, counts)
-
-    return beam
-
-
-def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
-    counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
-
-    if len(candidates) == 0:
-        raise ValueError("The candidates list can not be empty")
-
-    # Find the candidate with the highest quality
-    max_scoring_candidate = max(candidates, key = func_get_quality)
-    max_score = score(max_scoring_candidate)
-    # Use it to set the minimum score
-    min_score = fraction * max_scoring_candidate.quality
-
-    selected_candidates_count = 0
-    logger.debug(f"var_cover: beam_width={beam_width} min_score={min_score}")
-    
-    # Select all subgroups that have score higher than the minimum
-    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0: # OMEGA(G, Sel) · φ(G) ≥ δ.
-        logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count + 1}: {(max_score, max_scoring_candidate)}")
-        # Add the highest scoring candidate to the beam
-        beam.append(max_scoring_candidate)
-        update_counts(max_scoring_candidate, counts)
-        selected_candidates_count += 1
-        # And remove it from the candidates list
-        candidates.remove(max_scoring_candidate)
-        # Update the highest scoring candidate
-        (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
-
-    return beam
-
-
-def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
-    """
-    Compute and return the weighted covering score for the current candidate based on 
-    how often its cover overlaps with already selected candidates
-
-    Requirement
-    -----------
-    len(cand.cover) > 0
-
-    Parameters
-    ----------
-    cand: Subgroup
-        The candidate to rank
-    counts: DefaultDict[int, int]
-        The counts of every transaction(index in the original entire dataset) 
-        from already selected candidates
-    weight: float
-        The initial weight of every transaction
-
-    Returns
-    -------
-    float
-
-    References
-    ----------
-    [1] Page 222
-        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
-    """
-    if len(cand.cover) <= 0: 
-        raise ValueError("Can not compute the score for a candidate which cover is empty")
-
-    if not (0 < weight <= 1): 
-        raise ValueError("Value needs be in (0, 1] ")
-
-    result = 0.
-    for transaction in cand.cover:
-        result += pow(weight, counts[transaction])
-    return result / len(cand.cover)
-
-
-def update_counts(cand: Subgroup, counts: Dict[int, int]):
-    """Increase by 1 the counts of every transaction in the specified candidate's cover"""
-    for t in cand.cover:
-        counts[t] += 1
 
 
 def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover):
@@ -264,6 +103,7 @@ def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
 
 # Actual mining function
 
+
 def setup_logging(stdoutfile: str, level = logging.DEBUG):
     """Setup the logger to be used by the dssd algorithm and other parts.
     This function should be called only once, in the dssd algorithm otherwise, weird things might happen
@@ -293,9 +133,8 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
 
     return logger
 
-from . import selection_strategies, quality_measures, refinement_operators
 def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attributes: List[str], model_attributes: List[str], max_depth: int, k: int, j: int = math.inf, min_cov: int = 2, beam_width: int = 0, num_cut_points: Dict[str, int] = defaultdict(lambda: 5), 
-    quality_measure: quality_measures.QualityMeasure = None, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator: RefinementOperator = RefinementOperatorOfficial(), experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
+    quality_measure: QualityMeasure = None, selection_strategy: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(), refinement_operator: RefinementOperator = RefinementOperatorOfficial(), experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: SelectionStrategy = None, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
     """
     Mine and return mined subgroups
 
@@ -323,18 +162,14 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         a map associating each numeric attribute with the number of cutpoints to use when discretizing that argument.
     quality_measure: QualityMeasure, default=None
         An implementation of a quality measure to be used.
-    selection_strategy: str, default=""
-        selection strategy to be used.
-    selection_params: Dict[str, Any], default={}
-        specific arguments required to instantiate the selected selection strategy.
+    selection_strategy: SelectionStrategy, default=FixedDescriptionBasedSelectionStrategy()
+        An implementation of a selection strategy to be used (during phase 1).
     refinement_operator: RefinementOperator, default=RefinementOperatorOfficial()
         An implementation of the refinement operator to be used.
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of the search phase
-    post_selection_strategy: str, default=""
-        selection strategy to be used during post processing of the actual mining phase.
-    post_selection_params: Dict[str, Any], default={}
-        specific arguments required to instantiate the selected post selection strategy.
+    post_selection_strategy: SelectionStrategy, default=selection_strategy
+        An implementation of a selection strategy to be used (during phase 3).
     skip_phase2: bool, default=False
         Whether or not to skip phase 2. Defaults to False
     skip_phase3: bool, default=False
@@ -353,7 +188,6 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
     local_args = locals()
     post_selection_strategy = post_selection_strategy or selection_strategy
-    post_selection_params = post_selection_params or selection_params
     local_args["column_types"] = {k: v.value for k,v in column_types.items()} # accessing the actual values of the enum objects
     function_args = "\n".join([f'{k}={v}' for k,v in local_args.items() if k not in ('self', 'data')])
     output_folder = f"outputs/{experience_id or f'{int(time.time())}-{selection_strategy}-max_depth={max_depth}'}"
@@ -373,8 +207,8 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     # creating the quality measure, selection strategy and refinement operator based on their arguments
     q = quality_measure
     # s.create(quality_measure, dataset.df[model_attributes], extra_parameters=quality_parameters)
-    selector = selection_strategies.create(selection_strategy, extra_parameters=selection_params)
-    post_selector = selection_strategies.create(post_selection_strategy, extra_parameters=post_selection_params)
+    selector = selection_strategy
+    post_selector = post_selection_strategy
     
     # fill in the fields of the refinement operator
     refinement_operator.dataset = Table(dataset.df[descriptive_attributes], column_types={k: dataset.column_types[k] for k in descriptive_attributes})

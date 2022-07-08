@@ -3,22 +3,22 @@ import pandas
 import pytest
 
 from ..cond import Cond
-from ..dssd import _fixed_size_cover_selection, _var_size_cover_selection, _var_size_description_selection, multiplicative_weighted_covering_score_smart
 from ..subgroup import Subgroup
 from ..description import Description
-from .. import selection_strategies as ss
-
-def test_refinement_operator_factory():
-    ss.register("undefined_selection_strategy", lambda x="": x)
-    assert ss.create("undefined_selection_strategy", {}) == ""
-    ss.register("undefined_selection_strategy", None)
-
-    with pytest.raises(ValueError):
-        ss.create("undefined_selection_strategy", {})
-
+from ..selection_strategies import (
+    _fixed_size_cover_selection, 
+    _var_size_cover_selection, 
+    _var_size_description_selection, 
+    multiplicative_weighted_covering_score_smart,
+    FixedCoverBasedSelectionStrategy, 
+    FixedDescriptionBasedSelectionStrategy, 
+    VarCoverBasedSelectionStrategy, 
+    VarDescriptionBasedStandardSelectionStrategy, 
+    VarDescriptionBasedFastSelectionStrategy
+)
 
 def test_fixed_size_description_selection():
-    s: ss.FixedDescriptionBasedSelectionStrategy = ss.create("description", {"min_diff_conditions": 2})
+    s = FixedDescriptionBasedSelectionStrategy(min_diff_conditions = 2)
 
     empty_cand = Subgroup(Description([]), 0.0)
     beam = [Subgroup(Description([]), 0.0)]
@@ -71,7 +71,7 @@ def test_fixed_size_description_selection():
 
 
 def test_var_size_description_selection():
-    s: ss.VarDescriptionBasedFastSelectionStrategy = ss.create("description-var", {"max_attribute_occ": 1})
+    s = VarDescriptionBasedFastSelectionStrategy(max_attribute_occ = 1)
 
     # c is the number of times an attribute is allowed to appear in a description
     # l is the maximum number of conditions that a single candidate can have
@@ -112,9 +112,37 @@ def test_var_size_description_selection():
     assert s.select(cands2, beam=[], beam_width=4)  == [cand1, cand2, cand4]
 
 
+def test_multiplicative_weighted_covering_score():
+    empty_cand = Subgroup(Description([]), cover=pandas.Index([]))
+
+    # ensure only non empty candidates can be given as argument
+    with pytest.raises(ValueError):
+        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0.9)
+
+    # ensure a non empty candidate is given as an argument
+    with pytest.raises(ValueError):
+        multiplicative_weighted_covering_score_smart(empty_cand, {}, 0)
+
+    # ensure invalid weigh raises an exception
+    with pytest.raises(ValueError):
+        multiplicative_weighted_covering_score_smart(Subgroup(Description([]), cover=pandas.Index([0])), {}, 1.5)
+
+    # non empty cover with empty selection
+    assert multiplicative_weighted_covering_score_smart(Subgroup(Description([]), 0.0, cover=pandas.Index([0, 2])), defaultdict(int), .9) == 1
+
+    # watch score decrease as the selection already contains transactions covered by the candidate
+    cand1 = Subgroup(Description([]), cover=pandas.Index([0]))
+    assert multiplicative_weighted_covering_score_smart(cand1, {0: 1}, 0.9) == .9
+    assert multiplicative_weighted_covering_score_smart(cand1, {0: 2}, 0.9) == .9 ** 2
+
+    # candidate with a cover size different that those already in the selection
+    # candidate size is taken into account while computing the score 
+    cand2 = Subgroup(Description([]), cover=pandas.Index([0, 5, 6]))
+    assert multiplicative_weighted_covering_score_smart(cand2, defaultdict(int, {0: 2}), 0.9) == (.9 ** 2 + 1 + 1) / len(cand2.cover)
+
 
 def test_fixed_size_cover_selection():
-    s: ss.FixedCoverBasedSelectionStrategy = ss.create("cover", {"weight": .5})
+    s = FixedCoverBasedSelectionStrategy(weight = .5)
 
     # descriptions here are not used so we could have left them empty
     cand1 = Subgroup(Description(), 7.5, pandas.Index([1, 2, 3, 4, 5, 6]))
@@ -162,7 +190,7 @@ def test_var_size_cover_selection():
     beam_width = 3
     # fraction explanation at the last line of this function
     fraction = 4.375 / 7.5 + 0.001
-    s: ss.VarCoverBasedSelectionStrategy = ss.create("cover-var", {"weight": .5, "fraction": fraction})
+    s = VarCoverBasedSelectionStrategy(weight = .5, fraction= fraction)
 
     # empty candidates list
     with pytest.raises(ValueError):

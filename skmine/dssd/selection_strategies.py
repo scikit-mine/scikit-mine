@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List
+from collections import defaultdict
+import logging
+from typing import DefaultDict, Dict, List
+from .custom_types import FuncQuality
+from .utils import diff_items_count, sort_subgroups, func_get_quality
 from .subgroup import Subgroup
-from . import dssd
 
 
 class SelectionStrategy(ABC):
@@ -30,6 +33,28 @@ class SelectionStrategy(ABC):
         """
         pass
 
+# Create a custom logger
+logger = logging.getLogger("dssd")
+
+def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2) -> List[Subgroup]:
+    def is_candidate_diverse(candidate: Subgroup, beam: List[Subgroup], min_diff_conditions: int) -> bool:
+        return all(c.quality != candidate.quality or diff_items_count(c.description.conditions, candidate.description.conditions) >= min_diff_conditions for c in beam)
+
+    logger.debug(f"desc: beam_width={beam_width}")
+    selected_candidates_count = 0
+    candidate_index = 0
+    # Make sure candidates are ordered in quality descending order, this might not be required if we assume an ordering pre-condition
+    sort_subgroups(candidates)
+    
+    while candidate_index < len(candidates) and selected_candidates_count < beam_width:
+        candidate = candidates[candidate_index]
+        candidate_diverse = is_candidate_diverse(candidate, beam, min_diff_conditions)
+        if candidate_diverse:
+            beam.append(candidate)
+            selected_candidates_count += 1
+            logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count}")
+        candidate_index += 1
+    return beam
 
 class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
     """
@@ -56,8 +81,50 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         self.min_diff_conditions = min_diff_conditions
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd._fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
+        return _fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
 
+
+
+def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int) -> List[Subgroup]:
+    def is_candidate_diverse(candidate: Subgroup, attributes_usage: DefaultDict[str, int], max_occ: int) -> bool:
+        for cond in candidate.description.conditions:
+            if attributes_usage[cond.attribute] >= max_occ: # discard this candidate as it has at least an attribute already overused
+                return False
+        return True
+
+    def update_beam(beam: List[Subgroup], attributes_usage: Dict[str, int], candidate: Subgroup):
+        beam.append(candidate)
+        # Update the usage count of the attributes present in the selected candidate
+        for cond in candidate.description.conditions:
+            # realize that this can cause some attributes reach a usage count higher that max_occ as if 
+            # a description contains multiple conditions on the same attribute and that attribute had 
+            # just one more legal possible usage. Might wanna check for a way to aggregate the number 
+            # of usages before processing to the diversity computing strategy
+            attributes_usage[cond.attribute] += 1
+
+
+    selected_candidates_count = 0
+    candidate_index = 0
+    # Make sure candidates are ordered in quality descending order
+    sort_subgroups(candidates)
+    # candidates = sorted(candidates, key = lambda c: c.quality, reverse=True)
+    attributes_usage = defaultdict(int, {})
+    max_occ = c * l
+    logger.debug(f"var_desc: beam_width={beam_width}, max_occ={max_occ}")
+
+    while candidate_index < len(candidates) and selected_candidates_count < beam_width:
+        candidate = candidates[candidate_index]
+        candidate_diverse = is_candidate_diverse(candidate, attributes_usage, max_occ)
+        
+        if candidate_diverse:
+            selected_candidates_count += 1
+            update_beam(beam, attributes_usage, candidate)
+            logger.debug(f"SELECTED CANDIDATE {selected_candidates_count}")
+
+        candidate_index += 1 
+
+    logger.debug(f"attributes_usage={attributes_usage}")
+    return beam
 
 class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
     """
@@ -94,7 +161,7 @@ class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
         return len(cands[0].description.conditions)
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd._var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
+        return _var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
 
 
 class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelectionStrategy):
@@ -110,6 +177,29 @@ class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelect
         """
         return max(len(cand.description.conditions) for cand in cands)
 
+
+
+def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
+    counts = defaultdict(int, {})
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
+
+    # in case there are less candidates than the beam width
+    # just retrun the candidates list
+    if len(candidates) <= beam_width:
+        beam.extend(candidates)
+        return beam
+
+    logger.debug(f"cover: beam_width={beam_width}")
+
+    for i in range(beam_width):
+        logger.debug(f"SELECTED CANDIDATE {i + 1}")
+        max_scoring_candidate = max(candidates, key = score)
+        # Select the the candidate with the highest score for beam_width times
+        candidates.remove(max_scoring_candidate)
+        beam.append(max_scoring_candidate)
+        update_counts(max_scoring_candidate, counts)
+
+    return beam
 
 class FixedCoverBasedSelectionStrategy(SelectionStrategy):
     """
@@ -138,8 +228,84 @@ class FixedCoverBasedSelectionStrategy(SelectionStrategy):
         self.weight = weight
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd._fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
+        return _fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
 
+
+def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
+    counts = defaultdict(int, {})
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
+
+    if len(candidates) == 0:
+        raise ValueError("The candidates list can not be empty")
+
+    # Find the candidate with the highest quality
+    max_scoring_candidate = max(candidates, key = func_get_quality)
+    max_score = score(max_scoring_candidate)
+    # Use it to set the minimum score
+    min_score = fraction * max_scoring_candidate.quality
+
+    selected_candidates_count = 0
+    logger.debug(f"var_cover: beam_width={beam_width} min_score={min_score}")
+    
+    # Select all subgroups that have score higher than the minimum
+    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0: # OMEGA(G, Sel) · φ(G) ≥ δ.
+        logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count + 1}: {(max_score, max_scoring_candidate)}")
+        # Add the highest scoring candidate to the beam
+        beam.append(max_scoring_candidate)
+        update_counts(max_scoring_candidate, counts)
+        selected_candidates_count += 1
+        # And remove it from the candidates list
+        candidates.remove(max_scoring_candidate)
+        # Update the highest scoring candidate
+        (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
+
+    return beam
+
+
+def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
+    """
+    Compute and return the weighted covering score for the current candidate based on 
+    how often its cover overlaps with already selected candidates
+
+    Requirement
+    -----------
+    len(cand.cover) > 0
+
+    Parameters
+    ----------
+    cand: Subgroup
+        The candidate to rank
+    counts: DefaultDict[int, int]
+        The counts of every transaction(index in the original entire dataset) 
+        from already selected candidates
+    weight: float
+        The initial weight of every transaction
+
+    Returns
+    -------
+    float
+
+    References
+    ----------
+    [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    if len(cand.cover) <= 0: 
+        raise ValueError("Can not compute the score for a candidate which cover is empty")
+
+    if not (0 < weight <= 1): 
+        raise ValueError("Value needs be in (0, 1] ")
+
+    result = 0.
+    for transaction in cand.cover:
+        result += pow(weight, counts[transaction])
+    return result / len(cand.cover)
+
+
+def update_counts(cand: Subgroup, counts: Dict[int, int]):
+    """Increase by 1 the counts of every transaction in the specified candidate's cover"""
+    for t in cand.cover:
+        counts[t] += 1
 
 class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
     """
@@ -168,26 +334,4 @@ class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
         self.fraction = fraction
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return dssd._var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
-
-
-_builders: Dict[str, Callable[..., SelectionStrategy]] = None
-
-if _builders is None: 
-    _builders = {
-        "description": FixedDescriptionBasedSelectionStrategy,
-        "description-var": VarDescriptionBasedFastSelectionStrategy,
-        "description-var-post": VarDescriptionBasedStandardSelectionStrategy,
-        "cover": FixedCoverBasedSelectionStrategy,
-        "cover-var": VarCoverBasedSelectionStrategy,
-        "compression": None
-    }
-
-def register(selection_strategy: str, builder: Callable[..., SelectionStrategy]):
-    _builders[selection_strategy] = builder
-
-def create(selection_strategy: str, extra_parameters: Dict[str, Any]) -> SelectionStrategy:
-    builder = _builders.get(selection_strategy)
-    if not builder:
-            raise ValueError(f"!!! UNSUPPORTED SELECTION STRATEGY ({selection_strategy}) !!!")
-    return builder(**extra_parameters)
+        return _var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
