@@ -1,9 +1,11 @@
 from typing import Any
 
+from attr import attr
+
 
 class Cond:
     """
-    A class representing a condition
+    A class representing a condition that should not be mutated once created
     
     Parameters
     ----------
@@ -26,6 +28,13 @@ class Cond:
         self.attribute = attribute
         self.op = op
         self.val = val
+        self.__attr_str = f"`{self.attribute}`" if ' ' in self.attribute else self.attribute
+        if isinstance(self.val, (int, float,)):
+            self.__val_str = str(self.val)
+        elif isinstance(self.val, str):
+            self.__val_str = f'"{self.val}"'
+        else: # bool cases included
+            self.__val_str = self.val
 
 
     def __eq__(self, other: 'Cond'):
@@ -34,13 +43,7 @@ class Cond:
 
     def __str__(self):
         """Return a pandas like string that can be used to query a pandas DataFrame by using the df.query() method"""
-        if isinstance(self.val, (int, float,)):
-            val_str = str(self.val)
-        elif isinstance(self.val, str):
-            val_str = f'"{self.val}"'
-        else: # bool cases included
-            val_str = self.val
-        return f"({self.attribute} {self.op} {val_str})"
+        return f"({self.__attr_str} {self.op} {self.__val_str})"
 
 
     def __repr__(self):
