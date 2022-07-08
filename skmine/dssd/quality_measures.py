@@ -129,21 +129,21 @@ class WRACCQuality(QualityMeasure):
     """
     def __init__(self, dataset: DataFrame, binary_model_attribute: str) -> None:
         super().__init__(dataset, [binary_model_attribute])
-        self.dataset_ones = WRACCQuality._ones_fraction(dataset, binary_model_attribute)
+        self.dataset_ones = WRACCQuality.ones_fraction(dataset, binary_model_attribute)
 
     @property
     def bin_attr(self) -> str:
         return self.model_attributes[0]
 
     @classmethod
-    def _ones_fraction(cls, df: DataFrame, attr: str):
+    def ones_fraction(cls, df: DataFrame, attr: str):
         """Compute the fraction of ones or true values for an attribute in the dataframe"""
         if len(df) == 0:
             raise ValueError("The dataframe can not be empty")
         return len(df[(df[attr] == 1) | (df[attr] == True)]) / len(df)
             
     def compute_quality(self, sg: DataFrame):
-        candidate_ones = WRACCQuality._ones_fraction(sg, self.bin_attr)
+        candidate_ones = WRACCQuality.ones_fraction(sg, self.bin_attr)
         result = (len(sg) / len(self.dataset)) * abs(candidate_ones - self.dataset_ones)
         print(f"COMPUTING WRACC FOR target_attr={self.bin_attr}, result={result}")
         return result
@@ -178,6 +178,7 @@ class KLQuality(QualityMeasure):
     def __init__(self, dataset: DataFrame, model_attributes: List[str]) -> None:
         super().__init__(dataset, model_attributes)
         self.df_column_shares =  column_shares(dataset)
+
 
     def compute_quality(self, sg: DataFrame):
         res = smart_kl_sums(self.df_column_shares, column_shares(sg, self.model_attributes), self.model_attributes)
