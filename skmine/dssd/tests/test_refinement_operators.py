@@ -9,15 +9,6 @@ from ..utils import _get_cut_points_smart
 from .. import refinement_operators as ro
 
 
-def test_refinement_operator_factory():
-    ro.register("undefined_operator", lambda x="": x)
-    assert ro.create("undefined_operator", {}) == ""
-    ro.register("undefined_operator", None)
-
-    with pytest.raises(ValueError):
-        ro.create("undefined_operator", {})
-
-
 df = pandas.DataFrame({
     "num": [0, 4, 3.5, 6],
     "bin": [True, False] * 2,
@@ -63,7 +54,7 @@ def test_dssd_paper_refinements():
     nominal_conditions = [Cond("a", "==", "one"), Cond("a", "!=", "one"), Cond("a", "==", "two"), Cond("a", "!=", "two")]
     binary_conditions = [Cond("bin", "==", True), Cond("bin", "==", False)]
     conds_store = [*numeric_conditions, *nominal_conditions, *binary_conditions]
-    official_ro: ro.RefinementOperatorOfficial = ro.create("official", extra_parameters)
+    official_ro = ro.RefinementOperatorOfficial(**extra_parameters)
 
 
     # testing the append method

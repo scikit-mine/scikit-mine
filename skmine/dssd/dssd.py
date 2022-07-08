@@ -7,6 +7,8 @@ import time
 import logging
 from typing import Any, DefaultDict, List, Dict
 from pandas import DataFrame
+
+from .refinement_operators import RefinementOperator, RefinementOperatorOfficial
 from .table import Table
 from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
 from .subgroup import Subgroup
@@ -293,7 +295,7 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
 
 from . import selection_strategies, quality_measures, refinement_operators
 def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attributes: List[str], model_attributes: List[str], max_depth: int, k: int, j: int = math.inf, min_cov: int = 2, beam_width: int = 0, num_cut_points: Dict[str, int] = defaultdict(lambda: 5), 
-    quality_measure: quality_measures.QualityMeasure = None, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator_name: str = "official", experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
+    quality_measure: quality_measures.QualityMeasure = None, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator: RefinementOperator = RefinementOperatorOfficial(), experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
     """
     Mine and return mined subgroups
 
@@ -325,8 +327,8 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         selection strategy to be used.
     selection_params: Dict[str, Any], default={}
         specific arguments required to instantiate the selected selection strategy.
-    refinement_operator_name: str, default="official"
-        The name of the refinement operator to be used.
+    refinement_operator: RefinementOperator, default=RefinementOperatorOfficial()
+        An implementation of the refinement operator to be used.
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of the search phase
     post_selection_strategy: str, default=""
@@ -373,13 +375,14 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     # s.create(quality_measure, dataset.df[model_attributes], extra_parameters=quality_parameters)
     selector = selection_strategies.create(selection_strategy, extra_parameters=selection_params)
     post_selector = selection_strategies.create(post_selection_strategy, extra_parameters=post_selection_params)
-    refinement_operator = refinement_operators.create(refinement_operator_name, extra_parameters={
-        "dataset": Table(dataset.df[descriptive_attributes], column_types={k: dataset.column_types[k] for k in descriptive_attributes}),
-        "num_cut_points": num_cut_points,
-        "min_cov": min_cov, 
-        "cover_func": cover_func_optimized,
-        "quality_func": quality_func
-    })
+    
+    # fill in the fields of the refinement operator
+    refinement_operator.dataset = Table(dataset.df[descriptive_attributes], column_types={k: dataset.column_types[k] for k in descriptive_attributes})
+    refinement_operator.cover_func = cover_func_optimized
+    refinement_operator.quality_func = quality_func
+    refinement_operator.min_cov = min_cov
+    refinement_operator.num_cut_points = num_cut_points
+
     logger.info(f"Phase 1: Mining {j} subgroups each having at most {max_depth} conditions each")
 
     # initialize a beam with a base candidate subgroup, containing all elements of the initial dataset

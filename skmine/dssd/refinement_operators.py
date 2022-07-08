@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List
+from collections import defaultdict
+from typing import Dict, List
 from .subgroup import Subgroup
 from .table import Table
 from .cond import Cond
@@ -12,32 +13,17 @@ class RefinementOperator(ABC):
     with longer descriptions based on one subgroup
     """
 
-    def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
-        """
-        Create a new refinement operator
-
-        Parameters
-        ----------
-        dataset: Table
-            The dataset used in the experiment of the
-        num_cut_points: Dict[str, int]
-            The number of cut points desired to disretize every single numeric attribute in the dataset
-        min_cov: int
-            The minimum coverage newer valid subgroups should have 
-        cover_func: FuncCover
-            A function to compute the cover of generated subgroup in order to be valid
-        quality_func: FuncQuality
-            A quality function to compute quality of the generated subgroups
-
-        """
+    def __init__(self, dataset: Table, cover_func: FuncCover, quality_func: FuncQuality, min_cov: int, num_cut_points: Dict[str, int]) -> None:
         super().__init__()
         self.dataset = dataset
-        self.column_types = dataset.column_types
         self.num_cut_points = num_cut_points
         self.min_cov = min_cov
         self.cover_func = cover_func
         self.quality_func = quality_func
 
+    @property
+    def column_types(self):
+        return self.dataset.column_types
 
     def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
         """
@@ -110,9 +96,27 @@ class RefinementOperatorOfficial(RefinementOperator):
     [1] Page 225 (6.2 Refining subgroups)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
-        super().__init__(dataset, num_cut_points, min_cov, cover_func, quality_func)
 
+    def __init__(self, dataset: Table = None, cover_func: FuncCover = None, quality_func: FuncQuality = None, min_cov: int = 2, num_cut_points: Dict[str, int] = defaultdict(lambda : 5)) -> None:
+        """
+        Create a new official refinement operator.
+        If going to be used with the dssd algorithm, just do RefinementOperatorOfficial() 
+        with no arguments, those will be filled in later by the algorithm.
+
+        Parameters
+        ----------
+        dataset: Table, default=None
+            The dataset used in the experiment of the
+        cover_func: FuncCover, default=None
+            A function to compute the cover of generated subgroup in order to be valid
+        quality_func: FuncQuality, default=None
+            A quality function to compute quality of the generated subgroups
+        min_cov: int, default=2
+            The minimum coverage newer valid subgroups should have 
+        num_cut_points: Dict[str, int], default=defaultdict(lambda: 5)
+            The number of cut points desired to disretize every single numeric attribute in the dataset
+        """
+        super().__init__(dataset, cover_func, quality_func, min_cov, num_cut_points)
 
     def _refine_binary(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         if cand.description.is_attribute_used(col):
@@ -161,10 +165,6 @@ class RefinementOperatorOfficial(RefinementOperator):
 
 
 class RefinementOperatorOfficialImproved(RefinementOperatorOfficial):
-    def __init__(self, dataset: Table, num_cut_points: Dict[str, int], min_cov: int, cover_func: FuncCover, quality_func: FuncQuality) -> None:
-        super().__init__(dataset, num_cut_points, min_cov, cover_func, quality_func)
-
-
     def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
         sg = self.cover_func(cand)
         if self.min_cov <= len(sg.index) < len(cand.parent.cover):
@@ -173,22 +173,3 @@ class RefinementOperatorOfficialImproved(RefinementOperatorOfficial):
             if cand.quality > cand.parent.quality:
                 cand_list.append(cand)
         return cand_list
-
-
-_builders: Dict[str, Callable[..., RefinementOperator]] = None
-
-if _builders is None: 
-    _builders = {
-        "official": RefinementOperatorOfficial,
-        "official_improved": RefinementOperatorOfficialImproved,
-        "powerfull": None
-    }
-
-def register(operator_name: str, builder: Callable[..., RefinementOperator]):
-    _builders[operator_name] = builder
-
-def create(operator_name: str, extra_parameters: Dict[str, Any]) -> RefinementOperator:
-    builder = _builders.get(operator_name)
-    if not builder:
-            raise ValueError(f"!!! UNSUPPORTED REFINEMENT OPERATOR ({operator_name}) !!!")
-    return builder(**extra_parameters)

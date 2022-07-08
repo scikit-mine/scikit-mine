@@ -2,6 +2,9 @@ from collections import defaultdict
 import numpy as np
 import pandas
 import pytest
+
+from ..refinement_operators import RefinementOperatorOfficial
+from ..table import Table
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
@@ -106,10 +109,13 @@ def test_mining():
     column_types = {"bin": ColumnType.BINARY, "num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
     # d = DSSDEMM(df, column_types)
     global res
-    res = mine(df, column_types, descriptive_attributes=["bin", "cat", "num"], model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1, num_cut_points={"num": 5}, #{}, 
+    desc_attrs = ["bin", "cat", "num"]
+    res = mine(df, column_types, descriptive_attributes=desc_attrs, model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1,
     quality_measure=EuclideanEubTSQuality(df, "ts"),
     selection_strategy="cover",
     selection_params={"weight": .9},
-    refinement_operator_name="official", save_intermediate_results=True)
+    refinement_operator=RefinementOperatorOfficial()
+    )
+    # "official", save_intermediate_results=True)
 
     print(res)
