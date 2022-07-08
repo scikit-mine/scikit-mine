@@ -7,45 +7,7 @@ from tslearn.barycenters import dtw_barycenter_averaging as dba
 from tslearn.barycenters import euclidean_barycenter as eub
 import numpy as np
 from fastdtw import fastdtw
-from scipy.spatial.distance import euclidean
 from .utils import column_shares
-from .custom_types import ColumnShares
-
-
-def measure_distance(c1: np.ndarray, c2: np.ndarray, distance_measure: str) -> float:
-    """Compute and return a measure of the similarity between two models
-        distance_measure = "euclidean", "dtw"
-    """
-
-    if distance_measure == "dtw" :  # self > quality measure ??
-        # return dtw(c1, c2)
-        return fastdtw(c1, c2)[0] # maybe this is slow because it is also computing the path ?
-        return fastdtw(c1, c2, dist=euclidean)[0] # maybe this is slow because it is also computing the path ?
-    if distance_measure == "euclidean" :
-        return math.sqrt(sum((px - qx) ** 2.0 for px, qx in zip(c1, c2))) # taken from python official doc to use instead of required to have python 3.8 as this is when the dist function was introduced
-        # return math.dist(c1, c2)
-        # return math.sqrt(sum((c1 - c2) ** 2))
-    
-    raise ValueError("!!! UNSUPPORTED DISTANCE MEASURE !!!: Only 'euclidean' and 'dtw' are supported")
-
-
-def ts_model(subgroup: DataFrame, attr: str, target_model: str = "eub") -> np.ndarray:
-    """Compute a model for the subgroup based on the target_model on this instance.
-        Model computation is based on the target model technique defined on this instance
-
-    Args:
-        subgroup (DataFrame): a df of elements to compute a model for
-
-    Returns:
-        numpy.array of shape (sz, d): the computed model for the subgroup
-    """
-    if target_model == 'dba' :
-        return dba(subgroup[attr].to_numpy())
-    if target_model == 'eub' :
-        return eub(subgroup[attr].to_numpy())
-        # model = eub([t for t in subgroup[self.target]])
-    raise ValueError("!!! UNSUPPORTED TARGET MODEL !!!: Only 'eub' and 'dba' are supported")
-
 
 
 class QualityMeasure(ABC):
@@ -83,7 +45,7 @@ class WRACCQuality(QualityMeasure):
     dataset: DataFrame
         A dataframe representing the entire dataset
     binary_model_attribute: str
-        The name of the target attriute. This attribute should be a binary one 
+        The name of the target attribute. This attribute should be a binary one 
 
     References
     ----------
@@ -202,24 +164,194 @@ class WKLQuality(KLQuality):
         return super().compute_quality(sg) * len(sg)
 
 
-class TSQuality(QualityMeasure):
-    def __init__(self, dataset: DataFrame, model_attribute: str, target_model: str, dist_measure: str) -> None:
-        super().__init__(dataset, [model_attribute])
-        self.target_model = target_model
-        self.dist_measure = dist_measure
-        self.dataset_model = ts_model(dataset, model_attribute, target_model)
 
+class TSModel(ABC):
+    """
+    An abstract class representing a method used to compute the average of multiple time series
+    """
+    def __init__(self, **kwargs) -> None:
+        super().__init__()
+
+    def compute_model(self, sg: DataFrame, attr: str) -> np.ndarray:
+        """
+        Compute an average model for the subgroup based on the specified attribute.
+
+        Parameters
+        ----------
+        subgroup: DataFrame
+            A dataframe containing df of elements to compute a model for
+
+        Returns:
+            numpy.array of shape (sz, d): the computed model for the subgroup
+        """
+        pass
+
+
+class TSDistance(ABC):
+    """
+    An abstract class representing a method used to compute the distance between two time series
+    
+    Parameters
+    ----------
+    dist_kwargs:
+        A dictionnary of key value arguments to pass to the actual implementation of the computation function 
+    """
+    def __init__(self, **dist_kwargs) -> None:
+        super().__init__()
+        self.dist_kwargs = dist_kwargs 
+   
+    def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
+        """
+        Return a distance between two time series (arrays of numerical values)
+
+        Parameters
+        ----------
+        c1: numpy.ndarray
+            The first array of values
+        c2: numpy.ndarray
+            The other array of values
+
+        Returns
+        -------
+        float
+        """
+        pass
+
+
+class TSQuality(QualityMeasure, TSModel, TSDistance):
+    """
+    Compute the quality of a subgroup with regards to a single time series attribute
+    This method is based on an averaging method and a distance computing method
+
+    the internal formula used for computing the quality is: 
+        `q = sqrt(|subgroup|) * dist(model(dataset), model(subgroup))`
+
+    Parameters
+    ----------
+    dataset: DataFrame
+        A dataframe representing the entire dataset
+    model_attribute: str
+        The name of the target attribute. This attribute should be a time series in the dataframe
+    dist_kwargs:
+        Keyword based extra arguments for the distance computing method
+
+    References
+    ----------
+    [1] Page 215-216 (3 Quality measures)
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    def __init__(self, dataset: DataFrame, model_attribute: str, **dist_kwargs) -> None:
+        QualityMeasure.__init__(self, dataset, [model_attribute])
+        TSDistance.__init__(self, **dist_kwargs)
+        self.dataset_model = self.compute_model(dataset, model_attribute)
+
+    @property
+    def ts_attr(self):
+        return self.model_attributes[0]
 
     def compute_quality(self, sg: DataFrame):
         quality = 0
         if not sg.empty:
-            dba_c = ts_model(sg, self.model_attributes[0], self.target_model)
-            dba_compl = self.dataset_model  # model subgroup compl TODO : si vide ?
-            # pow(len(sg),0.5) is used to take the size of the subgroup into account
-            # jsigne said this way of doing was decided commonly with the other researchers
-            quality = pow(len(sg),0.5) * measure_distance(dba_c.ravel(), dba_compl.ravel(), self.dist_measure)  # *(len(sg)/len(self.data))  # compare model
+            sg_model = self.compute_model(sg, self.ts_attr)
+            quality = pow(len(sg),0.5) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())  # *(len(sg)/len(self.data))  # compare model
         return quality
 
+
+class EubModel(TSModel):
+    """A wrapper class around euclidean barycenter averaging method, implementation from `tslearn.barycenters.euclidean_barycenter`"""
+
+    def compute_model(self, df: DataFrame, attr: str):
+        return eub(df[attr].to_numpy())
+
+class DBAModel(TSModel):
+    """A wrapper class around dynamic DTW barycenter averaging method, implementation from `tslearn.barycenters.dtw_barycenter_averaging`"""
+    def compute_model(self, df: DataFrame, attr: str):
+        return dba(df[attr].to_numpy())
+
+class EuclideanDistance(TSDistance):
+    """A wrapper class around euclidean distance method"""
+    def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
+        return math.sqrt(sum((px - qx) ** 2.0 for px, qx in zip(c1, c2))) # taken from python official doc to use instead of required to have python 3.8 as this is when the dist function was introduced
+
+class DtwDistance(TSDistance):
+    """A wrapper class around the DTW distance method, implementation from `tslearn.metrics.dtw`"""
+    def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
+        return dtw(c1, c2, **self.dist_kwargs)
+
+class FastDtwDistance(TSDistance):
+    """A wrapper class around the DTW distance method, implementation from `fastdtw.fastdtw`"""
+    def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
+        return fastdtw(c1, c2, **self.dist_kwargs)[0] # maybe this is slow because it is also computing the path ?
+
+
+class DtwDbaTSQuality(TSQuality, DtwDistance, DBAModel): 
+    """
+    A time series quality measure based on :
+    - distance = dtw(from `tslearn.metrics.dtw`)
+    - model = DTW barycenter averaging or DBA (from `tslearn.barycenters.dtw_barycenter_averaging`)\n
+    Notes: This method is potentially very slow because of the complexity of DBA
+
+    See also
+    --------
+    `tslearn.metrics.dtw`,`tslearn.barycenters.dtw_barycenter_averaging`
+
+    Examples
+    --------
+    >>> from skmine.dssd import DtwDbaTSQuality
+    >>> import pandas
+    >>> import numpy as np
+    >>> s1 = np.array([1, 2, 6, 5, 7])
+    >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
+    >>> DtwDbaTSQuality(df, "ts").compute_quality(df)
+    0.0
+    """
+    pass
+
+class FastDtwDbaTSQuality(TSQuality, FastDtwDistance, DBAModel):
+    """
+    A time series quality measure based on :
+    - distance = dtw(from `fastdtw.fastdtw`)
+    - model = DTW barycenter averaging or DBA (from `tslearn.barycenters.dtw_barycenter_averaging`)\n
+    Notes: This method is potentially very slow because of the complexity of DBA
+
+    See also
+    --------
+    `fastdtw.fastdtw`,`tslearn.barycenters.dtw_barycenter_averaging`
+
+    Examples
+    --------
+    >>> from skmine.dssd import FastDtwDbaTSQuality
+    >>> from scipy.spatial.distance import euclidean
+    >>> import pandas
+    >>> import numpy as np
+    >>> s1 = np.array([1, 2, 6, 5, 7])
+    >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
+    >>> FastDtwDbaTSQuality(df, "ts", dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
+    0.0
+    """
+    pass
+
+class EuclideanEubTSQuality(TSQuality, EuclideanDistance, EubModel):
+    """
+    A time series quality measure based on :
+    - distance = standard euclidean distance(from `fastdtw.fastdtw`)
+    - model = euclidean barycenter (from `tslearn.barycenters.euclidean_barycenter`)
+
+    See also
+    --------
+    `tslearn.barycenters.euclidean_barycenter`
+
+    Examples
+    --------
+    >>> from skmine.dssd import EuclideanEubTSQuality
+    >>> import pandas
+    >>> import numpy as np
+    >>> s1 = np.array([1, 2, 6, 5, 7])
+    >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
+    >>> EuclideanEubTSQuality(df, "ts").compute_quality(df)
+    0.0
+    """
+    pass
 
 
 _builders: Dict[str, Callable[..., QualityMeasure]] = None 
@@ -229,7 +361,9 @@ if _builders is None:
         "kl": KLQuality,
         "wkl": WKLQuality,
         "wracc": WRACCQuality,
-        "ts_quality": TSQuality,
+        "dtw_dba_quality": DtwDbaTSQuality,
+        "fastdtw_dba_quality": FastDtwDbaTSQuality,
+        "eucl_eub_quality": EuclideanEubTSQuality,
         "wkg": None
     }
 

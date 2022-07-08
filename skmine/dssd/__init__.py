@@ -4,4 +4,4 @@ from .subgroup import Subgroup
 from .table import Table
 from .custom_types import ColumnType
 from .utils import subgroup
-from .quality_measures import WRACCQuality, KLQuality, WKLQuality
+from .quality_measures import WRACCQuality, KLQuality, WKLQuality, DtwDbaTSQuality, FastDtwDbaTSQuality, EuclideanEubTSQuality

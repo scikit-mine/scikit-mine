@@ -79,19 +79,16 @@ def test_measure_distance():
     s3 = np.array([0, 1, 2, 2, 4, 5, 7, 8])
 
     # testing same length time series for euclidean
-    assert qa.measure_distance(s1, s1, "euclidean") == 0
+    assert qa.EuclideanDistance().measure_distance(s1, s1) == 0
 
-    assert qa.measure_distance(s1, s2, "euclidean") == 1
+    assert qa.EuclideanDistance().measure_distance(s1, s2) == 1
 
     # testing same and different length time series for dtw 
-    assert qa.measure_distance(s1, s1, "dtw") == 0
+    assert qa.FastDtwDistance().measure_distance(s1, s1) == 0
 
     # vvv--- for the tslearns.metrics.dtw version
     # assert qa.measure_distance(s1, s3, "dtw") == 2.449489742783178
-    assert qa.measure_distance(s1, s3, "dtw") == 4.0
-
-    with pytest.raises(ValueError):
-        qa.measure_distance(s1, s3, "invalid-measure")
+    assert qa.FastDtwDistance().measure_distance(s1, s3) == 4.0
 
 
 def test_time_series_model():
@@ -101,12 +98,9 @@ def test_time_series_model():
     df = pandas.DataFrame({"a": [s1, s2, s3]})
 
     # ensuring that the correct function is being used depending on the specified target_model
-    assert np.array_equal(qa.ts_model(df, "a", "eub"), eub(df["a"].to_numpy()))
+    assert np.array_equal(qa.EubModel().compute_model(df, "a"), eub(df["a"].to_numpy()))
 
-    assert np.array_equal(qa.ts_model(df, "a", "dba"), dba(df["a"].to_numpy()))
-
-    with pytest.raises(ValueError):
-        qa.ts_model(pandas.DataFrame({"a": [s1, s2, s3]}), "a", "invalid-model-method")
+    assert np.array_equal(qa.DBAModel().compute_model(df, "a"), dba(df["a"].to_numpy()))
 
 
 def test_ts_quality():
@@ -116,8 +110,9 @@ def test_ts_quality():
     df = pandas.DataFrame({"ts": [s1, s2, s3]})
     sg = pandas.DataFrame({"ts": [s3]})
 
-    s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"})
-
+    # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"})
+    # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts"})
+    s = qa.EuclideanEubTSQuality(df, "ts")
     # ensure an empty subgroup has a zero quality
     assert s.compute_quality(pandas.DataFrame()) == 0
 
@@ -125,5 +120,5 @@ def test_ts_quality():
     assert s.compute_quality(df) == 0
 
     # ensure the specified formula is actually being used for computing quality
-    model = qa.ts_model(sg, "ts", s.target_model)
-    assert s.compute_quality(sg) == pow(len(sg),0.5) * qa.measure_distance(model.ravel(), s.dataset_model.ravel(), s.dist_measure)
+    model = qa.EubModel().compute_model(sg, "ts")
+    assert s.compute_quality(sg) == pow(len(sg),0.5) * qa.EuclideanDistance().measure_distance(s.dataset_model, model)
