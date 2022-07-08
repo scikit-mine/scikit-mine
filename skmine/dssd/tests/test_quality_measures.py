@@ -10,15 +10,6 @@ from .. import quality_measures as qa
 from ..utils import column_shares
 
 
-def test_quality_measures_factory():
-    qa.register("undefined_quality_measure", lambda x,y={}: "")
-    assert qa.create("undefined_quality_measure", pandas.DataFrame(), {}) == ""
-    qa.register("undefined_quality_measure", None)
-
-    with pytest.raises(ValueError):
-        qa.create("undefined_quality_measure", pandas.DataFrame(), {})
-
-
 def test_wracc():
     df = pandas.DataFrame({"a": [True, True, True, False] * 2})
 
@@ -28,7 +19,7 @@ def test_wracc():
     assert qa.WRACCQuality.ones_fraction(df, "a") == (3 * 2) / 8
 
     sg = pandas.DataFrame({ "a": [True, True, True, True] })
-    q = qa.create("wracc", entire_df=df, extra_parameters={"binary_model_attribute": "a"})
+    q = qa.WRACCQuality(df, "a")
 
     assert q.compute_quality(df) == 0
 
@@ -60,17 +51,11 @@ def test_kl_quality():
     assert qa.KLQuality(df, []).compute_quality(sg) == 0
 
     kl_a = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
-    assert qa.KLQuality(df, ["a"]).compute_quality(sg) == kl_a
-
     kl_b = .5 * math.log2(.5/.5) + .5 * math.log2(.5/.5)
+
+    assert qa.KLQuality(df, ["a"]).compute_quality(sg) == kl_a
     assert qa.KLQuality(df, ["a", "bin"]).compute_quality(sg) == kl_a + kl_b
-
-
-    kl: qa.KLQuality = qa.create("kl", entire_df=df, extra_parameters={"model_attributes": ["a", "bin"] })
-    assert kl.compute_quality(sg) == kl_a + kl_b
-
-    wkl: qa.KLQuality = qa.create("wkl", entire_df=df, extra_parameters={"model_attributes": ["a", "bin"] })
-    assert wkl.compute_quality(sg) == (kl_a + kl_b) * len(sg)
+    assert qa.WKLQuality(df, ["a", "bin"]).compute_quality(sg) == (kl_a + kl_b) * len(sg)
 
 
 def test_measure_distance():

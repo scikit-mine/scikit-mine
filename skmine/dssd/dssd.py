@@ -293,7 +293,7 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
 
 from . import selection_strategies, quality_measures, refinement_operators
 def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attributes: List[str], model_attributes: List[str], max_depth: int, k: int, j: int = math.inf, min_cov: int = 2, beam_width: int = 0, num_cut_points: Dict[str, int] = defaultdict(lambda: 5), 
-    quality_measure: str = "", quality_parameters: Dict[str, Any] = {}, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator_name: str = "official", experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
+    quality_measure: quality_measures.QualityMeasure = None, selection_strategy: str = "description", selection_params: Dict[str, Any] = {"min_diff_conditions": 2}, refinement_operator_name: str = "official", experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: str = "", post_selection_params: Dict[str, Any] = {}, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
     """
     Mine and return mined subgroups
 
@@ -319,10 +319,8 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         The beam width to use during phase 1.
     num_cut_points: Dict[str, int], default={*:5}
         a map associating each numeric attribute with the number of cutpoints to use when discretizing that argument.
-    quality_measure: str
-        quality measure to be used.
-    quality_parameters: Dict[str, Any], default={}
-        specific arguments required to instantiate the selection quality measure.
+    quality_measure: QualityMeasure, default=None
+        An implementation of a quality measure to be used.
     selection_strategy: str, default=""
         selection strategy to be used.
     selection_params: Dict[str, Any], default={}
@@ -371,7 +369,8 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
     cover_func_non_optimized: FuncCover = lambda c: subgroup(dataset.df, c.description, False)
 
     # creating the quality measure, selection strategy and refinement operator based on their arguments
-    q = quality_measures.create(quality_measure, dataset.df[model_attributes], extra_parameters=quality_parameters)
+    q = quality_measure
+    # s.create(quality_measure, dataset.df[model_attributes], extra_parameters=quality_parameters)
     selector = selection_strategies.create(selection_strategy, extra_parameters=selection_params)
     post_selector = selection_strategies.create(post_selection_strategy, extra_parameters=post_selection_params)
     refinement_operator = refinement_operators.create(refinement_operator_name, extra_parameters={

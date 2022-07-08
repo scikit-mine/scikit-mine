@@ -7,7 +7,7 @@ from ..description import Description
 from ..cond import Cond
 from ..dssd import apply_dominance_pruning, _fixed_size_cover_selection, _fixed_size_description_selection, multiplicative_weighted_covering_score_smart, update_topk, _var_size_cover_selection, _var_size_description_selection, mine
 from ..custom_types import ColumnType
-
+from ..quality_measures import EuclideanEubTSQuality
 
 def test_update_topk():
     cand1 = Subgroup(Description(), .5, pandas.Index([]))
@@ -107,8 +107,7 @@ def test_mining():
     # d = DSSDEMM(df, column_types)
     global res
     res = mine(df, column_types, descriptive_attributes=["bin", "cat", "num"], model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1, num_cut_points={"num": 5}, #{}, 
-    quality_measure="eucl_eub_quality", 
-    quality_parameters={"model_attribute": "ts"},
+    quality_measure=EuclideanEubTSQuality(df, "ts"),
     selection_strategy="cover",
     selection_params={"weight": .9},
     refinement_operator_name="official", save_intermediate_results=True)

@@ -352,26 +352,3 @@ class EuclideanEubTSQuality(TSQuality, EuclideanDistance, EubModel):
     0.0
     """
     pass
-
-
-_builders: Dict[str, Callable[..., QualityMeasure]] = None 
-
-if _builders is None:
-    _builders = {
-        "kl": KLQuality,
-        "wkl": WKLQuality,
-        "wracc": WRACCQuality,
-        "dtw_dba_quality": DtwDbaTSQuality,
-        "fastdtw_dba_quality": FastDtwDbaTSQuality,
-        "eucl_eub_quality": EuclideanEubTSQuality,
-        "wkg": None
-    }
-
-def register(measure_name: str, builder: Callable[..., QualityMeasure]):
-    _builders[measure_name] = builder
-
-def create(measure_name: str, entire_df: DataFrame, extra_parameters: Dict[str, Any] ):
-    builder = _builders.get(measure_name)
-    if not builder:
-        raise ValueError(f"!!! UNSUPPORTED QUALITY MEASURE ({measure_name}) !!!")
-    return builder(entire_df, **extra_parameters)
