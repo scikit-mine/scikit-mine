@@ -228,7 +228,7 @@ def min_max_avg(col: Collection[Union[int, float]]):
     count = 0
     for i in col:
         if count == 0:
-            (_min,_max,_avg) = (i,i,i)
+            (_min,_max,_avg) = (i,i,0)
         if i < _min:
             _min = i
         if i > _max:
