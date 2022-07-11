@@ -1,12 +1,11 @@
 from collections import defaultdict
-from numbers import Number
-from typing import Any, Collection, List, Tuple, Union
+from typing import Collection, Dict, List, Type, Union
 import numpy as np
 from pandas import DataFrame
+from pyparsing import Diagnostics
 
 from .custom_types import ColumnShares, FuncQuality
 from .subgroup import Subgroup
-from .cond import Cond
 from .description import Description
 
 
@@ -207,7 +206,7 @@ def subgroup(base_df: DataFrame, description: Description, only_check_last_cond:
 
     Examples
     --------
-    >>> from skmine.dssd import subgroup
+    >>> from skmine.dssd import subgroup, Cond
     >>> import pandas
     >>> df = pandas.DataFrame({"a": [2, 3, 4, 5], "bin": [1, 0, 0, 1], "cat": ["t", "t", "T", "T"]})
     >>> subgroup(df, Description([Cond("a", ">", 3), Cond("a", "<", 10), Cond("bin", "==", True), Cond("cat", "==", "T")] ))
@@ -247,8 +246,8 @@ def _min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
     """Return a string version of the minimum, maximum and average quality for the considered candidates list"""
     (min_quality, max_quality, avg_quality) = min_max_avg(c.quality for c in cands)
     return f"min_quality={min_quality}{sep}max_quality={max_quality}{sep}avg_quality={avg_quality}"
-    
-    
+
+
 def subgroups_to_csv(subgroups: List[Subgroup]) -> str:
     """Return a csv(like) representation of the specified subgroups"""
     return ("index,quality,size,#conditions,description\n" + \

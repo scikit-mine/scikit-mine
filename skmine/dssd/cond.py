@@ -1,7 +1,5 @@
 from typing import Any
 
-from attr import attr
-
 
 class Cond:
     """
@@ -25,19 +23,22 @@ class Cond:
     """
 
     def __init__(self, attribute: str, op: str, val: Any):
-        self.attribute = attribute
-        self.op = op
-        self.val = val
-        self.__attr_str = f"`{self.attribute}`" if ' ' in self.attribute else self.attribute
-        if isinstance(self.val, (int, float,)):
-            self.__val_str = str(self.val)
-        elif isinstance(self.val, str):
-            self.__val_str = f'"{self.val}"'
-        else: # bool cases included
-            self.__val_str = self.val
+        self.__tuple = (attribute, op, val)
+        self.__attr_str = f"`{attribute}`" if ' ' in attribute else attribute
+        self.__val_str = str(val) if isinstance(val, (int, float,)) else f'"{val}"' if isinstance(val, str) else val # bool cases included
 
+
+    @property
+    def attribute(self): return self.__tuple[0]
+
+    @property
+    def op(self): return self.__tuple[1]
+
+    @property
+    def val(self): return self.__tuple[2]
 
     def __eq__(self, other: 'Cond'):
+        return self.__tuple == other.__tuple
         return self.attribute == other.attribute and self.op == other.op and self.val == other.val
 
 
@@ -52,4 +53,4 @@ class Cond:
 
     # method mainly used for removing duplicates of patterns (list of conditions)
     def __hash__(self):
-        return hash((self.attribute, self.op, self.val))
+        return hash(self.__tuple)

@@ -7,7 +7,6 @@ import numpy as np
 import pandas
 import pytest
 from .. import quality_measures as qa
-from ..utils import column_shares
 
 
 def test_wracc():
@@ -19,7 +18,7 @@ def test_wracc():
     assert qa.WRACCQuality.ones_fraction(df, "a") == (3 * 2) / 8
 
     sg = pandas.DataFrame({ "a": [True, True, True, True] })
-    q = qa.WRACCQuality(df, "a")
+    q = qa.WRACCQuality(df[["a"]])
 
     assert q.compute_quality(df) == 0
 
@@ -48,14 +47,14 @@ def test_kl_quality():
     })
     
 
-    assert qa.KLQuality(df, []).compute_quality(sg) == 0
+    assert qa.KLQuality(df[[]]).compute_quality(sg) == 0
 
     kl_a = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
     kl_b = .5 * math.log2(.5/.5) + .5 * math.log2(.5/.5)
 
-    assert qa.KLQuality(df, ["a"]).compute_quality(sg) == kl_a
-    assert qa.KLQuality(df, ["a", "bin"]).compute_quality(sg) == kl_a + kl_b
-    assert qa.WKLQuality(df, ["a", "bin"]).compute_quality(sg) == (kl_a + kl_b) * len(sg)
+    assert qa.KLQuality(df[["a"]]).compute_quality(sg) == kl_a
+    assert qa.KLQuality(df[["a", "bin"]]).compute_quality(sg) == kl_a + kl_b
+    assert qa.WKLQuality(df[["a", "bin"]]).compute_quality(sg) == (kl_a + kl_b) * len(sg)
 
 
 def test_measure_distance():
@@ -97,7 +96,7 @@ def test_ts_quality():
 
     # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"})
     # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts"})
-    s = qa.EuclideanEubTSQuality(df, "ts")
+    s = qa.EuclideanEubTSQuality(df[["ts"]])
     # ensure an empty subgroup has a zero quality
     assert s.compute_quality(pandas.DataFrame()) == 0
 

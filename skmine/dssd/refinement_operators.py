@@ -1,11 +1,17 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Dict, List
+
+from pandas import DataFrame, Series
+from pandas.api.types import is_bool_dtype, is_numeric_dtype
 from .subgroup import Subgroup
-from .table import Table
 from .cond import Cond
 from .custom_types import ColumnType, FuncCover, FuncQuality
 from .utils import _get_cut_points_smart
+
+BINARY = "binary"
+NUMERIC = "numeric"
+NOMINAL = "nominal"
 
 class RefinementOperator(ABC):
     """
@@ -13,41 +19,21 @@ class RefinementOperator(ABC):
     with longer descriptions based on one subgroup
     """
 
-    def __init__(self, dataset: Table, cover_func: FuncCover, quality_func: FuncQuality, min_cov: int, num_cut_points: Dict[str, int]) -> None:
+    def __init__(self, df: DataFrame, cover_func: FuncCover, quality_func: FuncQuality) -> None:
         super().__init__()
-        self.dataset = dataset
-        self.num_cut_points = num_cut_points
-        self.min_cov = min_cov
+        self.df = df
         self.cover_func = cover_func
         self.quality_func = quality_func
 
+
     @property
-    def column_types(self):
-        return self.dataset.column_types
+    def df(self): return self._df
 
-    def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
-        """
-        This function is the one deciding the validity of a subgroup before including it in the result
-
-        Parameters
-        ----------
-        cand: Subgroup
-            The candidate subgroup to be evaluated
-        cand_list: List[Subgroup]
-            The list where to append the candidate if valid
-
-        Returns
-        -------
-        List[Subgroup]: returns the same result list received in parameter just for convenience purposes
-        """
-        sg = self.cover_func(cand)
-        if self.min_cov <= len(sg.index) < len(cand.parent.cover):
-        # if self.min_cov <= len(sg.index) < len(self.dataset.df):
-            cand.cover = sg.index
-            cand.quality = self.quality_func(cand)
-            cand_list.append(cand)
-        return cand_list
-
+    @df.setter
+    def df(self, df: DataFrame):
+        self._df = df
+        column_types = self.column_types = _column_types(df)
+        self.unique_df: dict[str, Series] = {col: df[col].dropna(inplace=False).unique() for col in column_types if (column_types[col] == NOMINAL or column_types[col] == BINARY)}
 
     @abstractmethod
     def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]) -> List[Subgroup]:
@@ -68,6 +54,15 @@ class RefinementOperator(ABC):
 
 
 ### official refinement operator ###
+def _column_types(df: DataFrame) -> Dict[str, str]:
+    """Creates column types to be used by refinement operators off of the dtypes of the dataframe following these rules
+    dtype: bool -> binary, numeric -> numeric, other -> nominal
+    """
+    res = {}
+    for col_name, dtype in df.dtypes.items():
+        res[col_name] = BINARY if is_bool_dtype(dtype) else NUMERIC if is_numeric_dtype(dtype) else NOMINAL # any(fn(dtype) for fn in [pandas.api.types.is_string_dtype, pandas.api.types.is_object_dtype, pandas.api.types.is_categorical_dtype]):
+    return res
+
 class RefinementOperatorOfficial(RefinementOperator):
     """
     Refinement operator as described in the official DSSD paper.
@@ -97,7 +92,7 @@ class RefinementOperatorOfficial(RefinementOperator):
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
 
-    def __init__(self, dataset: Table = None, cover_func: FuncCover = None, quality_func: FuncQuality = None, min_cov: int = 2, num_cut_points: Dict[str, int] = defaultdict(lambda : 5)) -> None:
+    def __init__(self, df: DataFrame = DataFrame(), cover_func: FuncCover = None, quality_func: FuncQuality = None, min_cov: int = 2, min_quality: float = 0, num_cut_points: Dict[str, int] = defaultdict(lambda : 5)) -> None:
         """
         Create a new official refinement operator.
         If going to be used with the dssd algorithm, just do RefinementOperatorOfficial() 
@@ -105,18 +100,58 @@ class RefinementOperatorOfficial(RefinementOperator):
 
         Parameters
         ----------
-        dataset: Table, default=None
-            The dataset used in the experiment of the
+        df: DataFrame
+            Inner pandas dataframe
+        column_types (dict[str, ColumnType]): 
+            Map of descriptive column name and type for columns to consider from the dataset
         cover_func: FuncCover, default=None
             A function to compute the cover of generated subgroup in order to be valid
         quality_func: FuncQuality, default=None
             A quality function to compute quality of the generated subgroups
         min_cov: int, default=2
             The minimum coverage newer valid subgroups should have 
+        min_quality: float, default=0.0
+            The minimum quality generated subgroups should have to be considered valid 
         num_cut_points: Dict[str, int], default=defaultdict(lambda: 5)
-            The number of cut points desired to disretize every single numeric attribute in the dataset
+            The number of cut points desired to disretize every single numeric descriptive attribute in the dataset
+
+
+        Variables
+        ---------
+        unique_df (dict[str, Series]):
+            Map of binary/nominal columns and their unique values. This is stored 
+            to avoid computing those unique values everytime as the inner dataset
+            is likely not going to be modified
         """
-        super().__init__(dataset, cover_func, quality_func, min_cov, num_cut_points)
+        super().__init__(df, cover_func, quality_func)
+        self.num_cut_points = num_cut_points
+        self.min_cov = min_cov
+        self.min_quality = min_quality
+
+
+    def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
+        """
+        This function is the one deciding the validity of a subgroup before including it in the result
+
+        Parameters
+        ----------
+        cand: Subgroup
+            The candidate subgroup to be evaluated
+        cand_list: List[Subgroup]
+            The list where to append the candidate if valid
+
+        Returns
+        -------
+        List[Subgroup]: returns the same result list received in parameter just for convenience purposes
+        """
+        sg = self.cover_func(cand)
+        if self.min_cov <= len(sg.index) < len(cand.parent.cover):
+        # if self.min_cov <= len(sg.index) < len(self.dataset.df):
+            cand.cover = sg.index
+            cand.quality = self.quality_func(cand)
+            cand_list.append(cand)
+        return cand_list
+
 
     def _refine_binary(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         if cand.description.is_attribute_used(col):
@@ -126,7 +161,7 @@ class RefinementOperatorOfficial(RefinementOperator):
 
 
     def _refine_nominal(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
-        unique_values = self.dataset.unique_df[col]
+        unique_values = self.unique_df[col]
         if cand.description.is_attribute_used(col):
             if not cand.description.has_equal_condition_on_attr(col):
                 for val in unique_values:
@@ -139,7 +174,7 @@ class RefinementOperatorOfficial(RefinementOperator):
 
     def _refine_numerical(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
         # the way it is implemented in the dssd official source code
-        values = sorted(self.dataset.df.loc[cand.cover][col].values)
+        values = sorted(self.df.loc[cand.cover][col].values)
 
         # having values be taken from here is what makes the cow patterns reach higher quality
         # values = self.dataset.df[col].values
@@ -150,16 +185,16 @@ class RefinementOperatorOfficial(RefinementOperator):
 
 
     def _refine_column(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
-        if self.dataset.column_types[col] == ColumnType.BINARY:
+        if self.column_types[col] == BINARY:
             self._refine_binary(cand, col, cand_list)
-        elif self.dataset.column_types[col] == ColumnType.NOMINAL:
+        elif self.column_types[col] == NOMINAL:
             self._refine_nominal(cand, col, cand_list)
-        elif self.dataset.column_types[col] == ColumnType.NUMERIC:
+        elif self.column_types[col] == NUMERIC:
             self._refine_numerical(cand, col, cand_list)
 
 
     def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
-        for col_name in self.dataset.column_types:
+        for col_name in self.column_types:
             self._refine_column(cand, col_name, cand_list)
         return cand_list
 

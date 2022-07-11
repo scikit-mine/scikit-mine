@@ -8,7 +8,6 @@ from typing import List, Dict
 from pandas import DataFrame
 
 from .refinement_operators import RefinementOperator, RefinementOperatorOfficial
-from .table import Table
 from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
 from .subgroup import Subgroup
 from .description import Description
@@ -133,42 +132,47 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
 
     return logger
 
-def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attributes: List[str], model_attributes: List[str], max_depth: int, k: int, j: int = math.inf, min_cov: int = 2, beam_width: int = 0, num_cut_points: Dict[str, int] = defaultdict(lambda: 5), 
-    quality_measure: QualityMeasure = None, selection_strategy: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(), refinement_operator: RefinementOperator = RefinementOperatorOfficial(), experience_id: str = "", save_intermediate_results: bool = True, post_selection_strategy: SelectionStrategy = None, skip_phase2: bool = False, skip_phase3: bool = False) -> List[Subgroup]:
+def mine(
+    max_depth: int, 
+    k: int, 
+    j: int = math.inf, 
+    beam_width: int = None, 
+    quality_measure: QualityMeasure = None, 
+    selector: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(), 
+    refinement_operator: RefinementOperator = None, 
+    experience_id: str = "", 
+    save_intermediate_results: bool = True, 
+    post_selector: SelectionStrategy = None, 
+    skip_phase2: bool = False, 
+    skip_phase3: bool = False) -> List[Subgroup]:
     """
     Mine and return mined subgroups
 
     Parameters
     ----------
-    data: DataFrame
-        The dataset that mining operating will be made on
-    column_types: Dict[str, ColumnType] 
-        A mapping of every column in the dataset and their type.
-    descriptive_attributes: List[str]
-        Descriptive attributes used for mining. They should be a subset of all the attributes present in the dataset.
-    model_attributes: List[str]
-        Model attribute(s) depending on the quality measure that is selected
     max_depth: int
         Maximum number of conditions per subgroup description
     k: int
         The number of subgroups to be returned as a result of the experiment
     j: int 
         The maximum number of subgroups to be kept in memory at all time during the process. Defaults to math.inf.
-    min_cov: int, default=2
-        : minimum coverage of selected subgroups.
     beam_width: int, default=k
         The beam width to use during phase 1.
-    num_cut_points: Dict[str, int], default={*:5}
-        a map associating each numeric attribute with the number of cutpoints to use when discretizing that argument.
     quality_measure: QualityMeasure, default=None
         An implementation of a quality measure to be used.
-    selection_strategy: SelectionStrategy, default=FixedDescriptionBasedSelectionStrategy()
+        Notes: This is where the target attributes go
+        The quality measure is expected to operate on a projection of the dataset on the target attributes
+    selector: SelectionStrategy, default=FixedDescriptionBasedSelectionStrategy()
         An implementation of a selection strategy to be used (during phase 1).
     refinement_operator: RefinementOperator, default=RefinementOperatorOfficial()
         An implementation of the refinement operator to be used.
+        Remember this is where the desccriptive attributes go, the minimum coverage, min quality, numeric discretisation cut points 
+        techniques, etc.
+        The operator is expected to operate on a projection of the dataset on the descriptive attributes
+        The quality and cover computing function are automatically filled in later by the preparation functions
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of the search phase
-    post_selection_strategy: SelectionStrategy, default=selection_strategy
+    post_selector: SelectionStrategy, default=selection_strategy
         An implementation of a selection strategy to be used (during phase 3).
     skip_phase2: bool, default=False
         Whether or not to skip phase 2. Defaults to False
@@ -187,40 +191,31 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
 
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
     local_args = locals()
-    post_selection_strategy = post_selection_strategy or selection_strategy
-    local_args["column_types"] = {k: v.value for k,v in column_types.items()} # accessing the actual values of the enum objects
+    post_selector = post_selector or selector
+    beam_width = beam_width or k
     function_args = "\n".join([f'{k}={v}' for k,v in local_args.items() if k not in ('self', 'data')])
-    output_folder = f"outputs/{experience_id or f'{int(time.time())}-{selection_strategy}-max_depth={max_depth}'}"
+    output_folder = f"outputs/{experience_id or f'{int(time.time())}-{selector}-max_depth={max_depth}'}"
     os.makedirs(output_folder, exist_ok=True)
     write_file(f"{output_folder}/dssd_params.conf", [function_args])
 
 
     logger = setup_logging(f"{output_folder}/stdout")
-    dataset = Table(data, column_types)
     # a wrapper function that computes subgroups quality
-    quality_func: FuncQuality = lambda c: q.compute_quality(q.dataset.loc[c.cover])
+    quality_func: FuncQuality = lambda c: quality_measure.compute_quality(quality_measure._df.loc[c.cover])
     # an "optimized" function to compute the cover of a subgroup, it is optimized cause it uses its parent cover as a base and only checks last added condition
-    cover_func_optimized: FuncCover = lambda c: subgroup(dataset.df.loc[c.parent.cover], c.description, True)
+    cover_func_optimized: FuncCover = lambda c: subgroup(ro.df.loc[c.parent.cover], c.description, True)
     # normal unoptimized wrapper function for computing the cover of a subgroup
-    cover_func_non_optimized: FuncCover = lambda c: subgroup(dataset.df, c.description, False)
-
-    # creating the quality measure, selection strategy and refinement operator based on their arguments
-    q = quality_measure
-    # s.create(quality_measure, dataset.df[model_attributes], extra_parameters=quality_parameters)
-    selector = selection_strategy
-    post_selector = post_selection_strategy
+    cover_func_non_optimized: FuncCover = lambda c: subgroup(ro.df, c.description, False)
     
+    ro = refinement_operator
     # fill in the fields of the refinement operator
-    refinement_operator.dataset = Table(dataset.df[descriptive_attributes], column_types={k: dataset.column_types[k] for k in descriptive_attributes})
-    refinement_operator.cover_func = cover_func_optimized
-    refinement_operator.quality_func = quality_func
-    refinement_operator.min_cov = min_cov
-    refinement_operator.num_cut_points = num_cut_points
+    ro.cover_func = cover_func_optimized
+    ro.quality_func = quality_func
 
     logger.info(f"Phase 1: Mining {j} subgroups each having at most {max_depth} conditions each")
 
     # initialize a beam with a base candidate subgroup, containing all elements of the initial dataset
-    beam = [Subgroup(Description([]), 0, cover=dataset.df.index, parent=None)]
+    beam = [Subgroup(Description([]), 0, cover=ro.df.index, parent=None)]
     result: List[Subgroup] = []
     start_time = time.time()
     depth = 1
@@ -229,7 +224,7 @@ def mine(data: DataFrame, column_types: Dict[str, ColumnType], descriptive_attri
         logger.info(f"Generating depth {depth} candidates")
         for cand in beam:
             # all valid candidates that extend current candidate's pattern with one condition
-            candidates += refinement_operator.refine_candidate(cand, [])
+            candidates += ro.refine_candidate(cand, [])
 
         logger.info(f"depth={depth} : generated {len(candidates)} candidates")
         logger.info(f"depth={depth} : {_min_max_avg_quality_string(candidates, ' ')}")

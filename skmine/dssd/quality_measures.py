@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import math
-from typing import Any, Callable, DefaultDict, Dict, List
+from typing import Any, DefaultDict, Dict, List
 from pandas import DataFrame
 from tslearn.metrics import dtw
 from tslearn.barycenters import dtw_barycenter_averaging as dba
@@ -15,9 +15,21 @@ class QualityMeasure(ABC):
     A class representing a method to compute the quality of a subgroup
     based on the target attribute(s).
     """
-    def __init__(self, dataset: DataFrame, model_attributes: List[str]) -> None:
-        self.dataset = dataset
-        self.model_attributes = model_attributes
+    def __init__(self, df: DataFrame, model_attributes: List[str] = []) -> None:
+        self._df = df
+        # self._df = df[model_attributes]
+        # self.model_attributes = model_attributes
+
+    @property
+    def model_attributes(self):
+        return self._df.columns
+
+    @property
+    def df(self): return self._df
+
+    @df.setter
+    def df(self, df: DataFrame):
+        self._df = df
 
     @abstractmethod
     def compute_quality(self, sg: DataFrame) -> float:
@@ -42,7 +54,7 @@ class WRACCQuality(QualityMeasure):
 
     Parameters
     ----------
-    dataset: DataFrame
+    df: DataFrame
         A dataframe representing the entire dataset
     binary_model_attribute: str
         The name of the target attribute. This attribute should be a binary one 
@@ -52,13 +64,18 @@ class WRACCQuality(QualityMeasure):
     [1] Page 215-216 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, dataset: DataFrame, binary_model_attribute: str) -> None:
-        super().__init__(dataset, [binary_model_attribute])
-        self.dataset_ones = self.ones_fraction(dataset, binary_model_attribute)
+    def __init__(self, df: DataFrame) -> None:
+        super().__init__(df)
+        self.df = df # trigger internal update
 
     @property
     def bin_attr(self) -> str:
         return self.model_attributes[0]
+
+    @QualityMeasure.df.setter
+    def df(self, df: DataFrame):
+        QualityMeasure.df.fset(self, df)
+        self.dataset_ones = self.ones_fraction(df, self.bin_attr)
 
     @classmethod
     def ones_fraction(cls, df: DataFrame, attr: str):
@@ -69,7 +86,7 @@ class WRACCQuality(QualityMeasure):
             
     def compute_quality(self, sg: DataFrame):
         candidate_ones = self.ones_fraction(sg, self.bin_attr)
-        result = (len(sg) / len(self.dataset)) * abs(candidate_ones - self.dataset_ones)
+        result = (len(sg) / len(self._df)) * abs(candidate_ones - self.dataset_ones)
         print(f"COMPUTING WRACC FOR target_attr={self.bin_attr}, result={result}")
         return result
 
@@ -86,7 +103,7 @@ class KLQuality(QualityMeasure):
 
     Parameters
     ----------
-    dataset: DataFrame
+    df: DataFrame
         A dataframe representing the entire dataset
     model_attributes: List[str]
         The names of the target attributes
@@ -100,9 +117,15 @@ class KLQuality(QualityMeasure):
     [1] Page 217-218 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, dataset: DataFrame, model_attributes: List[str]) -> None:
-        super().__init__(dataset, model_attributes)
-        self.df_column_shares =  column_shares(dataset)
+    def __init__(self, df: DataFrame) -> None:
+        super().__init__(df)
+        self.df = df # trigger internal update
+    
+
+    @QualityMeasure.df.setter
+    def df(self, df: DataFrame):
+        QualityMeasure.df.fset(self, df)
+        self.df_column_shares = column_shares(df)
 
 
     @classmethod
@@ -150,7 +173,7 @@ class WKLQuality(KLQuality):
 
     Parameters
     ----------
-    dataset: DataFrame
+    df: DataFrame
         A dataframe representing the entire dataset
     model_attributes: List[str]
         The names of the target attributes
@@ -228,7 +251,7 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
 
     Parameters
     ----------
-    dataset: DataFrame
+    df: DataFrame
         A dataframe representing the entire dataset
     model_attribute: str
         The name of the target attribute. This attribute should be a time series in the dataframe
@@ -240,14 +263,19 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
     [1] Page 215-216 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, dataset: DataFrame, model_attribute: str, **dist_kwargs) -> None:
-        QualityMeasure.__init__(self, dataset, [model_attribute])
+    def __init__(self, df: DataFrame, **dist_kwargs) -> None:
+        QualityMeasure.__init__(self, df)
         TSDistance.__init__(self, **dist_kwargs)
-        self.dataset_model = self.compute_model(dataset, model_attribute)
+        self.df = df # trigger internal update
 
     @property
     def ts_attr(self):
         return self.model_attributes[0]
+
+    @QualityMeasure.df.setter
+    def df(self, df: DataFrame):
+        QualityMeasure.df.fset(self, df)
+        self.dataset_model = self.compute_model(df, self.ts_attr)
 
     def compute_quality(self, sg: DataFrame):
         quality = 0
@@ -302,7 +330,7 @@ class DtwDbaTSQuality(TSQuality, DtwDistance, DBAModel):
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> DtwDbaTSQuality(df, "ts").compute_quality(df)
+    >>> DtwDbaTSQuality(df[["ts"]]).compute_quality(df)
     0.0
     """
     pass
@@ -326,7 +354,7 @@ class FastDtwDbaTSQuality(TSQuality, FastDtwDistance, DBAModel):
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> FastDtwDbaTSQuality(df, "ts", dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
+    >>> FastDtwDbaTSQuality(df[["ts"]], dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
     0.0
     """
     pass
@@ -348,7 +376,7 @@ class EuclideanEubTSQuality(TSQuality, EuclideanDistance, EubModel):
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> EuclideanEubTSQuality(df, "ts").compute_quality(df)
+    >>> EuclideanEubTSQuality(df[["ts"]]).compute_quality(df)
     0.0
     """
     pass

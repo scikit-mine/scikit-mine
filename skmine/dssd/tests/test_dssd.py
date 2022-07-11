@@ -1,7 +1,4 @@
-from collections import defaultdict
-import numpy as np
 import pandas
-import pytest
 
 from ..selection_strategies import FixedCoverBasedSelectionStrategy
 from ..refinement_operators import RefinementOperatorOfficial
@@ -81,10 +78,11 @@ def test_mining():
     # d = DSSDEMM(df, column_types)
     global res
     desc_attrs = ["bin", "cat", "num"]
-    res = mine(df, column_types, descriptive_attributes=desc_attrs, model_attributes=["ts"], max_depth=5, k = 10, j = 1000, beam_width=10, min_cov=1,
-    quality_measure=EuclideanEubTSQuality(df, "ts"),
-    selection_strategy=FixedCoverBasedSelectionStrategy(.9),
-    refinement_operator=RefinementOperatorOfficial()
+    desc_column_types = {k: column_types[k] for k in desc_attrs}
+    res = mine(max_depth=5, k = 10, j = 1000,
+    quality_measure=EuclideanEubTSQuality(df, model_attribute="ts"),
+    selector=FixedCoverBasedSelectionStrategy(.9),
+    refinement_operator=RefinementOperatorOfficial(df[desc_attrs], min_cov=1)
     )
     # "official", save_intermediate_results=True)
 

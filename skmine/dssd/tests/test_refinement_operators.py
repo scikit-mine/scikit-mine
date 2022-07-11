@@ -1,10 +1,8 @@
 import pandas
-import pytest
 from ..subgroup import Subgroup
 from ..cond import Cond
 from ..custom_types import ColumnType
 from ..description import Description
-from ..table import Table
 from ..utils import _get_cut_points_smart
 from .. import refinement_operators as ro
 
@@ -17,7 +15,7 @@ df = pandas.DataFrame({
 
 dataset_size = len(df)
 
-column_types = {"num": ColumnType.NUMERIC, "a": ColumnType.NOMINAL, "bin": ColumnType.BINARY}
+# column_types = {"num": ColumnType.NUMERIC, "a": ColumnType.NOMINAL, "bin": ColumnType.BINARY}
 
 min_coverage = 2
 
@@ -39,7 +37,8 @@ def mock_quality(cand: Subgroup):
 
 discretization = {"num": 2}
 extra_parameters = {
-    "dataset": Table(df, column_types),
+    "df": df, 
+    # "column_types": column_types,
     "num_cut_points": discretization,
     "cover_func": mock_cover,
     "quality_func": mock_quality,
