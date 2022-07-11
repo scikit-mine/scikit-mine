@@ -15,10 +15,8 @@ class QualityMeasure(ABC):
     A class representing a method to compute the quality of a subgroup
     based on the target attribute(s).
     """
-    def __init__(self, df: DataFrame, model_attributes: List[str] = []) -> None:
+    def __init__(self, df: DataFrame) -> None:
         self._df = df
-        # self._df = df[model_attributes]
-        # self.model_attributes = model_attributes
 
     @property
     def model_attributes(self):
@@ -64,7 +62,7 @@ class WRACCQuality(QualityMeasure):
     [1] Page 215-216 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, df: DataFrame) -> None:
+    def __init__(self, df: DataFrame = DataFrame()) -> None:
         super().__init__(df)
         self.df = df # trigger internal update
 
@@ -117,7 +115,7 @@ class KLQuality(QualityMeasure):
     [1] Page 217-218 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, df: DataFrame) -> None:
+    def __init__(self, df: DataFrame = DataFrame()) -> None:
         super().__init__(df)
         self.df = df # trigger internal update
     
@@ -263,7 +261,7 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
     [1] Page 215-216 (3 Quality measures)
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
-    def __init__(self, df: DataFrame, **dist_kwargs) -> None:
+    def __init__(self, df: DataFrame = DataFrame(), **dist_kwargs) -> None:
         QualityMeasure.__init__(self, df)
         TSDistance.__init__(self, **dist_kwargs)
         self.df = df # trigger internal update
@@ -275,7 +273,8 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
     @QualityMeasure.df.setter
     def df(self, df: DataFrame):
         QualityMeasure.df.fset(self, df)
-        self.dataset_model = self.compute_model(df, self.ts_attr)
+        if len(df.columns) > 0:
+            self.dataset_model = self.compute_model(df, self.ts_attr)
 
     def compute_quality(self, sg: DataFrame):
         quality = 0

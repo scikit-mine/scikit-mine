@@ -133,17 +133,17 @@ def setup_logging(stdoutfile: str, level = logging.DEBUG):
     return logger
 
 def mine(
-    max_depth: int, 
-    k: int, 
-    j: int = math.inf, 
-    beam_width: int = None, 
-    quality_measure: QualityMeasure = None, 
-    selector: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(), 
-    refinement_operator: RefinementOperator = None, 
-    experience_id: str = "", 
-    save_intermediate_results: bool = True, 
-    post_selector: SelectionStrategy = None, 
-    skip_phase2: bool = False, 
+    k: int,
+    j: int = None,
+    max_depth: int = 0,
+    beam_width: int = None,
+    quality_measure: QualityMeasure = None,
+    selector: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(),
+    post_selector: SelectionStrategy = None,
+    refinement_operator: RefinementOperator = None,
+    output_folder: str = "",
+    save_intermediate_results: bool = True,
+    skip_phase2: bool = False,
     skip_phase3: bool = False) -> List[Subgroup]:
     """
     Mine and return mined subgroups
@@ -164,16 +164,18 @@ def mine(
         The quality measure is expected to operate on a projection of the dataset on the target attributes
     selector: SelectionStrategy, default=FixedDescriptionBasedSelectionStrategy()
         An implementation of a selection strategy to be used (during phase 1).
+    post_selector: SelectionStrategy, default=selection_strategy
+        An implementation of a selection strategy to be used (during phase 3).
     refinement_operator: RefinementOperator, default=RefinementOperatorOfficial()
         An implementation of the refinement operator to be used.
         Remember this is where the desccriptive attributes go, the minimum coverage, min quality, numeric discretisation cut points 
         techniques, etc.
         The operator is expected to operate on a projection of the dataset on the descriptive attributes
         The quality and cover computing function are automatically filled in later by the preparation functions
+    output_folder: str, default=""
+        The output folder where to store (intermediate) results
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of the search phase
-    post_selector: SelectionStrategy, default=selection_strategy
-        An implementation of a selection strategy to be used (during phase 3).
     skip_phase2: bool, default=False
         Whether or not to skip phase 2. Defaults to False
     skip_phase3: bool, default=False
@@ -191,11 +193,7 @@ def mine(
 
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
     local_args = locals()
-    post_selector = post_selector or selector
-    beam_width = beam_width or k
-    function_args = "\n".join([f'{k}={v}' for k,v in local_args.items() if k not in ('self', 'data')])
-    output_folder = f"outputs/{experience_id or f'{int(time.time())}-{selector}-max_depth={max_depth}'}"
-    os.makedirs(output_folder, exist_ok=True)
+    function_args = "\n".join([f'{k}={v}' for k,v in local_args.items()])
     write_file(f"{output_folder}/dssd_params.conf", [function_args])
 
 
