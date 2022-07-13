@@ -1,28 +1,32 @@
 from .cond import Cond 
 from .description import Description
 from .subgroup import Subgroup
-from .custom_types import ColumnType
 from .utils import subgroup
 from .quality_measures import (
+    TSQuality,
     QualityMeasure,
-    WRACCQuality, 
-    KLQuality, 
-    WKLQuality, 
-    DtwDbaTSQuality, 
-    FastDtwDbaTSQuality, 
-    EuclideanEubTSQuality
+    WRACC, 
+    KL, 
+    WKL, 
+    DtwDba, 
+    FastDtwDba, 
+    EuclideanEub
 )
 
 from .refinement_operators import (
     RefinementOperator,
-    RefinementOperatorOfficial
+    RefinementOperatorImpl
 )
 
 from .selection_strategies import (
     SelectionStrategy,
-    FixedDescriptionBasedSelectionStrategy,
-    VarDescriptionBasedFastSelectionStrategy,
-    VarDescriptionBasedStandardSelectionStrategy,
-    FixedCoverBasedSelectionStrategy,
-    VarCoverBasedSelectionStrategy
+    Desc,
+    VarDescFast,
+    VarDescStandard,
+    Cover,
+    VarCover,
+    multiplicative_weighted_covering_score_smart
 )
+
+from .dssd_miner import DSSDMiner
+from .dssd import apply_dominance_pruning, update_topk

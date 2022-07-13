@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
+from functools import singledispatch
 import math
 from typing import Any, DefaultDict, Dict, List
-from pandas import DataFrame
+from pandas import DataFrame, Series
+import pandas
 from tslearn.metrics import dtw
 from tslearn.barycenters import dtw_barycenter_averaging as dba
 from tslearn.barycenters import euclidean_barycenter as eub
 import numpy as np
 from fastdtw import fastdtw
+
+from skmine.dssd.subgroup import Subgroup
 from .utils import column_shares
 
 
@@ -14,6 +18,16 @@ class QualityMeasure(ABC):
     """
     A class representing a method to compute the quality of a subgroup
     based on the target attribute(s).
+
+    Parameters
+    ----------
+    df: DataFrame
+        The dataframe containing the projection of the dataset only on target attributes
+
+    Attributes
+    ----------
+    model_attributes: List[str]
+        The list of the model attributes used by this quality measure (this is a get only property)
     """
     def __init__(self, df: DataFrame) -> None:
         self._df = df
@@ -41,21 +55,58 @@ class QualityMeasure(ABC):
 
         Returns
         -------
-        float: The actual quality of the subgroup 
+        float: 
+            The actual quality of the subgroup 
         """
         pass
 
 
-class WRACCQuality(QualityMeasure):
+    def quality_from_subgroup(self, sg: Subgroup) -> float:
+        """
+        Return the quality of the given subgroup
+
+        Parameters
+        ----------
+        sg: Subgroup
+            The cover/content of the subgroup
+
+        Returns
+        -------
+        float:
+            The actual quality of the subgroup 
+        """
+        return self.compute_quality(self.df.loc[sg.cover])
+
+    def quality_from_cover(self, sg: pandas.Index) -> float:
+        """
+        Return the quality of the given subgroup cover
+
+        Parameters
+        ----------
+        sg: pandas.Index
+            The cover/content of the subgroup
+
+        Returns
+        -------
+        float:
+            The actual quality of the corresponding subgroup 
+        """
+        return self.compute_quality(self.df.loc[sg])
+
+
+class WRACC(QualityMeasure):
     """
     Compute the weighted relative accuracy quality of a subgroup with regards to a single target binary attribute
 
     Parameters
     ----------
     df: DataFrame
-        A dataframe representing the entire dataset
-    binary_model_attribute: str
-        The name of the target attribute. This attribute should be a binary one 
+        A dataframe representing the entire dataset. The dataframe should only contain one column as WRACC is only meant for single binary target attribute
+
+    Attributes
+    ----------
+    bin_attr: str
+        The name of the binary attribute used by this quality measure (get only property)
 
     References
     ----------
@@ -77,7 +128,20 @@ class WRACCQuality(QualityMeasure):
 
     @classmethod
     def ones_fraction(cls, df: DataFrame, attr: str):
-        """Compute the fraction of ones or true values for an attribute in the dataframe"""
+        """
+        Compute the fraction of ones or true values for an attribute in the dataframe
+        
+        Parameters
+        ----------
+        df: DataFrame
+            The dataframe to use
+        attr: str
+            The column name to select in the dataframe. This column should only have binary values(bool or 0/1)
+
+        Returns
+        -------
+        float
+        """
         if len(df) == 0:
             raise ValueError("The dataframe can not be empty")
         return len(df[(df[attr] == 1) | (df[attr] == True)]) / len(df)
@@ -89,7 +153,7 @@ class WRACCQuality(QualityMeasure):
         return result
 
 
-class KLQuality(QualityMeasure):
+class KL(QualityMeasure):
     """
     Compute the Kullback-Leibler quality of a subgroup with regards to
     a single or multiple target binary or nominal attributes.
@@ -97,18 +161,16 @@ class KLQuality(QualityMeasure):
     take into account the size of the subgroup while computing the quality.
     As such, smaller subgroups tend to have higher quality so you might end up 
     with unexpected results if you don't fully understand this measure. It is generaly
-    recommended to use the `skmine.dssd.WKLQuality` for more predictable results.
+    recommended to use the `skmine.dssd.WKL` for more predictable results.
 
     Parameters
     ----------
     df: DataFrame
-        A dataframe representing the entire dataset
-    model_attributes: List[str]
-        The names of the target attributes
+        A dataframe representing the entire dataset. The dataframe should contain one or multiple binary/nominal columns
 
     See also
     --------
-    skmine.dssd.WKLQuality
+    WKL
 
     References
     ----------
@@ -162,7 +224,7 @@ class KLQuality(QualityMeasure):
         return result
 
 
-class WKLQuality(KLQuality):
+class WKL(KL):
     """
     Compute the Weighted Kullback and Leibler quality of a subgroup with regards to
     a single or multiple target binary or nominal attributes.
@@ -172,9 +234,7 @@ class WKLQuality(KLQuality):
     Parameters
     ----------
     df: DataFrame
-        A dataframe representing the entire dataset
-    model_attributes: List[str]
-        The names of the target attributes
+        A dataframe representing the entire dataset. The dataframe should contain one or multiple binary/nominal columns
 
     References
     ----------
@@ -193,17 +253,19 @@ class TSModel(ABC):
     def __init__(self, **kwargs) -> None:
         super().__init__()
 
-    def compute_model(self, sg: DataFrame, attr: str) -> np.ndarray:
+    def compute_model(self, series: Series) -> np.ndarray:
         """
-        Compute an average model for the subgroup based on the specified attribute.
+        Compute an average model for the time series in the specified series
 
         Parameters
         ----------
-        subgroup: DataFrame
-            A dataframe containing df of elements to compute a model for
+        series: Series
+            A series containing the time series to compute a model for
 
-        Returns:
-            numpy.array of shape (sz, d): the computed model for the subgroup
+        Returns
+        -------
+        numpy.array of shape (sz, d):
+            The computed model for the subgroup
         """
         pass
 
@@ -242,19 +304,21 @@ class TSDistance(ABC):
 class TSQuality(QualityMeasure, TSModel, TSDistance):
     """
     Compute the quality of a subgroup with regards to a single time series attribute
-    This method is based on an averaging method and a distance computing method
-
-    the internal formula used for computing the quality is: 
+    This method is based on an averaging method and a distance computing method.
+    The internal formula used for computing the quality is: 
         `q = sqrt(|subgroup|) * dist(model(dataset), model(subgroup))`
 
     Parameters
     ----------
     df: DataFrame
-        A dataframe representing the entire dataset
-    model_attribute: str
-        The name of the target attribute. This attribute should be a time series in the dataframe
-    dist_kwargs:
+        A dataframe representing the entire dataset. The dataframe should contain only one column that contains only time series
+    **dist_kwargs:
         Keyword based extra arguments for the distance computing method
+
+    Attributes
+    ----------
+    ts_attr: str
+        The name of the time series attribute used by this quality measure (get only property)
 
     References
     ----------
@@ -274,26 +338,59 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
     def df(self, df: DataFrame):
         QualityMeasure.df.fset(self, df)
         if len(df.columns) > 0:
-            self.dataset_model = self.compute_model(df, self.ts_attr)
+            self.dataset_model = self.compute_model(df[self.ts_attr])
+
+    def model_from_subgroup(self, sg: Subgroup):
+        """
+        Compute an average model for the time series extracted from the specified subroup
+
+        Parameters
+        ----------
+        sg: Subgroup
+            The subgroup for which to compute the model
+
+        Returns
+        -------
+        numpy.array of shape (sz, d):
+            The computed model for the subgroup
+        """
+        return self.compute_model(self.df.loc[sg.cover][self.ts_attr])
+
+    def model_from_cover(self, sg: pandas.Index):
+        """
+        Compute an average model for the time series extracted based on the specified index
+
+        Parameters
+        ----------
+        sg: pandas.Index
+            The index to use to obtain a subset of the time series and compute the model
+
+        Returns
+        -------
+        numpy.array of shape (sz, d):
+            The computed model for the corresponding subgroup
+        """
+        return self.compute_model(self.df.loc[sg][self.ts_attr])
+
 
     def compute_quality(self, sg: DataFrame):
         quality = 0
         if not sg.empty:
-            sg_model = self.compute_model(sg, self.ts_attr)
+            sg_model = self.compute_model(sg[self.ts_attr])
             quality = pow(len(sg),0.5) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())  # *(len(sg)/len(self.data))  # compare model
+            # quality = len(sg) / len(self.df) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())  # *(len(sg)/len(self.data))  # compare model
         return quality
 
 
 class EubModel(TSModel):
     """A wrapper class around euclidean barycenter averaging method, implementation from `tslearn.barycenters.euclidean_barycenter`"""
-
-    def compute_model(self, df: DataFrame, attr: str):
-        return eub(df[attr].to_numpy())
+    def compute_model(self, series: Series):
+        return eub(series.to_numpy())
 
 class DBAModel(TSModel):
     """A wrapper class around dynamic DTW barycenter averaging method, implementation from `tslearn.barycenters.dtw_barycenter_averaging`"""
-    def compute_model(self, df: DataFrame, attr: str):
-        return dba(df[attr].to_numpy())
+    def compute_model(self, series: Series):
+        return dba(series.to_numpy())
 
 class EuclideanDistance(TSDistance):
     """A wrapper class around euclidean distance method"""
@@ -311,7 +408,7 @@ class FastDtwDistance(TSDistance):
         return fastdtw(c1, c2, **self.dist_kwargs)[0] # maybe this is slow because it is also computing the path ?
 
 
-class DtwDbaTSQuality(TSQuality, DtwDistance, DBAModel): 
+class DtwDba(TSQuality, DtwDistance, DBAModel): 
     """
     A time series quality measure based on :
     - distance = dtw(from `tslearn.metrics.dtw`)
@@ -324,17 +421,17 @@ class DtwDbaTSQuality(TSQuality, DtwDistance, DBAModel):
 
     Examples
     --------
-    >>> from skmine.dssd import DtwDbaTSQuality
+    >>> from skmine.dssd import DtwDba
     >>> import pandas
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> DtwDbaTSQuality(df[["ts"]]).compute_quality(df)
+    >>> DtwDba(df[["ts"]]).compute_quality(df)
     0.0
     """
     pass
 
-class FastDtwDbaTSQuality(TSQuality, FastDtwDistance, DBAModel):
+class FastDtwDba(TSQuality, FastDtwDistance, DBAModel):
     """
     A time series quality measure based on :
     - distance = dtw(from `fastdtw.fastdtw`)
@@ -343,22 +440,22 @@ class FastDtwDbaTSQuality(TSQuality, FastDtwDistance, DBAModel):
 
     See also
     --------
-    `fastdtw.fastdtw`,`tslearn.barycenters.dtw_barycenter_averaging`
+    `fastdtw.fastdtw`,`tslearn.barycenters.dtw_barycenter_averaging
 
     Examples
     --------
-    >>> from skmine.dssd import FastDtwDbaTSQuality
+    >>> from skmine.dssd import FastDtwDba
     >>> from scipy.spatial.distance import euclidean
     >>> import pandas
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> FastDtwDbaTSQuality(df[["ts"]], dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
+    >>> FastDtwDba(df[["ts"]], dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
     0.0
     """
     pass
 
-class EuclideanEubTSQuality(TSQuality, EuclideanDistance, EubModel):
+class EuclideanEub(TSQuality, EuclideanDistance, EubModel):
     """
     A time series quality measure based on :
     - distance = standard euclidean distance(from `fastdtw.fastdtw`)
@@ -370,12 +467,12 @@ class EuclideanEubTSQuality(TSQuality, EuclideanDistance, EubModel):
 
     Examples
     --------
-    >>> from skmine.dssd import EuclideanEubTSQuality
+    >>> from skmine.dssd import EuclideanEub
     >>> import pandas
     >>> import numpy as np
     >>> s1 = np.array([1, 2, 6, 5, 7])
     >>> df = pandas.DataFrame({"ts": [s1, s1, s1]})
-    >>> EuclideanEubTSQuality(df[["ts"]]).compute_quality(df)
+    >>> EuclideanEub(df[["ts"]]).compute_quality(df)
     0.0
     """
     pass

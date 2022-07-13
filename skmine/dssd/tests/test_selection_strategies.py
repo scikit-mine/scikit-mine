@@ -10,15 +10,15 @@ from ..selection_strategies import (
     _var_size_cover_selection, 
     _var_size_description_selection, 
     multiplicative_weighted_covering_score_smart,
-    FixedCoverBasedSelectionStrategy, 
-    FixedDescriptionBasedSelectionStrategy, 
-    VarCoverBasedSelectionStrategy, 
-    VarDescriptionBasedStandardSelectionStrategy, 
-    VarDescriptionBasedFastSelectionStrategy
+    Cover, 
+    Desc, 
+    VarCover, 
+    VarDescStandard, 
+    VarDescFast
 )
 
 def test_fixed_size_description_selection():
-    s = FixedDescriptionBasedSelectionStrategy(min_diff_conditions = 2)
+    s = Desc(min_diff_conditions = 2)
 
     empty_cand = Subgroup(Description([]), 0.0)
     beam = [Subgroup(Description([]), 0.0)]
@@ -62,16 +62,16 @@ def test_fixed_size_description_selection():
     # We could also include the length of the candidate description while comparing candidates but that
     # could creates worst issues as a long pattern can have an equal quality as a short one but still 
     # targets a different subgroup
-    assert res == [empty_cand, cand4, cand3, cand1]
+    assert res == [empty_cand, cand4, cand3, cand2]
 
     # as shown in this test, we can see that when the beam is wide enough to accomodate cand1 and cand2, they are both selected
     res = s.select([cand3, cand4, cand1, cand2], beam=[empty_cand], beam_width=beam_width + 1)
     print(res)
-    assert res == [empty_cand, cand4, cand3, cand1, cand2]
+    assert res == [empty_cand, cand4, cand3, cand2, cand1]
 
 
 def test_var_size_description_selection():
-    s = VarDescriptionBasedFastSelectionStrategy(max_attribute_occ = 1)
+    s = VarDescFast(max_attribute_occ = 1)
 
     # c is the number of times an attribute is allowed to appear in a description
     # l is the maximum number of conditions that a single candidate can have
@@ -142,7 +142,7 @@ def test_multiplicative_weighted_covering_score():
 
 
 def test_fixed_size_cover_selection():
-    s = FixedCoverBasedSelectionStrategy(weight = .5)
+    s = Cover(weight = .5)
 
     # descriptions here are not used so we could have left them empty
     cand1 = Subgroup(Description(), 7.5, pandas.Index([1, 2, 3, 4, 5, 6]))
@@ -190,7 +190,7 @@ def test_var_size_cover_selection():
     beam_width = 3
     # fraction explanation at the last line of this function
     fraction = 4.375 / 7.5 + 0.001
-    s = VarCoverBasedSelectionStrategy(weight = .5, fraction= fraction)
+    s = VarCover(weight = .5, fraction= fraction)
 
     # empty candidates list
     with pytest.raises(ValueError):

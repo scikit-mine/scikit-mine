@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 from pandas.api.types import is_bool_dtype, is_numeric_dtype
 from .subgroup import Subgroup
 from .cond import Cond
-from .custom_types import ColumnType, FuncCover, FuncQuality
+from .custom_types import FuncCover, FuncQuality
 from .utils import _get_cut_points_smart
 
 BINARY = "binary"
@@ -47,8 +47,10 @@ class RefinementOperator(ABC):
         cand_list: List[Subgroup]
             The list where to add the valid candidates generated
 
-        Returns:
-        List[Subgroup]: return the same cand_list just for convenience purposes
+        Returns
+        -------
+        List[Subgroup]:
+            The same cand_list just for convenience purposes
         """
         pass
 
@@ -63,29 +65,52 @@ def _column_types(df: DataFrame) -> Dict[str, str]:
         res[col_name] = BINARY if is_bool_dtype(dtype) else NUMERIC if is_numeric_dtype(dtype) else NOMINAL # any(fn(dtype) for fn in [pandas.api.types.is_string_dtype, pandas.api.types.is_object_dtype, pandas.api.types.is_categorical_dtype]):
     return res
 
-class RefinementOperatorOfficial(RefinementOperator):
+class RefinementOperatorImpl(RefinementOperator):
     """
     Refinement operator as described in the official DSSD paper.
 
     Explanation
     -----------
-    Given a subgroup G, generates all valid subgroup descriptions that extend G’s description 
-    with one condition. We distinguish three types of description attributes, each with its own specifics.
-    * Binary attribute {==}
-    The only allowed condition type is ==, and consequently only a single condi-
-    tion on any binary attribute can be part of a subgroup description.
-    * Nominal attribute {==, !=}
-    Both == and != are allowed. For any nominal attribute, either a single
-    = or multiple != conditions are allowed in a description.
-    * Numeric attribute {<, >}
-    Both < and > are allowed. Due to the large cardinality of numeric data, generating all 
-    possible conditions is infeasible. Thus, to prevent the search space from exploding, the values 
-    of a numeric attribute that occur within a subgroup are binned into six equal-sized bins 
-    and {<, >}-conditions are generated for the five cut points obtained this way. This ‘on-the-fly’ 
-    discretisation, performed upon refinement of a subgroup, results in a much more fine-grained
-    binning than a priori discretisation. Multiple conditions on the same attribute are
-    allowed, even though this may lead to redundant conditions in a description (e.g.D x < 10 ∧ D x < 5).
+        Given a subgroup G, generates all valid subgroup descriptions that extend G’s description 
+        with one condition. We distinguish three types of description attributes, each with its own specifics.
+        * Binary attribute {==}
+        The only allowed condition type is ==, and consequently only a single condi-
+        tion on any binary attribute can be part of a subgroup description.
+        * Nominal attribute {==, !=}
+        Both == and != are allowed. For any nominal attribute, either a single
+        = or multiple != conditions are allowed in a description.
+        * Numeric attribute {<, >}
+        Both < and > are allowed. Due to the large cardinality of numeric data, generating all 
+        possible conditions is infeasible. Thus, to prevent the search space from exploding, the values 
+        of a numeric attribute that occur within a subgroup are binned into six equal-sized bins 
+        and {<, >}-conditions are generated for the five cut points obtained this way. This ‘on-the-fly’ 
+        discretisation, performed upon refinement of a subgroup, results in a much more fine-grained
+        binning than a priori discretisation. Multiple conditions on the same attribute are
+        allowed, even though this may lead to redundant conditions in a description (e.g.D x < 10 ∧ D x < 5).
 
+
+    Parameters
+    ----------
+    df: DataFrame
+        Inner pandas dataframe
+    cover_func: FuncCover, default=None
+        A function to compute the cover of generated subgroup in order to be valid
+    quality_func: FuncQuality, default=None
+        A quality function to compute quality of the generated subgroups
+    min_cov: int, default=2
+        The minimum coverage newer valid subgroups should have 
+    min_quality: float, default=0.0
+        The minimum quality generated subgroups should have to be considered valid 
+    num_cut_points: Dict[str, int], default=defaultdict(lambda: 5)
+        The number of cut points desired to disretize every single numeric descriptive attribute in the dataset
+
+    Attributes
+    ----------
+    unique_df: Dict[str, Series]
+        Map of binary/nominal columns and their unique values. This is stored 
+        to avoid computing those unique values everytime as the inner dataset
+        is likely not going to be modified
+        
     References
     ----------
     [1] Page 225 (6.2 Refining subgroups)
@@ -98,30 +123,6 @@ class RefinementOperatorOfficial(RefinementOperator):
         If going to be used with the dssd algorithm, just do RefinementOperatorOfficial() 
         with no arguments, those will be filled in later by the algorithm.
 
-        Parameters
-        ----------
-        df: DataFrame
-            Inner pandas dataframe
-        column_types (dict[str, ColumnType]): 
-            Map of descriptive column name and type for columns to consider from the dataset
-        cover_func: FuncCover, default=None
-            A function to compute the cover of generated subgroup in order to be valid
-        quality_func: FuncQuality, default=None
-            A quality function to compute quality of the generated subgroups
-        min_cov: int, default=2
-            The minimum coverage newer valid subgroups should have 
-        min_quality: float, default=0.0
-            The minimum quality generated subgroups should have to be considered valid 
-        num_cut_points: Dict[str, int], default=defaultdict(lambda: 5)
-            The number of cut points desired to disretize every single numeric descriptive attribute in the dataset
-
-
-        Variables
-        ---------
-        unique_df (dict[str, Series]):
-            Map of binary/nominal columns and their unique values. This is stored 
-            to avoid computing those unique values everytime as the inner dataset
-            is likely not going to be modified
         """
         super().__init__(df, cover_func, quality_func)
         self.num_cut_points = num_cut_points
@@ -142,7 +143,8 @@ class RefinementOperatorOfficial(RefinementOperator):
 
         Returns
         -------
-        List[Subgroup]: returns the same result list received in parameter just for convenience purposes
+        List[Subgroup]: 
+            The same result list received in parameter just for convenience purposes
         """
         sg = self.cover_func(cand)
         if self.min_cov <= len(sg.index) < len(cand.parent.cover):
@@ -199,7 +201,7 @@ class RefinementOperatorOfficial(RefinementOperator):
         return cand_list
 
 
-class RefinementOperatorOfficialImproved(RefinementOperatorOfficial):
+class RefinementOperatorOfficialImproved(RefinementOperatorImpl):
     def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
         sg = self.cover_func(cand)
         if self.min_cov <= len(sg.index) < len(cand.parent.cover):

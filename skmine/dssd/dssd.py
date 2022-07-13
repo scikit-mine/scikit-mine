@@ -4,19 +4,16 @@ import math
 import os
 import time
 import logging
-from typing import List, Dict
+from typing import List
 from pandas import DataFrame
 
-from .refinement_operators import RefinementOperator, RefinementOperatorOfficial
-from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, diff_items_count, func_get_quality, subgroup, subgroups_to_csv
+from .refinement_operators import RefinementOperator, RefinementOperatorImpl
+from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, subgroup, subgroups_to_csv, dummy_logger
 from .subgroup import Subgroup
 from .description import Description
-from .custom_types import ColumnType, FuncCover, FuncQuality
-from .selection_strategies import FixedDescriptionBasedSelectionStrategy, SelectionStrategy
+from .custom_types import  FuncCover, FuncQuality
+from .selection_strategies import Desc, SelectionStrategy
 from .quality_measures import QualityMeasure
-
-# Create a custom logger
-logger = logging.getLogger("dssd")
 
 
 def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cover_func: FuncCover):
@@ -77,7 +74,8 @@ def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
 
     Returns
     -------
-    List[Subgroup]: The same list received in argument is returned for convenience purposes
+    List[Subgroup]:
+        The same list received in argument is returned for convenience purposes
     """
     
     # highly inspired by the bisect insort method in python 3.8
@@ -102,49 +100,23 @@ def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
 
 # Actual mining function
 
-
-def setup_logging(stdoutfile: str, level = logging.DEBUG):
-    """Setup the logger to be used by the dssd algorithm and other parts.
-    This function should be called only once, in the dssd algorithm otherwise, weird things might happen
-    """
-    # Create handlers
-    c_handler = logging.StreamHandler()
-    file_debug_handler = logging.FileHandler(f"{stdoutfile}.debug.log")
-    file_info_handler = logging.FileHandler(f"{stdoutfile}.info.log")
-    c_handler.setLevel(logging.DEBUG)
-    file_debug_handler.setLevel(logging.DEBUG)
-    file_info_handler.setLevel(logging.INFO)
-
-    # Create formatters and add it to handlers
-    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    c_format = logging.Formatter('%(asctime)s: %(message)s')
-    f_format = logging.Formatter('%(asctime)s: %(message)s')
-    c_handler.setFormatter(c_format)
-    file_info_handler.setFormatter(f_format)
-    file_debug_handler.setFormatter(f_format)
-
-    # Add handlers to the logger
-    logger.addHandler(c_handler)
-    logger.addHandler(file_info_handler)
-    logger.addHandler(file_debug_handler)
-
-    logger.setLevel(level)
-
-    return logger
-
 def mine(
     k: int,
     j: int = None,
     max_depth: int = 0,
     beam_width: int = None,
-    quality_measure: QualityMeasure = None,
-    selector: SelectionStrategy = FixedDescriptionBasedSelectionStrategy(),
+    quality: QualityMeasure = None,
+    selector: SelectionStrategy = Desc(),
     post_selector: SelectionStrategy = None,
     refinement_operator: RefinementOperator = None,
     output_folder: str = "",
     save_intermediate_results: bool = True,
+    save_result: bool = True,
     skip_phase2: bool = False,
-    skip_phase3: bool = False) -> List[Subgroup]:
+    skip_phase3: bool = False,
+    return_pool: bool = False,
+    sort_final_result: bool = False,
+    logger: logging.Logger = dummy_logger) -> List[Subgroup]:
     """
     Mine and return mined subgroups
 
@@ -192,14 +164,11 @@ def mine(
     """
 
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
-    local_args = locals()
-    function_args = "\n".join([f'{k}={v}' for k,v in local_args.items()])
-    write_file(f"{output_folder}/dssd_params.conf", [function_args])
+    function_args = "\n".join([f'{k}={v}' for k,v in locals().items()])
+    if save_result and output_folder != "": write_file(f"{output_folder}/dssd_params.conf", [function_args])
 
-
-    logger = setup_logging(f"{output_folder}/stdout")
     # a wrapper function that computes subgroups quality
-    quality_func: FuncQuality = lambda c: quality_measure.compute_quality(quality_measure._df.loc[c.cover])
+    quality_func: FuncQuality = lambda c: quality.compute_quality(quality._df.loc[c.cover])
     # an "optimized" function to compute the cover of a subgroup, it is optimized cause it uses its parent cover as a base and only checks last added condition
     cover_func_optimized: FuncCover = lambda c: subgroup(ro.df.loc[c.parent.cover], c.description, True)
     # normal unoptimized wrapper function for computing the cover of a subgroup
@@ -224,6 +193,9 @@ def mine(
             # all valid candidates that extend current candidate's pattern with one condition
             candidates += ro.refine_candidate(cand, [])
 
+        if len(candidates) == 0:
+            logger.warning(f"depth={depth} : Generated 0 candidates... Stopping exploration phase\n")
+            break
         logger.info(f"depth={depth} : generated {len(candidates)} candidates")
         logger.info(f"depth={depth} : {_min_max_avg_quality_string(candidates, ' ')}")
         for cand in candidates:
@@ -250,13 +222,16 @@ def mine(
         if save_intermediate_results: write_file(f"{output_folder}/stats2-after-duplicates-removal.csv", [subgroups_to_csv(result)])
 
     # final candidates selection / post selection phase
+    if return_pool: 
+        pool = result.copy()
     if not skip_phase3:
         logger.info(f"Phase 3: Post selecting {k} candidates out of {len(result)}...")
         result = post_selector.select(result, beam_width=k, beam=[])
-        sort_subgroups(result)
+        if sort_final_result: sort_subgroups(result)
 
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
     logger.info(f"Final selection\n{len(result)} candidate(s)\n{_min_max_avg_quality_string(result, ' ')}")
-    logger.info(f"Results stored in the folder: {os.getcwd()}/{output_folder}")
-    write_file(f"{output_folder}/stats3-final-results.csv", [subgroups_to_csv(result)])
+    if save_result: write_file(f"{output_folder}/stats3-final-results.csv", [subgroups_to_csv(result)])
+    if return_pool:
+        return result, pool
     return result

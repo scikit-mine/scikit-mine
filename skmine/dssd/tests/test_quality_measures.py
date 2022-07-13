@@ -13,16 +13,16 @@ def test_wracc():
     df = pandas.DataFrame({"a": [True, True, True, False] * 2})
 
     with pytest.raises(ValueError):
-        qa.WRACCQuality.ones_fraction(pandas.DataFrame(), "example_attribute")
+        qa.WRACC.ones_fraction(pandas.DataFrame(), "example_attribute")
 
-    assert qa.WRACCQuality.ones_fraction(df, "a") == (3 * 2) / 8
+    assert qa.WRACC.ones_fraction(df, "a") == (3 * 2) / 8
 
     sg = pandas.DataFrame({ "a": [True, True, True, True] })
-    q = qa.WRACCQuality(df[["a"]])
+    q = qa.WRACC(df[["a"]])
 
     assert q.compute_quality(df) == 0
 
-    assert qa.WRACCQuality.ones_fraction(sg, "a") == 4 / 4
+    assert qa.WRACC.ones_fraction(sg, "a") == 4 / 4
     assert q.compute_quality(sg) == (4 / 8) * abs(1 - 3 * 2 / 8)
 
 
@@ -31,9 +31,9 @@ def test_kl_quality():
     subset_correct_distribution = defaultdict(int, {"one": .75, "two": .25})
     entire_dataset_distribution = defaultdict(int, {"one": .5, "two": .5})
 
-    assert qa.KLQuality.kl(defaultdict(int), entire_dataset_distribution) == 0
+    assert qa.KL.kl(defaultdict(int), entire_dataset_distribution) == 0
     res = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
-    assert qa.KLQuality.kl(subset_correct_distribution, entire_dataset_distribution) == res
+    assert qa.KL.kl(subset_correct_distribution, entire_dataset_distribution) == res
 
 
     df = pandas.DataFrame({
@@ -47,14 +47,14 @@ def test_kl_quality():
     })
     
 
-    assert qa.KLQuality(df[[]]).compute_quality(sg) == 0
+    assert qa.KL(df[[]]).compute_quality(sg) == 0
 
     kl_a = .75 * math.log2(.75/.5) + .25 * math.log2(.25/.5)
     kl_b = .5 * math.log2(.5/.5) + .5 * math.log2(.5/.5)
 
-    assert qa.KLQuality(df[["a"]]).compute_quality(sg) == kl_a
-    assert qa.KLQuality(df[["a", "bin"]]).compute_quality(sg) == kl_a + kl_b
-    assert qa.WKLQuality(df[["a", "bin"]]).compute_quality(sg) == (kl_a + kl_b) * len(sg)
+    assert qa.KL(df[["a"]]).compute_quality(sg) == kl_a
+    assert qa.KL(df[["a", "bin"]]).compute_quality(sg) == kl_a + kl_b
+    assert qa.WKL(df[["a", "bin"]]).compute_quality(sg) == (kl_a + kl_b) * len(sg)
 
 
 def test_measure_distance():
@@ -82,9 +82,9 @@ def test_time_series_model():
     df = pandas.DataFrame({"a": [s1, s2, s3]})
 
     # ensuring that the correct function is being used depending on the specified target_model
-    assert np.array_equal(qa.EubModel().compute_model(df, "a"), eub(df["a"].to_numpy()))
+    assert np.array_equal(qa.EubModel().compute_model(df["a"]), eub(df["a"].to_numpy()))
 
-    assert np.array_equal(qa.DBAModel().compute_model(df, "a"), dba(df["a"].to_numpy()))
+    assert np.array_equal(qa.DBAModel().compute_model(df["a"]), dba(df["a"].to_numpy()))
 
 
 def test_ts_quality():
@@ -96,7 +96,7 @@ def test_ts_quality():
 
     # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts", "target_model": "eub", "dist_measure": "euclidean"})
     # s: qa.TSQuality = qa.create("ts_quality", entire_df=df, extra_parameters={"model_attribute": "ts"})
-    s = qa.EuclideanEubTSQuality(df[["ts"]])
+    s = qa.EuclideanEub(df[["ts"]])
     # ensure an empty subgroup has a zero quality
     assert s.compute_quality(pandas.DataFrame()) == 0
 
@@ -104,5 +104,5 @@ def test_ts_quality():
     assert s.compute_quality(df) == 0
 
     # ensure the specified formula is actually being used for computing quality
-    model = qa.EubModel().compute_model(sg, "ts")
+    model = qa.EubModel().compute_model(sg["ts"])
     assert s.compute_quality(sg) == pow(len(sg),0.5) * qa.EuclideanDistance().measure_distance(s.dataset_model, model)

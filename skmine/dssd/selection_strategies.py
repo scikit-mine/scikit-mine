@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import logging
+from pydoc import describe
 from typing import DefaultDict, Dict, List
 from .custom_types import FuncQuality
-from .utils import diff_items_count, sort_subgroups, func_get_quality
+from .utils import diff_items_count, sort_subgroups, func_get_quality, dummy_logger
 from .subgroup import Subgroup
 
 
@@ -14,7 +15,7 @@ class SelectionStrategy(ABC):
     """
 
     @abstractmethod
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
         """
         Select a number of subgroups from the specified list into the received beam list
 
@@ -33,10 +34,8 @@ class SelectionStrategy(ABC):
         """
         pass
 
-# Create a custom logger
-logger = logging.getLogger("dssd")
 
-def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2) -> List[Subgroup]:
+def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, min_diff_conditions: int = 2, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
     def is_candidate_diverse(candidate: Subgroup, beam: List[Subgroup], min_diff_conditions: int) -> bool:
         return all(c.quality != candidate.quality or diff_items_count(c.description.conditions, candidate.description.conditions) >= min_diff_conditions for c in beam)
 
@@ -56,7 +55,7 @@ def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Sub
         candidate_index += 1
     return beam
 
-class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
+class Desc(SelectionStrategy):
     """
     Fixed description selection strategy\n
     Explanation:
@@ -67,12 +66,11 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
     Parameters
     ----------
     min_diff_conditions: int, default=2
-        The number of conditions that have to differ for same quality candidate to be 
-        included in the selection
+        The number of conditions that have to differ for same quality candidate to be included in the selection
 
     References
     ----------
-        [1] Page 222
+    [1] Page 222
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
 
@@ -80,12 +78,12 @@ class FixedDescriptionBasedSelectionStrategy(SelectionStrategy):
         super().__init__()
         self.min_diff_conditions = min_diff_conditions
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return _fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions)
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions, logger=logger)
 
 
 
-def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int) -> List[Subgroup]:
+def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, c: int, l: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
     def is_candidate_diverse(candidate: Subgroup, attributes_usage: DefaultDict[str, int], max_occ: int) -> bool:
         for cond in candidate.description.conditions:
             if attributes_usage[cond.attribute] >= max_occ: # discard this candidate as it has at least an attribute already overused
@@ -126,7 +124,7 @@ def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgr
     logger.debug(f"attributes_usage={attributes_usage}")
     return beam
 
-class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
+class VarDescFast(SelectionStrategy):
     """
     Variable size description selection strategy[fast variant better suited for phase 1 of the dssd algorithm]\n
     Explanation:
@@ -144,7 +142,7 @@ class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
 
     References
     ----------
-        [1] Page 222
+    [1] Page 222
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
 
@@ -160,11 +158,11 @@ class VarDescriptionBasedFastSelectionStrategy(SelectionStrategy):
         """
         return len(cands[0].description.conditions)
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return _var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands))
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands), logger=logger)
 
 
-class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelectionStrategy):
+class VarDescStandard(VarDescFast):
     """
     Variable size description selection strategy[standard version with no optimization and is better suited for phase 3 of the dssd algorithm]
 
@@ -176,90 +174,6 @@ class VarDescriptionBasedStandardSelectionStrategy(VarDescriptionBasedFastSelect
         assumtion of the depth of the various candidates
         """
         return max(len(cand.description.conditions) for cand in cands)
-
-
-
-def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float) -> List[Subgroup]:
-    counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
-
-    # in case there are less candidates than the beam width
-    # just retrun the candidates list
-    if len(candidates) <= beam_width:
-        beam.extend(candidates)
-        return beam
-
-    logger.debug(f"cover: beam_width={beam_width}")
-
-    for i in range(beam_width):
-        logger.debug(f"SELECTED CANDIDATE {i + 1}")
-        max_scoring_candidate = max(candidates, key = score)
-        # Select the the candidate with the highest score for beam_width times
-        candidates.remove(max_scoring_candidate)
-        beam.append(max_scoring_candidate)
-        update_counts(max_scoring_candidate, counts)
-
-    return beam
-
-class FixedCoverBasedSelectionStrategy(SelectionStrategy):
-    """
-    Fixed size cover based selection strategy\n
-    Explanation:
-        A score based on multiplicative weighted covering (Lavraˇc et al 2004) is used to weigh 
-        the quality of each subgroup, aiming to minimise the overlap between the selected subgroups.
-        The less often tuples in subgroup G are already covered by subgroups in the selection, 
-        the larger the score. If the cover contains only previously uncovered tuples, wscore(G, Sel) = 1.
-        In k iterations, k subgroups are selected. In each iteration, the subgroup that maximises 
-        weighted_score(G, Sel) · quality(subgroup) is selected.
-
-    Parameters
-    ----------
-    weight: float, default=0.9
-        The weight to use for computing covering score. Should be in [0, 1[
-
-    References
-    ----------
-        [1] Page 222
-        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
-    """
-    
-    def __init__(self, weight: float = .9) -> None:
-        super().__init__()
-        self.weight = weight
-
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return _fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight)
-
-
-def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float) -> List[Subgroup]:
-    counts = defaultdict(int, {})
-    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
-
-    if len(candidates) == 0:
-        raise ValueError("The candidates list can not be empty")
-
-    # Find the candidate with the highest quality
-    max_scoring_candidate = max(candidates, key = func_get_quality)
-    max_score = score(max_scoring_candidate)
-    # Use it to set the minimum score
-    min_score = fraction * max_scoring_candidate.quality
-
-    selected_candidates_count = 0
-    logger.debug(f"var_cover: beam_width={beam_width} min_score={min_score}")
-    
-    # Select all subgroups that have score higher than the minimum
-    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0: # OMEGA(G, Sel) · φ(G) ≥ δ.
-        logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count + 1}: {(max_score, max_scoring_candidate)}")
-        # Add the highest scoring candidate to the beam
-        beam.append(max_scoring_candidate)
-        update_counts(max_scoring_candidate, counts)
-        selected_candidates_count += 1
-        # And remove it from the candidates list
-        candidates.remove(max_scoring_candidate)
-        # Update the highest scoring candidate
-        (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
-
-    return beam
 
 
 def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
@@ -306,8 +220,103 @@ def update_counts(cand: Subgroup, counts: Dict[int, int]):
     """Increase by 1 the counts of every transaction in the specified candidate's cover"""
     for t in cand.cover:
         counts[t] += 1
+        
+    
+def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+    counts = defaultdict(int, {})
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
 
-class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
+    # in case there are less candidates than the beam width
+    # just retrun the candidates list
+    if len(candidates) <= beam_width:
+        beam.extend(candidates)
+        return beam
+
+    logger.debug(f"cover: beam_width={beam_width}")
+
+    for i in range(beam_width):
+        logger.debug(f"SELECTED CANDIDATE {i + 1}")
+
+        # vvv this version favrites shorter description subgroup when having equal quality
+        max_scoring_candidate = max(candidates, key = lambda cand: (score(cand), -len(cand.description)))
+        # max_scoring_candidate = max(candidates, key = lambda cand: score)
+
+        # Select the the candidate with the highest score for beam_width times
+        candidates.remove(max_scoring_candidate)
+        beam.append(max_scoring_candidate)
+        update_counts(max_scoring_candidate, counts)
+
+    return beam
+
+class Cover(SelectionStrategy):
+    """
+    Fixed size cover based selection strategy\n
+    Explanation:
+        A score based on multiplicative weighted covering (Lavraˇc et al 2004) is used to weigh 
+        the quality of each subgroup, aiming to minimise the overlap between the selected subgroups.
+        The less often tuples in subgroup G are already covered by subgroups in the selection, 
+        the larger the score. If the cover contains only previously uncovered tuples, wscore(G, Sel) = 1.
+        In k iterations, k subgroups are selected. In each iteration, the subgroup that maximises 
+        weighted_score(G, Sel) · quality(subgroup) is selected.
+
+    Parameters
+    ----------
+    weight: float, default=0.9
+        The weight to use for computing covering score. Should be in ]0, 1[
+        The lower this weight, the less likely there will be an overalap in the selection
+
+    References
+    ----------
+    [1] Page 222
+        Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
+    """
+    
+    def __init__(self, weight: float = 0.9) -> None:
+        super().__init__()
+        self.weight = weight
+
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, logger=logger)
+
+
+def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+    counts = defaultdict(int, {})
+    score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts,  weight) * c.quality
+
+    if len(candidates) == 0:
+        raise ValueError("The candidates list can not be empty")
+
+    # Find the candidate with the highest quality
+    max_scoring_candidate = max(candidates, key = func_get_quality)
+    max_score = score(max_scoring_candidate)
+    # Use it to set the minimum score
+    min_score = fraction * max_scoring_candidate.quality
+
+    selected_candidates_count = 0
+    logger.debug(f"var_cover: beam_width={beam_width} min_score={min_score}")
+    
+    # Select all subgroups that have score higher than the minimum
+    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0: # OMEGA(G, Sel) · φ(G) ≥ δ.
+        logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count + 1}: {(max_score, max_scoring_candidate)}")
+        # Add the highest scoring candidate to the beam
+        beam.append(max_scoring_candidate)
+        update_counts(max_scoring_candidate, counts)
+        selected_candidates_count += 1
+        # And remove it from the candidates list
+        candidates.remove(max_scoring_candidate)
+        # Update the highest scoring candidate
+
+        # vvv new, helps in prioritising shorter description candidates, particulary usefull when all the subgroups in the pool are not the same size
+        (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: (c[0], -len(c[1].description)), default=(-1, None))
+        
+        # vvv old 
+        # (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
+        
+
+    return beam
+
+
+class VarCover(Cover):
     """
     Variable size cover based selection strategy\n
     Explanation:
@@ -319,19 +328,20 @@ class VarCoverBasedSelectionStrategy(FixedCoverBasedSelectionStrategy):
     Parameters
     ----------
     weight: float, default=0.9
-        The weight to use for computing covering score. Should be in [0, 1[
+        The weight to use for computing covering score. Should be in ]0, 1[
+        The lower this weight, the less likely there will be an overalap in the selection
     fraction: float, default=0.5
         The fraction to use for computing the min_score. Should be in [0, 1[
 
     References
     ----------
-        [1] Page 223
+    [1] Page 223
         Leeuwen, Matthijs & Knobbe, Arno. (2012). Diverse subgroup set discovery. Data Mining and Knowledge Discovery. 25. 10.1007/s10618-012-0273-y.
     """
     
-    def __init__(self, weight: float, fraction: float) -> None:
+    def __init__(self, weight: float = 0.9, fraction: float = 0.5) -> None:
         super().__init__(weight)
         self.fraction = fraction
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup]) -> List[Subgroup]:
-        return _var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction)
+    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction, logger=logger)

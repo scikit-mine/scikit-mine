@@ -1,7 +1,6 @@
 import pandas
 from ..subgroup import Subgroup
 from ..cond import Cond
-from ..custom_types import ColumnType
 from ..description import Description
 from ..utils import _get_cut_points_smart
 from .. import refinement_operators as ro
@@ -14,8 +13,6 @@ df = pandas.DataFrame({
 })
 
 dataset_size = len(df)
-
-# column_types = {"num": ColumnType.NUMERIC, "a": ColumnType.NOMINAL, "bin": ColumnType.BINARY}
 
 min_coverage = 2
 
@@ -38,7 +35,6 @@ def mock_quality(cand: Subgroup):
 discretization = {"num": 2}
 extra_parameters = {
     "df": df, 
-    # "column_types": column_types,
     "num_cut_points": discretization,
     "cover_func": mock_cover,
     "quality_func": mock_quality,
@@ -53,7 +49,7 @@ def test_dssd_paper_refinements():
     nominal_conditions = [Cond("a", "==", "one"), Cond("a", "!=", "one"), Cond("a", "==", "two"), Cond("a", "!=", "two")]
     binary_conditions = [Cond("bin", "==", True), Cond("bin", "==", False)]
     conds_store = [*numeric_conditions, *nominal_conditions, *binary_conditions]
-    official_ro = ro.RefinementOperatorOfficial(**extra_parameters)
+    official_ro = ro.RefinementOperatorImpl(**extra_parameters)
 
 
     # testing the append method

@@ -1,13 +1,12 @@
 import pandas
 
-from ..selection_strategies import FixedCoverBasedSelectionStrategy
-from ..refinement_operators import RefinementOperatorOfficial
+from ..selection_strategies import Cover
+from ..refinement_operators import RefinementOperatorImpl
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
 from ..dssd import apply_dominance_pruning, update_topk, mine
-from ..custom_types import ColumnType
-from ..quality_measures import EuclideanEubTSQuality
+from ..quality_measures import EuclideanEub
 
 def test_update_topk():
     cand1 = Subgroup(Description(), .5, pandas.Index([]))
@@ -74,15 +73,17 @@ def test_mining():
                 ]
     })
 
-    column_types = {"bin": ColumnType.BINARY, "num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
+    # column_types = {"bin": ColumnType.BINARY, "num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
     # d = DSSDEMM(df, column_types)
     global res
     desc_attrs = ["bin", "cat", "num"]
-    desc_column_types = {k: column_types[k] for k in desc_attrs}
-    res = mine(max_depth=5, k = 10, j = 1000,
-    quality_measure=EuclideanEubTSQuality(df, model_attribute="ts"),
-    selector=FixedCoverBasedSelectionStrategy(.9),
-    refinement_operator=RefinementOperatorOfficial(df[desc_attrs], min_cov=1)
+    # desc_column_types = {k: column_types[k] for k in desc_attrs}
+    res = mine(max_depth=5, k = 10, beam_width=10, j = 1000,
+    quality=EuclideanEub(df[["ts"]]),
+    selector=Cover(.9), post_selector=Cover(.9),
+    refinement_operator=RefinementOperatorImpl(df[desc_attrs], min_cov=1),
+    save_result=False,
+    save_intermediate_results=False
     )
     # "official", save_intermediate_results=True)
 

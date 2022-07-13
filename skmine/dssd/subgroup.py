@@ -40,6 +40,10 @@ class Subgroup:
     def __str__(self):
         return f"({self.description}, {len(self.cover)}, {self.quality})"
 
+    
+    def __len__(self):
+        return len(self.cover)
+
 
     def __repr__(self):
         return str(self)
@@ -70,7 +74,8 @@ class Subgroup:
 
 
     def __hash__(self):
-        return hash(tuple(self.description.conditions))
+        # the set is used in order to remove order importance in the conditions
+        return hash(tuple(set(self.description.conditions)))
 
 
     def child_with_new_condition(self, new_cond: Cond):

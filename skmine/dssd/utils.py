@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from typing import Collection, Dict, List, Type, Union
 import numpy as np
 from pandas import DataFrame
@@ -8,6 +9,9 @@ from .custom_types import ColumnShares, FuncQuality
 from .subgroup import Subgroup
 from .description import Description
 
+
+dummy_logger = logging.getLogger("dummy_dssd")
+dummy_logger.addHandler(logging.NullHandler())
 
 def _get_cut_points(lo: float, hi: float, num_cut_points: int) -> List[float]:
     """
@@ -67,7 +71,8 @@ def _get_cut_points_smart(values: List[float], num_cut_points: int):
     num_cut_points: int 
         The number of cut points that we want for the values 
 
-    Returns:
+    Returns
+    -------
     List[float]
 
     Examples
@@ -138,7 +143,8 @@ def sort_subgroups(subgroups: List[Subgroup], descending: bool = True):
     -------
     List[Subgroup]
     """
-    subgroups.sort(key = func_get_quality, reverse=descending)
+    # updated this to sort first based on quality descending and then description length ascending
+    subgroups.sort(key = lambda s: (s.quality, -len(s.description)), reverse=descending)
     return subgroups
 
 
@@ -164,7 +170,8 @@ def column_shares(df: DataFrame, columns: List[str] = None) -> ColumnShares:
 
     Returns
     -------
-    ColumnShares: a nested default dictionnary containing the shares
+    ColumnShares: 
+        A nested default dictionnary containing the shares
 
     Examples
     --------

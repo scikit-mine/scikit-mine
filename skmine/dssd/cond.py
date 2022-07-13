@@ -7,7 +7,7 @@ class Cond:
     
     Parameters
     ----------
-    attribute: str: 
+    attribute: str
         The left operand of the condition as an attribute's name 
         that can later be used to select data from a dataset
     op: str, any of these: <, <=, ==, !=, >, >=
@@ -39,7 +39,6 @@ class Cond:
 
     def __eq__(self, other: 'Cond'):
         return self.__tuple == other.__tuple
-        return self.attribute == other.attribute and self.op == other.op and self.val == other.val
 
 
     def __str__(self):
