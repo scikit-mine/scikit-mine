@@ -16,8 +16,6 @@ R = TypeVar('R', bound=RefinementOperator)
 Q = TypeVar('Q', bound=QualityMeasure)
 S = TypeVar('S', bound=SelectionStrategy)
 
-# Create a custom logger
-
 
 def setup_logging(logger_name: str, stdoutfile: str, level = logging.DEBUG):
     """Setup the logger to be used by the dssd algorithm and other parts.
@@ -172,7 +170,6 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
             return_pool=True,
             logger=self.logger
         )
-        # add my dummy handler here that will propagate all the way to downstream methods like the select method
         return self
 
 

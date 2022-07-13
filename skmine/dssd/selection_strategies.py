@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import logging
-from pydoc import describe
 from typing import DefaultDict, Dict, List
 from .custom_types import FuncQuality
 from .utils import diff_items_count, sort_subgroups, func_get_quality, dummy_logger
@@ -42,7 +41,7 @@ def _fixed_size_description_selection(candidates: List[Subgroup], beam: List[Sub
     logger.debug(f"desc: beam_width={beam_width}")
     selected_candidates_count = 0
     candidate_index = 0
-    # Make sure candidates are ordered in quality descending order, this might not be required if we assume an ordering pre-condition
+    # Make sure candidates are ordered in quality descending order
     sort_subgroups(candidates)
     
     while candidate_index < len(candidates) and selected_candidates_count < beam_width:
@@ -105,7 +104,6 @@ def _var_size_description_selection(candidates: List[Subgroup], beam: List[Subgr
     candidate_index = 0
     # Make sure candidates are ordered in quality descending order
     sort_subgroups(candidates)
-    # candidates = sorted(candidates, key = lambda c: c.quality, reverse=True)
     attributes_usage = defaultdict(int, {})
     max_occ = c * l
     logger.debug(f"var_desc: beam_width={beam_width}, max_occ={max_occ}")
@@ -226,8 +224,7 @@ def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup]
     counts = defaultdict(int, {})
     score: FuncQuality = lambda c: multiplicative_weighted_covering_score_smart(c, counts, weight) * c.quality
 
-    # in case there are less candidates than the beam width
-    # just retrun the candidates list
+    # In case there are less candidates than the beam width just retrun the candidates list
     if len(candidates) <= beam_width:
         beam.extend(candidates)
         return beam
@@ -237,9 +234,8 @@ def _fixed_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup]
     for i in range(beam_width):
         logger.debug(f"SELECTED CANDIDATE {i + 1}")
 
-        # vvv this version favrites shorter description subgroup when having equal quality
+        # Favoring subgroup with shorter when having equal quality, the shorter the description the better
         max_scoring_candidate = max(candidates, key = lambda cand: (score(cand), -len(cand.description)))
-        # max_scoring_candidate = max(candidates, key = lambda cand: score)
 
         # Select the the candidate with the highest score for beam_width times
         candidates.remove(max_scoring_candidate)
@@ -296,7 +292,7 @@ def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], 
     logger.debug(f"var_cover: beam_width={beam_width} min_score={min_score}")
     
     # Select all subgroups that have score higher than the minimum
-    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0: # OMEGA(G, Sel) · φ(G) ≥ δ.
+    while max_score >= min_score and selected_candidates_count < beam_width and len(candidates) > 0:
         logger.debug(f"SELECTED CANDIDATE N°{selected_candidates_count + 1}: {(max_score, max_scoring_candidate)}")
         # Add the highest scoring candidate to the beam
         beam.append(max_scoring_candidate)
@@ -304,13 +300,8 @@ def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], 
         selected_candidates_count += 1
         # And remove it from the candidates list
         candidates.remove(max_scoring_candidate)
-        # Update the highest scoring candidate
-
-        # vvv new, helps in prioritising shorter description candidates, particulary usefull when all the subgroups in the pool are not the same size
+        # Update the highest scoring candidate with the shortest description, this is quite useful when subgroups in the pool don't have the same description length
         (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: (c[0], -len(c[1].description)), default=(-1, None))
-        
-        # vvv old 
-        # (max_score, max_scoring_candidate) = max(((score(cand), cand) for cand in candidates), key=lambda c: c[0], default=(-1, None))
         
 
     return beam

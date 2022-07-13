@@ -175,12 +175,7 @@ class RefinementOperatorImpl(RefinementOperator):
 
 
     def _refine_numerical(self, cand: Subgroup, col: str, cand_list: List[Subgroup]):
-        # the way it is implemented in the dssd official source code
         values = sorted(self.df.loc[cand.cover][col].values)
-
-        # having values be taken from here is what makes the cow patterns reach higher quality
-        # values = self.dataset.df[col].values
-
         for val in _get_cut_points_smart(values, self.num_cut_points[col]):
             self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, "<", val)), cand_list)
             self.check_and_append_candidate(cand.child_with_new_condition(new_cond = Cond(col, ">", val)), cand_list)

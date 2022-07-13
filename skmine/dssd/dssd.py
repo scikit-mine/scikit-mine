@@ -45,8 +45,6 @@ def apply_dominance_pruning(candidate: Subgroup, quality_func: FuncQuality, cove
         # remove the condition from the candidate
         candidate.description.conditions.remove(condition)
 
-        # add the cover computing function here and also deem the quality function to be completely dependant on what is inside the candidate cover at the moment of the call
-        # so if the cover should be updated we make sure to do it before calling the quality function
         candidate.cover = cover_func(candidate).index
         new_quality = quality_func(candidate)
         if new_quality < highest_quality:
@@ -97,8 +95,6 @@ def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
         result.pop()
     return result
 
-
-# Actual mining function
 
 def mine(
     k: int,
