@@ -2,7 +2,6 @@ from distutils.file_util import write_file
 import time
 import logging
 from typing import List
-
 from .refinement_operators import RefinementOperator, RefinementOperatorImpl
 from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, subgroup, subgroups_to_csv, dummy_logger
 from .subgroup import Subgroup
@@ -164,16 +163,9 @@ def mine(
     function_args = "\n".join([f'{k}={v}' for k,v in locals().items()])
     if save_result and output_folder != "": write_file(f"{output_folder}/dssd_params.conf", [function_args])
 
-    # a wrapper function that computes subgroups quality
-    quality_func: FuncQuality = lambda c: quality.compute_quality(quality._df.loc[c.cover])
-    # an "optimized" function to compute the cover of a subgroup, it is optimized cause it uses its parent cover as a base and only checks last added condition
-    cover_func_optimized: FuncCover = lambda c: subgroup(ref_op.df.loc[c.parent.cover], c.description, True)
-    # normal unoptimized wrapper function for computing the cover of a subgroup
-    cover_func_non_optimized: FuncCover = lambda c: subgroup(ref_op.df, c.description, False)
-    
     # fill in the fields of the refinement operator
-    ref_op.cover_func = cover_func_optimized
-    ref_op.quality_func = quality_func
+    ref_op.cover_func = lambda c: subgroup(ref_op.df.loc[c.parent.cover], c.description, True)
+    ref_op.quality_func = quality.quality_from_subgroup
 
     logger.info(f"Phase 1: Mining {j} subgroups each having at most {max_depth} conditions each")
 
@@ -209,7 +201,7 @@ def mine(
         logger.info(f"Phase 2: Dominance pruning & deduplication")
         logger.info(f"Dominance pruning {len(result)} candidates...")
         for cand in result:
-            apply_dominance_pruning(cand, quality_func, cover_func_non_optimized)
+            apply_dominance_pruning(cand, quality.quality_from_subgroup, lambda c: subgroup(ref_op.df, c.description, False))
 
         # remove duplicates that may have occured due to the pruning process
         logger.info(f"Removing duplicates...")
