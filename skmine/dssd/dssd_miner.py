@@ -74,7 +74,7 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
     k: int
         The number of subgroups to be returned as a result of the experiment
     quality: QualityMeasure
-        An proper implementation of a quality measure suited for handling the target attributes to be used.
+        A proper implementation of a quality measure suited for handling the target attributes to be used.
         (The quality measure is expected to operate only a projection of the dataset on the target attributes)
     min_cov: int, default=2
         The minimum coverage for supgroups to be considered
@@ -178,7 +178,7 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
             quality=self.quality,
             selector=self.selector,
             post_selector=self.post_selector,
-            refinement_operator=self.refinement_operator,
+            ref_op=self.refinement_operator,
             output_folder=self.output_folder,
             save_intermediate_results=self.save_intermediate_results,
             save_result=self.save_result,

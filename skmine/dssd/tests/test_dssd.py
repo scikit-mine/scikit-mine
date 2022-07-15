@@ -81,7 +81,7 @@ def test_mining():
     res = mine(max_depth=5, k = 10, beam_width=10, j = 1000,
     quality=EuclideanEub(df[["ts"]]),
     selector=Cover(.9), post_selector=Cover(.9),
-    refinement_operator=RefinementOperatorImpl(df[desc_attrs], min_cov=1),
+    ref_op=RefinementOperatorImpl(df[desc_attrs], min_cov=1),
     save_result=False,
     save_intermediate_results=False
     )

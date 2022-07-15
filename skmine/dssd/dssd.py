@@ -1,11 +1,7 @@
-from collections import defaultdict
 from distutils.file_util import write_file
-import math
-import os
 import time
 import logging
 from typing import List
-from pandas import DataFrame
 
 from .refinement_operators import RefinementOperator, RefinementOperatorImpl
 from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, subgroup, subgroups_to_csv, dummy_logger
@@ -98,13 +94,13 @@ def update_topk(result: List[Subgroup], candidate: Subgroup, max_size: int = 0):
 
 def mine(
     k: int,
-    j: int = None,
-    max_depth: int = 0,
+    j: int,
+    max_depth: int = 3,
     beam_width: int = None,
     quality: QualityMeasure = None,
     selector: SelectionStrategy = Desc(),
     post_selector: SelectionStrategy = None,
-    refinement_operator: RefinementOperator = None,
+    ref_op: RefinementOperator = RefinementOperatorImpl(),
     output_folder: str = "",
     save_intermediate_results: bool = True,
     save_result: bool = True,
@@ -118,40 +114,44 @@ def mine(
 
     Parameters
     ----------
-    max_depth: int
-        Maximum number of conditions per subgroup description
     k: int
         The number of subgroups to be returned as a result of the experiment
     j: int 
-        The maximum number of subgroups to be kept in memory at all time during the process. Defaults to math.inf.
+        The maximum number of subgroups to be kept in memory at all time during the process
+    max_depth: int, default=3
+        Maximum number of conditions per subgroup description
     beam_width: int, default=k
-        The beam width to use during phase 1.
-    quality_measure: QualityMeasure, default=None
-        An implementation of a quality measure to be used.
-        Notes: This is where the target attributes go
-        The quality measure is expected to operate on a projection of the dataset on the target attributes
-    selector: SelectionStrategy, default=FixedDescriptionBasedSelectionStrategy()
+        The beam width to use during phase 1
+    quality: QualityMeasure, default=None
+        An implementation of a quality measure to be used. The quality measure uses a projection of the dataset on the target attributes.
+    selector: SelectionStrategy, default=Desc()
         An implementation of a selection strategy to be used (during phase 1).
-    post_selector: SelectionStrategy, default=selection_strategy
+    post_selector: SelectionStrategy, default=selector
         An implementation of a selection strategy to be used (during phase 3).
-    refinement_operator: RefinementOperator, default=RefinementOperatorOfficial()
-        An implementation of the refinement operator to be used.
-        Remember this is where the desccriptive attributes go, the minimum coverage, min quality, numeric discretisation cut points 
-        techniques, etc.
-        The operator is expected to operate on a projection of the dataset on the descriptive attributes
-        The quality and cover computing function are automatically filled in later by the preparation functions
+    ref_op: RefinementOperator, default=RefinementOperatorImpl()
+        An implementation of the refinement operator to be used. 
+        Notes: The operator is expected to operate on a projection of the dataset on the descriptive attributes, so this is where the descriptive attributes go and minimum coverage, min quality, numeric discretisation cut points variables are exploited.
+        (The quality and cover computing function are automatically filled in later by the algorithm)
     output_folder: str, default=""
-        The output folder where to store (intermediate) results
+        The output folder where to store (intermediate) results and any other files created by the algorithm
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of the search phase
+    save_result: bool, default=False
+        whether or not to save the actual result of the mining process
     skip_phase2: bool, default=False
-        Whether or not to skip phase 2. Defaults to False
+        Whether or not to skip phase 2
     skip_phase3: bool, default=False
-        Whether or not to skip phase 3. Defaults to False
+        Whether or not to skip phase 3
+    sort_final_result: bool, default=False
+        Whether or not to sort the candidates quality descending during phase 3 after post selection.
+    logger: Logger, default=dummy_logger
+        Logger for the dssd algorithm and other parts
 
     Returns
     -------
-    List[Subgroup]
+    List[Subgroup] | (Tuple[List[Subgroup], List[Subgroup]]):
+        Return the actual result and the pool used for final seleciton if return_pool is True 
+
 
     References
     ----------
@@ -160,25 +160,25 @@ def mine(
     """
 
     # write a string version of all the arguments received to a config file, helpful to later remember what config yielded what result
+    beam_width = beam_width if beam_width is not None else k
     function_args = "\n".join([f'{k}={v}' for k,v in locals().items()])
     if save_result and output_folder != "": write_file(f"{output_folder}/dssd_params.conf", [function_args])
 
     # a wrapper function that computes subgroups quality
     quality_func: FuncQuality = lambda c: quality.compute_quality(quality._df.loc[c.cover])
     # an "optimized" function to compute the cover of a subgroup, it is optimized cause it uses its parent cover as a base and only checks last added condition
-    cover_func_optimized: FuncCover = lambda c: subgroup(ro.df.loc[c.parent.cover], c.description, True)
+    cover_func_optimized: FuncCover = lambda c: subgroup(ref_op.df.loc[c.parent.cover], c.description, True)
     # normal unoptimized wrapper function for computing the cover of a subgroup
-    cover_func_non_optimized: FuncCover = lambda c: subgroup(ro.df, c.description, False)
+    cover_func_non_optimized: FuncCover = lambda c: subgroup(ref_op.df, c.description, False)
     
-    ro = refinement_operator
     # fill in the fields of the refinement operator
-    ro.cover_func = cover_func_optimized
-    ro.quality_func = quality_func
+    ref_op.cover_func = cover_func_optimized
+    ref_op.quality_func = quality_func
 
     logger.info(f"Phase 1: Mining {j} subgroups each having at most {max_depth} conditions each")
 
     # initialize a beam with a base candidate subgroup, containing all elements of the initial dataset
-    beam = [Subgroup(Description([]), 0, cover=ro.df.index, parent=None)]
+    beam = [Subgroup(Description([]), 0, cover=ref_op.df.index, parent=None)]
     result: List[Subgroup] = []
     start_time = time.time()
     depth = 1
@@ -187,7 +187,7 @@ def mine(
         logger.info(f"Generating depth {depth} candidates")
         for cand in beam:
             # all valid candidates that extend current candidate's pattern with one condition
-            candidates += ro.refine_candidate(cand, [])
+            candidates += ref_op.refine_candidate(cand, [])
 
         if len(candidates) == 0:
             logger.warning(f"depth={depth} : Generated 0 candidates... Stopping exploration phase\n")
