@@ -1,7 +1,5 @@
 from collections import defaultdict
 import logging
-import os
-from time import time
 from typing import Generic, List, TypeVar
 from pandas import DataFrame
 from skmine.base import BaseMiner
@@ -17,15 +15,34 @@ Q = TypeVar('Q', bound=QualityMeasure)
 S = TypeVar('S', bound=SelectionStrategy)
 
 
-def setup_logging(logger_name: str, stdoutfile: str, level = logging.DEBUG):
-    """Setup the logger to be used by the dssd algorithm and other parts.
-    This function should be called only once, in the dssd algorithm otherwise, weird things might happen
+def setup_logging(logger_name: str, output_folder: str, level = logging.DEBUG):
     """
+    Setup a logger to be used by the dssd algorithm (and components).
+
+    Parameters
+    ----------
+    logger_name: str
+        The name to give for the logger
+    output_folder: str
+        The output folder to use for logging handler that output their logs to a file
+    level: int, default=logging.DEBUG
+        The initial loglevel to set for the "new" logger
+
+    Returns
+    -------
+    logging.Logger:
+        A logger with the specified name and handlers to output logs to specified output folder
+    """
+
     logger = logging.getLogger(logger_name)
+
+    if logger.hasHandlers(): 
+        logger.handlers.clear()
+
     # Create handlers
     c_handler = logging.StreamHandler()
-    file_debug_handler = logging.FileHandler(f"{stdoutfile}.debug.log")
-    file_info_handler = logging.FileHandler(f"{stdoutfile}.info.log")
+    file_debug_handler = logging.FileHandler(f"{output_folder}/debug.log")
+    file_info_handler = logging.FileHandler(f"{output_folder}/info.log")
     c_handler.setLevel(logging.DEBUG)
     file_debug_handler.setLevel(logging.DEBUG)
     file_info_handler.setLevel(logging.INFO)
@@ -57,12 +74,12 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
     k: int
         The number of subgroups to be returned as a result of the experiment
     quality: QualityMeasure
-        An implementation of a quality measure to be used.
-        The quality measure should be appropriate for handling the target attributes to be used (The quality measure is expected to operate only a projection of the dataset on the target attributes)
+        An proper implementation of a quality measure suited for handling the target attributes to be used.
+        (The quality measure is expected to operate only a projection of the dataset on the target attributes)
     min_cov: int, default=2
         The minimum coverage for supgroups to be considered
     j: int, default=k*k
-        The maximum number of subgroups to be kept in memory at all time during the process. Defaults to math.inf.
+        The maximum number of subgroups to be kept in memory at all time during the process.
     max_depth: int, default=3
         Maximum number of conditions per subgroup description
     selector: SelectionStrategy, default=Desc()
@@ -83,6 +100,8 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         The output folder where to store (intermediate) results, or execution arguments
     save_intermediate_results: bool, default=True
         whether or not to save intermediate results at each depth of phase 1 and also intermediate results at the pruning and deduplication phase (phase 2)
+    save_result: bool, default=False
+        whether or not to save the actual result of the mining process
     skip_phase2: bool, default=False
         Whether or not to skip phase 2. Please do not change this variable's default value unless you really know what you are doing
     skip_phase3: bool, default=False
@@ -114,9 +133,9 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         self.post_selector = selector
         self.refinement_operator: R = RefinementOperatorImpl(min_cov=min_cov)
         self.beam_width = k
-        self.output_folder = f"outputs/{int(time())}-{selector}-max_depth={max_depth}"
+        self.output_folder = ""
         self.save_intermediate_results = False
-        self.save_result = True
+        self.save_result = False
         self.skip_phase2 = False
         self.skip_phase3 = False
         self.result: List[Subgroup] = []
@@ -151,7 +170,6 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         """
         self.refinement_operator.df = D
         self.quality.df = y
-        if self.save_result: os.makedirs(self.output_folder, exist_ok=True)
         (self.result, self.pool) = mine(
             k=self.k, 
             j=self.j,
@@ -222,27 +240,38 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
 
 
 
-    def use_verbose_logger(self):
+    def use_verbose_logger(self, output_folder: str):
         """
-        Use a quite verbose default logger that enables in depth inspection while running the dssd algorithm
+        Use a preconfigured verbose logger that enables in depth inspection during the fitting process.
+        This method also enables saving intermediate and final results.
+
+        Parameters
+        ----------
+        output_folder: str
+            An existing folder to store all the verbose logging, the intermediate and final results of a fitting process
 
         Returns
         -------
         DSSDMiner:
             self
         """
+        self.output_folder = output_folder
+        self.save_result = self.save_intermediate_results = True
         self.logger = setup_logging("dssd_miner", self.output_folder)
         return self
         
     def use_silent_logger(self):
         """
-        Use a dummy logger that silences any form of output while running the algorithm
-        
+        Use a dummy logger that silences any form of output during the fitting process.
+        This method also disables saving intermediate and final results.
+
         Returns
         -------
         DSSDMiner:
             self
         """
+        self.output_folder = ""
+        self.save_result = self.save_intermediate_results = False
         self.logger = dummy_logger
         return self
         
