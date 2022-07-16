@@ -61,7 +61,7 @@ def test_dssd_paper_refinements():
     start_cand = Subgroup(Description())
     start_cand.cover = mock_cover(start_cand).index
 
-    cands_step1 = official_ro.refine_candidate(start_cand, [])
+    cands_step1 = official_ro.refine_candidate(start_cand)
 
     # ensure that there are as much generated candidates as conditions in the 
     # condition store. one candidate for every condition
@@ -91,7 +91,7 @@ def test_dssd_paper_refinements():
 
     # update the start cand and begin a new refinement operation
     start_cand = cands_step1[0]
-    cands_step2 = official_ro.refine_candidate(Subgroup(Description([Cond("a", "!=", "one")])), [])
+    cands_step2 = official_ro.refine_candidate(Subgroup(Description([Cond("a", "!=", "one")])))
 
     # cands_step2 should have no element because of the min coverage that eleminated all of the potential candidates as 
     # the mock cover_func return a cover of size 1 for all candidate with two conditions in their description

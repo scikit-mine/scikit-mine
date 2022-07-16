@@ -36,7 +36,7 @@ class RefinementOperator(ABC):
         self.unique_df: dict[str, Series] = {col: df[col].dropna(inplace=False).unique() for col in column_types if (column_types[col] == NOMINAL or column_types[col] == BINARY)}
 
     @abstractmethod
-    def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]) -> List[Subgroup]:
+    def refine_candidate(self, cand: Subgroup) -> List[Subgroup]:
         """
         Generate candidates off of the specified cand and add the valid ones to the cand_list
 
@@ -44,13 +44,11 @@ class RefinementOperator(ABC):
         ----------
         cand: Subgroup
             The base candidate subgroup to refine
-        cand_list: List[Subgroup]
-            The list where to add the valid candidates generated
 
         Returns
         -------
         List[Subgroup]:
-            The same cand_list just for convenience purposes
+            A list of refined subgroups
         """
         pass
 
@@ -193,10 +191,11 @@ class RefinementOperatorImpl(RefinementOperator):
             self._refine_numerical(cand, col, cand_list)
 
 
-    def refine_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):
+    def refine_candidate(self, cand: Subgroup):
+        res: List[Subgroup] = []
         for col_name in self.column_types:
-            self._refine_column(cand, col_name, cand_list)
-        return cand_list
+            self._refine_column(cand, col_name, res)
+        return res
 
 
 class RefinementOperatorOfficialImproved(RefinementOperatorImpl):

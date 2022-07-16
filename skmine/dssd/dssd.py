@@ -180,7 +180,7 @@ def mine(
         candidates: List[Subgroup] = []
         logger.info(f"depth = {depth}")
         for cand in beam:
-            candidates += ref_op.refine_candidate(cand, candidates)
+            candidates += ref_op.refine_candidate(cand)
         logger.info(f"Generated {len(candidates)} candidates, {_min_max_avg_quality_string(candidates, ' ')}")
 
         if len(candidates) == 0:
