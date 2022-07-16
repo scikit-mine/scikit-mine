@@ -14,7 +14,7 @@ class SelectionStrategy(ABC):
     """
 
     @abstractmethod
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+    def select(self, cands: List[Subgroup], beam_width: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
         """
         Select a number of subgroups from the specified list into the received beam list
 
@@ -80,8 +80,8 @@ class Desc(SelectionStrategy):
     def __str__(self) -> str:
         return f"desc[min_diff_conditions={self.min_diff_conditions}]"
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
-        return _fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions, logger=logger)
+    def select(self, cands: List[Subgroup], beam_width: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _fixed_size_description_selection(candidates=cands, beam=[], beam_width=beam_width, min_diff_conditions=self.min_diff_conditions, logger=logger)
 
 
 
@@ -162,8 +162,8 @@ class VarDescFast(SelectionStrategy):
         """
         return len(cands[0].description.conditions)
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
-        return _var_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands), logger=logger)
+    def select(self, cands: List[Subgroup], beam_width: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _var_size_description_selection(candidates=cands, beam=[], beam_width=beam_width, c=self.max_attribute_occ, l=self._current_depth(cands), logger=logger)
 
 
 class VarDescStandard(VarDescFast):
@@ -280,8 +280,8 @@ class Cover(SelectionStrategy):
     def __str__(self) -> str:
         return f"cover[weight={self.weight}]"
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
-        return _fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, logger=logger)
+    def select(self, cands: List[Subgroup], beam_width: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _fixed_size_cover_selection(candidates=cands, beam=[], beam_width=beam_width, weight=self.weight, logger=logger)
 
 
 def _var_size_cover_selection(candidates: List[Subgroup], beam: List[Subgroup], beam_width: int, weight: float, fraction: float, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
@@ -346,5 +346,5 @@ class VarCover(Cover):
     def __str__(self) -> str:
         return f"var_cover[weight={self.weight}-fraction={self.fraction}]"
 
-    def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
-        return _var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction, logger=logger)
+    def select(self, cands: List[Subgroup], beam_width: int, logger: logging.Logger = dummy_logger) -> List[Subgroup]:
+        return _var_size_cover_selection(candidates=cands, beam=[], beam_width=beam_width, weight=self.weight, fraction=self.fraction, logger=logger)

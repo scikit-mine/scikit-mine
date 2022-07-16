@@ -21,30 +21,27 @@ def test_fixed_size_description_selection():
     s = Desc(min_diff_conditions = 2)
 
     empty_cand = Subgroup(Description([]), 0.0)
-    beam = [Subgroup(Description([]), 0.0)]
     beam_width = 3
 
     # testing some edges cases
-    assert s.select([], beam=[], beam_width=beam_width) == []
-    assert s.select([], beam=beam, beam_width=beam_width) == [empty_cand]
-    assert s.select([empty_cand], beam=[], beam_width=beam_width) == [empty_cand]
-    assert s.select([empty_cand], beam=[empty_cand], beam_width=beam_width) == [empty_cand]
-    assert s.select([empty_cand, empty_cand], beam=[empty_cand], beam_width=beam_width) == [empty_cand]
+    assert s.select([], beam_width=beam_width) == []
+    assert s.select([empty_cand], beam_width=beam_width) == [empty_cand]
+    assert s.select([empty_cand, empty_cand], beam_width=beam_width) == [empty_cand]
     
     # regular cases
     cand1 = Subgroup(Description([Cond("a", "==", 0)]), 0.0)
-    assert s.select([cand1, cand1], beam=[empty_cand], beam_width=beam_width) == [empty_cand]
+    assert s.select([cand1, cand1], beam_width=beam_width) == [cand1]
 
     # candidates with the same quality and not enough different patterns is not selected
     cand1 = Subgroup(Description([Cond("a", ">", 0)]), 0.4)
     cand2 = Subgroup(Description([Cond("a", ">", 0), Cond("a", ">", 6)]), 0.4)
     # cand2 has only one condition different from cand1 so it is not selected
-    assert s.select([cand1, cand2], beam=[empty_cand], beam_width=beam_width) == [empty_cand, cand1]
+    assert s.select([cand1, cand2], beam_width=beam_width) == [cand1]
 
     cand3 = Subgroup(Description([Cond("a", ">", 0), Cond("a", ">", 6), Cond("a", ">", 7)]), 0.4)
     # showing that although it may look logical for cand3 to not be selected too, it will be as it has two conditions that no selected candidate has
     # dominance pruning will eliminate these candidates
-    assert s.select([cand1, cand2, cand3], beam=[empty_cand], beam_width=beam_width) == [empty_cand, cand1, cand3]
+    assert s.select([cand1, cand2, cand3], beam_width=beam_width) == [cand1, cand3]
 
     # ensuring that the at the number of selected candidates is at most the beam_width
     cand1 = Subgroup(Description([Cond("a", "!=", "three"), Cond("a", "!=", "four"), Cond("a", "!=", "one")]), 0.2)
@@ -53,7 +50,7 @@ def test_fixed_size_description_selection():
     cand4 = Subgroup(Description([Cond("a", "==", "four")]), 0.4)
     # cand5 = Candidate(Description([Cond("a", "==", "five")]), 0.5)
     # cand6 = Candidate(Description([Cond("a", "==", "six")]), 0.6)
-    res = s.select([cand3, cand4, cand1, cand2], beam=[empty_cand], beam_width=beam_width)
+    res = s.select([cand3, cand4, cand1, cand2], beam_width=beam_width)
     print(res)
     # Notes: One could argue here that cand2 should have been selected instead of cand1
     # but because of the short beam width and as they have same quality and comparison between candidates is only implemented
@@ -62,21 +59,16 @@ def test_fixed_size_description_selection():
     # We could also include the length of the candidate description while comparing candidates but that
     # could creates worst issues as a long pattern can have an equal quality as a short one but still 
     # targets a different subgroup
-    assert res == [empty_cand, cand4, cand3, cand2]
+    assert res == [cand4, cand3, cand2]
 
     # as shown in this test, we can see that when the beam is wide enough to accomodate cand1 and cand2, they are both selected
-    res = s.select([cand3, cand4, cand1, cand2], beam=[empty_cand], beam_width=beam_width + 1)
+    res = s.select([cand3, cand4, cand1, cand2], beam_width=beam_width + 1)
     print(res)
-    assert res == [empty_cand, cand4, cand3, cand2, cand1]
+    assert res == [cand4, cand3, cand2, cand1]
 
 
 def test_var_size_description_selection():
     s = VarDescFast(max_attribute_occ = 1)
-
-    # c is the number of times an attribute is allowed to appear in a description
-    # l is the maximum number of conditions that a single candidate can have
-    c = 0
-    l = 0
 
     # the qualities here are completely fictionnal as only the logic of the algorithm is taken into account here
     cand1 = Subgroup(Description([Cond("a", "<", 0)]), 5)
@@ -90,13 +82,13 @@ def test_var_size_description_selection():
     assert _var_size_description_selection(cands1, [], 0, 1, 1) == []
     assert _var_size_description_selection(cands1, [], 5, 1, 0) == []
     # the result is only the highest quality candidate as the beam width is 1
-    assert s.select(cands1, beam=[], beam_width=1)  == [cand1]
+    assert s.select(cands1, beam_width=1)  == [cand1]
 
     # as each attribute is allowed to be used 1 * 1 time(s) in the resulting beam
     # only the highest quality candidates are selected and the others contributing
     # into overusing the attributes are discarded even though the beam_width is not 
     # yet reached 
-    assert s.select(cands1, beam=[], beam_width=3)  == [cand1, cand4]
+    assert s.select(cands1, beam_width=3)  == [cand1, cand4]
 
     cand1 = Subgroup(Description([Cond("a", "<", 0), Cond("b", "<", 6)]), 5)
     cand2 = Subgroup(Description([Cond("b", ">", 6), Cond("b", ">", 7)]), 4)
@@ -109,7 +101,7 @@ def test_var_size_description_selection():
     # cand3 is not selected cause the max usage of attribute b is already reached
     # cand4 is then selected as the usage of a is not yet reached
     # although the beam_width is not yet reached, the alogorithm stops as there is no candidate left to examine 
-    assert s.select(cands2, beam=[], beam_width=4)  == [cand1, cand2, cand4]
+    assert s.select(cands2, beam_width=4)  == [cand1, cand2, cand4]
 
 
 def test_multiplicative_weighted_covering_score():
@@ -152,10 +144,10 @@ def test_fixed_size_cover_selection():
 
     cands = [cand2, cand3, cand1, cand4]
     
-    assert s.select(cands, beam=[], beam_width=4) == [cand2, cand4, cand1, cand3]
+    assert s.select(cands, beam_width=4) == [cand2, cand4, cand1, cand3]
 
     beam_width = 2
-    res = s.select(cands, beam=[], beam_width=beam_width)
+    res = s.select(cands, beam_width=beam_width)
     
     # ensure that the result is equal to the beam width provided that the initial list of candidates if large enough
     assert len(cands) < beam_width or len(res) == beam_width
@@ -200,7 +192,7 @@ def test_var_size_cover_selection():
     assert _var_size_cover_selection(cands.copy(), [], 4, weight, 0) == _fixed_size_cover_selection(cands.copy(), [], 4, weight)
 
     # ensure that the result is equal to the beam width provided that the initial list of candidates if large enough
-    res = s.select(cands.copy(), beam=[], beam_width=beam_width)
+    res = s.select(cands.copy(), beam_width=beam_width)
     assert len(res) <= beam_width
     assert len(res) == 2
 

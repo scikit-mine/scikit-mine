@@ -191,7 +191,7 @@ def mine(
             update_topk(pool, cand, j)
         if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-generated-candidates.csv", [subgroups_to_csv(candidates)])
 
-        beam = selector.select(candidates, beam_width=beam_width, beam = [])
+        beam = selector.select(candidates, beam_width=beam_width)
         logger.info(f"selected {len(beam)} candidates\n")
         if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-selected-candidates.csv", [subgroups_to_csv(beam)])
         depth += 1
@@ -213,7 +213,7 @@ def mine(
     # final candidates selection / post selection phase
     if not skip_phase3:
         logger.info(f"Phase 3: Post selecting {k} candidates out of {len(pool)}...")
-        result = post_selector.select(pool, beam_width=k, beam=[])
+        result = post_selector.select(pool, beam_width=k)
         if sort_final_result: sort_subgroups(result)
 
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
