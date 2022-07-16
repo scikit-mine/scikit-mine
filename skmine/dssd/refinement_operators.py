@@ -55,7 +55,6 @@ class RefinementOperator(ABC):
         pass
 
 
-### official refinement operator ###
 def _column_types(df: DataFrame) -> Dict[str, str]:
     """Creates column types to be used by refinement operators off of the dtypes of the dataframe following these rules
     dtype: bool -> binary, numeric -> numeric, other -> nominal
@@ -128,6 +127,10 @@ class RefinementOperatorImpl(RefinementOperator):
         self.num_cut_points = num_cut_points
         self.min_cov = min_cov
         self.min_quality = min_quality
+
+
+    def __str__(self) -> str:
+        return f"ref_op_impl[min_cov={self.min_cov}-min_quality={self.min_quality}-cut_points={dict(self.num_cut_points)}]"
 
 
     def check_and_append_candidate(self, cand: Subgroup, cand_list: List[Subgroup]):

@@ -77,6 +77,9 @@ class Desc(SelectionStrategy):
         super().__init__()
         self.min_diff_conditions = min_diff_conditions
 
+    def __str__(self) -> str:
+        return f"desc[min_diff_conditions={self.min_diff_conditions}]"
+
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
         return _fixed_size_description_selection(candidates=cands, beam=beam, beam_width=beam_width, min_diff_conditions=self.min_diff_conditions, logger=logger)
 
@@ -147,6 +150,9 @@ class VarDescFast(SelectionStrategy):
     def __init__(self, max_attribute_occ: int = 2) -> None:
         super().__init__()
         self.max_attribute_occ = max_attribute_occ
+
+    def __str__(self) -> str:
+        return f"var_desc[max_attribute_occ={self.max_attribute_occ}]"
 
     def _current_depth(self, cands: List[Subgroup]) -> int:
         """
@@ -271,6 +277,9 @@ class Cover(SelectionStrategy):
         super().__init__()
         self.weight = weight
 
+    def __str__(self) -> str:
+        return f"cover[weight={self.weight}]"
+
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
         return _fixed_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, logger=logger)
 
@@ -333,6 +342,9 @@ class VarCover(Cover):
     def __init__(self, weight: float = 0.9, fraction: float = 0.5) -> None:
         super().__init__(weight)
         self.fraction = fraction
+
+    def __str__(self) -> str:
+        return f"var_cover[weight={self.weight}-fraction={self.fraction}]"
 
     def select(self, cands: List[Subgroup], beam_width: int, beam: List[Subgroup], logger: logging.Logger = dummy_logger) -> List[Subgroup]:
         return _var_size_cover_selection(candidates=cands, beam=beam, beam_width=beam_width, weight=self.weight, fraction=self.fraction, logger=logger)

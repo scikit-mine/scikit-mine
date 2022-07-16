@@ -117,6 +117,9 @@ class WRACC(QualityMeasure):
         super().__init__(df)
         self.df = df # trigger internal update
 
+    def __str__(self) -> str:
+        return "wracc"
+
     @property
     def bin_attr(self) -> str:
         return self.model_attributes[0]
@@ -181,6 +184,8 @@ class KL(QualityMeasure):
         super().__init__(df)
         self.df = df # trigger internal update
     
+    def __str__(self) -> str:
+        return "kl"
 
     @QualityMeasure.df.setter
     def df(self, df: DataFrame):
@@ -243,6 +248,9 @@ class WKL(KL):
     """
     def compute_quality(self, sg: DataFrame):
         return super().compute_quality(sg) * len(sg)
+
+    def __str__(self) -> str:
+        return "wkl"
 
 
 
@@ -429,7 +437,9 @@ class DtwDba(TSQuality, DtwDistance, DBAModel):
     >>> DtwDba(df[["ts"]]).compute_quality(df)
     0.0
     """
-    pass
+    
+    def __str__(self) -> str:
+        return "dtw-dba"
 
 class FastDtwDba(TSQuality, FastDtwDistance, DBAModel):
     """
@@ -453,7 +463,9 @@ class FastDtwDba(TSQuality, FastDtwDistance, DBAModel):
     >>> FastDtwDba(df[["ts"]], dist=euclidean).compute_quality(df) # passing distance args dist=euclidean to control how fastdtw works
     0.0
     """
-    pass
+
+    def __str__(self) -> str:
+        return "fastdtw-dba"
 
 class EuclideanEub(TSQuality, EuclideanDistance, EubModel):
     """
@@ -475,4 +487,6 @@ class EuclideanEub(TSQuality, EuclideanDistance, EubModel):
     >>> EuclideanEub(df[["ts"]]).compute_quality(df)
     0.0
     """
-    pass
+
+    def __str__(self) -> str:
+        return "euclidean-eub"
