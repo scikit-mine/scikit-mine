@@ -147,11 +147,11 @@ class RefinementOperatorImpl(RefinementOperator):
             The same result list received in parameter just for convenience purposes
         """
         sg = self.cover_func(cand)
-        if self.min_cov <= len(sg.index) < len(cand.parent.cover):
-        # if self.min_cov <= len(sg.index) < len(self.dataset.df):
+        if self.min_cov <= len(sg.index) < len(self.df):
             cand.cover = sg.index
             cand.quality = self.quality_func(cand)
-            cand_list.append(cand)
+            if cand.quality >= self.min_quality:
+                cand_list.append(cand)
         return cand_list
 
 
@@ -202,6 +202,6 @@ class RefinementOperatorOfficialImproved(RefinementOperatorImpl):
         if self.min_cov <= len(sg.index) < len(cand.parent.cover):
             cand.cover = sg.index
             cand.quality = self.quality_func(cand)
-            if cand.quality > cand.parent.quality:
+            if cand.quality >= cand.parent.quality:
                 cand_list.append(cand)
         return cand_list

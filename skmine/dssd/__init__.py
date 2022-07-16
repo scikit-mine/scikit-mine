@@ -28,5 +28,4 @@ from .selection_strategies import (
     multiplicative_weighted_covering_score_smart
 )
 
-from .dssd_miner import DSSDMiner
-from .dssd import apply_dominance_pruning, update_topk
+from .dssd import apply_dominance_pruning, update_topk, DSSDMiner

@@ -1,11 +1,9 @@
 import pandas
-
 from ..selection_strategies import Cover
-from ..refinement_operators import RefinementOperatorImpl
 from ..subgroup import Subgroup
 from ..description import Description
 from ..cond import Cond
-from ..dssd import apply_dominance_pruning, update_topk, mine
+from ..dssd import DSSDMiner, apply_dominance_pruning, update_topk, mine
 from ..quality_measures import EuclideanEub
 
 def test_update_topk():
@@ -53,7 +51,6 @@ def test_dominance_pruning():
     assert candidate.description == Subgroup(Description([Cond("num", ">", 4.0)])).description
 
 
-res = None
 def test_mining():
     df = pandas.DataFrame({
         'bin': [True, True, True, False,False,False,False,False,False,False],
@@ -73,18 +70,7 @@ def test_mining():
                 ]
     })
 
-    # column_types = {"bin": ColumnType.BINARY, "num": ColumnType.NUMERIC, "cat": ColumnType.NOMINAL, "ts": ColumnType.TIME_SERIE}
-    # d = DSSDEMM(df, column_types)
     global res
     desc_attrs = ["bin", "cat", "num"]
-    # desc_column_types = {k: column_types[k] for k in desc_attrs}
-    res = mine(max_depth=5, k = 10, beam_width=10, j = 1000,
-    quality=EuclideanEub(df[["ts"]]),
-    selector=Cover(.9), post_selector=Cover(.9),
-    ref_op=RefinementOperatorImpl(df[desc_attrs], min_cov=1),
-    save_result=False,
-    save_intermediate_results=False
-    )
-    # "official", save_intermediate_results=True)
-
+    res = DSSDMiner(k=10, max_depth=5, j=1000, min_cov=1, quality=EuclideanEub(), selector=Cover()).fit(df[desc_attrs], df[["ts"]]).result
     print(res)
