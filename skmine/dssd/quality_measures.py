@@ -385,18 +385,17 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
         quality = 0
         if not sg.empty:
             sg_model = self.compute_model(sg[self.ts_attr])
-            quality = pow(len(sg),0.5) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())  # *(len(sg)/len(self.data))  # compare model
-            # quality = len(sg) / len(self.df) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())  # *(len(sg)/len(self.data))  # compare model
+            quality = pow(len(sg),0.5) * self.measure_distance(sg_model.ravel(), self.dataset_model.ravel())
         return quality
 
 
 class EubModel(TSModel):
-    """A wrapper class around euclidean barycenter averaging method, implementation from `tslearn.barycenters.euclidean_barycenter`"""
+    """A wrapper class around euclidean barycenter averaging method, implementation from tslearn.barycenters.euclidean_barycenter"""
     def compute_model(self, series: Series):
         return eub(series.to_numpy())
 
 class DBAModel(TSModel):
-    """A wrapper class around dynamic DTW barycenter averaging method, implementation from `tslearn.barycenters.dtw_barycenter_averaging`"""
+    """A wrapper class around dynamic DTW barycenter averaging method, implementation from tslearn.barycenters.dtw_barycenter_averaging"""
     def compute_model(self, series: Series):
         return dba(series.to_numpy())
 
@@ -406,26 +405,26 @@ class EuclideanDistance(TSDistance):
         return math.sqrt(sum((px - qx) ** 2.0 for px, qx in zip(c1, c2))) # taken from python official doc to use instead of required to have python 3.8 as this is when the dist function was introduced
 
 class DtwDistance(TSDistance):
-    """A wrapper class around the DTW distance method, implementation from `tslearn.metrics.dtw`"""
+    """A wrapper class around the DTW distance method, implementation from tslearn.metrics.dtw"""
     def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
         return dtw(c1, c2, **self.dist_kwargs)
 
 class FastDtwDistance(TSDistance):
-    """A wrapper class around the DTW distance method, implementation from `fastdtw.fastdtw`"""
+    """A wrapper class around the DTW distance method, implementation from fastdtw.fastdtw"""
     def measure_distance(self, c1: np.ndarray, c2: np.ndarray) -> float:
         return fastdtw(c1, c2, **self.dist_kwargs)[0] # maybe this is slow because it is also computing the path ?
 
 
 class DtwDba(TSQuality, DtwDistance, DBAModel): 
     """
-    A time series quality measure based on :
-    - distance = dtw(from `tslearn.metrics.dtw`)
-    - model = DTW barycenter averaging or DBA (from `tslearn.barycenters.dtw_barycenter_averaging`)\n
+    A time series quality measure based on : \n
+    - distance = dtw(from tslearn.metrics.dtw)\n
+    - model = DTW barycenter averaging or DBA (from tslearn.barycenters.dtw_barycenter_averaging)\n
     Notes: This method is potentially very slow because of the complexity of DBA
 
     See also
     --------
-    `tslearn.metrics.dtw`,`tslearn.barycenters.dtw_barycenter_averaging`
+    tslearn.metrics.dtw,tslearn.barycenters.dtw_barycenter_averaging
 
     Examples
     --------
@@ -443,14 +442,14 @@ class DtwDba(TSQuality, DtwDistance, DBAModel):
 
 class FastDtwDba(TSQuality, FastDtwDistance, DBAModel):
     """
-    A time series quality measure based on :
-    - distance = dtw(from `fastdtw.fastdtw`)
-    - model = DTW barycenter averaging or DBA (from `tslearn.barycenters.dtw_barycenter_averaging`)\n
+    A time series quality measure based on : \n
+    - distance = dtw(from fastdtw.fastdtw) \n
+    - model = DTW barycenter averaging or DBA (from tslearn.barycenters.dtw_barycenter_averaging)\n
     Notes: This method is potentially very slow because of the complexity of DBA
 
     See also
     --------
-    `fastdtw.fastdtw`,`tslearn.barycenters.dtw_barycenter_averaging
+    fastdtw.fastdtw, tslearn.barycenters.dtw_barycenter_averaging
 
     Examples
     --------
@@ -469,13 +468,13 @@ class FastDtwDba(TSQuality, FastDtwDistance, DBAModel):
 
 class EuclideanEub(TSQuality, EuclideanDistance, EubModel):
     """
-    A time series quality measure based on :
-    - distance = standard euclidean distance(from `fastdtw.fastdtw`)
+    A time series quality measure based on :\n
+    - distance = standard euclidean distance(from `fastdtw.fastdtw`)\n
     - model = euclidean barycenter (from `tslearn.barycenters.euclidean_barycenter`)
 
     See also
     --------
-    `tslearn.barycenters.euclidean_barycenter`
+    tslearn.barycenters.euclidean_barycenter
 
     Examples
     --------
