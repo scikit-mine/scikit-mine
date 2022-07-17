@@ -69,21 +69,14 @@ class RefinementOperatorImpl(RefinementOperator):
     Given a subgroup G, generates all valid subgroup descriptions that extend G’s description 
     with one condition. We distinguish three types of description attributes, each with its own specifics.
 
-    * Binary attribute {==}
-    The only allowed condition type is ==, and consequently only a single condi-
-    tion on any binary attribute can be part of a subgroup description.
-
-    * Nominal attribute {==, !=}
-    Both == and != are allowed. For any nominal attribute, either a single
-    = or multiple != conditions are allowed in a description.
-
-    * Numeric attribute {<, >}
-    Both < and > are allowed. Due to the large cardinality of numeric data, generating all 
-    possible conditions is infeasible. Thus, to prevent the search space from exploding, the values 
-    of a numeric attribute that occur within a subgroup are binned into six equal-sized bins 
-    and {<, >}-conditions are generated for the five cut points obtained this way. This ‘on-the-fly’ 
-    discretisation, performed upon refinement of a subgroup, results in a much more fine-grained
-    binning than a priori discretisation. Multiple conditions on the same attribute are
+    * Binary attribute {==} : The only allowed condition type is ==, and consequently only a single condition on any binary attribute can be part of a subgroup description.
+    * Nominal attribute {==, !=} : Both == and != are allowed. For any nominal attribute, either a single == or multiple != conditions are allowed in a description.
+    * Numeric attribute {<, >} : Both < and > are allowed. Due to the large cardinality of numeric data, generating all \
+    possible conditions is infeasible. Thus, to prevent the search space from exploding, the values \
+    of a numeric attribute that occur within a subgroup are binned into six equal-sized bins \
+    and {<, >}-conditions are generated for the five cut points obtained this way. This ‘on-the-fly’ \
+    discretisation, performed upon refinement of a subgroup, results in a much more fine-grained\
+    binning than a priori discretisation. Multiple conditions on the same attribute are\
     allowed, even though this may lead to redundant conditions in a description (e.g.D x < 10 ∧ D x < 5).
 
     Parameters

@@ -311,8 +311,7 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
     """
     Compute the quality of a subgroup with regards to a single time series attribute
     This method is based on an averaging method and a distance computing method.
-    The internal formula used for computing the quality is: 
-        `q = sqrt(|subgroup|) * dist(model(dataset), model(subgroup))`
+    The internal formula used for computing the quality is: `q = sqrt(|subgroup|) * dist(model(dataset), model(subgroup))`
 
     Parameters
     ----------

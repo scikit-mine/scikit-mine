@@ -133,7 +133,7 @@ class VarDescFast(SelectionStrategy):
         only c times in a condition in a subgroup set. Because the number of occurrences of 
         an attribute depends on the number of conditions per description, each attribute is allowed 
         to occur c * l times, where l is the (maximum) length of the  descriptions in the candidate set. 
-        The beam width now depends on the number of description attributes |D|, c and l.
+        The beam width now depends on the number of description attributes \|D\|, c and l.
         This effectively results in a (more or less) static beam width per experiment
 
     Parameters
@@ -182,12 +182,8 @@ class VarDescStandard(VarDescFast):
 
 def multiplicative_weighted_covering_score_smart(cand: Subgroup, counts: DefaultDict[int, int], weight: float) -> float:
     """
-    Compute and return the weighted covering score for the current candidate based on 
-    how often its cover overlaps with already selected candidates
-
-    Requirement
-    -----------
-    len(cand.cover) > 0
+    Compute and return the weighted covering score for a non empty current candidate based on 
+    how often its cover overlaps with already selected candidates.
 
     Parameters
     ----------

@@ -1,4 +1,4 @@
-.. _itemsets:
+.. _dssd:
 
 DSSD
 ****
@@ -47,7 +47,9 @@ Subgroup, Condition, Description
 .. autoclass:: skmine.dssd.Description
 .. automethod:: skmine.dssd.apply_dominance_pruning
 .. automethod:: skmine.dssd.update_topk
-.. automodule:: skmine.dssd.custom_types
+.. autoattribute:: skmine.dssd.FuncCover
+.. autoattribute:: skmine.dssd.FuncQuality
+.. autoattribute:: skmine.dssd.ColumnShares
 
 
 
