@@ -1,5 +1,3 @@
-import random
-from typing import List
 from scipy.io import arff
 import pandas as pd
 import numpy as np
@@ -17,39 +15,30 @@ def load_emotions(arff_file_path: str, sample: int = 0, return_D_y: bool = True)
     return df
 
 
-
-def _noise_ts(source_array: List[float], min_noise: float, max_noise: float, max_modification_percentage=.2):
-    n_true = random.randint(0, int(max_modification_percentage * len(source_array)))
-    n_false = len(source_array) - n_true
-    modifiers = random.choices([True, False], weights=[n_true, n_false], k=len(source_array))
-    return [
-        random.uniform(min_noise, max_noise) * v if modifiers[i] else v for (i, v) in enumerate(source_array)
-    ]
-
 def load_time_series_data1(return_D_y: bool = True):
     t = np.linspace(0, 1, 50, endpoint=False)
     base_square_ts = signal.square(2 * np.pi * 5 * t)
     base_sin_ts = np.sin(2 * np.pi * t)
     base_triangular_ts = signal.sawtooth(2 * np.pi * 5 * t)
     tris = [
-        {"bin": False, "num": 1.9,    "cat": "tri", "ts": _noise_ts(base_triangular_ts, 1, 1)},
-        {"bin": True,  "num": .9,    "cat": "tri", "ts": _noise_ts(base_triangular_ts, 1, 1)},
-        {"bin": False, "num": 1.5,  "cat": "tri", "ts": _noise_ts(base_triangular_ts, 1, 1)},
-        {"bin": False, "num": 1.5,  "cat": "tri", "ts": _noise_ts(base_triangular_ts, 1, 1)},
+        {"bin": False, "num": 1.9,    "cat": "tri", "ts": base_triangular_ts},
+        {"bin": True,  "num": .9,    "cat": "tri", "ts": base_triangular_ts},
+        {"bin": False, "num": 1.5,  "cat": "tri", "ts": base_triangular_ts},
+        {"bin": False, "num": 1.5,  "cat": "tri", "ts": base_triangular_ts},
     ]
 
     squares = [
-        {"bin": True,  "num": 1,    "cat": "squ", "ts": _noise_ts(base_square_ts, 1, 1)},
-        {"bin": False, "num": 6,    "cat": "squ", "ts": _noise_ts(base_square_ts, 1, 1)},
-        {"bin": True,  "num": 8,    "cat": "sq_", "ts": _noise_ts(base_square_ts, 1, 1)},
-        {"bin": False, "num": 5,    "cat": "squ", "ts": _noise_ts(base_square_ts, 1, 1)},
+        {"bin": True,  "num": 1,    "cat": "squ", "ts": base_square_ts},
+        {"bin": False, "num": 6,    "cat": "squ", "ts": base_square_ts},
+        {"bin": True,  "num": 8,    "cat": "sq_", "ts": base_square_ts},
+        {"bin": False, "num": 5,    "cat": "squ", "ts": base_square_ts},
     ]
 
     sins = [
-        {"bin": True,  "num": 10,    "cat": "sin", "ts": _noise_ts(base_sin_ts, 1, 1)},
-        {"bin": False, "num": 40,    "cat": "sin", "ts": _noise_ts(base_sin_ts, 1, 1)},
-        {"bin": True,  "num": 9,    "cat": "sin", "ts": _noise_ts(base_sin_ts, 1, 1)},
-        {"bin": False, "num": 12,    "cat": "sin", "ts": _noise_ts(base_sin_ts, 1, 1)},
+        {"bin": True,  "num": 10,    "cat": "sin", "ts": base_sin_ts},
+        {"bin": False, "num": 40,    "cat": "sin", "ts": base_sin_ts},
+        {"bin": True,  "num": 9,    "cat": "sin", "ts": base_sin_ts},
+        {"bin": False, "num": 12,    "cat": "sin", "ts": base_sin_ts},
     ]
 
     df = pd.DataFrame([*tris, *squares, *sins])
