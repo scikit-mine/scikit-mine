@@ -58,6 +58,8 @@ and some extra dependencies
 * sortedcontainers>=2.1.0
 * roaringbitmap==0.7
 * joblib>=0.11.1
+* tslearn>=0.5.2
+* fastdtw>=0.3.4
 
 **scikit-learn** is not a dependency. However, scikit-mine is **contiuously tested for interactions with scikit-learn**
 
