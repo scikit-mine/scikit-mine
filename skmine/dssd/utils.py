@@ -1,17 +1,15 @@
 from collections import defaultdict
 import logging
-from typing import Collection, Dict, List, Type, Union
+from typing import Collection, List, Union
 import numpy as np
 from pandas import DataFrame
-from pyparsing import Diagnostics
-
 from .custom_types import ColumnShares, FuncQuality
 from .subgroup import Subgroup
 from .description import Description
 
 
 dummy_logger = logging.getLogger("dummy_dssd")
-dummy_logger.addHandler(logging.NullHandler())
+if not dummy_logger.hasHandlers(): dummy_logger.addHandler(logging.NullHandler())
 
 def _get_cut_points(lo: float, hi: float, num_cut_points: int) -> List[float]:
     """
@@ -129,8 +127,8 @@ def diff_items_count(l1: Collection, l2: Collection) -> int:
 
 def sort_subgroups(subgroups: List[Subgroup], descending: bool = True):
     """
-    Sort subgroups inplace based on their quality and for convenience,
-    returns the subgroups list as a result 
+    Sort subgroups inplace based on their quality and on description length descending in order to favorite shorter description subgroups.
+    For convenience, returns the subgroups list as a result 
 
     Parameters
     ----------
@@ -251,14 +249,19 @@ def min_max_avg(col: Collection[Union[int, float]]):
 
 def _min_max_avg_quality_string(cands: List[Subgroup], sep: str = "\n"):
     """Return a string version of the minimum, maximum and average quality for the considered candidates list"""
-    (min_quality, max_quality, avg_quality) = min_max_avg(c.quality for c in cands)
-    return f"min_quality={min_quality}{sep}max_quality={max_quality}{sep}avg_quality={avg_quality}"
+    (min, max, avg) = min_max_avg(c.quality for c in cands)
+    return f"quality: min={min}{sep}max={max}{sep}avg={avg}"
 
 
-def subgroups_to_csv(subgroups: List[Subgroup]) -> str:
-    """Return a csv(like) representation of the specified subgroups"""
-    return ("index,quality,size,#conditions,description\n" + \
-        "\n".join(
-        f"{index + 1},{sg.quality},{len(sg.cover)},{len(sg.description)},{sg.description}"
-            for (index, sg) in enumerate(subgroups)
-    )).replace(r"'", "")
+def subgroups_to_df(subgroups: List[Subgroup], return_cover: bool = False) -> str:
+    data = defaultdict(list)
+    for c in subgroups:
+        data["quality"].append(c.quality)
+        data["pattern"].append(c.description)
+        data["pattern_length"].append(len(c.description))
+        data["cover_length"].append(len(c))
+        data["cover"].append(list(c.cover))
+    if not return_cover:
+        del data["cover"]
+    return DataFrame(data=data)
+

@@ -29,3 +29,9 @@ from .selection_strategies import (
 )
 
 from .dssd import apply_dominance_pruning, update_topk, DSSDMiner
+
+from .custom_types import (
+    FuncCover,
+    FuncQuality,
+    ColumnShares
+)

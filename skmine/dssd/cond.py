@@ -20,6 +20,8 @@ class Cond:
     --------
     >>> from skmine.dssd import Cond
     >>> condition1 = Cond("age", ">", 18)
+    >>> condition1
+    (age > 18)
     """
 
     def __init__(self, attribute: str, op: str, val: Any):

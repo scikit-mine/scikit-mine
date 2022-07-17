@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from functools import singledispatch
 import math
-from typing import Any, DefaultDict, Dict, List
+from typing import Any, DefaultDict
 from pandas import DataFrame, Series
 import pandas
 from tslearn.metrics import dtw
@@ -9,7 +8,6 @@ from tslearn.barycenters import dtw_barycenter_averaging as dba
 from tslearn.barycenters import euclidean_barycenter as eub
 import numpy as np
 from fastdtw import fastdtw
-
 from skmine.dssd.subgroup import Subgroup
 from .utils import column_shares
 
@@ -100,7 +98,7 @@ class WRACC(QualityMeasure):
 
     Parameters
     ----------
-    df: DataFrame
+    df: DataFrame, default=DataFrame()
         A dataframe representing the entire dataset. The dataframe should only contain one column as WRACC is only meant for single binary target attribute
 
     Attributes
@@ -152,7 +150,6 @@ class WRACC(QualityMeasure):
     def compute_quality(self, sg: DataFrame):
         candidate_ones = self.ones_fraction(sg, self.bin_attr)
         result = (len(sg) / len(self._df)) * abs(candidate_ones - self.dataset_ones)
-        print(f"COMPUTING WRACC FOR target_attr={self.bin_attr}, result={result}")
         return result
 
 
@@ -168,7 +165,7 @@ class KL(QualityMeasure):
 
     Parameters
     ----------
-    df: DataFrame
+    df: DataFrame, default=DataFrame()
         A dataframe representing the entire dataset. The dataframe should contain one or multiple binary/nominal columns
 
     See also
@@ -195,7 +192,8 @@ class KL(QualityMeasure):
 
     @classmethod
     def kl(cls, p: DefaultDict[Any, float], q: DefaultDict[Any, float]) -> float:
-        """Compute the Kullback-Leibler difference as proposed in the paper
+        """
+        Compute the Kullback-Leibler difference as proposed in the paper
 
         Parameters
         ----------
@@ -238,7 +236,7 @@ class WKL(KL):
 
     Parameters
     ----------
-    df: DataFrame
+    df: DataFrame, default=DataFrame()
         A dataframe representing the entire dataset. The dataframe should contain one or multiple binary/nominal columns
 
     References
@@ -318,7 +316,7 @@ class TSQuality(QualityMeasure, TSModel, TSDistance):
 
     Parameters
     ----------
-    df: DataFrame
+    df: DataFrame, default=DataFrame()
         A dataframe representing the entire dataset. The dataframe should contain only one column that contains only time series
     **dist_kwargs:
         Keyword based extra arguments for the distance computing method

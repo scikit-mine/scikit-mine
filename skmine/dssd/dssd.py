@@ -1,12 +1,12 @@
-from collections import defaultdict
 from distutils.file_util import write_file
 import time
 import logging
 from typing import Generic, List, TypeVar
 from pandas import DataFrame
+import pandas
 from skmine.base import BaseMiner
 from .refinement_operators import RefinementOperator, RefinementOperatorImpl
-from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, subgroup, subgroups_to_csv, dummy_logger
+from .utils import _min_max_avg_quality_string, sort_subgroups, remove_duplicates, subgroup, subgroup, dummy_logger, subgroups_to_df
 from .subgroup import Subgroup
 from .description import Description
 from .custom_types import  FuncCover, FuncQuality
@@ -189,13 +189,13 @@ def mine(
 
         for cand in candidates:
             update_topk(pool, cand, j)
-        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-generated-candidates.csv", [subgroups_to_csv(candidates)])
+        if save_intermediate_results: pandas.to_pickle(subgroups_to_df(pool), f"{output_folder}/depth{depth}-generated-candidates.dat")
 
         beam = selector.select(candidates, beam_width=beam_width)
         logger.info(f"selected {len(beam)} candidates\n")
-        if save_intermediate_results: write_file(f"{output_folder}/depth{depth}-selected-candidates.csv", [subgroups_to_csv(beam)])
+        if save_intermediate_results: pandas.to_pickle(subgroups_to_df(pool), f"{output_folder}/depth{depth}-selected-candidates.csv")
         depth += 1
-    if save_intermediate_results: write_file(f"{output_folder}/stats1-after-mining-and-before-pruning.csv", [subgroups_to_csv(pool)])
+    if save_intermediate_results: pandas.to_pickle(subgroups_to_df(pool), f"{output_folder}/stats1-after-mining-and-before-pruning.dat")
 
     # post processing phase
     if not skip_phase2:
@@ -208,7 +208,7 @@ def mine(
         logger.info(f"Removing duplicates...")
         pool = remove_duplicates(pool)
         logger.info(f"{len(pool)} remaining after candidates deduplication...")
-        if save_intermediate_results: write_file(f"{output_folder}/stats2-after-duplicates-removal.csv", [subgroups_to_csv(pool)])
+        if save_intermediate_results: pandas.to_pickle(subgroups_to_df(pool), f"{output_folder}/stats2-after-duplicates-removal.dat")
 
     # final candidates selection / post selection phase
     if not skip_phase3:
@@ -218,7 +218,7 @@ def mine(
 
     logger.info(f"Total time taken = {time.time() - start_time} seconds\n")
     logger.info(f"Final selection\n{len(result)} candidate(s)\n{_min_max_avg_quality_string(result, ' ')}")
-    if save_result: write_file(f"{output_folder}/stats3-final-results.csv", [subgroups_to_csv(result)])
+    if save_result: pandas.to_pickle(subgroups_to_df(result), f"{output_folder}/stats3-final-results.dat")
 
     return (result, pool) if return_pool else result
 
@@ -377,11 +377,10 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         Examples
         --------
         >>> from skmine.datasets.dssd import load_emotions # doctest: +SKIP
-        >>> from skmine.dssd import DSSDMiner, WKLQuality, VarCoverBasedSelectionStrategy # doctest: +SKIP
-        >>> D,y = fetch_emotions(return_D_y = True) # doctest: +SKIP
-        >>> dssd = DSSDMiner(k=100, j=10_000, min_cov=10, max_depth=3, quality_measure=WKLQuality(), selector=VarCoverBasedSelectionStrategy) # doctest: +SKIP
-        >>> dssd.fit(df[descriptive_attributes], df[model_attributes]).discover() # doctest: +SKIP
-        >>> dssd.result # doctest: +SKIP
+        >>> from skmine.dssd import DSSDMiner, WKL, VarCover # doctest: +SKIP
+        >>> D,y = load_emotions("<path_to_emotions.arff>", return_D_y = True) # doctest: +SKIP
+        >>> dssd = DSSDMiner(k=100, j=10_000, min_cov=10, max_depth=3, quality=WKL(), selector=VarCover()) # doctest: +SKIP
+        >>> dssd.fit(D, y).discover() # doctest: +SKIP
         """
         self.refinement_operator.df = D
         self.quality.df = y
@@ -407,19 +406,6 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         return self
 
 
-    def _discover(self, result: List[Subgroup], return_cover: bool = False):
-        data = defaultdict(list)
-        for c in result:
-            data["quality"].append(c.quality)
-            data["pattern"].append(c.description)
-            data["pattern_length"].append(len(c.description))
-            data["cover_length"].append(len(c))
-            data["cover"].append(list(c.cover))
-        if not return_cover:
-            del data["cover"]
-        return DataFrame(data=data)
-
-
     def discover(self, return_cover: bool = False):
         """
         Navigate through the result of a fitting process
@@ -434,7 +420,7 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         DataFrame:
             A dataframe containing the following columns (quality, pattern, pattern_length, cover_length) and optionnaly the cover column depending on the return_cover parameter
         """
-        return self._discover(self.result, return_cover)
+        return subgroups_to_df(self.result, return_cover)
 
 
     def discover_pool(self, return_cover: bool = False):
@@ -451,7 +437,7 @@ class DSSDMiner(BaseMiner, Generic[Q, S]):
         DataFrame:
             A dataframe containing the following columns (quality, pattern, pattern_length, cover_length) and optionnaly the cover column depending on the return_cover parameter
         """
-        return self._discover(self.pool, return_cover)
+        return subgroups_to_df(self.pool, return_cover)
 
 
     def use_verbose_logger(self, output_folder: str):

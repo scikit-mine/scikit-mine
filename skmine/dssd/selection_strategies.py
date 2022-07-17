@@ -170,7 +170,7 @@ class VarDescStandard(VarDescFast):
     """
     Variable size description selection strategy[standard version with no optimization and is better suited for phase 3 of the dssd algorithm]
 
-    See `VarDescriptionBasedSelectionStrategy` for full documentation on this strategy
+    See VarDescFast for full documentation on this strategy
     """
     def _current_depth(self, cands: List[Subgroup]) -> int:
         """

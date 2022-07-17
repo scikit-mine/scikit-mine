@@ -88,7 +88,7 @@ class RefinementOperatorImpl(RefinementOperator):
 
     Parameters
     ----------
-    df: DataFrame
+    df: DataFrame, default=DataFrame()
         Inner pandas dataframe
     cover_func: FuncCover, default=None
         A function to compute the cover of generated subgroup in order to be valid

@@ -15,8 +15,9 @@ class Description:
     Examples
     --------
     >>> from skmine.dssd import Description, Cond
-    >>> condition1 = Cond("age", ">", 18)
-    >>> pattern = Description([condition1])
+    >>> pattern = Description([Cond("age", ">", 18), Cond("age", "<", 20)])
+    >>> pattern
+    (age > 18) & (age < 20)
     """
 
     def __init__(self, conditions: List[Cond] = None):
@@ -31,6 +32,8 @@ class Description:
         """Return a string that can be used to query a pandas dataframe using the df.query() method"""
         return f" & ".join(str(cond) for cond in self.conditions)
 
+    def __repr__(self) -> str:
+        return str(self)
 
     def __eq__(self, other: 'Description'):
         return id(self) == id(other) or set(self.conditions) == set(other.conditions)

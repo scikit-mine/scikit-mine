@@ -25,9 +25,8 @@ class Subgroup:
     -------
     >>> from skmine.dssd import Subgroup, Description, Cond
     >>> import pandas
-    >>> condition1 = Cond("age", ">", 18)
-    >>> pattern = Description([condition1])
-    >>> sg = Subgroup(pattern, quality = .5, cover = pandas.Index([1, 5]))
+    >>> Subgroup(Description([Cond("age", ">", 18)]), quality = .5, cover = pandas.Index([1, 5]))
+    ((age > 18), 2, 0.5)
     """
 
     def __init__(self, description: Description, quality: float = 0., cover: pandas.Index = None, parent: 'Subgroup' = None):
