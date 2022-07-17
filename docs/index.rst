@@ -19,6 +19,7 @@ Welcome to scikit-mine's documentation!
    reference/itemsets
    reference/periodic
    reference/emerging
+   reference/dssd
    reference/base
    reference/callbacks
 
@@ -29,6 +30,7 @@ Welcome to scikit-mine's documentation!
    tutorials/datasets/index
    tutorials/itemsets/index
    tutorials/callbacks/index
+   tutorials/dssd/index
 
 
 
