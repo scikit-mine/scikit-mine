@@ -4,3 +4,4 @@ roaringbitmap==0.7; platform_system != "Windows"
 joblib>=0.11.1
 sortedcontainers>=2.1.0
 dataclasses; python_version < '3.7'
+networkx~=2.5.1

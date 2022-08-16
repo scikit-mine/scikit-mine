@@ -21,6 +21,7 @@ Welcome to scikit-mine's documentation!
    reference/emerging
    reference/base
    reference/callbacks
+   reference/graph
 
 .. toctree::
    :maxdepth: 2
@@ -29,6 +30,7 @@ Welcome to scikit-mine's documentation!
    tutorials/datasets/index
    tutorials/itemsets/index
    tutorials/callbacks/index
+   tutorials/graph/index
 
 
 
