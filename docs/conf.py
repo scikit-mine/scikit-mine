@@ -13,9 +13,10 @@
 import os
 import sys
 from packaging.version import parse
-import skmine
 
 sys.path.insert(0, os.path.abspath('../'))
+
+import skmine
 
 # -- Project information -----------------------------------------------------
 project = 'scikit-mine'

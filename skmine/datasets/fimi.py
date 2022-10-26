@@ -3,18 +3,67 @@ Base IO for all FIMI datasets
 All datasets are available here : `http://fimi.uantwerpen.be/data/`
 """
 import os
+import wget
 
 import pandas as pd
 
-from .conf import urlopen
 from ._base import get_data_home
 
 BASE_URL = "http://fimi.uantwerpen.be/data/"
 
 
-def _preprocess(transaction):
-    s = bytes.decode(transaction[:-2])
-    return s.split(" ")
+def _read_dat(filepath, int_values=True, separator=' '):
+    """Read a local dataset file whose separator can be customized and whose values are either integers or strings.
+
+    Parameters
+    ----------
+    filepath : str
+        Indicate the path of the file to be read
+
+    int_values : bool
+        Specify if the items in the file are all integers. If not, then the items are considered as strings.
+
+    separator : str
+        Specify a separator between items other than the default space
+
+    Returns
+    -------
+    list
+        Return a transaction list composed for each transaction of a list of items
+    """
+    with open(filepath, 'r') as f:
+        lines = f.read().splitlines()
+
+    transactions = []
+    for line in lines:
+        tmp = line.rstrip()
+        tmp = list(map(int, tmp.split(separator))) if int_values else tmp.split(separator)
+        transactions.append(tmp)
+
+    return transactions
+
+
+def fetch_file(filepath, separator=' '):
+    """Loader for files in FIMI format
+
+    Parameters
+    ----------
+    filepath : str
+        Path of the file to load
+
+    separator : str
+        Indicate a custom separator between the items. By default, it is a space.
+
+    Returns
+    -------
+    pd.Series
+        Transactions from the requested dataset,
+        as an in-memory pandas Series
+    """
+    transactions = _read_dat(filepath, int_values=False, separator=separator)
+    s = pd.Series(transactions, name=os.path.splitext(os.path.basename(filepath))[0])
+
+    return s
 
 
 def fetch_any(filename, data_home=None):
@@ -26,7 +75,7 @@ def fetch_any(filename, data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
 
     filename : str
@@ -42,20 +91,13 @@ def fetch_any(filename, data_home=None):
     filepath = os.path.join(data_home, filename)
     name, _ = os.path.splitext(filename)
     if filename in os.listdir(data_home):  # already fetched
-        s = pd.read_pickle(filepath)
-        s.name = name
+        it = _read_dat(filepath)
     else:  # not fetched yet
         url = BASE_URL + filename
-        resp = urlopen(url)
-        it = (_preprocess(transaction) for transaction in resp)
-        s = pd.Series(it, name=name)
-        s.to_pickle(filepath)
+        wget.download(url, filepath)
+        it = _read_dat(filepath)
 
-    try:
-        s = s.map(lambda l: list(map(int, l)))
-    except ValueError:
-        print(f"Could not cast {filename} items to integers")
-
+    s = pd.Series(it, name=name)
     return s
 
 
@@ -72,7 +114,7 @@ def fetch_chess(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
@@ -97,7 +139,7 @@ def fetch_connect(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
@@ -109,7 +151,7 @@ def fetch_connect(data_home=None):
     return fetch_any("connect.dat", data_home=data_home)
 
 
-def fetch_mushroom(data_home=None, return_D_y=False):
+def fetch_mushroom(data_home=None, return_mush_y=False):
     """Fetch and return the mushroom dataset (Frequent Itemset Mining)
 
     The Mushroom data set includes descriptions of hypothetical samples corresponding
@@ -131,42 +173,41 @@ def fetch_mushroom(data_home=None, return_D_y=False):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
-    return_D_y: bool, default=False.
+    return_mush_y: bool, default=False.
         If True, returns a tuple for both the data and the associated labels
         (0 for edible, 1 for poisonous)
 
     Returns
     -------
-    D: pd.Series
+    mush : pd.Series
         Transactions from the mushroom dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
 
-    (D, y) : tuple
+    (mush, y) : tuple
         if ``return_D_y`` is True
 
     Examples
     --------
     >>> from skmine.datasets.fimi import fetch_mushroom
     >>> from skmine.datasets.utils import describe
-    >>> D, y = fetch_mushroom(return_D_y=True)
-    >>> describe(D)['n_items']
-    117
+    >>> mush, y = fetch_mushroom(return_mush_y=True)
+    >>> describe(mush)['n_items']
+    119
     >>> y.value_counts()
     0    4208
     1    3916
     Name: mushroom, dtype: int64
     """
     mush = fetch_any("mushroom.dat", data_home=data_home)
-    D = mush.str[1:]
-    if return_D_y:
+    if return_mush_y:
         y = mush.str[0]
         y = y.replace(2, 0)  # 2 is edible, 1 is poisonous
-        return D, y
+        return mush, y
 
-    return D
+    return mush
 
 
 def fetch_pumsb(data_home=None):
@@ -184,7 +225,7 @@ def fetch_pumsb(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
@@ -209,7 +250,7 @@ def fetch_pumsb_star(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
@@ -236,7 +277,7 @@ def fetch_kosarak(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
@@ -272,7 +313,7 @@ def fetch_retail(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
+        Specify another download and cache folder for the datasets. By default,
         all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns

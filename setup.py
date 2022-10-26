@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from setuptools import find_packages, setup
+from setuptools import find_packages, setup, dist
+dist.Distribution().fetch_build_eggs(['numpy'])
 import numpy
 
 import skmine

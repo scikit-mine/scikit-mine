@@ -175,7 +175,7 @@ def test_discover_simple():
     bigger, cost = ppm.codetable[0]
 
     assert str(bigger) == "2 {r=3, p=12} (b - 3 - a - 2 - c)"
-    assert pytest.approx(cost, 14.51, abs=0.1)
+    assert pytest.approx(cost, abs=0.1) == 5.31
     # assert bigger.get_occs() == list(zip(S.index, S))  # FIXME page 21
 
     rec_occs, rec_events = zip(*bigger.get_occs())
