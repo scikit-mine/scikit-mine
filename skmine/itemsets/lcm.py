@@ -80,7 +80,7 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, max_depth=20, n_jobs=1, verbose=False):
+    def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self.max_depth = int(max_depth)
@@ -201,7 +201,7 @@ class LCM(BaseMiner, DiscovererMixin):
         return df
 
     def _inner(self, p_tids, limit, depth=0):
-        if depth >= self.max_depth:
+        if self.max_depth != -1 and depth >= self.max_depth:
             return
         p, tids = p_tids
         # project and reduce DB w.r.t P
@@ -280,7 +280,7 @@ class LCMMax(LCM):
             cp, None
         )  # items are in reverse order, so the first consumed is the max
 
-        if max_k and max_k == limit:
+        if max_k is not None and max_k == limit:
             p_prime = (
                 p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
