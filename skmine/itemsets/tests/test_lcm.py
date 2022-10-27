@@ -164,6 +164,31 @@ def test_relative_support():
         assert set(lcm.item_to_tids_[item]) == true_item_to_tids[item]
 
 
+def test_database_containing_item_0():
+    db = [
+        [0, 1, 2, 3],
+        [0, 1, 2],
+        [0, 1],
+        [0]
+    ]
+    db_true_patterns = pd.DataFrame(
+        [  # from db with min_supp=4
+            [{0}, 4]
+        ],
+        columns=["itemset", "support"],
+    )
+    db_true_patterns.loc[:, "itemset"] = db_true_patterns.itemset.map(tuple)
+
+    lcm = LCM(min_supp=4)
+    patterns = lcm.fit_discover(db)
+
+    for itemset, true_itemset in zip(patterns.itemset, db_true_patterns.itemset):
+        assert itemset == true_itemset
+    pd.testing.assert_series_equal(
+        patterns.support, db_true_patterns.support, check_dtype=False
+    )
+
+
 def test_lcm_max():
     lcm = LCMMax(min_supp=3)
     patterns = lcm.fit_discover(D)
