@@ -265,7 +265,7 @@ class LCMMax(LCM):
     """
 
     def _inner(self, p_tids, limit, depth=0):
-        if depth >= self.max_depth:
+        if self.max_depth != -1 and depth >= self.max_depth:
             return
         p, tids = p_tids
         # project and reduce DB w.r.t P
@@ -280,7 +280,7 @@ class LCMMax(LCM):
             cp, None
         )  # items are in reverse order, so the first consumed is the max
 
-        if max_k is not None and max_k == limit:
+        if max_k and max_k == limit:
             p_prime = (
                 p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
