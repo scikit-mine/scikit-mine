@@ -280,7 +280,7 @@ class LCMMax(LCM):
             cp, None
         )  # items are in reverse order, so the first consumed is the max
 
-        if max_k and max_k == limit:
+        if max_k is not None and max_k == limit:
             p_prime = (
                 p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
