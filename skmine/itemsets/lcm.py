@@ -215,7 +215,7 @@ class LCM(BaseMiner, DiscovererMixin):
         # items are in reverse order, so the first consumed is the max
         max_k = next(takewhile(lambda e: e >= limit, cp), None)
 
-        if max_k and max_k == limit:
+        if max_k is not None and max_k == limit:
             p_prime = (
                 p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
