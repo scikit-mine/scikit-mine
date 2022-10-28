@@ -439,7 +439,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             D.iloc[list(tids)] = D.iloc[list(tids)].map(itemset.union)
         return D.map(sorted)
 
-    # @lru_cache(maxsize=1024)
+    @lru_cache(maxsize=1024)
     def get_support(self, *items):
         """
         Get support from an itemset
