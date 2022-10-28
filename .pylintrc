@@ -1,6 +1,5 @@
 [MASTER]
 ignore-patterns=test.*?.py,docs/
-ignored-modules=roaringbitmap
 
 [MESSAGES CONTROL]
 disable=invalid-name,
