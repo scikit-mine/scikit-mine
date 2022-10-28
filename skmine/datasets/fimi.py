@@ -34,7 +34,7 @@ def _read_dat(filepath, int_values=True, separator=' '):
     with open(filepath, 'r') as f:
         try:
             lines = f.read().splitlines()
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError:
             print(f"The file {filepath} is already present in your data_home but it is a binary file, it must be "
                   f"deleted.")
             raise
