@@ -32,7 +32,12 @@ def _read_dat(filepath, int_values=True, separator=' '):
         Return a transaction list composed for each transaction of a list of items
     """
     with open(filepath, 'r') as f:
-        lines = f.read().splitlines()
+        try:
+            lines = f.read().splitlines()
+        except UnicodeDecodeError as e:
+            print(f"The file {filepath} is already present in your data_home but it is a binary file, it must be "
+                  f"deleted.")
+            raise
 
     transactions = []
     for line in lines:
