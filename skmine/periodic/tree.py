@@ -14,9 +14,9 @@ from typing import List
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedKeyList
+from roaringbitmap import RoaringBitmap as Bitmap
 
 from ..base import BaseMiner, DiscovererMixin, InteractiveMiner
-from ..bitmaps import Bitmap
 from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 

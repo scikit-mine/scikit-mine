@@ -5,7 +5,8 @@ import pandas as pd
 import pytest
 from sortedcontainers import SortedDict
 
-from ...bitmaps import Bitmap
+from roaringbitmap import RoaringBitmap as Bitmap
+
 from ..slim import SLIM, _to_vertical, generate_candidates
 
 

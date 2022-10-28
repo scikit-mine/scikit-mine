@@ -10,9 +10,9 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
+from roaringbitmap import RoaringBitmap as Bitmap
 
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
-from ..bitmaps import Bitmap
 from ..utils import _check_D, supervised_to_unsupervised
 
 

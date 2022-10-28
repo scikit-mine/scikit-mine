@@ -10,8 +10,9 @@ from itertools import groupby
 import numpy as np
 import pandas as pd
 
+from roaringbitmap import RoaringBitmap as Bitmap
+
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
-from ..bitmaps import Bitmap
 from ..utils import intersect2d, sliding_window_view
 
 log = np.log2

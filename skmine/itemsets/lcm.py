@@ -15,10 +15,10 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
+from roaringbitmap import RoaringBitmap as Bitmap
 
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
-from ..bitmaps import Bitmap
 
 from ..base import BaseMiner, DiscovererMixin
 
