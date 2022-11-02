@@ -160,7 +160,7 @@ class LCM(BaseMiner, DiscovererMixin):
         return self
 
     def discover(self, *, return_tids=False, return_depth=False):
-        """Return the set of closed itemsets, with respect to the minium support
+        """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
         ----------
