@@ -62,11 +62,21 @@ def filter_maximal(itemsets):
     """
     maximals = SortedList(key=len)
     itemsets = sorted(itemsets, key=len, reverse=True)
+    print("itemsets",type(itemsets))
     for iset in itemsets:
+        print("FILTER maximal", maximals)
+        print(type(iset))
         gts = maximals.irange(iset)
-        # is there a superset amongst bigger itemsets ?
+        gts2 = maximals.irange(iset)
+
+        print(f" iset {iset} ")
+        # # is there a superset amongst bigger itemsets ?
+        K = map(lambda e: e > iset, gts2)
+        print("K",list(K))
         if not any(map(lambda e: e > iset, gts)):
             maximals.add(iset)  # O(log(len(maximals)))
+            print("add maximals")
+    # print("FILTER maximal", maximals)
 
     return maximals
 
@@ -350,3 +360,10 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
 
         del candidates[node]
         excluded[node] = neighbours
+
+
+import pandas as pd
+
+
+D = pd.Series([{2}, {2, 4}, {2, 5}, {4, 6}, {1, 4, 6}, {3}])
+maximums = list(filter_maximal(D))
