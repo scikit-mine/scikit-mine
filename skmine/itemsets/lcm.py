@@ -187,15 +187,10 @@ class LCM(BaseMiner, DiscovererMixin):
         0     (2, 5)  [0, 1, 2]     0
         1  (2, 3, 5)     [0, 1]     0
         """
-        # # reverse order of support
-        # supp_sorted_items = sorted(
-        #     self.item_to_tids_.items(), key=lambda e: len(e[1]), reverse=True
-        # )
 
         dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
             delayed(self._explore_root)(item, tids) for item, tids in list(self.item_to_tids_.items())
-            # FIXME drop supp_sorted_items list(self.item_to_tids_.items())
-        ) # dsf is a list of dataframe
+        )  # dfs is a list of dataframe
 
         # make sure we have something to concat
         dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
