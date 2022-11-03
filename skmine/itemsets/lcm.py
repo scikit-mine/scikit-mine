@@ -81,7 +81,6 @@ class LCM(BaseMiner, DiscovererMixin):
     """
 
     def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False):
-
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # provided by user
         self.max_depth = int(max_depth)
@@ -117,7 +116,8 @@ class LCM(BaseMiner, DiscovererMixin):
                 item_to_tids[item].add(self.n_transactions_)
             self.n_transactions_ += 1
 
-        if isinstance(self.min_supp, float): # make support absolute if needed
+        if isinstance(self.min_supp, float):
+            # make support absolute if needed
             self._min_supp = self.min_supp * self.n_transactions_
 
         low_supp_items = [k for k, v in item_to_tids.items() if len(v) < self._min_supp]
@@ -146,9 +146,6 @@ class LCM(BaseMiner, DiscovererMixin):
             print(" ord_freq_dic ORDER ", ord_freq_dic)
             print(" ord_freq_dic after SORTEDICT ", self.item_to_tids_)
             print("reorder from ", ord_item_freq, " to ", list(ord_freq_dic.keys()))
-
-        # else:
-        #     self.item_to_tids_ = SortedDict(item_to_tids)
 
         if self.verbose:
             print(" after init ORDER ", list(self.item_to_tids_.keys()))
@@ -219,8 +216,6 @@ class LCM(BaseMiner, DiscovererMixin):
         # make sure we have something to concat
         dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
         df = pd.concat(dfs, axis=0, ignore_index=True)
-        print(f"For minsupp= {self.min_supp},  {len(df)} closed itemset found in {self.iter} iterations")
-
         if not return_tids:
             df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
             df.drop("tids", axis=1, inplace=True)
@@ -239,7 +234,6 @@ class LCM(BaseMiner, DiscovererMixin):
     def _inner(self, p_tids, limit, depth=0):
         self.iter += 1
         if self.max_depth != -1 and depth >= self.max_depth:
-            print("Depth of itemset in tree-structure  exceed defined value: ", self.max_depth)
             return
         p, tids = p_tids
         # project and reduce DB w.r.t P
@@ -255,14 +249,10 @@ class LCM(BaseMiner, DiscovererMixin):
 
         if max_k is not None and max_k == limit:
             p_prime = (
-                    p | set(cp) | {max_k}
+                p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
-            # if self.order == 'freq':
             itemset = sorted([self.ord_item_freq[ind] for ind in list(p_prime)])
-            # else:
-            #     itemset = sorted(p_prime)
-            #     print(" -> return ", itemset, tids, depth)
 
             if self.verbose:
                 print(" -> return ", itemset, tids, depth)
@@ -328,7 +318,7 @@ class LCMMax(LCM):
 
         if max_k is not None and max_k == limit:
             p_prime = (
-                    p | set(cp) | {max_k}
+                p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
 
             candidates = self.item_to_tids_.keys() - p_prime
@@ -345,28 +335,16 @@ class LCMMax(LCM):
 
             # only if no child node. This is how we PRE-check for maximality
             if no_cand:
-                # print("LCMAX self.ord_item_freq" , self.ord_item_freq)
-                # print("-- INNER out ")
-
                 itemset = set({self.ord_item_freq[ind] for ind in p_prime})
                 if self.verbose:
                     print("frequent coded itemset ", p_prime)
                     print("original itemset traduction ", itemset)
-                # print(f'prime{type(sorted(p_prime))}, itemset {type(itemset)}')
                 yield itemset, tids, depth
 
     def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
         patterns = super().discover(*args, **kwargs)
         maximals = filter_maximal(patterns["itemset"])
-        # maximums = [tuple(sorted(x)) for x in filter_maximal(patterns["itemset"])]
-        # print("LCMAX patterns before filter\n", patterns)
-        # print("MAXIMALS\n", maximals)
-        # print("maximums\n", maximums)
-        # print(patterns.itemset.isin(maximals))
 
         return patterns[patterns.itemset.isin(maximals)]
 
     setattr(discover, "__doc__", LCM.discover.__doc__.replace("closed", "maximal"))
-
-
-

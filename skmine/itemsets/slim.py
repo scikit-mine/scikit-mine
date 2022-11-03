@@ -461,10 +461,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
-        return (-len(itemset), -len(self.get_support(*itemset)), tuple(itemset))
+        return -len(itemset), -len(self.get_support(*itemset)), tuple(itemset)
 
     def _standard_candidate_order(self, itemset):
-        return (-len(self.get_support(*itemset)), -len(itemset), tuple(itemset))
+        return -len(self.get_support(*itemset)), -len(itemset), tuple(itemset)
 
     def prefit(self, D, y=None):
         """
