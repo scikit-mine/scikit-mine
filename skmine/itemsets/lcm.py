@@ -13,6 +13,8 @@ from itertools import takewhile
 
 import numpy as np
 import pandas as pd
+import os
+import shutil
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
 from roaringbitmap import RoaringBitmap as Bitmap
@@ -53,6 +55,12 @@ class LCM(BaseMiner, DiscovererMixin):
         to discover potential itemsets, considering this item as a root in the search space.
         **Processes are preffered** over threads.
 
+    out : str, default=None
+        File where results are written. Discover return None. The 'out' option is usefull 
+        to save memory : Instead of store all branch of lcm-tree in memory , each root 
+        branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
+        concatenanted in the final 'out' file. 
+
     References
     ----------
     .. [1]
@@ -80,7 +88,7 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False):
+    def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False, out=None):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # cf docstring: minimum support provided by user
         self.max_depth = int(max_depth)  # cf docstring
@@ -91,6 +99,12 @@ class LCM(BaseMiner, DiscovererMixin):
         self.ord_item_freq = []  # list of ordered item by decreasing frequency
         self.n_jobs = n_jobs  # number of jobs launched by joblib
         self.iter = 0  # number of recursive call to inner method
+        self.out = out
+        if self.out is not None:
+            self.temp_dir = 'TEMP_dir'
+            if os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir)
+            os.mkdir(self.temp_dir)
 
     def fit(self, D, y=None):
         """
@@ -188,29 +202,57 @@ class LCM(BaseMiner, DiscovererMixin):
         1  (2, 3, 5)     [0, 1]     0
         """
 
-        dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-            delayed(self._explore_root)(item, tids) for item, tids in list(self.item_to_tids_.items())
-        )  # dfs is a list of dataframe
+        if self.out is None : 
+            dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(self._explore_root)(item, tids, out=None, return_tids=return_tids) for item, tids in list(self.item_to_tids_.items())
+                # FIXME drop supp_sorted_items list(self.item_to_tids_.items())
+            ) # dsf is a list of dataframe        
 
-        # make sure we have something to concat
-        dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
-        df = pd.concat(dfs, axis=0, ignore_index=True)
+            # make sure we have something to concat
+            dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
+            df = pd.concat(dfs, axis=0, ignore_index=True)
 
-        if not return_tids:
-            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
-            df.drop("tids", axis=1, inplace=True)
+            if not return_tids:
+                df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
+                df.drop("tids", axis=1, inplace=True)
 
-        if not return_depth:
-            df.drop("depth", axis=1, inplace=True)
-        return df
+            if not return_depth:
+                df.drop("depth", axis=1, inplace=True)
+        
+            return df
+        else : 
+            dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(self._explore_root)(item, tids, out=f"{self.temp_dir}/root{k}.dat", return_tids=return_tids) for k, (item, tids) in enumerate(list(self.item_to_tids_.items()))
+                # FIXME drop supp_sorted_items list(self.item_to_tids_.items())
+            ) # dsf is a list of dataframe
 
-    def _explore_root(self, item, tids):
+            with open(self.out, 'w') as outfile:
+                for fname in [f"{self.temp_dir}/root{k}.dat" for k in range(len(list(self.item_to_tids_.items())))]:
+                    with open(fname) as infile:
+                        for line in infile:
+                            if line.strip():
+                                outfile.write(line)
+            shutil.rmtree(self.temp_dir)
+            return None
+
+    def _explore_root(self, item, tids, out=None, return_tids=False):
         it = self._inner((frozenset(), tids), item)
         df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from root item : {}".format(len(df), item))
+        if out is not None:
+            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
+            if os.path.exists(out):
+                os.remove(out)
+            with open(out, 'w') as file_pointer:
+                for index, row in df.iterrows():
+                    file_pointer.write(f"({row['support']}) {' '.join(  map(str, row['itemset']))}\n")
+                    if return_tids : 
+                        file_pointer.write(f"{' '.join( map(str, row['tids'] ) )}\n")
+            return None
 
-        return df
+        else:
+            return df
 
     def _inner(self, p_tids, limit, depth=0):
         self.iter += 1
