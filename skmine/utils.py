@@ -53,8 +53,8 @@ def filter_maximal(itemsets):
 
     Parameters
     ----------
-    itemsets: Iterator[frozenset]
-        a set of itemsets
+    itemsets: Iterator[list]
+        a list of itemsets
 
     Returns
     -------
@@ -62,11 +62,11 @@ def filter_maximal(itemsets):
     """
     maximals = SortedList(key=len)
     itemsets = sorted(itemsets, key=len, reverse=True)
-    for iset in itemsets:
-        gts = maximals.irange(iset)
+    for itemset_set in itemsets:
+        gts = maximals.irange(itemset_set)
         # # is there a superset amongst bigger itemsets ?
-        if not any(map(lambda e: e > iset, gts)):
-            maximals.add(iset)  # O(log(len(maximals)))
+        if not any(map(lambda e: e > itemset_set, gts)):
+            maximals.add(itemset_set)  # O(log(len(maximals)))
 
     return maximals
 

@@ -47,7 +47,7 @@ true_patterns = pd.DataFrame(
     columns=["itemset", "support"],
 )
 
-true_patterns.loc[:, "itemset"] = true_patterns.itemset.map(tuple)
+true_patterns.loc[:, "itemset"] = true_patterns.itemset.map(set)
 
 NULL_RESULT = (None, None, 0)
 
@@ -67,33 +67,33 @@ def test_first_parent_limit_1():
     limit = 1
     tids = lcm.item_to_tids_[limit]
 
-    ## pattern = {4, 6} -> first parent OK
+    ## pattern = [4, 6] -> first parent OK
     itemset, tids, _ = next(lcm._inner((frozenset([3, 5]), tids), limit), NULL_RESULT)
-    assert itemset == (3, 4, 6)
+    assert set(itemset) == {3, 4, 6}
     assert len(tids) == 5
 
-    # pattern = {} -> first parent fails
+    # pattern = [] -> first parent fails
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), limit), NULL_RESULT)
 
-    assert itemset == (4,)
+    assert itemset == [4]
 
 
 def test_first_parent_limit_2():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    # pattern = {} -> first parent OK
+    # pattern = [] -> first parent OK
     tids = lcm.item_to_tids_[2]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 2), NULL_RESULT)
 
-    assert itemset == (2, 5)
+    assert set(itemset) == {2, 5}
     assert len(tids) == 4
 
-    # pattern = {4} -> first parent OK
+    # pattern = [4] -> first parent OK
     tids = lcm.item_to_tids_[2] & lcm.item_to_tids_[4]
     itemset, tids, _ = next(lcm._inner((frozenset([4]), tids), 2), NULL_RESULT)
 
-    assert itemset == None
+    assert itemset is None
 
 
 def test_first_parent_limit_3():
@@ -103,7 +103,7 @@ def test_first_parent_limit_3():
     tids = lcm.item_to_tids_[3]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 3), NULL_RESULT)
 
-    assert itemset == (4, 6)
+    assert set(itemset) == {4, 6}
     assert len(tids) == 4
 
 
@@ -114,7 +114,7 @@ def test_first_parent_limit_4():
     tids = lcm.item_to_tids_[4]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 4), NULL_RESULT)
 
-    assert itemset == (1, 4, 6)
+    assert set(itemset) == {1, 4, 6}
     assert len(tids) == 3
 
 
@@ -125,7 +125,7 @@ def test_first_parent_limit_5():
     tids = lcm.item_to_tids_[5]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 5), NULL_RESULT)
 
-    assert itemset == (3,)
+    assert itemset == [3]
     assert len(tids) == 3
 
 
@@ -136,7 +136,7 @@ def test_first_parent_limit_6():
     tids = lcm.item_to_tids_[1]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 1), NULL_RESULT)
 
-    assert itemset == (4,)
+    assert itemset == [4]
     assert len(tids) == 5
 
 
@@ -159,7 +159,7 @@ def test_lcm_discover():
     patterns = lcm.fit_discover(D)  # get new pattern set
 
     for itemset, true_itemset in zip(patterns.itemset, true_patterns.itemset):
-        assert itemset == true_itemset
+        assert set(itemset) == true_itemset
     pd.testing.assert_series_equal(
         patterns.support, true_patterns.support, check_dtype=False
     )
@@ -193,13 +193,13 @@ def test_database_containing_item_0():
         ],
         columns=["itemset", "support"],
     )
-    db_true_patterns.loc[:, "itemset"] = db_true_patterns.itemset.map(tuple)
+    db_true_patterns.loc[:, "itemset"] = db_true_patterns.itemset.map(set)
 
     lcm = LCM(min_supp=4)
     patterns = lcm.fit_discover(db)
 
     for itemset, true_itemset in zip(patterns.itemset, db_true_patterns.itemset):
-        assert itemset == true_itemset
+        assert set(itemset) == true_itemset
     pd.testing.assert_series_equal(
         patterns.support, db_true_patterns.support, check_dtype=False
     )
@@ -215,3 +215,20 @@ def test_lcm_max():
         (2, 4),
         (3,),
     }
+
+
+def test_lcm_lexicographic_order():
+    db = [
+        [0, 1, 2, 3],
+        [0, 1, 2],
+        [0, 1],
+        [0]
+    ]
+    lcm = LCM(min_supp=3)
+    patterns = lcm.fit_discover(D, lexicographic_order=False)
+    longest_itemset = max(patterns.itemset, key=len)
+    assert longest_itemset != [1, 4, 6]
+
+    patterns = lcm.fit_discover(D, lexicographic_order=True)
+    longest_itemset = max(patterns.itemset, key=len)
+    assert longest_itemset == [1, 4, 6]
