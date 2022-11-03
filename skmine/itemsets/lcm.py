@@ -55,12 +55,6 @@ class LCM(BaseMiner, DiscovererMixin):
         to discover potential itemsets, considering this item as a root in the search space.
         **Processes are preffered** over threads.
 
-    out : str, default=None
-        File where results are written. Discover return None. The 'out' option is usefull
-        to save memory : Instead of store all branch of lcm-tree in memory , each root
-        branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
-        concatenanted in the final 'out' file.
-
     References
     ----------
     .. [1]
@@ -100,12 +94,6 @@ class LCM(BaseMiner, DiscovererMixin):
         self.n_jobs = n_jobs  # number of jobs launched by joblib
         self.iter = 0  # number of recursive call to inner method
         self.lexicographic_order = False  # if true, the items of each itemset are returned in lexicographical order
-        self.out = out
-        if self.out is not None:
-            self.temp_dir = 'TEMP_dir'
-            if os.path.exists(self.temp_dir):
-                shutil.rmtree(self.temp_dir)
-            os.mkdir(self.temp_dir)
 
     def fit(self, D, y=None):
         """
@@ -151,7 +139,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
         return self
 
-    def discover(self, *, return_tids=False, return_depth=False, lexicographic_order=False):
+    def discover(self, *, return_tids=False, return_depth=False, lexicographic_order=False, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
@@ -170,6 +158,13 @@ class LCM(BaseMiner, DiscovererMixin):
 
         lexicographic_order: bool, default=False
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
+
+
+        out : str, default=None
+            File where results are written. Discover return None. The 'out' option is usefull 
+            to save memory : Instead of store all branch of lcm-tree in memory , each root 
+            branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
+            concatenanted in the final 'out' file. 
 
         Returns
         -------
@@ -203,9 +198,15 @@ class LCM(BaseMiner, DiscovererMixin):
         """
         self.lexicographic_order = lexicographic_order
 
-        if self.out is None:
+        if out is not None: # write in file instead of store in memory
+            self.temp_dir = 'TEMP_dir' # temporary dir where root items branch files are written
+            if os.path.exists(self.temp_dir): # remove dir TEMP_dir if it exists
+                shutil.rmtree(self.temp_dir)
+            os.mkdir(self.temp_dir)     # create dir TEMP_dir
+
+        if out is None : # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(self._explore_root)(item, tids, out=None, return_tids=return_tids) for item, tids in
+                delayed(self._explore_root)(item, tids, root_file=None, return_tids=return_tids) for item, tids in
                 list(self.item_to_tids_.items())
             )  # dsf is a list of dataframe
 
@@ -221,35 +222,37 @@ class LCM(BaseMiner, DiscovererMixin):
                 df.drop("depth", axis=1, inplace=True)
 
             return df
-        else:
+        else: # store results in files
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(self._explore_root)(item, tids, out=f"{self.temp_dir}/root{k}.dat", return_tids=return_tids) for
-                k, (item, tids) in enumerate(list(self.item_to_tids_.items()))
-            )  # dsf is a list of dataframe
+                delayed(self._explore_root)(
+                    item, tids, root_file=f"{self.temp_dir}/root{k}.dat", return_tids=return_tids) for k, (
+                        item, tids) in enumerate(list(self.item_to_tids_.items()))
+                # FIXME drop supp_sorted_items list(self.item_to_tids_.items())
+            ) # dsf is a list of dataframe
 
-            with open(self.out, 'w') as outfile:
-                for fname in [f"{self.temp_dir}/root{k}.dat" for k in range(len(list(self.item_to_tids_.items())))]:
-                    with open(fname) as infile:
+            with open(out, 'w') as outfile:# concatenate all items root files located in self.temp_dir, in a single file 'out'
+                for fname in [f"{self.temp_dir}/root{k}.dat" for k in range(len(list(self.item_to_tids_.items())))]: # all items root files
+                    with open(fname) as infile: 
                         for line in infile:
-                            if line.strip():
+                            if line.strip(): # to skip empty lines
                                 outfile.write(line)
-            shutil.rmtree(self.temp_dir)
+            shutil.rmtree(self.temp_dir) # remove the temporary dir where root files are written
             return None
 
-    def _explore_root(self, item, tids, out=None, return_tids=False):
+    def _explore_root(self, item, tids, root_file=None, return_tids=False):
         it = self._inner((frozenset(), tids), item)
         df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from root item : {}".format(len(df), item))
-        if out is not None:
-            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
-            if os.path.exists(out):
-                os.remove(out)
-            with open(out, 'w') as file_pointer:
-                for index, row in df.iterrows():
-                    file_pointer.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
-                    if return_tids:
-                        file_pointer.write(f"{' '.join(map(str, row['tids']))}\n")
+        if root_file is not None: # for writing the items root files in dir self.temp_dir
+            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32) # calculate the support
+            if os.path.exists(root_file): # delete the root file if it already exist 
+                os.remove(root_file)
+            with open(root_file, 'w') as fw:  # write the items root files
+                for index, row in df.iterrows(): 
+                    fw.write(f"({row['support']}) {' '.join(  map(str, row['itemset']))}\n") #TUNO format
+                    if return_tids : 
+                        fw.write(f"{' '.join( map(str, row['tids'] ) )}\n") #TUNO format
             return None
         else:
             return df
