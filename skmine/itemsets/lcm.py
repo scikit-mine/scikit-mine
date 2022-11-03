@@ -82,15 +82,15 @@ class LCM(BaseMiner, DiscovererMixin):
 
     def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
-        self.min_supp = min_supp  # provided by user
-        self.max_depth = int(max_depth)
-        self._min_supp = _check_min_supp(self.min_supp)
-        self.item_to_tids_ = SortedDict()
-        self.n_transactions_ = 0
-        self.ctr = 0
-        self.n_jobs = n_jobs
+        self.min_supp = min_supp  # cf docstring: minimum support provided by user
+        self.max_depth = int(max_depth)  # cf docstring
         self.verbose = verbose
-        self.iter = 0
+
+        self._min_supp = _check_min_supp(self.min_supp)
+        self.item_to_tids_ = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this item
+        self.ord_item_freq = []  # list of ordered item by decreasing frequency
+        self.n_jobs = n_jobs  # number of jobs launched by joblib
+        self.iter = 0  # number of recursive call to inner method
 
     def fit(self, D, y=None):
         """
@@ -109,50 +109,33 @@ class LCM(BaseMiner, DiscovererMixin):
             if any entry in D is not iterable itself OR if any item is not **hashable**
             OR if all items are not **comparable** with each other.
         """
-        self.n_transactions_ = 0  # reset for safety
+        n_transactions_ = 0
         item_to_tids = defaultdict(Bitmap)
         for transaction in D:
             for item in transaction:
-                item_to_tids[item].add(self.n_transactions_)
-            self.n_transactions_ += 1
+                item_to_tids[item].add(n_transactions_)
+            n_transactions_ += 1
 
-        if isinstance(self.min_supp, float):
-            # make support absolute if needed
-            self._min_supp = self.min_supp * self.n_transactions_
+        if isinstance(self.min_supp, float):  # make support absolute if needed
+            self._min_supp = self.min_supp * n_transactions_
 
         low_supp_items = [k for k, v in item_to_tids.items() if len(v) < self._min_supp]
         for item in low_supp_items:
             del item_to_tids[item]
 
-        if self.verbose:
-            print(" INITIAL ORDER ", list(item_to_tids.keys()))
-
-        # item_to_tids.keys() # dans l'ordre d'apparition de l'énumération du dataset
+        # item_to_tids.keys() # dans l'ordre apparition de l'énumeration du dataset
 
         ord_freq_list = sorted(item_to_tids.items(), key=lambda item: len(item[1]), reverse=True)
-        # print("ord_freq_list", item_to_tids)
         ord_freq_dic = defaultdict(Bitmap)
         ord_item_freq = []
+
         for idx, element in enumerate(ord_freq_list):
             item, tid = element
-            if self.verbose:
-                print(f"item {item} with tid {tid}  convert to idx {idx}")
             ord_item_freq.append(item)
             ord_freq_dic[idx] = tid
+
         self.item_to_tids_ = SortedDict(ord_freq_dic)
         self.ord_item_freq = ord_item_freq
-
-        if self.verbose:
-            print(" ord_freq_dic ORDER ", ord_freq_dic)
-            print(" ord_freq_dic after SORTEDICT ", self.item_to_tids_)
-            print("reorder from ", ord_item_freq, " to ", list(ord_freq_dic.keys()))
-
-        if self.verbose:
-            print(" after init ORDER ", list(self.item_to_tids_.keys()))
-            print("type ", type(self.item_to_tids_))
-            print("type ", self.item_to_tids_)
-            print("type key 0", type(self.item_to_tids_[list(self.item_to_tids_.keys())[0]]))
-            print("END FIT\n", "_" * 20)
 
         return self
 
@@ -229,6 +212,7 @@ class LCM(BaseMiner, DiscovererMixin):
         df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from item : {}".format(len(df), item))
+
         return df
 
     def _inner(self, p_tids, limit, depth=0):
@@ -249,7 +233,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
         if max_k is not None and max_k == limit:
             p_prime = (
-                p | set(cp) | {max_k}
+                    p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
             itemset = sorted([self.ord_item_freq[ind] for ind in list(p_prime)])
@@ -300,6 +284,7 @@ class LCMMax(LCM):
     --------
     LCM
     """
+
     def _inner(self, p_tids, limit, depth=0):
         if self.max_depth != -1 and depth >= self.max_depth:
             return
@@ -318,7 +303,7 @@ class LCMMax(LCM):
 
         if max_k is not None and max_k == limit:
             p_prime = (
-                p | set(cp) | {max_k}
+                    p | set(cp) | {max_k}
             )  # max_k has been consumed when calling next()
 
             candidates = self.item_to_tids_.keys() - p_prime
@@ -335,11 +320,11 @@ class LCMMax(LCM):
 
             # only if no child node. This is how we PRE-check for maximality
             if no_cand:
-                itemset = set({self.ord_item_freq[ind] for ind in p_prime})
+                itemset = [self.ord_item_freq[ind] for ind in p_prime]
                 if self.verbose:
                     print("frequent coded itemset ", p_prime)
                     print("original itemset traduction ", itemset)
-                yield itemset, tids, depth
+                yield set(itemset), tids, depth
 
     def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
         patterns = super().discover(*args, **kwargs)
