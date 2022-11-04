@@ -56,8 +56,8 @@ def test_lcm_fit():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    for item in lcm.item_to_tids_.keys():
-        assert set(lcm.item_to_tids_[item]) == truer_reorderfreq_item_to_tids[item]
+    for item in lcm.item_to_tids.keys():
+        assert set(lcm.item_to_tids[item]) == truer_reorderfreq_item_to_tids[item]
 
 
 def test_first_parent_limit_1():
@@ -65,7 +65,7 @@ def test_first_parent_limit_1():
     lcm.fit(D)
 
     limit = 1
-    tids = lcm.item_to_tids_[limit]
+    tids = lcm.item_to_tids[limit]
 
     ## pattern = [4, 6] -> first parent OK
     itemset, tids, _ = next(lcm._inner((frozenset([3, 5]), tids), limit), NULL_RESULT)
@@ -83,14 +83,14 @@ def test_first_parent_limit_2():
     lcm.fit(D)
 
     # pattern = [] -> first parent OK
-    tids = lcm.item_to_tids_[2]
+    tids = lcm.item_to_tids[2]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 2), NULL_RESULT)
 
     assert set(itemset) == {2, 5}
     assert len(tids) == 4
 
     # pattern = [4] -> first parent OK
-    tids = lcm.item_to_tids_[2] & lcm.item_to_tids_[4]
+    tids = lcm.item_to_tids[2] & lcm.item_to_tids[4]
     itemset, tids, _ = next(lcm._inner((frozenset([4]), tids), 2), NULL_RESULT)
 
     assert itemset is None
@@ -100,7 +100,7 @@ def test_first_parent_limit_3():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    tids = lcm.item_to_tids_[3]
+    tids = lcm.item_to_tids[3]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 3), NULL_RESULT)
 
     assert set(itemset) == {4, 6}
@@ -111,7 +111,7 @@ def test_first_parent_limit_4():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    tids = lcm.item_to_tids_[4]
+    tids = lcm.item_to_tids[4]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 4), NULL_RESULT)
 
     assert set(itemset) == {1, 4, 6}
@@ -122,7 +122,7 @@ def test_first_parent_limit_5():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    tids = lcm.item_to_tids_[5]
+    tids = lcm.item_to_tids[5]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 5), NULL_RESULT)
 
     assert itemset == [3]
@@ -133,7 +133,7 @@ def test_first_parent_limit_6():
     lcm = LCM(min_supp=3)
     lcm.fit(D)
 
-    tids = lcm.item_to_tids_[1]
+    tids = lcm.item_to_tids[1]
     itemset, tids, _ = next(lcm._inner((frozenset(), tids), 1), NULL_RESULT)
 
     assert itemset == [4]
@@ -176,8 +176,8 @@ def test_relative_support():
     lcm.fit(D)
     np.testing.assert_almost_equal(lcm._min_supp, 2.8, 2)
 
-    for item in lcm.item_to_tids_.keys():
-        assert set(lcm.item_to_tids_[item]) == truer_reorderfreq_item_to_tids[item]
+    for item in lcm.item_to_tids.keys():
+        assert set(lcm.item_to_tids[item]) == truer_reorderfreq_item_to_tids[item]
 
 
 def test_database_containing_item_0():
