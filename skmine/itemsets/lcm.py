@@ -24,6 +24,7 @@ from ..utils import filter_maximal
 from ..base import BaseMiner, DiscovererMixin
 
 
+
 class LCM(BaseMiner, DiscovererMixin):
     """
     Linear time Closed item set Miner.
@@ -240,11 +241,8 @@ class LCM(BaseMiner, DiscovererMixin):
 
             if os.path.exists(root_file):  # delete the root file if it already exists
                 os.remove(root_file)
-            with open(root_file, 'w') as fw:  # write the items root files
-                for index, row in df.iterrows():
-                    fw.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
-                    if self.return_tids:
-                        fw.write(f"{' '.join(map(str, row['tids']))}\n")
+
+            self.write_df_tofile(root_file, df)
             return None
         else:
             return df
@@ -285,7 +283,12 @@ class LCM(BaseMiner, DiscovererMixin):
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit, depth + 1)
 
-
+    def write_df_tofile(self, filename, df):
+        with open(filename, 'w') as fw:  # write the items root files
+            for index, row in df.iterrows():
+                fw.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
+                if self.return_tids:
+                    fw.write(f"{' '.join(map(str, row['tids']))}\n")
 class LCMMax(LCM):
     """
     Linear time Closed item set Miner adapted to Maximal itemsets (or borders).
@@ -314,7 +317,6 @@ class LCMMax(LCM):
     --------
     LCM
     """
-
     def _inner(self, p_tids, limit, depth=0):
         if self.max_depth != -1 and depth >= self.max_depth:
             return None
@@ -351,12 +353,19 @@ class LCMMax(LCM):
                     yield itemset, len(tids), tids
 
     def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
+        outfile = kwargs.get('out')
+        kwargs['out'] = None
         patterns = super().discover(**kwargs)
         maximals = filter_maximal(patterns["itemset"])
         patterns = patterns[patterns.itemset.isin(maximals)].copy()
         patterns.loc[:, "itemset"] = patterns["itemset"].map(
             lambda i: sorted(list(i)) if self.lexicographic_order else list(i))
-        return patterns
+
+        if outfile:
+            self.write_df_tofile(outfile, patterns)
+            return None
+        else:
+            return patterns
 
     setattr(discover, "__doc__", LCM.discover.__doc__.replace("closed", "maximal"))
     setattr(discover, "__doc__", LCM.discover.__doc__.split("Example")[0])
