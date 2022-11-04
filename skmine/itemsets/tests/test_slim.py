@@ -276,7 +276,7 @@ def test_reconstruct(D):
 @pytest.mark.parametrize("k", [1, 2])
 def test_k(D, k):
     slim = SLIM(pruning=False, k=k).fit(D)
-    assert len(slim.discover(singletons=False)) == k
+    assert len(slim.discover()) == k
 
 
 def test_interactive(D):
