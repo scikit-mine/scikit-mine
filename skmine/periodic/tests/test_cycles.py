@@ -272,7 +272,7 @@ def test_small_datetime():
     S = pd.Series("ring_a_bell", index=minutes)
     S.index = index_to_datetime(S.index)
     pcm = PeriodicCycleMiner().fit(S)
-    cycles = pcm.discover()
+    cycles = pcm.discover(shifts=True)
     assert "dE" in cycles.columns
 
 
