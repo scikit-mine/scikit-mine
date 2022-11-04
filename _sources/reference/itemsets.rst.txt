@@ -14,3 +14,7 @@ SLIM
 LCM
 -------
 .. autoclass:: skmine.itemsets.LCM
+
+LCMMax
+-------
+.. autoclass:: skmine.itemsets.lcm.LCMMax

@@ -4,7 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -103,6 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -112,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -471,7 +473,7 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="n">one_day</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span>  <span class="c1"># a day in minutes</span>
-<span class="n">minutes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">7</span><span class="p">]</span>
+<span class="n">minutes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">one_day</span> <span class="o">*</span> <span class="mi">7</span><span class="p">]</span>
 
 <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;wake up&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">minutes</span><span class="p">)</span>
 <span class="n">start</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="s2">&quot;16/04/2020 07:30&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M&quot;</span><span class="p">)</span>
@@ -489,9 +491,9 @@ div.rendered_html tbody tr:hover {
 <div class="highlight"><pre>
 2020-04-16 07:30:00    wake up
 2020-04-17 07:29:00    wake up
-2020-04-18 07:30:00    wake up
-2020-04-19 07:31:00    wake up
-2020-04-20 07:30:00    wake up
+2020-04-18 07:29:00    wake up
+2020-04-19 07:30:00    wake up
+2020-04-20 07:32:00    wake up
 2020-04-23 07:30:00    wake up
 dtype: object
 </pre></div></div>
@@ -526,7 +528,7 @@ dtype: object
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span>
-<span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">(</span><span class="n">keep_residuals</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 <span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -566,7 +568,7 @@ dtype: object
       <th>0</th>
       <td>2020-04-16 07:30:00</td>
       <td>5</td>
-      <td>1 days</td>
+      <td>1 days 00:00:30</td>
     </tr>
   </tbody>
 </table>
@@ -620,15 +622,15 @@ dtype: object
       <th>0</th>
       <td>2020-04-16 07:30:00</td>
       <td>5</td>
-      <td>1 days</td>
-      <td>[-6, 6, 6, -6]</td>
+      <td>1 days 00:00:30</td>
+      <td>[-9, -3, 3, 9]</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>The last column named <code class="docutils literal notranslate"><span class="pre">dE</span></code> contains a list of shifts to apply to our cycle in case we want to reconstruct the original data. Trailing zeros have been removed for efficiency, but we can see there is: * a -60 second shift between the first and second entry (one minute early on tuesday) * a 60 second shift between the second and third entry (back to 7:30 on wednesday) * an 60 second shift between the third and fourth entry (one minute late on thursday) * an -60 second shift between the fourth
-and fifth entry (back to 7:30 on friday)</p>
+<p>The last column named <code class="docutils literal notranslate"><span class="pre">dE</span></code> contains a list of shifts to apply to our cycle in case we want to reconstruct the original data. Trailing zeros have been removed for efficiency, and their values are <code class="docutils literal notranslate"><span class="pre">relative</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">period</span></code>, but we can see there is: * a -90 second shift between the 1st and 2nd entry (1day30s - 90s later = waking up at 7:29 on tuesday) * a 30 second shift between the 2nd and 3rd entry (1day30s - 30s later = still waking up at 7:29 on wednesday) * an 30 second shift between the
+3rd and 4th entry (back to 7:30 on thursday) * an 90 second shift between the 4th and 5th entry (1day 30s + 90s later = waking up at 7:32 on friday)</p>
 <p>Also note that we can get the “uncovered” events, called <code class="docutils literal notranslate"><span class="pre">redisuals</span></code></p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -667,9 +669,9 @@ dtype: object
 <div class="highlight"><pre>
 2020-04-16 07:30:00    wake up
 2020-04-17 07:29:00    wake up
-2020-04-18 07:30:00    wake up
-2020-04-19 07:31:00    wake up
-2020-04-20 07:30:00    wake up
+2020-04-18 07:29:00    wake up
+2020-04-19 07:30:00    wake up
+2020-04-20 07:32:00    wake up
 2020-04-23 07:30:00    wake up
 dtype: object
 </pre></div></div>
@@ -735,8 +737,8 @@ Name: canadian_tv, dtype: string
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span>
-<span class="n">pcm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ctv_logs</span><span class="p">)</span>
+<span></span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="o">%</span><span class="k">snakeviz</span> -t pcm.fit(ctv_logs)
 </pre></div>
 </div>
 </div>
@@ -745,17 +747,18 @@ Name: canadian_tv, dtype: string
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/home/radon/miniconda3/envs/skmine/lib/python3.6/site-packages/scikit_mine-0.0.5-py3.6.egg/skmine/periodic/cycles.py:414: UserWarning: found duplicates in input sequence, removing them
+/home/radon/miniconda3/envs/skmine/lib/python3.6/site-packages/scikit_mine-0.0.5-py3.6.egg/skmine/periodic/cycles.py:433: UserWarning: found duplicates in input sequence, removing them
   warnings.warn(&#34;found duplicates in input sequence, removing them&#34;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;skmine.periodic.cycles.PeriodicCycleMiner at 0x7fed4883f048&gt;
+
+*** Profile stats marshalled to file &#39;/tmp/tmpw_wm3pe5&#39;.
+Opening SnakeViz in a new tab...
 </pre></div></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Note</span></code> : no need to worry for the warning, it’s here to notify duplicate event/timestamp pairs have been found</p>
@@ -800,35 +803,36 @@ Name: canadian_tv, dtype: string
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4" valign="top">Addison</th>
+      <th rowspan="2" valign="top">Addison</th>
       <th>0</th>
       <td>2020-08-03 07:11:00</td>
-      <td>5</td>
+      <td>4</td>
       <td>1 days 00:00:00</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>2020-08-10 07:11:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
+      <td>2020-08-02 06:00:00</td>
+      <td>4</td>
+      <td>7 days 00:00:00</td>
     </tr>
     <tr>
-      <th>2</th>
-      <td>2020-08-17 07:11:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:11:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Arthur Shorts</th>
+      <th rowspan="2" valign="top">Arthur Shorts</th>
       <th>0</th>
-      <td>2020-08-17 09:48:00</td>
-      <td>5</td>
+      <td>2020-08-03 09:48:00</td>
+      <td>4</td>
+      <td>1 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2020-08-01 11:00:00</td>
+      <td>4</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Beat Bugs</th>
+      <th>0</th>
+      <td>2020-08-03 07:30:00</td>
+      <td>4</td>
       <td>1 days 00:00:00</td>
     </tr>
     <tr>
@@ -839,23 +843,17 @@ Name: canadian_tv, dtype: string
       <td>...</td>
     </tr>
     <tr>
-      <th rowspan="3" valign="top">This Hour Has 22 Minutes</th>
-      <th>2</th>
-      <td>2020-08-11 00:30:00</td>
-      <td>7</td>
+      <th rowspan="2" valign="top">This Hour Has 22 Minutes</th>
+      <th>4</th>
+      <td>2020-08-18 00:30:00</td>
+      <td>4</td>
       <td>0 days 00:30:00</td>
     </tr>
     <tr>
-      <th>3</th>
+      <th>5</th>
       <td>2020-08-25 02:00:00</td>
       <td>4</td>
       <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2020-08-12 19:00:00</td>
-      <td>4</td>
-      <td>1 days 00:00:00</td>
     </tr>
     <tr>
       <th>Thrillusionists</th>
@@ -863,6 +861,13 @@ Name: canadian_tv, dtype: string
       <td>2020-08-02 07:36:00</td>
       <td>5</td>
       <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>True and the Rainbow Kingdom</th>
+      <th>0</th>
+      <td>2020-08-11 09:12:00</td>
+      <td>3</td>
+      <td>6 days 23:59:30</td>
     </tr>
     <tr>
       <th>Vet on the Hill</th>
@@ -873,7 +878,7 @@ Name: canadian_tv, dtype: string
     </tr>
   </tbody>
 </table>
-<p>86 rows × 3 columns</p>
+<p>147 rows × 3 columns</p>
 </div></div>
 </div>
 <p>The resulting dataframe has a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.MultiIndex.html">MultIndex</a>.</p>
@@ -922,27 +927,15 @@ Name: canadian_tv, dtype: string
   <tbody>
     <tr>
       <th>0</th>
-      <td>2020-08-17 09:48:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
+      <td>2020-08-03 09:48:00</td>
+      <td>4</td>
+      <td>1 days</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>2020-08-24 09:48:00</td>
-      <td>5</td>
-      <td>0 days 23:59:30</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-04 09:48:00</td>
+      <td>2020-08-01 11:00:00</td>
       <td>4</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-12 09:47:00</td>
-      <td>3</td>
-      <td>1 days 00:00:30</td>
+      <td>7 days</td>
     </tr>
   </tbody>
 </table>
@@ -991,33 +984,6 @@ Name: canadian_tv, dtype: string
   </thead>
   <tbody>
     <tr>
-      <th>Grand Designs</th>
-      <th>0</th>
-      <td>2020-08-01 05:00:00</td>
-      <td>31</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Schitt's Creek</th>
-      <th>0</th>
-      <td>2020-08-28 00:00:00</td>
-      <td>8</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th rowspan="2" valign="top">Kim's Convenience</th>
-      <th>0</th>
-      <td>2020-08-05 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-26 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
       <th>Mr. D</th>
       <th>0</th>
       <td>2020-08-06 00:30:00</td>
@@ -1025,35 +991,65 @@ Name: canadian_tv, dtype: string
       <td>0 days 00:30:00</td>
     </tr>
     <tr>
-      <th>Schitt's Creek</th>
-      <th>1</th>
-      <td>2020-08-07 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th rowspan="3" valign="top">This Hour Has 22 Minutes</th>
+      <th>Coronation Street Omnibus</th>
       <th>0</th>
-      <td>2020-08-18 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
+      <td>2020-08-02 08:57:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
     </tr>
     <tr>
-      <th>1</th>
-      <td>2020-08-04 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-11 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>Addison</th>
+      <th>Daisy &amp; The Gumboot Kids</th>
       <th>0</th>
-      <td>2020-08-03 07:11:00</td>
+      <td>2020-08-01 07:40:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Does It Fart?</th>
+      <th>0</th>
+      <td>2020-08-02 07:30:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Holy Baloney</th>
+      <th>0</th>
+      <td>2020-08-02 07:34:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Ollie: The Boy Who Became What He Ate</th>
+      <th>0</th>
+      <td>2020-08-10 08:59:00</td>
+      <td>5</td>
+      <td>1 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>The Strange Chores</th>
+      <th>0</th>
+      <td>2020-08-01 11:48:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>The Sunday Scrum</th>
+      <th>0</th>
+      <td>2020-08-02 11:00:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Thrillusionists</th>
+      <th>0</th>
+      <td>2020-08-02 07:36:00</td>
+      <td>5</td>
+      <td>7 days 00:00:00</td>
+    </tr>
+    <tr>
+      <th>Vet on the Hill</th>
+      <th>0</th>
+      <td>2020-08-03 16:00:00</td>
       <td>5</td>
       <td>1 days 00:00:00</td>
     </tr>
@@ -1107,41 +1103,42 @@ Name: canadian_tv, dtype: string
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4" valign="top">Addison</th>
+      <th rowspan="2" valign="top">Addison</th>
       <th>0</th>
       <td>2020-08-03 07:11:00</td>
-      <td>5</td>
+      <td>4</td>
       <td>1 days</td>
-      <td>[0, 0, 0, 0]</td>
+      <td>[0, 0, 0]</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>2020-08-10 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-      <td>[0, 0, 0, 0]</td>
+      <td>2020-08-02 06:00:00</td>
+      <td>4</td>
+      <td>7 days</td>
+      <td>[0, 0, 0]</td>
     </tr>
     <tr>
-      <th>2</th>
-      <td>2020-08-17 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-      <td>[0, 0, 0, 0]</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-      <td>[0, 0, 0, 0]</td>
-    </tr>
-    <tr>
-      <th>Arthur Shorts</th>
+      <th rowspan="2" valign="top">Arthur Shorts</th>
       <th>0</th>
-      <td>2020-08-17 09:48:00</td>
-      <td>5</td>
+      <td>2020-08-03 09:48:00</td>
+      <td>4</td>
       <td>1 days</td>
-      <td>[0, 0, 0, 0]</td>
+      <td>[0, -6, 6]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2020-08-01 11:00:00</td>
+      <td>4</td>
+      <td>7 days</td>
+      <td>[0, 0, 0]</td>
+    </tr>
+    <tr>
+      <th>Beat Bugs</th>
+      <th>0</th>
+      <td>2020-08-03 07:30:00</td>
+      <td>4</td>
+      <td>1 days</td>
+      <td>[0, 0, 0]</td>
     </tr>
   </tbody>
 </table>
@@ -1167,16 +1164,16 @@ Name: canadian_tv, dtype: string
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Rusty Rivets                             120
-Arthur Shorts                             48
+PJ Masks                                 264
+Hockey Night in Canada                    36
+CBC Kids                                  24
 Kiri &amp; Lou                                24
+Rusty Rivets                              24
 Daniel Tiger&#39;s Neighbourhood              18
-PJ Masks                                  18
+Ollie: The Boy Who Became What He Ate     18
+Arthur Shorts                             12
 Daisy &amp; The Gumboot Kids                  12
 Holy Baloney                              12
-Thrillusionists                           12
-Ollie: The Boy Who Became What He Ate      6
-The Strange Chores                         6
 Name: dE, dtype: int64
 </pre></div></div>
 </div>
@@ -1224,89 +1221,6 @@ Name: dE, dtype: int64
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4" valign="top">Addison</th>
-      <th>0</th>
-      <td>2020-08-03 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Arthur Shorts</th>
-      <th>0</th>
-      <td>2020-08-17 09:48:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th rowspan="4" valign="top">Beat Bugs</th>
-      <th>0</th>
-      <td>2020-08-03 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Big Block Sing Song</th>
-      <th>0</th>
-      <td>2020-08-03 07:25:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th rowspan="3" valign="top">CBC News Network</th>
-      <th>0</th>
-      <td>2020-08-10 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-17 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-24 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
       <th>Coronation Street Omnibus</th>
       <th>0</th>
       <td>2020-08-02 08:57:00</td>
@@ -1328,52 +1242,6 @@ Name: dE, dtype: int64
       <td>7 days</td>
     </tr>
     <tr>
-      <th rowspan="4" valign="top">Dragons' Den</th>
-      <th>0</th>
-      <td>2020-08-03 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Escape to the Country</th>
-      <th>0</th>
-      <td>2020-08-03 15:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Grand Designs</th>
-      <th>0</th>
-      <td>2020-08-01 05:00:00</td>
-      <td>31</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Heartland</th>
-      <th>0</th>
-      <td>2020-08-03 14:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
       <th>Holy Baloney</th>
       <th>0</th>
       <td>2020-08-02 07:34:00</td>
@@ -1381,30 +1249,9 @@ Name: dE, dtype: int64
       <td>7 days</td>
     </tr>
     <tr>
-      <th>Just For Laughs: Gags</th>
-      <th>0</th>
-      <td>2020-08-03 19:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Murdoch Mysteries</th>
-      <th>0</th>
-      <td>2020-08-03 13:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
       <th>Ollie: The Boy Who Became What He Ate</th>
       <th>0</th>
       <td>2020-08-10 08:59:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Rusty Rivets</th>
-      <th>0</th>
-      <td>2020-08-17 08:44:00</td>
       <td>5</td>
       <td>1 days</td>
     </tr>
@@ -1486,152 +1333,9 @@ Name: dE, dtype: int64
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4" valign="top">Addison</th>
-      <th>0</th>
-      <td>2020-08-03 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:11:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Arthur Shorts</th>
-      <th>0</th>
-      <td>2020-08-17 09:48:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th rowspan="4" valign="top">Beat Bugs</th>
-      <th>0</th>
-      <td>2020-08-03 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 07:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Big Block Sing Song</th>
-      <th>0</th>
-      <td>2020-08-03 07:25:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th rowspan="3" valign="top">CBC News Network</th>
-      <th>0</th>
-      <td>2020-08-10 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-17 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-24 12:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th rowspan="4" valign="top">Dragons' Den</th>
-      <th>0</th>
-      <td>2020-08-03 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-10 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2020-08-17 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2020-08-24 11:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Escape to the Country</th>
-      <th>0</th>
-      <td>2020-08-03 15:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Heartland</th>
-      <th>0</th>
-      <td>2020-08-03 14:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Just For Laughs: Gags</th>
-      <th>0</th>
-      <td>2020-08-03 19:30:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Murdoch Mysteries</th>
-      <th>0</th>
-      <td>2020-08-03 13:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
       <th>Ollie: The Boy Who Became What He Ate</th>
       <th>0</th>
       <td>2020-08-10 08:59:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Rusty Rivets</th>
-      <th>0</th>
-      <td>2020-08-17 08:44:00</td>
       <td>5</td>
       <td>1 days</td>
     </tr>

@@ -1,0 +1,550 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>skmine.graph.graphmdl.graph_mdl &mdash; scikit-mine 0.0.6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link href="../../../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html">
+          
+
+          
+            
+            <img src="../../../../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/feature_extraction.html">Feature Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/periodic.html">Periodic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/base.html">Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/graph.html">Graphs</a></li>
+</ul>
+<p><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+</ul>
+<p><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CONTRIBUTING.html#development-process">Development process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../HISTORY.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>skmine.graph.graphmdl.graph_mdl</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for skmine.graph.graphmdl.graph_mdl</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">networkx</span>
+<span class="kn">from</span> <span class="nn">skmine.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.label_codes</span> <span class="kn">import</span> <span class="n">LabelCodes</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.code_table</span> <span class="kn">import</span> <span class="n">CodeTable</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.code_table_row</span> <span class="kn">import</span> <span class="n">CodeTableRow</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl</span> <span class="kn">import</span> <span class="n">utils</span>
+
+
+<span class="k">def</span> <span class="nf">_order_pruning_rows</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Sort the pruning row by their usage&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">pattern_usage</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="GraphMDL"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL">[docs]</a><span class="k">class</span> <span class="nc">GraphMDL</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a python re-implementation of the GraphMDL family of approaches for extracting a small and</span>
+<span class="sd">        descriptive set of graph patterns from graph data.</span>
+<span class="sd">        This re-implementation supports directed graphs only, but supports multi-graphs.</span>
+
+<span class="sd">        This is a python re-implementation of the original Java algorithm, which is available at &#39;https://gitlab.inria.fr/fbariatt/graphmdl&#39;.</span>
+<span class="sd">        As such, some functionalities are not available in this version, such as a full support of graph automorphisms.</span>
+
+<span class="sd">        Author: Arnauld Djedjemel</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">         F. Bariatti, &quot;Mining Tractable Sets of Graph Patterns with the Minimum Description Length Principle&quot;, PhD thesis, Université de Rennes 1, 2021. Available: https://hal.inria.fr/tel-03523742</span>
+
+<span class="sd">         F. Bariatti, P. Cellier, and S. Ferré. &quot;GraphMDL+ : interleaving the generation and MDL-based selection of graph patterns&quot;, in Proceedings of the 36th Annual ACM Symposium on Applied Computing, Mar. 2021, pp. 355–363. doi: 10.1145/3412841.3441917.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label_codes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patterns</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_already_test</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of the candidates already tested</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pruning_rows</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of the rows who can prune</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_old_usage</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># Mapper for the rows old usage, useful for the pruning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_description_length</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_init_graph_mdl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Initialize the GraphMDL elements such as the label code,</span>
+<span class="sd">            the initial code table (CT0), and run a cover computation to create the first rewritten graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_already_test</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label_codes</span> <span class="o">=</span> <span class="n">LabelCodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>  <span class="c1"># label codes creation</span>
+        <span class="c1"># CT0 creation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span> <span class="o">=</span> <span class="n">CodeTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_label_codes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+        <span class="c1"># CT0 cover</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">cover</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rewritten_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">compute_total_description_length</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initial_description_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> initial CT </span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GraphMDL+ run ...&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial description length = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GraphMDL.fit"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Execute GraphMDl on a given data graph</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            D : networkx graph. All edges need to be labeled.</span>
+<span class="sd">            timeout: int , default=None</span>
+<span class="sd">                Maximum time for the algorithm execution (approx.).</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            GraphMDL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">timeout</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You should give a graph&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_graph_mdl</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_anytime_graph_mdl_with_timeout</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_anytime_graph_mdl_with_timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Anytime graph mdl with timeout</span>
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        GraphMDL</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">stop</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">current</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">:</span>
+                    <span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Candidate generation and sort start .....&quot;</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="p">)</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_order_candidates</span><span class="p">)</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Candidate generation and sort end ..........time =</span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;candidates number </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GraphMDL best Ct search start .....&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">begin</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_by_time</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">candidate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_already_test</span><span class="p">:</span>
+                        <span class="c1"># Add a candidate to a ct, cover and compute description length</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">current</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">begin</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_by_time</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span><span class="p">):</span>
+                                <span class="k">break</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_old_usage</span><span class="p">()</span>
+                        <span class="n">row</span> <span class="o">=</span> <span class="n">CodeTableRow</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">final_pattern</span><span class="p">())</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">cover</span><span class="p">()</span>
+                        <span class="n">temp_code_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">compute_total_description_length</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_already_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+                        <span class="c1"># if the new ct is better than the old, break and generate new candidates</span>
+                        <span class="c1"># with the new ct</span>
+                        <span class="k">if</span> <span class="n">temp_code_length</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rewritten_graph</span><span class="p">()</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="o">=</span> <span class="n">temp_code_length</span>
+                            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;New DL &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">)</span>
+                            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;new pattern added: </span><span class="si">{</span><span class="n">utils</span><span class="o">.</span><span class="n">display_graph</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">pattern</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;search time = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_pruning_candidates</span><span class="p">()</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_pruning</span><span class="p">()</span>
+                            <span class="k">break</span>
+                        <span class="k">elif</span> <span class="n">temp_code_length</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="ow">and</span> <span class="n">candidates</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+                                <span class="n">candidates</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;None best code table found&quot;</span><span class="p">)</span>
+                            <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;search time = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">remove_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                            <span class="n">stop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_mdl_end</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span>
+                            <span class="k">break</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># if the candidate not improve the result, remove it to the code table</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">remove_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Already test&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_mdl_end</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_stop_by_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">passed_time</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Check if the passed time surpasses the timeout</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ---------</span>
+<span class="sd">            passed_time : int</span>
+<span class="sd">                The passed time</span>
+<span class="sd">            timeout : int</span>
+<span class="sd">                The maximum time</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            --------</span>
+<span class="sd">            bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">passed_time</span> <span class="o">&gt;=</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_mdl_end</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_graph_mdl_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Complete the graph mdl algorithm by cover the code table and stop</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GraphMDL+ end .....&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">cover</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rewritten_graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">compute_total_description_length</span><span class="p">()</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final description length = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of patterns found = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_order_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Provide the candidate elements to order candidates</span>
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            candidate</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span> <span class="n">candidate</span><span class="o">.</span><span class="n">exclusive_port_number</span><span class="p">,</span>
+                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_label_codes</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">final_pattern</span><span class="p">())]</span>
+
+    <span class="k">def</span> <span class="nf">_compute_old_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Store patterns usage before compute new code table patterns usage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_old_usage</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rows</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_old_usage</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">pattern</span><span class="p">()]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">pattern_usage</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_compute_pruning_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Find the row where their usage has decreased since the last usage,</span>
+<span class="sd">            it&#39;s the step before the code table pruning</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rows</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">pattern</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_old_usage</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">pattern_usage</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_old_usage</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">pattern</span><span class="p">()]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pruning_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pruning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Make the code table pruning as krimp pruning.</span>
+
+<span class="sd">            That&#39;s consist of remove row in code table who are unnecessary,</span>
+<span class="sd">            because without them the code table is better.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pruning start ....&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_old_usage</span><span class="p">()</span>  <span class="c1"># compute old pattern usage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pruning_rows</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">_order_pruning_rows</span><span class="p">)</span>  <span class="c1"># sort the pruning rows</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pruning_rows</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">remove_row</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">cover</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">compute_total_description_length</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_rewritten_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rewritten_graph</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">compute_total_description_length</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pruning_rows</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_pruning_candidates</span><span class="p">()</span>  <span class="c1"># recompute the pruning candidates</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pruning</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="n">utils</span><span class="o">.</span><span class="n">MyLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pruning end ....&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GraphMDL.patterns"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.patterns">[docs]</a>    <span class="k">def</span> <span class="nf">patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Return the patterns found by the algorithm after fit has been called.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_patterns</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">rows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">code_length</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_patterns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">pattern</span><span class="p">())</span>
+
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">singleton_code_length</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_patterns</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">create_singleton_pattern</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patterns</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The fit method must be called first&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GraphMDL.description_length"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.description_length">[docs]</a>    <span class="k">def</span> <span class="nf">description_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Return the MDL description length (model + encoded data) for the best code table found by the algorithm.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            --------</span>
+<span class="sd">            float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span></div>
+
+<div class="viewcode-block" id="GraphMDL.initial_description_length"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.initial_description_length">[docs]</a>    <span class="k">def</span> <span class="nf">initial_description_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Return the MDL description length for the initial --singleton-only-- code table CT0.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_description_length</span></div>
+
+<div class="viewcode-block" id="GraphMDL.discover"><a class="viewcode-back" href="../../../../reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Provide a summary of the algorithm execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">display_ct</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;final description length : &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description_length</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Non singleton patterns found : &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">display_graph</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">singleton_code_length</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Singleton patterns found : &quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_code_table</span><span class="o">.</span><span class="n">singleton_code_length</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The fit method must be called first&quot;</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

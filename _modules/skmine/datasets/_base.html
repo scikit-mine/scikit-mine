@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -111,6 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -196,7 +198,7 @@
 <span class="sd">    This folder is used by some large dataset loaders to avoid downloading</span>
 <span class="sd">    data several times.</span>
 
-<span class="sd">    By default ``data_home`` is **$HOME/scikit_mine_data/**</span>
+<span class="sd">    By default, ``data_home`` is **./scikit_mine_data/**</span>
 
 <span class="sd">    Alternatively, it can be set by the **SCIKIT_MINE_DATA** environment</span>
 <span class="sd">    variable or programmatically by giving an explicit folder path.</span>
@@ -206,10 +208,12 @@
 <span class="sd">    data_home : str | None</span>
 <span class="sd">        The path to scikit-mine data dir.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">skmine</span>
+    <span class="n">sk_path</span> <span class="o">=</span> <span class="n">skmine</span><span class="o">.</span><span class="vm">__file__</span>  <span class="c1"># example sk_path = &#39;/home/username/codes/sk_root/skmine/__init__.py&#39;</span>
+    <span class="n">sk_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sk_path</span><span class="p">))</span>  <span class="c1"># sk_root = &#39;/home/username/codes/sk_root</span>
+
     <span class="k">if</span> <span class="n">data_home</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">data_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;SCIKIT_MINE_DATA&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">,</span> <span class="s2">&quot;scikit_mine_data&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">data_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SCIKIT_MINE_DATA&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sk_root</span><span class="p">,</span> <span class="s2">&quot;scikit_mine_data&quot;</span><span class="p">))</span>
     <span class="n">data_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">data_home</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_home</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_home</span><span class="p">)</span>

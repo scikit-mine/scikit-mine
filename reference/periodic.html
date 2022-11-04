@@ -4,7 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -103,11 +103,14 @@
 <li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Periodic</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#periodiccycleminer">PeriodicCycleMiner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#periodicpatternminer">PeriodicPatternMiner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#singleeventcycleminer">SingleEventCycleMiner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -117,6 +120,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -221,7 +225,7 @@
 <h2>PeriodicCycleMiner<a class="headerlink" href="#periodiccycleminer" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.periodic.PeriodicCycleMiner">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.</code><code class="sig-name descname">PeriodicCycleMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.</code><code class="sig-name descname">PeriodicCycleMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">keep_residuals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mining periodic cycles with a MDL Criterion</p>
 <p>PeriodicCycleMiner is an approach to mine periodic cycles from event logs
 while relying on a Minimum Description Length (MDL) criterion to evaluate
@@ -236,14 +240,16 @@ the periodic structure present in the data</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the <cite>repeating event</cite></p></li>
 <li><p><span class="math notranslate nohighlight">\(r\)</span> is the number of repetitions of the event, called the <cite>cycle length</cite></p></li>
-<li><p><span class="math notranslate nohighlight">\(p\)</span> is the inter-occurence distance, called the <cite>cycle period</cite></p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau\)</span> is the index of the first occurence, called the <cite>cycle starting point</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(p\)</span> is the inter-occurrence distance, called the <cite>cycle period</cite></p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau\)</span> is the index of the first occurrence, called the <cite>cycle starting point</cite></p></li>
 <li><p><span class="math notranslate nohighlight">\(E\)</span> is a list of <span class="math notranslate nohighlight">\(r - 1\)</span> signed integer offsets, i.e <cite>cycle shift corrections</cite></p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=100</em>) – maximum length for a candidate cycle, when running the dynamic programming heuristic</p></li>
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=20</em>) – maximum length for a candidate cycle, when running the dynamic programming heuristic</p></li>
+<li><p><strong>keep_residuals</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to keep track of residuals (occurrences not covered by any cycle) or not.
+Residuals are required for a lossless reconstruction of the original data.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of jobs to use for the computation. Each single event is attributed a job
 to discover potential cycles.
 Threads are preffered over processes.</p></li>
@@ -252,12 +258,13 @@ Threads are preffered over processes.</p></li>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring_a_bell&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">               start  length  period</span>
-<span class="go">ring_a_bell 0     40       4      20</span>
-<span class="go">            1     10       3      11</span>
+<span class="go">               start  length  period       cost</span>
+<span class="go">ring_a_bell 1     10       3      11  23.552849</span>
+<span class="go">            0     40       4      20  24.665780</span>
 </pre></div>
 </div>
 <p class="rubric">References</p>
@@ -272,7 +279,7 @@ Threads are preffered over processes.</p></li>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit PeriodicCycleMiner on data logs</p>
 <p>This generate new candidate cycles and evaluate them.
-Residual occurences are stored as an internal attribute,
+Residual occurrences are stored as an internal attribute,
 for later reconstruction (MDL is lossless)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -285,19 +292,16 @@ This pandas Series must have an index of type in
 
 <dl class="py method">
 <dt id="skmine.periodic.PeriodicCycleMiner.evaluate">
-<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cands</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate candidates <cite>cands</cite>, given S</p>
 <p>Unlike the original implementation by Galbrun &amp; Al.,
-if an occurence is present in more than one candidate cycle, we keep the cycle
+if an occurrence is present in more than one candidate cycle, we keep the cycle
 with the greatest length.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>S</strong> (<em>pd.Index</em>) – Series of occurences for a specific event</p></li>
-<li><p><strong>cands</strong> (<em>list</em><em>[</em><em>np.ndarray</em><em>]</em>) – A list of candidate batches. Each batch contains candidates occurences of the same length,
-hence stored in a common <cite>numpy.ndarray</cite>.
-Batches are sorted by decreasing order of width,
-so that we consider larger candidates first.</p></li>
+<li><p><strong>cands</strong> (<em>pd.DataFrame</em>) – a dataframe containing the candidates, as well-formed cycles</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – number of cycles to keep for the same occurence covered</p></li>
 </ul>
 </dd>
 </dl>
@@ -305,7 +309,7 @@ so that we consider larger candidates first.</p></li>
 
 <dl class="py method">
 <dt id="skmine.periodic.PeriodicCycleMiner.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shifts</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shifts</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">tids</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return cycles as a pandas DataFrame, with 3 columns,
 with a 2-level multi-index: the first level mapping events,
 and the second level being positional</p>
@@ -314,21 +318,27 @@ and the second level being positional</p>
 <dd class="field-odd"><p><dl>
 <dt>DataFrame with the following columns</dt><dd><table class="docutils align-default">
 <colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
+<col style="width: 21%" />
+<col style="width: 79%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>start</p></td>
 <td><p>when the cycle starts</p></td>
 </tr>
 <tr class="row-even"><td><p>length</p></td>
-<td><p>number of occurences in the event</p></td>
+<td><p>number of occurrences in the event</p></td>
 </tr>
 <tr class="row-odd"><td><p>period</p></td>
-<td><p>inter-occurence delay</p></td>
+<td><p>inter-occurrence delay</p></td>
 </tr>
 <tr class="row-even"><td><p>dE</p></td>
 <td><p>shift corrections, if shifts=True</p></td>
+</tr>
+<tr class="row-odd"><td><p>tids</p></td>
+<td><p>Transactions ids covered, if tids=True</p></td>
+</tr>
+<tr class="row-even"><td><p>cost</p></td>
+<td><p>MDL cost</p></td>
 </tr>
 </tbody>
 </table>
@@ -342,12 +352,13 @@ and the second level being positional</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicCycleMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">        start  length  period</span>
-<span class="go">ring 0     40       4      20</span>
-<span class="go">     1     10       3      11</span>
+<span class="go">        start  length  period       cost</span>
+<span class="go">ring 1     10       3      11  23.552849</span>
+<span class="go">     0     40       4      20  24.665780</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -355,7 +366,7 @@ and the second level being positional</p>
 <dl class="py method">
 <dt id="skmine.periodic.PeriodicCycleMiner.reconstruct">
 <code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.reconstruct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reconstruct the original occurences from the current cycles.
+<dd><p>Reconstruct the original occurrences from the current cycles.
 Residuals will also be included, as the compression scheme is lossless</p>
 <p>Denoting as <span class="math notranslate nohighlight">\(\sigma(E)\)</span> the sum of the shift corrections for a cycle
 <span class="math notranslate nohighlight">\(C\)</span>, we have</p>
@@ -378,7 +389,7 @@ Residuals will also be included, as the compression scheme is lossless</p>
 <code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicCycleMiner.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicCycleMiner.generate_candidates" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>S</strong> (<em>pd.Index</em><em> or </em><em>numpy.ndarray</em>) – Series of occurences for a specific event</p>
+<dd class="field-odd"><p><strong>S</strong> (<em>pd.Index</em><em> or </em><em>numpy.ndarray</em>) – Series of occurrences for a specific event</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A dict, where each key is an event and each value a list of batch of candidates.
@@ -404,6 +415,154 @@ so that we consider larger candidate cycles first.</p>
 <dd class="field-even"><p>pd.Series</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="periodicpatternminer">
+<h2>PeriodicPatternMiner<a class="headerlink" href="#periodicpatternminer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.periodic.PeriodicPatternMiner">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.</code><code class="sig-name descname">PeriodicPatternMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">cycle_miner_kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mining Periodic Pattern with a MDL criterion</p>
+<p>Implementation of periodic tree mining.</p>
+<p>This first extract cycles from the input data, and then combine these cycles
+into more complex tree structures.</p>
+<p>A tree is defined as a 3-tuple of the form
+:math: `    au`, <cite>C</cite>, <cite>E</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> (<em>int</em><em>, </em><em>default=20</em>) – Number of trees to keep from the set of candidates.
+Trees will be evaluated based on their</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#skmine.periodic.PeriodicCycleMiner" title="skmine.periodic.PeriodicCycleMiner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skmine.periodic.PeriodicCycleMiner</span></code></a></p>
+</div>
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.prefit">
+<code class="sig-name descname">prefit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.prefit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.prefit" title="Permalink to this definition">¶</a></dt>
+<dd><p>ingest data <cite>D</cite> and track basic informations to be used later</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.generate_candidates">
+<code class="sig-name descname">generate_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">singletons</span></em>, <em class="sig-param"><span class="n">S</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.generate_candidates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.generate_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate candidate trees be successive vertical/horizontal combinations</p>
+<p>Starting from singleton trees (~ cycles)</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#skmine.periodic.PeriodicPatternMiner.prefit" title="skmine.periodic.PeriodicPatternMiner.prefit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prefit</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trees</span></em>, <em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate candidate trees</p>
+<p>See the “greedy cover” method described at the top of page 30 from
+the original paper</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span><span class="p">:</span> <span class="n">skmine.periodic.tree.Tree</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>inplace edition of underlying datastructures</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discover periodic patterns (in the form of trees) from a sequence of event <cite>D</cite></p>
+<p>This iteratively refines the set of trees by successive vertical/horizontal
+combinations, starting from single-node trees describing <cite>cycles</cite>.</p>
+<p>The resulting model is a list of periodic trees.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.PeriodicPatternMiner.discover">
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/tree.html#PeriodicPatternMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.PeriodicPatternMiner.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overview on the discovered trees</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="singleeventcycleminer">
+<h2>SingleEventCycleMiner<a class="headerlink" href="#singleeventcycleminer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.periodic.SingleEventCycleMiner">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.</code><code class="sig-name descname">SingleEventCycleMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">20</span></em>, <em class="sig-param"><span class="n">keep_residuals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_occs_tot</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#SingleEventCycleMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.SingleEventCycleMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Miner periodic cycles, but in the scope of a single event</p>
+<p>To this end, we only accept 1 dimensional arrays as input
+PeriodicCycleMiner will operate by instantiating one SingleEventCycleMiner per event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=20</em>) – maximum length for a cycle</p></li>
+<li><p><strong>keep_residuals</strong> (<em>bool</em><em>, </em><em>default=False</em>) – either to keep residuals (lossless compression) or not (lossy compression)</p></li>
+<li><p><strong>n_occs_tot</strong> (<em>int</em><em>, </em><em>default=None</em>) – Number of total occurrences. When instanciating this class on a subset of the original
+data, this can be useful to pass the number of occurrences in this original data.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em>, </em><em>default=2</em>) – Maximum number of cycles covering the same occurrence</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="skmine.periodic.SingleEventCycleMiner.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#SingleEventCycleMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.SingleEventCycleMiner.fit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>np.array of shape</em><em> (</em><em>n_occs</em><em>, </em><em>)</em>) – Input occurrences</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>X will be reshaped to a 1-d vector in any case</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.SingleEventCycleMiner.discover">
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#SingleEventCycleMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.SingleEventCycleMiner.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expose cycles as a brand new dataframe</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.SingleEventCycleMiner.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#skmine.periodic.SingleEventCycleMiner.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate candidates <cite>cands</cite>, given S</p>
+<p>Unlike the original implementation by Galbrun &amp; Al.,
+if an occurrence is present in more than one candidate cycle, we keep the cycle
+with the greatest length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cands</strong> (<em>pd.DataFrame</em>) – a dataframe containing the candidates, as well-formed cycles</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – number of cycles to keep for the same occurence covered</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.periodic.SingleEventCycleMiner.reconstruct">
+<code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#SingleEventCycleMiner.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.SingleEventCycleMiner.reconstruct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the original occurrences from the current cycles.
+Residuals will also be included, as the compression scheme is lossless</p>
+<p>Denoting as <span class="math notranslate nohighlight">\(\sigma(E)\)</span> the sum of the shift corrections for a cycle
+<span class="math notranslate nohighlight">\(C\)</span>, we have</p>
+<div class="math notranslate nohighlight">
+\[\Delta(C)=(r-1) p+\sigma(E)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The reconstructed dataset</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.Series</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The index of the resulting pd.Series will not be sorted</p>
 </dd></dl>
 
 </dd></dl>

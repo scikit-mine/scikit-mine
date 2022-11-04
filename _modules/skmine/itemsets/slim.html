@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -111,6 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -195,9 +197,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedDict</span>
+<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
 <span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">InteractiveMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
-<span class="kn">from</span> <span class="nn">..bitmaps</span> <span class="kn">import</span> <span class="n">Bitmap</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_D</span><span class="p">,</span> <span class="n">supervised_to_unsupervised</span>
 
 
@@ -272,7 +274,7 @@
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">codetable</span><span class="p">,</span> <span class="n">SortedDict</span><span class="p">)</span>
     <span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">codetable</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e2</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X_usage</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">codetable</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">items</span><span class="p">()[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">depth</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">codetable</span><span class="o">.</span><span class="n">items</span><span class="p">()[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">depth</span><span class="p">]</span>
         <span class="n">_best_usage</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">best_XY</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_usage</span> <span class="ow">in</span> <span class="n">Y</span><span class="p">:</span>
@@ -338,7 +340,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="sd">    &gt;&gt;&gt; D = [[&#39;bananas&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;], [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;]]</span>
-<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).discover(singletons=True, usage_tids=True)</span>
+<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).discover()</span>
 <span class="sd">    (bananas, milk)    [0, 1]</span>
 <span class="sd">    (butter, tea)         [2]</span>
 <span class="sd">    (cookies,)         [1, 2]</span>
@@ -355,7 +357,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_items</span> <span class="o">=</span> <span class="n">n_items</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
@@ -369,7 +371,7 @@
 <div class="viewcode-block" id="SLIM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pylint:disable = too-many-locals</span>
         <span class="sd">&quot;&quot;&quot;fit SLIM on a transactional dataset</span>
 
-<span class="sd">        This generate new candidate patterns and add those which improve compression,</span>
+<span class="sd">        This generates new candidate patterns and add those which improve compression,</span>
 <span class="sd">        iteratibely refining ``self.codetable_``</span>
 
 <span class="sd">        Parameters</span>
@@ -514,7 +516,7 @@
 <span class="sd">            new data size (in bits) to be set</span>
 
 <span class="sd">        usages: dict, default=None</span>
-<span class="sd">            optional for usage outside of this class</span>
+<span class="sd">            optional for usage outside this class</span>
 <span class="sd">            eg. if one simply needs to include an itemset in the current codetable</span>
 <span class="sd">            as in interactive data mining</span>
 
@@ -590,7 +592,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="sd">        &gt;&gt;&gt; D = [&quot;ABC&quot;, &quot;AB&quot;, &quot;BCD&quot;]</span>
-<span class="sd">        &gt;&gt;&gt; SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)</span>
+<span class="sd">        &gt;&gt;&gt; SLIM().fit(D).discover()</span>
 <span class="sd">        (A, B)    [0, 1]</span>
 <span class="sd">        (B,)         [2]</span>
 <span class="sd">        (A,)          []</span>
@@ -616,7 +618,7 @@
 <div class="viewcode-block" id="SLIM.reconstruct"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.reconstruct">[docs]</a>    <span class="k">def</span> <span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;reconstruct the original data from the current `self.codetable_`&quot;&quot;&quot;</span>
         <span class="n">n_transactions</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">Bitmap</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">Bitmap</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codetable_</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="p">)</span>
 
         <span class="n">D</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="nb">set</span><span class="p">()]</span> <span class="o">*</span> <span class="n">n_transactions</span><span class="p">)</span>
@@ -646,10 +648,10 @@
 <span class="sd">        Returns a tuple associated with an itemset,</span>
 <span class="sd">        so that many itemsets can be sorted in Standard Cover Order</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="o">*</span><span class="n">itemset</span><span class="p">)),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
+        <span class="k">return</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="o">*</span><span class="n">itemset</span><span class="p">)),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_standard_candidate_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemset</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="o">*</span><span class="n">itemset</span><span class="p">)),</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">))</span>
+        <span class="k">return</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="o">*</span><span class="n">itemset</span><span class="p">)),</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SLIM.prefit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.SLIM.prefit">[docs]</a>    <span class="k">def</span> <span class="nf">prefit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

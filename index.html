@@ -4,7 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -104,6 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -113,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -240,14 +242,17 @@ Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.</p>
 </section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>scikit-mine requires Python&gt;=3.6,
+<p>scikit-mine requires Python&gt;=3.7,
 and some extra dependencies</p>
 <ul class="simple">
 <li><p>scipy&gt;=1.2.1</p></li>
 <li><p>pandas&gt;=1.0.0</p></li>
-<li><p>sortedcontainers&gt;=2.1.0</p></li>
-<li><p>roaringbitmap==0.7</p></li>
+<li><p>roaringbitmap</p></li>
 <li><p>joblib&gt;=0.11.1</p></li>
+<li><p>sortedcontainers&gt;=2.1.0</p></li>
+<li><p>dataclasses</p></li>
+<li><p>networkx~=2.5.1</p></li>
+<li><p>wget</p></li>
 </ul>
 <p><strong>scikit-learn</strong> is not a dependency. However, scikit-mine is <strong>contiuously tested for interactions with scikit-learn</strong></p>
 </section>
@@ -293,10 +298,13 @@ and some extra dependencies</p>
 <li class="toctree-l1"><a class="reference internal" href="reference/itemsets.html">Itemsets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/itemsets.html#slim">SLIM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/itemsets.html#lcm">LCM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/itemsets.html#lcmmax">LCMMax</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/periodic.html">Periodic</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/periodic.html#periodiccycleminer">PeriodicCycleMiner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/periodic.html#periodicpatternminer">PeriodicPatternMiner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/periodic.html#singleeventcycleminer">SingleEventCycleMiner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/emerging.html">Emerging</a><ul>
@@ -305,6 +313,10 @@ and some extra dependencies</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/base.html">Base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/callbacks.html">Callback API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/graph.html">Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/graph.html#graphmdl">GraphMDL+</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -337,6 +349,7 @@ and some extra dependencies</p>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/callbacks/callbacks.html#Inner-view-of-MDL-learning">Inner view of MDL learning</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">

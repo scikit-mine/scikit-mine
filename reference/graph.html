@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Graphs &mdash; scikit-mine 0.0.6 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../tutorials/datasets/index.html" />
+    <link rel="prev" title="Callback API" href="callbacks.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/skmine_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation from pypi</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html#installation-from-sources">Installation from sources</a></li>
+</ul>
+<p><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_extraction.html">Feature Extraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="itemsets.html">Itemsets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="periodic.html">Periodic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emerging.html">Emerging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callback API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#graphmdl">GraphMDL+</a></li>
+</ul>
+</li>
+</ul>
+<p><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+</ul>
+<p><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sklearn_compat.html">Compatibility with Scikit-Learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#inclusion-criteria">Inclusion criteria</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html#development-process">Development process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scikit-mine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Graphs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/graph.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="graphs">
+<span id="graph"></span><h1>Graphs<a class="headerlink" href="#graphs" title="Permalink to this headline">¶</a></h1>
+<p>Module dedicated to mine graph patterns from graph data.</p>
+<section id="graphmdl">
+<h2>GraphMDL+<a class="headerlink" href="#graphmdl" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.graph.graphmdl.graph_mdl.</code><code class="sig-name descname">GraphMDL</code><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a python re-implementation of the GraphMDL family of approaches for extracting a small and
+descriptive set of graph patterns from graph data.
+This re-implementation supports directed graphs only, but supports multi-graphs.</p>
+<p>This is a python re-implementation of the original Java algorithm, which is available at ‘<a class="reference external" href="https://gitlab.inria.fr/fbariatt/graphmdl">https://gitlab.inria.fr/fbariatt/graphmdl</a>’.
+As such, some functionalities are not available in this version, such as a full support of graph automorphisms.</p>
+<p>Author: Arnauld Djedjemel</p>
+<p class="rubric">References</p>
+<ol class="upperalpha simple" start="6">
+<li><p>Bariatti, “Mining Tractable Sets of Graph Patterns with the Minimum Description Length Principle”, PhD thesis, Université de Rennes 1, 2021. Available: <a class="reference external" href="https://hal.inria.fr/tel-03523742">https://hal.inria.fr/tel-03523742</a></p></li>
+</ol>
+<ol class="upperalpha simple" start="6">
+<li><p>Bariatti, P. Cellier, and S. Ferré. “GraphMDL+ : interleaving the generation and MDL-based selection of graph patterns”, in Proceedings of the 36th Annual ACM Symposium on Applied Computing, Mar. 2021, pp. 355–363. doi: 10.1145/3412841.3441917.</p></li>
+</ol>
+<dl class="py method">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute GraphMDl on a given data graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> (<em>networkx graph. All edges need to be labeled.</em>) – </p></li>
+<li><p><strong>timeout</strong> (<em>int</em><em> , </em><em>default=None</em>) – Maximum time for the algorithm execution (approx.).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL" title="skmine.graph.graphmdl.graph_mdl.GraphMDL">GraphMDL</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL.patterns">
+<code class="sig-name descname">patterns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL.patterns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL.patterns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the patterns found by the algorithm after fit has been called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL.description_length">
+<code class="sig-name descname">description_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL.description_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL.description_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the MDL description length (model + encoded data) for the best code table found by the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL.initial_description_length">
+<code class="sig-name descname">initial_description_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL.initial_description_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL.initial_description_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the MDL description length for the initial –singleton-only– code table CT0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.graph.graphmdl.graph_mdl.GraphMDL.discover">
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/graph/graphmdl/graph_mdl.html#GraphMDL.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.graph.graphmdl.graph_mdl.GraphMDL.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide a summary of the algorithm execution</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutorials/datasets/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="callbacks.html" class="btn btn-neutral float-left" title="Callback API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Rémi Adon
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
