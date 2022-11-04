@@ -11,7 +11,6 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 from collections import defaultdict
 from itertools import takewhile
 
-import numpy as np
 import pandas as pd
 import os
 import shutil
@@ -51,10 +50,8 @@ class LCM(BaseMiner, DiscovererMixin):
 
     max_depth: int, default=-1
         Maximum depth for exploration in the search space.
-        When going into recursion, we check if the current depth
-        is **strictly greater** than `max_depth`.
-        If this is the case, we stop.
-        This can avoid cumbersome computation.
+        By default -1 means no limitation in tree recursion.
+        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
         A **root node is considered of depth 0**.
 
     References
@@ -200,7 +197,7 @@ class LCM(BaseMiner, DiscovererMixin):
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=None) for item, tids in
                 list(self.item_to_tids.items())
-            )  # dsf is a list of dataframe
+            )  # dfs is a list of dataframe
             # make sure we have something to concat
             columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
             dfs.append(pd.DataFrame(columns=columns))
@@ -291,9 +288,8 @@ class LCM(BaseMiner, DiscovererMixin):
 
 class LCMMax(LCM):
     """
-    Linear time Closed item set Miner.
+    Linear time Closed item set Miner adapted to Maximal itemsets (or borders).
 
-    Adapted to Maximal itemsets (or borders).
     A maximal itemset is an itemset with no frequent superset.
 
     Parameters
@@ -307,15 +303,11 @@ class LCMMax(LCM):
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
         **Processes are preferred** over threads.
-        **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you have the following
-        warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
     max_depth: int, default=-1
         Maximum depth for exploration in the search space.
-        When going into recursion, we check if the current depth
-        is **strictly greater** than `max_depth`.
-        If this is the case, we stop.
-        This can avoid cumbersome computation.
+        By default -1 means no limitation in tree recursion.
+        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
         A **root node is considered of depth 0**.
 
     See Also
@@ -351,8 +343,12 @@ class LCMMax(LCM):
                     yield from self._inner(new_p_tids, new_limit, depth + 1)
 
             if no_cand:  # only if no child node. This is how we PRE-check for maximality
-                itemset = [self.ord_item_freq[ind] for ind in p_prime]
-                yield set(itemset), tids, depth
+                itemset = set([self.ord_item_freq[ind] for ind in p_prime])
+
+                if not self.return_tids:
+                    yield itemset, len(tids)
+                else:
+                    yield itemset, len(tids), tids
 
     def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
         patterns = super().discover(**kwargs)
