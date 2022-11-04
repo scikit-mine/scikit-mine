@@ -10,7 +10,6 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 
 from collections import defaultdict
 from itertools import takewhile
-
 import pandas as pd
 import os
 import shutil
