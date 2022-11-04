@@ -24,7 +24,6 @@ from ..utils import filter_maximal
 from ..base import BaseMiner, DiscovererMixin
 
 
-
 class LCM(BaseMiner, DiscovererMixin):
     """
     Linear time Closed item set Miner.
@@ -289,6 +288,8 @@ class LCM(BaseMiner, DiscovererMixin):
                 fw.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
                 if self.return_tids:
                     fw.write(f"{' '.join(map(str, row['tids']))}\n")
+
+
 class LCMMax(LCM):
     """
     Linear time Closed item set Miner adapted to Maximal itemsets (or borders).
@@ -317,6 +318,7 @@ class LCMMax(LCM):
     --------
     LCM
     """
+
     def _inner(self, p_tids, limit, depth=0):
         if self.max_depth != -1 and depth >= self.max_depth:
             return None
