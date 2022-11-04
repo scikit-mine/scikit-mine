@@ -73,16 +73,16 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> lcm = LCM(min_supp=2000)
     >>> patterns = lcm.fit_discover(chess)      # doctest: +SKIP
     >>> patterns.head()                         # doctest: +SKIP
-        itemset support
-    0      (58)    3195
-    1  (11, 58)    2128
-    2  (15, 58)    2025
-    3  (17, 58)    2499
-    4  (21, 58)    2224
+        itemset  support
+    0      [58]     3195
+    1      [52]     3185
+    2  [58, 52]     3184
+    3      [29]     3181
+    4  [58, 29]     3180
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False, out=None):
+    def __init__(self, *, min_supp=0.2, max_depth=-1, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # cf docstring: minimum support provided by user
         self.max_depth = int(max_depth)  # cf docstring
@@ -92,7 +92,6 @@ class LCM(BaseMiner, DiscovererMixin):
         # item
         self.ord_item_freq = []  # list of ordered item by decreasing frequency
         self.n_jobs = n_jobs  # number of jobs launched by joblib
-        self.iter = 0  # number of recursive call to inner method
         self.lexicographic_order = False  # if true, the items of each itemset are returned in lexicographical order
 
     def fit(self, D, y=None):
@@ -198,13 +197,7 @@ class LCM(BaseMiner, DiscovererMixin):
         """
         self.lexicographic_order = lexicographic_order
 
-        if out is not None: # write in file instead of store in memory
-            self.temp_dir = 'TEMP_dir' # temporary dir where root items branch files are written
-            if os.path.exists(self.temp_dir): # remove dir TEMP_dir if it exists
-                shutil.rmtree(self.temp_dir)
-            os.mkdir(self.temp_dir)     # create dir TEMP_dir
-
-        if out is None : # store results in memory
+        if out is None:  # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=None, return_tids=return_tids) for item, tids in
                 list(self.item_to_tids_.items())
@@ -222,21 +215,27 @@ class LCM(BaseMiner, DiscovererMixin):
                 df.drop("depth", axis=1, inplace=True)
 
             return df
-        else: # store results in files
+        else:  # store results in files
+            temp_dir = 'TEMP_dir'  # temporary dir where root items branch files are written
+            if os.path.exists(temp_dir):  # remove dir TEMP_dir if it exists
+                shutil.rmtree(temp_dir)
+            os.mkdir(temp_dir)  # create dir TEMP_dir
+
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(
-                    item, tids, root_file=f"{self.temp_dir}/root{k}.dat", return_tids=return_tids) for k, (
-                        item, tids) in enumerate(list(self.item_to_tids_.items()))
-                # FIXME drop supp_sorted_items list(self.item_to_tids_.items())
-            ) # dsf is a list of dataframe
+                    item, tids, root_file=f"{temp_dir}/root{k}.dat", return_tids=return_tids) for k, (
+                    item, tids) in enumerate(list(self.item_to_tids_.items()))
+            )  # dsf is a list of dataframe
 
-            with open(out, 'w') as outfile:# concatenate all items root files located in self.temp_dir, in a single file 'out'
-                for fname in [f"{self.temp_dir}/root{k}.dat" for k in range(len(list(self.item_to_tids_.items())))]: # all items root files
-                    with open(fname) as infile: 
+            with open(out, 'w') as outfile:  # concatenate all items root files located in self.temp_dir, in a single
+                # file 'out'
+                for fname in [f"{temp_dir}/root{k}.dat" for k in
+                              range(len(list(self.item_to_tids_.items())))]:  # all items root files
+                    with open(fname) as infile:
                         for line in infile:
-                            if line.strip(): # to skip empty lines
+                            if line.strip():  # to skip empty lines
                                 outfile.write(line)
-            shutil.rmtree(self.temp_dir) # remove the temporary dir where root files are written
+            shutil.rmtree(temp_dir)  # remove the temporary dir where root files are written
             return None
 
     def _explore_root(self, item, tids, root_file=None, return_tids=False):
@@ -244,21 +243,20 @@ class LCM(BaseMiner, DiscovererMixin):
         df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
         if self.verbose and not df.empty:
             print("LCM found {} new itemsets from root item : {}".format(len(df), item))
-        if root_file is not None: # for writing the items root files in dir self.temp_dir
-            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32) # calculate the support
-            if os.path.exists(root_file): # delete the root file if it already exist 
+        if root_file is not None:  # for writing the items root files in dir self.temp_dir
+            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)  # calculate the support
+            if os.path.exists(root_file):  # delete the root file if it already exists
                 os.remove(root_file)
             with open(root_file, 'w') as fw:  # write the items root files
-                for index, row in df.iterrows(): 
-                    fw.write(f"({row['support']}) {' '.join(  map(str, row['itemset']))}\n") #TUNO format
-                    if return_tids : 
-                        fw.write(f"{' '.join( map(str, row['tids'] ) )}\n") #TUNO format
+                for index, row in df.iterrows():
+                    fw.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
+                    if return_tids:
+                        fw.write(f"{' '.join(map(str, row['tids']))}\n")
             return None
         else:
             return df
 
     def _inner(self, p_tids, limit, depth=0):
-        self.iter += 1
         if self.max_depth != -1 and depth >= self.max_depth:
             return None
         p, tids = p_tids
@@ -316,7 +314,7 @@ class LCMMax(LCM):
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
-        **Processes are preffered** over threads.
+        **Processes are preferred** over threads.
 
     See Also
     --------
