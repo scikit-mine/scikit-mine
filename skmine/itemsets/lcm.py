@@ -41,12 +41,10 @@ class LCM(BaseMiner, DiscovererMixin):
         Either an int representing the absolute support, or a float for relative support
         Default to 0.2 (20%)
 
-    n_jobs : int, default=1
-        The number of jobs to use for the computation. Each single item is attributed a job
-        to discover potential itemsets, considering this item as a root in the search space.
-        **Processes are preferred** over threads.
-        **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you have the following
-        warning: UserWarning: A worker stopped while some jobs were given to the executor.
+    n_jobs : int, default=1 The number of jobs to use for the computation. Each single item is attributed a job to
+    discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**
+    over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you
+    have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
     max_depth: int, default=-1
         Maximum depth for exploration in the search space.
