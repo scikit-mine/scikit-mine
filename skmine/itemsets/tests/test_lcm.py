@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import pytest
 import numpy as np
@@ -237,3 +239,22 @@ def test_lcm_lexicographic_order():
     patterns = lcm.fit_discover(D, lexicographic_order=True)
     longest_itemset = max(patterns.itemset, key=len)
     assert longest_itemset == [1, 4, 6]
+
+
+def test_lcm_file_output():
+    lcm = LCM(min_supp=3)
+    lcm.fit_discover(D, lexicographic_order=True, out="./skmine/itemsets/tests/lcm_out.dat")
+    with open('./skmine/itemsets/tests/lcm_out.dat', 'r') as f:
+        lines = f.read().splitlines()
+    nb_itemsets = 0
+    true_itemsets = true_patterns.itemset.tolist()
+
+    for line, true_itemset in zip(lines, true_itemsets):
+        nb_itemsets += 1
+        itemset = line.split(") ")[1].split(" ")
+        assert len(itemset) == len(true_itemset)
+        for item in itemset:
+            assert int(item) in true_itemset
+
+    assert len(true_itemsets) == nb_itemsets
+    os.remove('./skmine/itemsets/tests/lcm_out.dat')
