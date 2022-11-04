@@ -1,5 +1,8 @@
 name: tests
-on: [pull_request]
+on:
+  push:
+    paths:
+      - skmine/**
 jobs:
   run:
     runs-on: ${{ matrix.os }}
@@ -20,4 +23,4 @@ jobs:
       - name: Generate coverage report
         run: |
           pytest --cov-report xml --cov=skmine --cov-config=.coveragerc skmine
-          coverage report --fail-under=92
+          coverage report --fail-under=90

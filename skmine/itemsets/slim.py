@@ -10,9 +10,9 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
+from roaringbitmap import RoaringBitmap as Bitmap
 
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
-from ..bitmaps import Bitmap
 from ..utils import _check_D, supervised_to_unsupervised
 
 
@@ -87,7 +87,7 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
     assert isinstance(codetable, SortedDict)
     depth = depth or int(np.log2(len(codetable)) * 1e2)
     for idx, (X, X_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1 : idx + 1 + depth]
+        Y = codetable.items()[idx + 1: idx + 1 + depth]
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
@@ -153,7 +153,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).discover(singletons=True, usage_tids=True)
+    >>> SLIM().fit(D).discover()
     (bananas, milk)    [0, 1]
     (butter, tea)         [2]
     (cookies,)         [1, 2]
@@ -170,7 +170,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     """
 
     def __init__(
-        self, *, k=50, pruning=True, n_items=200, tol=0.5,
+            self, *, k=50, pruning=True, n_items=200, tol=0.5,
     ):
         self.n_items = n_items
         self.tol = tol
@@ -184,7 +184,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
-        This generate new candidate patterns and add those which improve compression,
+        This generates new candidate patterns and add those which improve compression,
         iteratibely refining ``self.codetable_``
 
         Parameters
@@ -329,7 +329,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             new data size (in bits) to be set
 
         usages: dict, default=None
-            optional for usage outside of this class
+            optional for usage outside this class
             eg. if one simply needs to include an itemset in the current codetable
             as in interactive data mining
 
@@ -405,7 +405,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)
+        >>> SLIM().fit(D).discover()
         (A, B)    [0, 1]
         (B,)         [2]
         (A,)          []
@@ -431,7 +431,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
         n_transactions = (
-            max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
+                max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
         )
 
         D = pd.Series([set()] * n_transactions)
@@ -461,10 +461,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order
         """
-        return (-len(itemset), -len(self.get_support(*itemset)), tuple(itemset))
+        return -len(itemset), -len(self.get_support(*itemset)), tuple(itemset)
 
     def _standard_candidate_order(self, itemset):
-        return (-len(self.get_support(*itemset)), -len(itemset), tuple(itemset))
+        return -len(self.get_support(*itemset)), -len(itemset), tuple(itemset)
 
     def prefit(self, D, y=None):
         """

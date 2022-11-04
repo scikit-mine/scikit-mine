@@ -10,8 +10,9 @@ from itertools import groupby
 import numpy as np
 import pandas as pd
 
+from roaringbitmap import RoaringBitmap as Bitmap
+
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
-from ..bitmaps import Bitmap
 from ..utils import intersect2d, sliding_window_view
 
 log = np.log2
@@ -507,12 +508,13 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
     Examples
     --------
     >>> from skmine.periodic import PeriodicCycleMiner
+    >>> import pandas as pd
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
     >>> pcm = PeriodicCycleMiner().fit(S)
     >>> pcm.discover()
                    start  length  period       cost
-    ring_a_bell 0     40       4      20  24.665780
-                1     10       3      11  23.552849
+    ring_a_bell 1     10       3      11  23.552849
+                0     40       4      20  24.665780
 
     References
     ----------
@@ -601,12 +603,13 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         Example
         -------
         >>> from skmine.periodic import PeriodicCycleMiner
+        >>> import pandas as pd
         >>> S = pd.Series("ring", [10, 20, 32, 40, 60, 79, 100, 240])
         >>> pcm = PeriodicCycleMiner().fit(S)
         >>> pcm.discover()
                 start  length  period       cost
-        ring 0     40       4      20  24.665780
-             1     10       3      11  23.552849
+        ring 1     10       3      11  23.552849
+             0     40       4      20  24.665780
         """
         all_cols = ["start", "length", "period", "cost"]
         if tids:

@@ -8,6 +8,8 @@ Methods to fetch, generate, and describe datasets.
 
 Standard datasets for itemset mining
 ------------------------------------
+.. autofunction:: skmine.datasets.fimi.fetch_file
+
 .. autofunction:: skmine.datasets.fimi.fetch_any
 
 .. autofunction:: skmine.datasets.fimi.fetch_chess

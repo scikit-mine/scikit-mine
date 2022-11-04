@@ -10,15 +10,15 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 
 from collections import defaultdict
 from itertools import takewhile
-
-import numpy as np
 import pandas as pd
+import os
+import shutil
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
+from roaringbitmap import RoaringBitmap as Bitmap
 
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
-from ..bitmaps import Bitmap
 
 from ..base import BaseMiner, DiscovererMixin
 
@@ -40,18 +40,16 @@ class LCM(BaseMiner, DiscovererMixin):
         Either an int representing the absolute support, or a float for relative support
         Default to 0.2 (20%)
 
-    max_depth: int, default=20
-        Maximum depth for exploration in the search space.
-        When going into recursion, we check if the current depth
-        is **strictly greater** than `max_depth`.
-        If this is the case, we stop.
-        This can avoid cumbersome computation.
-        A **root node is considered of depth 0**.
+    n_jobs : int, default=1 The number of jobs to use for the computation. Each single item is attributed a job to
+    discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**
+    over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you
+    have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
-    n_jobs : int, default=1
-        The number of jobs to use for the computation. Each single item is attributed a job
-        to discover potential itemsets, considering this item as a root in the search space.
-        **Processes are preffered** over threads.
+    max_depth: int, default=-1
+        Maximum depth for exploration in the search space.
+        By default -1 means no limitation in tree recursion.
+        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
+        A **root node is considered of depth 0**.
 
     References
     ----------
@@ -69,27 +67,29 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> from skmine.datasets.fimi import fetch_chess
     >>> chess = fetch_chess()
     >>> lcm = LCM(min_supp=2000)
-    >>> patterns = lcm.fit_discover(chess)      # doctest: +SKIP
-    >>> patterns.head()                         # doctest: +SKIP
+    >>> patterns = lcm.fit_discover(chess)
+    >>> patterns.head()
         itemset support
-    0      (58)    3195
-    1  (11, 58)    2128
-    2  (15, 58)    2025
-    3  (17, 58)    2499
-    4  (21, 58)    2224
+    0      [58]    3195
+    1      [52]    3185
+    2  [58, 52]    3184
+    3      [29]    3181
+    4  [58, 29]    3180
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, max_depth=20, n_jobs=1, verbose=False):
+    def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False, max_depth=-1):
         _check_min_supp(min_supp)
-        self.min_supp = min_supp  # provided by user
-        self.max_depth = int(max_depth)
-        self._min_supp = _check_min_supp(self.min_supp)
-        self.item_to_tids_ = SortedDict()
-        self.n_transactions_ = 0
-        self.ctr = 0
-        self.n_jobs = n_jobs
+        self.min_supp = min_supp  # cf docstring: minimum support provided by user
+        self.max_depth = int(max_depth)  # cf docstring
         self.verbose = verbose
+        self._min_supp = _check_min_supp(self.min_supp)
+        self.item_to_tids = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this
+        # item
+        self.ord_item_freq = []  # list of ordered item by decreasing frequency
+        self.n_jobs = n_jobs  # number of jobs launched by joblib
+        self.lexicographic_order = False  # if true, the items of each itemset are returned in lexicographical order
+        self.return_tids = False
 
     def fit(self, D, y=None):
         """
@@ -108,26 +108,35 @@ class LCM(BaseMiner, DiscovererMixin):
             if any entry in D is not iterable itself OR if any item is not **hashable**
             OR if all items are not **comparable** with each other.
         """
-        self.n_transactions_ = 0  # reset for safety
-        item_to_tids = defaultdict(Bitmap)
+        n_transactions_ = 0
+        item_to_tids_ = defaultdict(Bitmap)
         for transaction in D:
             for item in transaction:
-                item_to_tids[item].add(self.n_transactions_)
-            self.n_transactions_ += 1
+                item_to_tids_[item].add(n_transactions_)
+            n_transactions_ += 1
 
-        if isinstance(self.min_supp, float):
-            # make support absolute if needed
-            self._min_supp = self.min_supp * self.n_transactions_
+        if isinstance(self.min_supp, float):  # make support absolute if needed
+            self._min_supp = self.min_supp * n_transactions_
 
-        low_supp_items = [k for k, v in item_to_tids.items() if len(v) < self._min_supp]
-        for item in low_supp_items:
-            del item_to_tids[item]
+        low_supp_items = [k for k, v in item_to_tids_.items() if len(v) < self._min_supp]
+        for item in low_supp_items:  # drop low freq items
+            del item_to_tids_[item]
 
-        self.item_to_tids_ = SortedDict(item_to_tids)
-        return self
+        ord_freq_list = sorted(item_to_tids_.items(), key=lambda item: len(item[1]), reverse=True)
+        ord_freq_dic = defaultdict(Bitmap)
+        ord_item_freq = []
+        for idx, element in enumerate(ord_freq_list):
+            item, tid = element
+            ord_item_freq.append(item)
+            ord_freq_dic[idx] = tid  # rename most frequent item like cat by 0, second  dog by 1
 
-    def discover(self, *, return_tids=False, return_depth=False):
-        """Return the set of closed itemsets, with respect to the minium support
+        self.item_to_tids = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}
+        self.ord_item_freq = ord_item_freq  # [cat, dog, '0', ...]
+
+        return self  # for call .fit().discover() in DiscovererMixin()
+
+    def discover(self, *, return_tids=False, lexicographic_order=False, out=None):
+        """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
         ----------
@@ -140,74 +149,109 @@ class LCM(BaseMiner, DiscovererMixin):
             Either to return transaction ids along with itemset.
             Default to False, will return supports instead
 
-        return_depth: bool, default=False
-            Either to return depth for each item or not.
+        lexicographic_order: bool, default=False
+            Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
+
+        out : str, default=None
+            File where results are written. Discover return None. The 'out' option is usefull 
+            to save memory : Instead of store all branch of lcm-tree in memory , each root 
+            branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
+            concatenated in the final 'out' file.
 
         Returns
         -------
         pd.DataFrame
             DataFrame with the following columns
                 ==========  =================================
-                itemset     a `tuple` of co-occured items
+                itemset     a `list` of co-occured items
                 support     frequence for this itemset
                 ==========  =================================
 
             if `return_tids=True` then
                 ==========  =================================
-                itemset     a `tuple` of co-occured items
+                itemset     a `list` of co-occured items
+                support     frequence for this itemset
                 tids        a bitmap tracking positions
                 ==========  =================================
-
-            if `return_depth` is `True`, then a `depth` column is also present
 
         Example
         -------
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
-        >>> LCM(min_supp=2).fit_discover(D)
-             itemset  support
-        0     (2, 5)        3
-        1  (2, 3, 5)        2
-        >>> LCM(min_supp=2).fit_discover(D, return_tids=True, return_depth=True) # doctest: +SKIP
-             itemset       tids depth
-        0     (2, 5)  [0, 1, 2]     0
-        1  (2, 3, 5)     [0, 1]     1
+        >>> LCM(min_supp=2).fit_discover(D, lexicographic_order=True)
+             itemset support
+        0     [2, 5]       3
+        1  [2, 3, 5]       2
+        >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
+             itemset support       tids
+        0     [2, 5]       3  [0, 1, 2]
+        1  [2, 5, 3]       2     [0, 1]
         """
-        # reverse order of support
-        supp_sorted_items = sorted(
-            self.item_to_tids_.items(), key=lambda e: len(e[1]), reverse=True
-        )
+        self.lexicographic_order = lexicographic_order
+        self.return_tids = return_tids
 
-        dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-            delayed(self._explore_root)(item, tids) for item, tids in supp_sorted_items
-        )
+        if out is None:  # store results in memory
+            dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(self._explore_root)(item, tids, root_file=None) for item, tids in
+                list(self.item_to_tids.items())
+            )  # dfs is a list of dataframe
+            # make sure we have something to concat
+            columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
+            dfs.append(pd.DataFrame(columns=columns))
+            df = pd.concat(dfs, axis=0, ignore_index=True)
 
-        # make sure we have something to concat
-        dfs.append(pd.DataFrame(columns=["itemset", "tids", "depth"]))
-        df = pd.concat(dfs, axis=0, ignore_index=True)
-        if not return_tids:
-            df.loc[:, "support"] = df["tids"].map(len).astype(np.uint32)
-            df.drop("tids", axis=1, inplace=True)
+            return df
 
-        if not return_depth:
-            df.drop("depth", axis=1, inplace=True)
-        return df
+        else:  # store results in files
+            temp_dir = 'TEMP_dir'  # temporary dir where root items branch files are written
+            if os.path.exists(temp_dir):  # remove dir TEMP_dir if it exists
+                shutil.rmtree(temp_dir)
+            os.mkdir(temp_dir)  # create dir TEMP_dir
 
-    def _explore_root(self, item, tids):
+            Parallel(n_jobs=self.n_jobs, prefer="processes")(
+                delayed(self._explore_root)(
+                    item, tids, root_file=f"{temp_dir}/root{k}.dat") for k, (
+                    item, tids) in enumerate(list(self.item_to_tids.items()))
+            )
+
+            with open(out, 'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
+                for fname in [f"{temp_dir}/root{k}.dat" for k in
+                              range(len(list(self.item_to_tids.items())))]:  # all items root files
+                    with open(fname) as infile:
+                        for line in infile:
+                            if line.strip():  # to skip empty lines
+                                outfile.write(line)
+            shutil.rmtree(temp_dir)  # remove the temporary dir where root files are written
+
+            return None
+
+    def _explore_root(self, item, tids, root_file=None):
         it = self._inner((frozenset(), tids), item)
-        df = pd.DataFrame(data=it, columns=["itemset", "tids", "depth"])
+        columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
+        df = pd.DataFrame(data=it, columns=columns)
+
         if self.verbose and not df.empty:
-            print("LCM found {} new itemsets from item : {}".format(len(df), item))
-        return df
+            print("LCM found {} new itemsets from root item : {}".format(len(df), item))
+
+        if root_file is not None:  # for writing the items root files in dir self.temp_dir
+
+            if os.path.exists(root_file):  # delete the root file if it already exists
+                os.remove(root_file)
+
+            self.write_df_tofile(root_file, df)
+            return None
+        else:
+            return df
 
     def _inner(self, p_tids, limit, depth=0):
-        if depth >= self.max_depth:
-            return
+
+        if self.max_depth != -1 and depth >= self.max_depth:
+            return None
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
             item
-            for item, ids in reversed(self.item_to_tids_.items())
+            for item, ids in reversed(self.item_to_tids.items())
             if tids.issubset(ids)
             if item not in p
         )
@@ -215,28 +259,38 @@ class LCM(BaseMiner, DiscovererMixin):
         # items are in reverse order, so the first consumed is the max
         max_k = next(takewhile(lambda e: e >= limit, cp), None)
 
-        if max_k and max_k == limit:
-            p_prime = (
-                p | set(cp) | {max_k}
-            )  # max_k has been consumed when calling next()
+        if max_k is not None and max_k == limit:
+            p_prime = (p | set(cp) | {max_k})  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
-            yield tuple(sorted(p_prime)), tids, depth
+            itemset = [self.ord_item_freq[ind] for ind in list(p_prime)]
+            itemset = sorted(itemset) if self.lexicographic_order else itemset
 
-            candidates = self.item_to_tids_.keys() - p_prime
+            if not self.return_tids:
+                yield itemset, len(tids)
+            else:
+                yield itemset, len(tids), tids
+
+            candidates = self.item_to_tids.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
             for new_limit in candidates:
-                ids = self.item_to_tids_[new_limit]
+                ids = self.item_to_tids[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit, depth + 1)
 
+    def write_df_tofile(self, filename, df):
+        with open(filename, 'w') as fw:  # write the items root files
+            for index, row in df.iterrows():
+                fw.write(f"({row['support']}) {' '.join(map(str, row['itemset']))}\n")
+                if self.return_tids:
+                    fw.write(f"{' '.join(map(str, row['tids']))}\n")
+
 
 class LCMMax(LCM):
     """
-    Linear time Closed item set Miner.
+    Linear time Closed item set Miner adapted to Maximal itemsets (or borders).
 
-    Adapted to Maximal itemsets (or borders).
     A maximal itemset is an itemset with no frequent superset.
 
     Parameters
@@ -246,18 +300,16 @@ class LCMMax(LCM):
         Either an int representing the absolute support, or a float for relative support
         Default to 0.2 (20%)
 
-    max_depth: int, default=20
-        Maximum depth for exploration in the search space.
-        When going into recursion, we check if the current depth
-        is **strictly greater** than `max_depth`.
-        If this is the case, we stop.
-        This can avoid cumbersome computation.
-        A **root node is considered of depth 0**.
-
     n_jobs : int, default=1
         The number of jobs to use for the computation. Each single item is attributed a job
         to discover potential itemsets, considering this item as a root in the search space.
-        **Processes are preffered** over threads.
+        **Processes are preferred** over threads.
+
+    max_depth: int, default=-1
+        Maximum depth for exploration in the search space.
+        By default -1 means no limitation in tree recursion.
+        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
+        A **root node is considered of depth 0**.
 
     See Also
     --------
@@ -265,45 +317,54 @@ class LCMMax(LCM):
     """
 
     def _inner(self, p_tids, limit, depth=0):
-        if depth >= self.max_depth:
-            return
+        if self.max_depth != -1 and depth >= self.max_depth:
+            return None
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
             item
-            for item, ids in reversed(self.item_to_tids_.items())
+            for item, ids in reversed(self.item_to_tids.items())
             if tids.issubset(ids)
             if item not in p
         )
+        max_k = next(cp, None)  # items are in reverse order, so the first consumed is the max
 
-        max_k = next(
-            cp, None
-        )  # items are in reverse order, so the first consumed is the max
-
-        if max_k and max_k == limit:
-            p_prime = (
-                p | set(cp) | {max_k}
-            )  # max_k has been consumed when calling next()
-
-            candidates = self.item_to_tids_.keys() - p_prime
+        if max_k is not None and max_k == limit:
+            p_prime = (p | set(cp) | {max_k})  # max_k has been consumed when calling next()
+            candidates = self.item_to_tids.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
-
             no_cand = True
+
             for new_limit in candidates:
-                ids = self.item_to_tids_[new_limit]
+                ids = self.item_to_tids[new_limit]
                 if tids.intersection_len(ids) >= self._min_supp:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit, depth + 1)
 
-            # only if no child node. This is how we PRE-check for maximality
-            if no_cand:
-                yield tuple(sorted(p_prime)), tids, depth
+            if no_cand:  # only if no child node. This is how we PRE-check for maximality
+                itemset = set([self.ord_item_freq[ind] for ind in p_prime])
+
+                if not self.return_tids:
+                    yield itemset, len(tids)
+                else:
+                    yield itemset, len(tids), tids
 
     def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
-        patterns = super().discover(*args, **kwargs)
-        maximums = [tuple(sorted(x)) for x in filter_maximal(patterns["itemset"])]
-        return patterns[patterns.itemset.isin(maximums)]
+        outfile = kwargs.get('out')
+        kwargs['out'] = None
+        patterns = super().discover(**kwargs)
+        maximals = filter_maximal(patterns["itemset"])
+        patterns = patterns[patterns.itemset.isin(maximals)].copy()
+        patterns.loc[:, "itemset"] = patterns["itemset"].map(
+            lambda i: sorted(list(i)) if self.lexicographic_order else list(i))
+
+        if outfile:
+            self.write_df_tofile(outfile, patterns)
+            return None
+        else:
+            return patterns
 
     setattr(discover, "__doc__", LCM.discover.__doc__.replace("closed", "maximal"))
+    setattr(discover, "__doc__", LCM.discover.__doc__.split("Example")[0])

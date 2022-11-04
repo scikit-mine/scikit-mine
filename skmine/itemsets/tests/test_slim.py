@@ -5,7 +5,8 @@ import pandas as pd
 import pytest
 from sortedcontainers import SortedDict
 
-from ...bitmaps import Bitmap
+from roaringbitmap import RoaringBitmap as Bitmap
+
 from ..slim import SLIM, _to_vertical, generate_candidates
 
 
@@ -275,7 +276,7 @@ def test_reconstruct(D):
 @pytest.mark.parametrize("k", [1, 2])
 def test_k(D, k):
     slim = SLIM(pruning=False, k=k).fit(D)
-    assert len(slim.discover(singletons=False)) == k
+    assert len(slim.discover()) == k
 
 
 def test_interactive(D):

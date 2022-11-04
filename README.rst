@@ -50,14 +50,17 @@ See examples in the tutorials; the notebooks are available here_.
 Dependencies
 ------------
 
-scikit-mine requires Python>=3.6,
+scikit-mine requires Python>=3.7,
 and some extra dependencies
 
 * scipy>=1.2.1
 * pandas>=1.0.0
-* sortedcontainers>=2.1.0
-* roaringbitmap==0.7
+* roaringbitmap
 * joblib>=0.11.1
+* sortedcontainers>=2.1.0
+* dataclasses
+* networkx~=2.5.1
+* wget
 
 **scikit-learn** is not a dependency. However, scikit-mine is **contiuously tested for interactions with scikit-learn**
 
