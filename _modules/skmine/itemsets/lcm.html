@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.6 documentation</title>
+  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.7 documentation</title>
   
 
   
@@ -197,7 +197,6 @@
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">takewhile</span>
-
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
@@ -228,12 +227,10 @@
 <span class="sd">        Either an int representing the absolute support, or a float for relative support</span>
 <span class="sd">        Default to 0.2 (20%)</span>
 
-<span class="sd">    n_jobs : int, default=1</span>
-<span class="sd">        The number of jobs to use for the computation. Each single item is attributed a job</span>
-<span class="sd">        to discover potential itemsets, considering this item as a root in the search space.</span>
-<span class="sd">        **Processes are preferred** over threads.</span>
-<span class="sd">        **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you have the following</span>
-<span class="sd">        warning: UserWarning: A worker stopped while some jobs were given to the executor.</span>
+<span class="sd">    n_jobs : int, default=1 The number of jobs to use for the computation. Each single item is attributed a job to</span>
+<span class="sd">    discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**</span>
+<span class="sd">    over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you</span>
+<span class="sd">    have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.</span>
 
 <span class="sd">    max_depth: int, default=-1</span>
 <span class="sd">        Maximum depth for exploration in the search space.</span>
