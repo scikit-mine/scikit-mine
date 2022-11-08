@@ -5,6 +5,9 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 
 # Authors: Rémi Adon <remi.adon@gmail.com>
 #          Luis Galárraga <galarraga@luisgalarraga.de>
+#          Hermann Courteille <hermann.courteille@irisa.fr>
+#          Cyril Regan <cyril.regan@irisa.fr>
+#          Thomas Betton <thomas.betton@irisa.fr>
 #
 # License: BSD 3 clause
 

@@ -79,3 +79,6 @@ Internal Contributors
 - Luis Galárraga (https://github.com/lgalarra)
 - Josie Signe (https://github.com/Darlysia)
 - Esther Galbrun (https://github.com/nurblageij)
+- Hermann Courteille (https://github.com/hermann74)
+- Cyril Regan (https://github.com/cyril-data)
+- Thomas Betton (https://github.com/thomasbtnfr)
