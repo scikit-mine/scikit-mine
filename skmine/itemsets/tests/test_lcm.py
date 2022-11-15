@@ -173,11 +173,6 @@ def test_lcm_discover():
     )
 
 
-def test_lcm_discover_max_depth():
-    patterns = LCM(min_supp=3, max_depth=1).fit_discover(D)
-    assert not ((2, 4) in patterns.itemset.tolist())
-
-
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
     lcm.fit(D)
@@ -258,3 +253,34 @@ def test_lcm_file_output():
 
     assert len(true_itemsets) == nb_itemsets
     os.remove('./skmine/itemsets/tests/lcm_out.dat')
+
+
+def test_max_length_lcm():
+    lcm = LCM(min_supp=3)
+
+    patterns = lcm.fit_discover(D, lexicographic_order=True)
+    longest_itemset = max(patterns['itemset'], key=len)
+    assert longest_itemset == [1, 4, 6]
+    assert len(patterns) == len(true_patterns)
+
+    patterns = lcm.fit_discover(D, lexicographic_order=True, max_length=2)
+    longest_itemset = max(patterns['itemset'], key=len)
+    assert longest_itemset != [1, 4, 6]
+    assert len(patterns) == len(true_patterns)-1
+
+
+def test_max_length_lcm_max():
+    lcm = LCMMax(min_supp=3)
+
+    patterns = lcm.fit_discover(D, lexicographic_order=True)
+    longest_itemset = max(patterns['itemset'], key=len)
+    print("patterns 1", patterns)
+    assert longest_itemset == [1, 4, 6]
+    assert len(patterns) == 4
+
+    patterns = lcm.fit_discover(D, lexicographic_order=True, max_length=2)
+    longest_itemset = max(patterns['itemset'], key=len)
+    print("patterns 2", patterns)
+    assert longest_itemset != [1, 4, 6]
+    assert len(patterns) == 3
+

@@ -48,12 +48,6 @@ class LCM(BaseMiner, DiscovererMixin):
         over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you
         have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
-    max_depth: int, default=-1
-        Maximum depth for exploration in the search space.
-        By default -1 means no limitation in tree recursion.
-        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
-        A **root node is considered of depth 0**.
-
     References
     ----------
     .. [1]
@@ -81,10 +75,10 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
-    def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False, max_depth=-1):
+    def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
         _check_min_supp(min_supp)
         self.min_supp = min_supp  # cf docstring: minimum support provided by user
-        self.max_depth = int(max_depth)  # cf docstring
+        self.max_length = -1  # maximum length of an itemset
         self.verbose = verbose
         self._min_supp = _check_min_supp(self.min_supp)
         self.item_to_tids = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this
@@ -138,7 +132,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
         return self  # for call .fit().discover() in DiscovererMixin()
 
-    def discover(self, *, return_tids=False, lexicographic_order=False, out=None):
+    def discover(self, *, return_tids=False, lexicographic_order=False, max_length=-1, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
@@ -154,6 +148,9 @@ class LCM(BaseMiner, DiscovererMixin):
 
         lexicographic_order: bool, default=False
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
+
+        max_length: int, default=-1 Maximum length of an itemset. By default, -1 means that LCM returns itemsets of
+        all lengths.
 
         out : str, default=None
             File where results are written. Discover return None. The 'out' option is usefull 
@@ -192,6 +189,7 @@ class LCM(BaseMiner, DiscovererMixin):
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
+        self.max_length = max_length
 
         if out is None:  # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
@@ -246,10 +244,8 @@ class LCM(BaseMiner, DiscovererMixin):
         else:
             return df
 
-    def _inner(self, p_tids, limit, depth=0):
+    def _inner(self, p_tids, limit):
 
-        if self.max_depth != -1 and depth >= self.max_depth:
-            return None
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
@@ -268,10 +264,11 @@ class LCM(BaseMiner, DiscovererMixin):
             itemset = [self.ord_item_freq[ind] for ind in list(p_prime)]
             itemset = sorted(itemset) if self.lexicographic_order else itemset
 
-            if not self.return_tids:
-                yield itemset, len(tids)
-            else:
-                yield itemset, len(tids), tids
+            if len(itemset) <= self.max_length or self.max_length == -1:
+                if not self.return_tids:
+                    yield itemset, len(tids)
+                else:
+                    yield itemset, len(tids), tids
 
             candidates = self.item_to_tids.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
@@ -280,7 +277,7 @@ class LCM(BaseMiner, DiscovererMixin):
                 if tids.intersection_len(ids) >= self._min_supp:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
-                    yield from self._inner(new_p_tids, new_limit, depth + 1)
+                    yield from self._inner(new_p_tids, new_limit)
 
     def write_df_tofile(self, filename, df):
         with open(filename, 'w') as fw:  # write the items root files
@@ -308,20 +305,12 @@ class LCMMax(LCM):
         to discover potential itemsets, considering this item as a root in the search space.
         **Processes are preferred** over threads.
 
-    max_depth: int, default=-1
-        Maximum depth for exploration in the search space.
-        By default -1 means no limitation in tree recursion.
-        if max_depth >0 is specified, tree exploration is limited to height `max_depth`.
-        A **root node is considered of depth 0**.
-
     See Also
     --------
     LCM
     """
 
-    def _inner(self, p_tids, limit, depth=0):
-        if self.max_depth != -1 and depth >= self.max_depth:
-            return None
+    def _inner(self, p_tids, limit):
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
@@ -344,7 +333,7 @@ class LCMMax(LCM):
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
-                    yield from self._inner(new_p_tids, new_limit, depth + 1)
+                    yield from self._inner(new_p_tids, new_limit)
 
             if no_cand:  # only if no child node. This is how we PRE-check for maximality
                 itemset = set([self.ord_item_freq[ind] for ind in p_prime])
@@ -354,12 +343,21 @@ class LCMMax(LCM):
                 else:
                     yield itemset, len(tids), tids
 
-    def discover(self, *args, **kwargs):  # pylint: disable=signature-differs
+    def discover(self, *args, **kwargs):
         outfile = kwargs.get('out')
         kwargs['out'] = None
         patterns = super().discover(**kwargs)
+        # keep only maximal itemsets
         maximals = filter_maximal(patterns["itemset"])
         patterns = patterns[patterns.itemset.isin(maximals)].copy()
+
+        # keeps only itemsets smaller than max_length
+        if self.max_length != -1:
+            length_mask = patterns.itemset.apply(lambda x: len(x) <= self.max_length)
+            patterns = patterns[length_mask]
+            patterns.reset_index(drop=True, inplace=True)
+
+        # return a list of itemset sorted or not
         patterns.loc[:, "itemset"] = patterns["itemset"].map(
             lambda i: sorted(list(i)) if self.lexicographic_order else list(i))
 
