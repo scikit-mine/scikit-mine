@@ -492,14 +492,14 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
-        print("D", D)
         if hasattr(D, "ndim") and D.ndim == 2:
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
-            item_to_tids = _to_vertical(D)  # convert tids in Roaring Bitmap
+            # compute tids for each item in Roaring Bitmap
+            item_to_tids = _to_vertical(D)
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
