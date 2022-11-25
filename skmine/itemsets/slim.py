@@ -201,7 +201,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             candidates = self.generate_candidates(stack=seen_cands)
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
-                diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
+                diff = (self.model_size_ + self.data_size_) - \
+                    (data_size + model_size)
 
                 if diff >= self.tol:
                     self.update(
@@ -213,7 +214,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                     break
 
             if not candidates:  # if empty candidate generation
-                Warning(f"could not find `{self.k}` itemsets, try with a lower `tol`")
+                Warning(
+                    f"could not find `{self.k}` itemsets, try with a lower `tol`")
                 break
 
         return self
@@ -272,7 +274,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         -------
         iterator[tuple(frozenset, Bitmap)]
         """
-        ct = SortedDict(self._standard_candidate_order, self.codetable_.items())
+        ct = SortedDict(self._standard_candidate_order,
+                        self.codetable_.items())
         return generate_candidates(ct, stack=stack)
 
     def evaluate(self, candidate):
@@ -340,7 +343,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         assert not (candidate is None and usages is None)
         if usages is None:
             data_size, model_size, usages = self.evaluate(candidate)
-        to_drop = {c for c in self.codetable_.keys() - usages.keys() if len(c) > 1}
+        to_drop = {c for c in self.codetable_.keys() - usages.keys()
+                   if len(c) > 1}
         self.codetable_.update(usages)
         for iset in to_drop:
             del self.codetable_[iset]
@@ -431,7 +435,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
         n_transactions = (
-                max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
+            max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
         )
 
         D = pd.Series([set()] * n_transactions)
@@ -459,11 +463,17 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     def _standard_cover_order(self, itemset):
         """
         Returns a tuple associated with an itemset,
-        so that many itemsets can be sorted in Standard Cover Order
+        so that many itemsets can be sorted in Standard Cover Order :
+        |X|↓ supp_D(X) ↓ lexicographically ↑
         """
         return -len(itemset), -len(self.get_support(*itemset)), tuple(itemset)
 
     def _standard_candidate_order(self, itemset):
+        """
+        Returns a tuple associated with an itemset,
+        so that many itemsets can be sorted in Standard Candidate Order :
+        supp_D(X) ↓ |X| ↓ lexicographically ↑
+        """
         return -len(self.get_support(*itemset)), -len(itemset), tuple(itemset)
 
     def prefit(self, D, y=None):
@@ -482,28 +492,78 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
+        print("D", D)
         if hasattr(D, "ndim") and D.ndim == 2:
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
-            item_to_tids = _to_vertical(D)
-        sct = pd.Series(item_to_tids)
+            item_to_tids = _to_vertical(D)  # convert tids in Roaring Bitmap
+        sct = pd.Series(item_to_tids)  # sct for "standard code table"
+        # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
+        # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
+        # The Standard Codetable ST is composed of singletons as itemsets : so in ST
+        #  - cover(t) = all singletons in t
+        #  - usage(X) = supp(X) (support is the number of transactions in X )
         usage = sct.map(len).astype(np.uint32)
+
+        # Descending Usage sorting
         usage = usage.nlargest(self.n_items)
         sct = sct[usage.index]
+
+        # Build Standard Codetable <class 'pandas.core.series.Series'> in usage descending order :
+        #   [
+        #       singleton , tids      # first singleton with max usage
+        #       singleton , tids
+        #       ...
+        #   ]
         self.standard_codetable_ = sct
 
+        # Convert Standard Codetable pandas.Series in list of (  frozenset({.}), RoaringBitmap({...})   ,      ...    )
         ct_it = ((frozenset([e]), tids) for e, tids in sct.items())
+
+        # Sort Standard Codetable in standard_cover_order
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
 
+        # Compute the length of the optimal prefix code of itemset X :
+        #     codes(X) =  L(X|CT)  = -log2(usage(X) / ∑_CT usage)
         codes = -_log2(usage / usage.sum())
         self._starting_codes = codes
 
-        # L(code_ST(X)) = L(code_CT(X)), because CT=ST
+        # The encoded size of the code table is then given by
+        # L(CT | D) = ∑_{X∈CT & usage(X)!=0) L(X|ST) + L(X|CT)
+        #
+        # because CT=ST :
+        # L(CT | D) = 2 * ∑_{X∈CT & usage(X)!=0) L(X|ST)
+        #           = 2 * ∑_{X} L(X|ST)
+        #                (as X ∈ ST : usage(X)!=0 because it exists at least one transaction where {X} is in)
+        #           = 2 * codes.sum()
         self.model_size_ = 2 * codes.sum()
 
+        # Compute the length of the encoding of the database D : L(D | CT )
+        #
+        # L(D | CT ) is the sum of the sizes of the encoded transactions L(t|CT) for t ∈ D.
+        #
+        #   The length of the encoding of the transaction L(t|CT) is simply the
+        #   sum of the code lengths of the itemsets in its cover :
+        #             L(t|CT) =  ∑_{X∈cover(t)} L(X | CT )
+        #
+        #   As CT=ST  :  X ∈ cover(t) = {X} in t =>
+        #                            L(t|CT)  =  ∑_{ {X} in t } L(X|CT)
+        #                            L(t|CT)  =  ∑_{ {X} in t } codes(X)
+        #
+        #  L(D | CT)   = sum( L(t|CT) for  t∈D  )
+        #              = ∑_{ t ∈ D }  ∑_{     {X} ∈ t   } codes(X)
+        #              = ∑_{{X}∈ I }  ∑_{t ∈ tids(X) } codes(X)   (if we change place of the sum)
+        #              = ∑_{{X}∈ I} usage(X) * codes(X)
+        #
+        # example : for D =  ['ABC', 'AB', 'BCD']
+        # L(D | CT) =   codes('A') + codes('B') + codes('C')
+        #             + codes('A') + codes('B')
+        #             +              codes('B') + codes('C')  + codes('D')
+        #           = 2codes('A') + 3codes('B') +2codes('C') + 1codes('D')
+        #           = usage('A')*codes('A') + usage('B')*codes('B') + ...
         self.data_size_ = (codes * usage).sum()
 
         return self
