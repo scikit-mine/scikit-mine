@@ -328,11 +328,12 @@
 <span class="s2">&gt;&gt;&gt; from skmine.callbacks import mdl_prints</span>
 <span class="s2">&gt;&gt;&gt; from skmine.base import MDLOptimizer</span>
 <span class="s2">&gt;&gt;&gt; class MyMDLMiner(MDLOptimizer):</span>
-<span class="s2">&gt;&gt;&gt;    def __init__(self):</span>
-<span class="s2">...        self.codetable_ = dict()</span>
-<span class="s2">...    def generate_candidates(self):</span>
-<span class="s2">...        return [(2,), (2, 3), (2, 4)]</span>
-<span class="s2">...    def evaluate(self): pass</span>
+<span class="s2">...     def __init__(self):</span>
+<span class="s2">...         self.codetable_ = dict()</span>
+<span class="s2">...     def generate_candidates(self):</span>
+<span class="s2">...         return [(2,), (2, 3), (2, 4)]</span>
+<span class="s2">...     def evaluate(self):</span>
+<span class="s2">...         pass</span>
 
 <span class="s2">&gt;&gt;&gt; miner = MyMDLMiner()</span>
 <span class="s2">&gt;&gt;&gt; mdl_prints(miner)</span>

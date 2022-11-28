@@ -197,7 +197,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedDict</span>
-<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span> <span class="k">as</span> <span class="n">Bitmap</span>
+<span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
 <span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">InteractiveMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_D</span><span class="p">,</span> <span class="n">supervised_to_unsupervised</span>
@@ -282,7 +282,7 @@
             <span class="k">if</span> <span class="n">XY</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">stack</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">XY</span><span class="p">)</span>
-            <span class="n">inter_len</span> <span class="o">=</span> <span class="n">y_usage</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">X_usage</span><span class="p">)</span>
+            <span class="n">inter_len</span> <span class="o">=</span> <span class="n">y_usage</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">X_usage</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">inter_len</span> <span class="o">&gt;</span> <span class="n">_best_usage</span><span class="p">:</span>
                 <span class="n">_best_usage</span> <span class="o">=</span> <span class="n">inter_len</span>
                 <span class="n">best_XY</span> <span class="o">=</span> <span class="n">XY</span>
@@ -340,10 +340,10 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="sd">    &gt;&gt;&gt; D = [[&#39;bananas&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;], [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;]]</span>
-<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).discover()</span>
-<span class="sd">    (bananas, milk)    [0, 1]</span>
-<span class="sd">    (butter, tea)         [2]</span>
-<span class="sd">    (cookies,)         [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; SLIM().fit(D).discover(singletons=True, usage_tids=True)</span>
+<span class="sd">    (bananas, milk)    (0, 1)</span>
+<span class="sd">    (butter, tea)         (2)</span>
+<span class="sd">    (cookies,)         (1, 2)</span>
 <span class="sd">    dtype: object</span>
 
 <span class="sd">    References</span>
@@ -583,7 +583,7 @@
 <span class="sd">        singletons: bool, default=False</span>
 <span class="sd">            Either to include itemsets of length 1 in the result</span>
 <span class="sd">        usage_tids: bool, default=False</span>
-<span class="sd">            Either to return transaction ids for an itemset (usage) or its codelength</span>
+<span class="sd">            Either returns the transaction ids for each itemset in tuple format or its codelength</span>
 <span class="sd">        drop_null_usage: bool, default=True</span>
 <span class="sd">            Either to include itemset with no usage in the training data</span>
 <span class="sd">            (i.e itemsets under cover of other itemsets)</span>
@@ -592,12 +592,12 @@
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; from skmine.itemsets import SLIM</span>
 <span class="sd">        &gt;&gt;&gt; D = [&quot;ABC&quot;, &quot;AB&quot;, &quot;BCD&quot;]</span>
-<span class="sd">        &gt;&gt;&gt; SLIM().fit(D).discover()</span>
-<span class="sd">        (A, B)    [0, 1]</span>
-<span class="sd">        (B,)         [2]</span>
-<span class="sd">        (A,)          []</span>
-<span class="sd">        (C,)      [0, 2]</span>
-<span class="sd">        (D,)         [2]</span>
+<span class="sd">        &gt;&gt;&gt; SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)</span>
+<span class="sd">        (A, B)    (0, 1)</span>
+<span class="sd">        (B,)         (2)</span>
+<span class="sd">        (A,)          ()</span>
+<span class="sd">        (C,)      (0, 2)</span>
+<span class="sd">        (D,)         (2)</span>
 <span class="sd">        dtype: object</span>
 
 <span class="sd">        Returns</span>

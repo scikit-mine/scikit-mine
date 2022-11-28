@@ -205,7 +205,7 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedDict</span>
-<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span> <span class="k">as</span> <span class="n">Bitmap</span>
+<span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_min_supp</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">filter_maximal</span>
@@ -356,7 +356,7 @@
 
 <span class="sd">            if `return_tids=True` then</span>
 <span class="sd">                ==========  =================================</span>
-<span class="sd">                itemset     a `list` of co-occured items</span>
+<span class="sd">                itemset     a `tuple` of co-occured items</span>
 <span class="sd">                support     frequence for this itemset</span>
 <span class="sd">                tids        a bitmap tracking positions</span>
 <span class="sd">                ==========  =================================</span>
@@ -371,8 +371,8 @@
 <span class="sd">        1  [2, 3, 5]       2</span>
 <span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_discover(D, return_tids=True)</span>
 <span class="sd">             itemset support       tids</span>
-<span class="sd">        0     [2, 5]       3  [0, 1, 2]</span>
-<span class="sd">        1  [2, 5, 3]       2     [0, 1]</span>
+<span class="sd">        0     [2, 5]       3  (0, 1, 2)</span>
+<span class="sd">        1  [2, 5, 3]       2     (0, 1)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order</span> <span class="o">=</span> <span class="n">lexicographic_order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span> <span class="o">=</span> <span class="n">return_tids</span>
@@ -461,7 +461,7 @@
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
             <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
                 <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
                     <span class="c1"># new pattern and its associated tids</span>
                     <span class="n">new_p_tids</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
                     <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="n">new_p_tids</span><span class="p">,</span> <span class="n">new_limit</span><span class="p">)</span>
@@ -516,7 +516,7 @@
 
             <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
                 <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
                     <span class="n">no_cand</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="c1"># get new pattern and its associated tids</span>
                     <span class="n">new_p_tids</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>

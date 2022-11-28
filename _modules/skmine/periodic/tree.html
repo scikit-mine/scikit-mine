@@ -201,7 +201,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedKeyList</span>
-<span class="kn">from</span> <span class="nn">roaringbitmap</span> <span class="kn">import</span> <span class="n">RoaringBitmap</span> <span class="k">as</span> <span class="n">Bitmap</span>
+<span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
 <span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">,</span> <span class="n">InteractiveMiner</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">bron_kerbosch</span>
@@ -709,6 +709,8 @@
 <div class="viewcode-block" id="PeriodicPatternMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicPatternMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicPatternMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">InteractiveMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mining Periodic Pattern with a MDL criterion</span>
+
+<span class="sd">    Warning: this implementation is unstable.</span>
 
 <span class="sd">    Implementation of periodic tree mining.</span>
 

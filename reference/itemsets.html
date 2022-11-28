@@ -258,10 +258,10 @@ input data.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">(bananas, milk)    [0, 1]</span>
-<span class="go">(butter, tea)         [2]</span>
-<span class="go">(cookies,)         [1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">usage_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">(bananas, milk)    (0, 1)</span>
+<span class="go">(butter, tea)         (2)</span>
+<span class="go">(cookies,)         (1, 2)</span>
 <span class="go">dtype: object</span>
 </pre></div>
 </div>
@@ -412,7 +412,7 @@ as in interactive data mining</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>singletons</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to include itemsets of length 1 in the result</p></li>
-<li><p><strong>usage_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids for an itemset (usage) or its codelength</p></li>
+<li><p><strong>usage_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either returns the transaction ids for each itemset in tuple format or its codelength</p></li>
 <li><p><strong>drop_null_usage</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either to include itemset with no usage in the training data
 (i.e itemsets under cover of other itemsets)</p></li>
 </ul>
@@ -421,12 +421,12 @@ as in interactive data mining</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ABC&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">,</span> <span class="s2">&quot;BCD&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">(A, B)    [0, 1]</span>
-<span class="go">(B,)         [2]</span>
-<span class="go">(A,)          []</span>
-<span class="go">(C,)      [0, 2]</span>
-<span class="go">(D,)         [2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">usage_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">(A, B)    (0, 1)</span>
+<span class="go">(B,)         (2)</span>
+<span class="go">(A,)          ()</span>
+<span class="go">(C,)      (0, 2)</span>
+<span class="go">(D,)         (2)</span>
 <span class="go">dtype: object</span>
 </pre></div>
 </div>
@@ -591,7 +591,7 @@ concatenated in the final ‘out’ file.</p></li>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>itemset</p></td>
-<td><p>a <cite>list</cite> of co-occured items</p></td>
+<td><p>a <cite>tuple</cite> of co-occured items</p></td>
 </tr>
 <tr class="row-even"><td><p>support</p></td>
 <td><p>frequence for this itemset</p></td>
@@ -618,8 +618,8 @@ concatenated in the final ‘out’ file.</p></li>
 <span class="go">1  [2, 3, 5]       2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">     itemset support       tids</span>
-<span class="go">0     [2, 5]       3  [0, 1, 2]</span>
-<span class="go">1  [2, 5, 3]       2     [0, 1]</span>
+<span class="go">0     [2, 5]       3  (0, 1, 2)</span>
+<span class="go">1  [2, 5, 3]       2     (0, 1)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -695,7 +695,7 @@ concatenated in the final ‘out’ file.</p></li>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>itemset</p></td>
-<td><p>a <cite>list</cite> of co-occured items</p></td>
+<td><p>a <cite>tuple</cite> of co-occured items</p></td>
 </tr>
 <tr class="row-even"><td><p>support</p></td>
 <td><p>frequence for this itemset</p></td>
