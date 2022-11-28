@@ -141,11 +141,12 @@ Examples
 >>> from skmine.callbacks import mdl_prints
 >>> from skmine.base import MDLOptimizer
 >>> class MyMDLMiner(MDLOptimizer):
->>>    def __init__(self):
-...        self.codetable_ = dict()
-...    def generate_candidates(self):
-...        return [(2,), (2, 3), (2, 4)]
-...    def evaluate(self): pass
+...     def __init__(self):
+...         self.codetable_ = dict()
+...     def generate_candidates(self):
+...         return [(2,), (2, 3), (2, 4)]
+...     def evaluate(self):
+...         pass
 
 >>> miner = MyMDLMiner()
 >>> mdl_prints(miner)

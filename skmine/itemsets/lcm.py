@@ -18,7 +18,7 @@ import os
 import shutil
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
@@ -169,7 +169,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
             if `return_tids=True` then
                 ==========  =================================
-                itemset     a `list` of co-occured items
+                itemset     a `tuple` of co-occured items
                 support     frequence for this itemset
                 tids        a bitmap tracking positions
                 ==========  =================================
@@ -184,8 +184,8 @@ class LCM(BaseMiner, DiscovererMixin):
         1  [2, 3, 5]       2
         >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
              itemset support       tids
-        0     [2, 5]       3  [0, 1, 2]
-        1  [2, 5, 3]       2     [0, 1]
+        0     [2, 5]       3  (0, 1, 2)
+        1  [2, 5, 3]       2     (0, 1)
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
@@ -274,7 +274,7 @@ class LCM(BaseMiner, DiscovererMixin):
             candidates = candidates[: candidates.bisect_left(limit)]
             for new_limit in candidates:
                 ids = self.item_to_tids[new_limit]
-                if tids.intersection_len(ids) >= self._min_supp:
+                if tids.intersection_cardinality(ids) >= self._min_supp:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit)
@@ -329,7 +329,7 @@ class LCMMax(LCM):
 
             for new_limit in candidates:
                 ids = self.item_to_tids[new_limit]
-                if tids.intersection_len(ids) >= self._min_supp:
+                if tids.intersection_cardinality(ids) >= self._min_supp:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))

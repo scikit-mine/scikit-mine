@@ -55,7 +55,7 @@ and some extra dependencies
 
 * scipy>=1.2.1
 * pandas>=1.0.0
-* roaringbitmap
+* pyroaring
 * joblib>=0.11.1
 * sortedcontainers>=2.1.0
 * dataclasses

@@ -10,7 +10,7 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
 from ..utils import _check_D, supervised_to_unsupervised
@@ -95,7 +95,7 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
             if XY in stack:
                 continue
             stack.add(XY)
-            inter_len = y_usage.intersection_len(X_usage)
+            inter_len = y_usage.intersection_cardinality(X_usage)
             if inter_len > _best_usage:
                 _best_usage = inter_len
                 best_XY = XY
@@ -153,10 +153,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).discover()
-    (bananas, milk)    [0, 1]
-    (butter, tea)         [2]
-    (cookies,)         [1, 2]
+    >>> SLIM().fit(D).discover(singletons=True, usage_tids=True)
+    (bananas, milk)    (0, 1)
+    (butter, tea)         (2)
+    (cookies,)         (1, 2)
     dtype: object
 
     References
@@ -396,7 +396,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         singletons: bool, default=False
             Either to include itemsets of length 1 in the result
         usage_tids: bool, default=False
-            Either to return transaction ids for an itemset (usage) or its codelength
+            Either returns the transaction ids for each itemset in tuple format or its codelength
         drop_null_usage: bool, default=True
             Either to include itemset with no usage in the training data
             (i.e itemsets under cover of other itemsets)
@@ -405,12 +405,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).discover()
-        (A, B)    [0, 1]
-        (B,)         [2]
-        (A,)          []
-        (C,)      [0, 2]
-        (D,)         [2]
+        >>> SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)
+        (A, B)    (0, 1)
+        (B,)         (2)
+        (A,)          ()
+        (C,)      (0, 2)
+        (D,)         (2)
         dtype: object
 
         Returns

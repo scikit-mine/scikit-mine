@@ -135,7 +135,7 @@ def test_compute_cycles_dyn():
     minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
 
     occs, covered = compute_cycles_dyn(minutes, len(minutes))
-    assert covered == set(range(len(minutes)))
+    assert set(covered) == set(range(len(minutes)))
     assert isinstance(occs, list)
 
 
@@ -147,7 +147,7 @@ def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
     )
 
     occs, covered = compute_cycles_dyn(minutes, len(minutes))
-    assert covered == set(range(len(minutes)))
+    assert set(covered) == set(range(len(minutes)))
     assert all([isinstance(e, np.ndarray) for e in occs])
     assert [e.shape for e in occs] == [(1, 6), (2, 3)]
 
