@@ -3,6 +3,7 @@
 
 
 from setuptools import find_packages, setup, dist
+
 dist.Distribution().fetch_build_eggs(['numpy'])
 import numpy
 
@@ -20,6 +21,11 @@ CLASSIFIERS = ['Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
                'License :: OSI Approved',
                'Programming Language :: Python',
+               'Programming Language :: Python :: 3.11',
+               'Programming Language :: Python :: 3.10',
+               'Programming Language :: Python :: 3.9',
+               'Programming Language :: Python :: 3.8',
+               'Programming Language :: Python :: 3.7',
                'Topic :: Software Development',
                'Topic :: Scientific/Engineering',
                'Operating System :: Microsoft :: Windows',
@@ -40,14 +46,12 @@ EXTRAS_REQUIRE = {
     ]
 }
 
-
 # try replacing with `codecs.open('README.rst', encoding='utf-8-sig') as f:` if error
 with open('README.rst') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 with open('requirements.txt') as req_fd:
     INSTALL_REQUIRES = req_fd.read().splitlines()
-
 
 setup(name=DISTNAME,
       maintainer=MAINTAINER,
@@ -65,4 +69,4 @@ setup(name=DISTNAME,
       install_requires=INSTALL_REQUIRES,
       extras_require=EXTRAS_REQUIRE,
       include_dirs=[numpy.get_include()],
-)
+      )
