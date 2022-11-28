@@ -14,7 +14,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedKeyList
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..base import BaseMiner, DiscovererMixin, InteractiveMiner
 from ..utils import bron_kerbosch

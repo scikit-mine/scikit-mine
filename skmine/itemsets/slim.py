@@ -10,13 +10,15 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
 from ..utils import _check_D, supervised_to_unsupervised
 
 
-def _to_vertical(D, stop_items=set(), return_len=False):
+def _to_vertical(D, stop_items=None, return_len=False):
+    if stop_items is None:
+        stop_items = set()
     res = defaultdict(Bitmap)
     idx = 0
     for idx, transaction in enumerate(D):
@@ -87,20 +89,27 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
     assert isinstance(codetable, SortedDict)
     depth = depth or int(np.log2(len(codetable)) * 1e2)
     for idx, (X, X_usage) in enumerate(codetable.items()):
+        print(f"idx : {idx}, X : {X}, X_usage : {X_usage}")
         Y = codetable.items()[idx + 1: idx + 1 + depth]
+        print(Y)
         _best_usage = 0
         best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
+            print(f"union : {XY}")
             if XY in stack:
+                print("in stack")
                 continue
             stack.add(XY)
-            inter_len = y_usage.intersection_len(X_usage)
+            inter_len = y_usage.intersection_cardinality(X_usage)
+            print(f"inter_len : {inter_len}")
             if inter_len > _best_usage:
+                print("inter_len > best_usage")
                 _best_usage = inter_len
                 best_XY = XY
 
         if best_XY is not None:
+            print("yield")
             yield best_XY, _best_usage
 
 
@@ -153,7 +162,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).discover()
+    >>> SLIM().fit(D).discover(singletons=True, usage_tids=True)
     (bananas, milk)    [0, 1]
     (butter, tea)         [2]
     (cookies,)         [1, 2]
@@ -172,6 +181,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     def __init__(
             self, *, k=50, pruning=True, n_items=200, tol=0.5,
     ):
+        self._starting_codes = None
         self.n_items = n_items
         self.tol = tol
         self.standard_codetable_ = None
@@ -193,6 +203,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             Transactional dataset, either as an iterable of iterables
             or encoded as tabular binary data
         """
+        print("*"*50, "FIT", "*"*50)
         self.prefit(D, y=y)
         seen_cands = set()
         k = 0
@@ -217,6 +228,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 Warning(
                     f"could not find `{self.k}` itemsets, try with a lower `tol`")
                 break
+
+        print("*" * 50, "END FIT", "*" * 50)
 
         return self
 
@@ -297,6 +310,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         ct.insert(idx, candidate)
         D = {k: v.copy() for k, v in self.standard_codetable_.items()}
         CTc = cover(D, ct)
+        print(f"ctc : {CTc}")
 
         decreased = set()
         for iset, usage in self.codetable_.items():  # TODO useless is size is too big
@@ -409,7 +423,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).discover()
+        >>> SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)
         (A, B)    [0, 1]
         (B,)         [2]
         (A,)          []
@@ -492,25 +506,31 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
+        print("*" * 50, "PREFIT", "*" * 50)
         if hasattr(D, "ndim") and D.ndim == 2:
+            print("if")
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
+            print("else")
             # compute tids for each item in Roaring Bitmap
             item_to_tids = _to_vertical(D)
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
+        print(f"sct : {sct}")
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
         # The Standard Codetable ST is composed of singletons as itemsets : so in ST
         #  - cover(t) = all singletons in t
         #  - usage(X) = supp(X) (support is the number of transactions in X )
         usage = sct.map(len).astype(np.uint32)
+        print(f"usage : {usage}")
 
         # Descending Usage sorting
         usage = usage.nlargest(self.n_items)
         sct = sct[usage.index]
+        print(f"sct : {sct}")
 
         # Build Standard Codetable <class 'pandas.core.series.Series'> in usage descending order :
         #   [
@@ -525,11 +545,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         # Sort Standard Codetable in standard_cover_order
         self.codetable_ = SortedDict(self._standard_cover_order, ct_it)
+        print(f"codetable : {self.codetable_}")
 
         # Compute the length of the optimal prefix code of itemset X :
         #     codes(X) =  L(X|CT)  = -log2(usage(X) / ∑_CT usage)
         codes = -_log2(usage / usage.sum())
         self._starting_codes = codes
+        print(f"starting_codes : {self._starting_codes}")
 
         # The encoded size of the code table is then given by
         # L(CT | D) = ∑_{X∈CT & usage(X)!=0) L(X|ST) + L(X|CT)
@@ -565,6 +587,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         #           = 2codes('A') + 3codes('B') +2codes('C') + 1codes('D')
         #           = usage('A')*codes('A') + usage('B')*codes('B') + ...
         self.data_size_ = (codes * usage).sum()
+
+        print("-" * 50, "END PREFIT", "-" * 50)
 
         return self
 

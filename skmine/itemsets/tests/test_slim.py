@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from sortedcontainers import SortedDict
 
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..slim import SLIM, _to_vertical, generate_candidates
 
@@ -122,8 +122,10 @@ def test_generate_candidate_1():
             frozenset("C"): Bitmap(range(0, 5)),
         }
     )
+    print(codetable)
 
     new_candidates = generate_candidates(codetable)
+    print(new_candidates)
     assert new_candidates == [
         (frozenset("AB"), 6),
         (frozenset("BC"), 5),
@@ -286,7 +288,7 @@ def test_interactive(D):
     slim.prefit(D)
     candidates = slim.generate_candidates()
     for true_est_usage, (cand, est_usage) in compress(
-        zip(est_usages, candidates), answers
+            zip(est_usages, candidates), answers
     ):
         assert est_usage == true_est_usage
         slim.update(cand)

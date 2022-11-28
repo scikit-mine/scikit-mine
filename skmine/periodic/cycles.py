@@ -10,7 +10,7 @@ from itertools import groupby
 import numpy as np
 import pandas as pd
 
-from roaringbitmap import RoaringBitmap as Bitmap
+from pyroaring import BitMap as Bitmap
 
 from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from ..utils import intersect2d, sliding_window_view
