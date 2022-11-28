@@ -484,7 +484,7 @@ or encoded as tabular binary data</p>
 <h2>LCM<a class="headerlink" href="#lcm" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.LCM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">LCM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linear time Closed item set Miner.</p>
 <p>LCM can be used as a <strong>generic purpose</strong> miner, yielding some patterns
 that will be later submitted to a custom acceptance criterion.</p>
@@ -499,10 +499,6 @@ Default to 0.2 (20%)</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1 The number of jobs to use for the computation. Each single item is attributed a job to</em>) – discover potential itemsets, considering this item as a root in the search space. <strong>Processes are preferred</strong>
 over threads. <strong>Carefully adjust the number of jobs</strong> otherwise the results may be corrupted especially if you
 have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.</p></li>
-<li><p><strong>max_depth</strong> (<em>int</em><em>, </em><em>default=-1</em>) – Maximum depth for exploration in the search space.
-By default -1 means no limitation in tree recursion.
-if max_depth &gt;0 is specified, tree exploration is limited to height <cite>max_depth</cite>.
-A <strong>root node is considered of depth 0</strong>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -552,7 +548,7 @@ If D is a pandas.Series, then <cite>(D.map(type) == list).all()</cite> should re
 
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.discover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.discover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minimum support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -563,6 +559,8 @@ Items must be both hashable and comparable</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids along with itemset.
 Default to False, will return supports instead</p></li>
 <li><p><strong>lexicographic_order</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either the order of the items in each itemset is not ordered or the items are ordered lexicographically</p></li>
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1 Maximum length of an itemset. By default</em><em>, </em><em>-1 means that LCM returns itemsets of</em>) – </p></li>
+<li><p><strong>lengths.</strong> (<em>all</em>) – </p></li>
 <li><p><strong>out</strong> (<em>str</em><em>, </em><em>default=None</em>) – File where results are written. Discover return None. The ‘out’ option is usefull
 to save memory : Instead of store all branch of lcm-tree in memory , each root
 branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
@@ -633,7 +631,7 @@ concatenated in the final ‘out’ file.</p></li>
 <h2>LCMMax<a class="headerlink" href="#lcmmax" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.lcm.LCMMax">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.lcm.</code><code class="sig-name descname">LCMMax</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">max_depth</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.lcm.</code><code class="sig-name descname">LCMMax</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">min_supp</span><span class="o">=</span><span class="default_value">0.2</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Linear time Closed item set Miner adapted to Maximal itemsets (or borders).</p>
 <p>A maximal itemset is an itemset with no frequent superset.</p>
 <dl class="field-list simple">
@@ -645,10 +643,6 @@ Default to 0.2 (20%)</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of jobs to use for the computation. Each single item is attributed a job
 to discover potential itemsets, considering this item as a root in the search space.
 <strong>Processes are preferred</strong> over threads.</p></li>
-<li><p><strong>max_depth</strong> (<em>int</em><em>, </em><em>default=-1</em>) – Maximum depth for exploration in the search space.
-By default -1 means no limitation in tree recursion.
-if max_depth &gt;0 is specified, tree exploration is limited to height <cite>max_depth</cite>.
-A <strong>root node is considered of depth 0</strong>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -669,6 +663,8 @@ Items must be both hashable and comparable</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids along with itemset.
 Default to False, will return supports instead</p></li>
 <li><p><strong>lexicographic_order</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either the order of the items in each itemset is not ordered or the items are ordered lexicographically</p></li>
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1 Maximum length of an itemset. By default</em><em>, </em><em>-1 means that LCM returns itemsets of</em>) – </p></li>
+<li><p><strong>lengths.</strong> (<em>all</em>) – </p></li>
 <li><p><strong>out</strong> (<em>str</em><em>, </em><em>default=None</em>) – File where results are written. Discover return None. The ‘out’ option is usefull
 to save memory : Instead of store all branch of lcm-tree in memory , each root
 branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
