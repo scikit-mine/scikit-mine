@@ -523,6 +523,8 @@ class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
     """
     Mining Periodic Pattern with a MDL criterion
 
+    Warning: this implementation is unstable.
+
     Implementation of periodic tree mining.
 
     This first extract cycles from the input data, and then combine these cycles

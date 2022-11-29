@@ -169,7 +169,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
             if `return_tids=True` then
                 ==========  =================================
-                itemset     a `list` of co-occured items
+                itemset     a `tuple` of co-occured items
                 support     frequence for this itemset
                 tids        a bitmap tracking positions
                 ==========  =================================
@@ -184,8 +184,8 @@ class LCM(BaseMiner, DiscovererMixin):
         1  [2, 3, 5]       2
         >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
              itemset support       tids
-        0     [2, 5]       3  [0, 1, 2]
-        1  [2, 5, 3]       2     [0, 1]
+        0     [2, 5]       3  (0, 1, 2)
+        1  [2, 5, 3]       2     (0, 1)
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
