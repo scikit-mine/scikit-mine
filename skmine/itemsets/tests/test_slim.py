@@ -1,18 +1,30 @@
 from itertools import compress
 
 import numpy as np
+import pandas
 import pandas as pd
 import pytest
 from sortedcontainers import SortedDict
 
 from pyroaring import BitMap as Bitmap
 
-from ..slim import SLIM, _to_vertical, generate_candidates
+from ..slim import SLIM, _to_vertical, generate_candidates, _log2
 
 
 @pytest.fixture
 def D():
     return pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
+
+
+@pytest.fixture
+def codetable():
+    return SortedDict({
+        frozenset({'bananas'}): Bitmap([0, 1]),
+        frozenset({'cookies'}): Bitmap([1, 2]),
+        frozenset({'milk'}): Bitmap([0, 1]),
+        frozenset({'butter'}): Bitmap([2]),
+        frozenset({'tea'}): Bitmap([2])
+    })
 
 
 def to_tabular_df(D):
@@ -294,3 +306,17 @@ def test_interactive(D):
         slim.update(cand)
 
     assert len(slim.discover(singletons=False)) == sum(answers)
+
+
+def test_standard_candidate_order(codetable):
+    slim = SLIM()
+    slim.codetable_ = codetable
+    sct = {
+        'bananas': Bitmap([0, 1]), 'milk': Bitmap([0, 1]), 'cookies': Bitmap([1, 2]), 'butter': Bitmap([2]),
+        'tea': Bitmap([2])
+    }
+    slim.standard_codetable_ = pd.Series(data=sct, index=['bananas', 'milk', 'cookies', 'butter', 'tea'])
+    print(slim.codetable_)
+    print(slim.standard_codetable_)
+    sorted_codetable = SortedDict(slim._standard_candidate_order, slim.codetable_)
+    print(sorted_codetable)

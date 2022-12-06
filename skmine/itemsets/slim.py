@@ -92,7 +92,7 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
     # for i,X in CT :
     #     for Y in CT(i+1:)
     for idx, (X, X_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1 : idx + 1 + depth]
+        Y = codetable.items()[idx + 1: idx + 1 + depth]
         # Init (best_XY=None,_best_usage=0) to retain the best couple (best_XY) /
         #                         usage(X∪Y') > usage(X∪Y) (>0)
         # for each Y after X in Standard Candidate Order (supp_D(X)↓|X|↓lexicographically↑)
@@ -115,12 +115,11 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
 def generate_candidates(codetable, stack=set()):
     """
     assumes codetable is sorted in Standard Candidate Order
-    Return sorted in decreasing usage order
     """
     return sorted(
         generate_candidates_big(codetable, stack=stack),
         key=lambda e: e[1],
-        reverse=True,
+        reverse=True,  # sort the itemsets by decreasing usage
     )
 
 
@@ -178,17 +177,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(
-        self,
-        *,
-        k=50,
-        pruning=True,
-        n_items=200,
-        tol=0.5,
-    ):
+    def __init__(self, *, k=50, pruning=True):
         self._starting_codes = None
-        self.n_items = n_items
-        self.tol = tol
+        # self.n_items = n_items
+        # self.tol = tol
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
@@ -208,29 +200,23 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             Transactional dataset, either as an iterable of iterables
             or encoded as tabular binary data
         """
-        # Init `self.codetable_`, `self.data_size_` and `self.model_size` with stantard code table.
         self.prefit(D, y=y)
         seen_cands = set()
-        # Get unique couples of items in Standard Candidate Order
-        k = 0
 
-        while k < self.k:
+        while True:
             candidates = self.generate_candidates(stack=seen_cands)
+
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
 
-                if diff >= self.tol:
+                if diff > 0:
                     self.update(
                         usages=usages, data_size=data_size, model_size=model_size
                     )
 
-                    k = sum(map(lambda iset: len(iset) > 1, self.codetable_))
-                if k >= self.k:
-                    break
-
             if not candidates:  # if empty candidate generation
-                Warning(f"could not find `{self.k}` itemsets, try with a lower `tol`")
+                Warning(f"all candidates have been listed")
                 break
 
         return self
@@ -285,9 +271,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         the X∪Y with highest estimated gain; as we traverse the elements descending on usage,
         we do not need to consider any element V or W with lower usage than the current best candidate X ∪ Y .
         Moreover, suppose X is considered before Y .
-            Therefore usage(Y ) ≤ usage(X), and we can first bound using usage(X ∪ Y ) = usage(X).
-            Second, we can bound using usage(X ∪ Y ) = usage(Y ).
-            Then, if this bound is met, we need to calculate the expected usage usage(X ∪ Y ) by intersecting the usage lists of X and Y .
+            Therefore usage(Y) ≤ usage(X), and we can first bound using usage(X ∪ Y) = usage(X).
+            Second, we can bound using usage(X ∪ Y) = usage(Y).
+            Then, if this bound is met, we need to calculate the expected usage usage(X ∪ Y) by intersecting the usage lists of X and Y .
 
         Parameters
         ----------
@@ -299,8 +285,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         iterator[tuple(frozenset, Bitmap)]
         """
         # Sort CT in  Standard Candidate Order : supp_D(X) ↓ |X| ↓ lexicographically ↑
-        ct = SortedDict(self._standard_candidate_order, self.codetable_.items())
-
+        ct = SortedDict(self._standard_candidate_order, self.codetable_.items())  # This is a deep copy
         return generate_candidates(ct, stack=stack)
 
     def evaluate(self, candidate):
@@ -328,24 +313,16 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         CTc = cover(D, ct)
         decreased = set()
         for iset, usage in self.codetable_.items():  # TODO useless is size is too big
-            # TODO !!! **CAREFULL** len(CTc[iset]) < len(usage) does not implie  L(D, CTc) > L(D, CT )
-            #
-            # cf :
-            #   CT_endoded_size = sum(list(self._compute_sizes(self.codetable_)))
-            #   CTc_endoded_size = sum(list(self._compute_sizes(CTc)))
-            #   print('\nlen(CTc[iset]) < len(usage)', len(CTc[iset]) < len(usage))
-            #   print('L(D, CTc) < L(D, CT )', CTc_endoded_size < CT_endoded_size)
-            #
-            # TODO : !!! **CAREFULL to check** : itemsets in ``codetable`` for which usage has decreased : REALLY ?
             if len(CTc[iset]) < len(usage):
                 decreased.add(iset)
 
         data_size, model_size = self._compute_sizes(CTc)
+        print(f"total size : {data_size + model_size}")
 
-        if self.pruning:
-            CTc, data_size, model_size = self._prune(
-                CTc, decreased, model_size, data_size
-            )
+        # if self.pruning:
+        #     CTc, data_size, model_size = self._prune(
+        #         CTc, decreased, model_size, data_size
+        #     )
 
         return data_size, model_size, CTc
 
@@ -380,7 +357,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         assert not (candidate is None and usages is None)
         if usages is None:
             data_size, model_size, usages = self.evaluate(candidate)
-        to_drop = {c for c in self.codetable_.keys() - usages.keys() if len(c) > 1}
+        to_drop = {c for c in self.codetable_.keys() - usages.keys()
+                   if len(c) > 1}  # deletes itemsets but not the singletons that do not appear in the usages after
+        # calculating the coverage
         self.codetable_.update(usages)
         for iset in to_drop:
             del self.codetable_[iset]
@@ -466,12 +445,16 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         s = pd.Series(list(s.values()), index=list(s.keys()))
         if not usage_tids:
             s = s.map(len).astype(np.uint32)
+        print("data_size", self.data_size_)
+        print("model_size", self.model_size_)
+        print("total_size", self.data_size_ + self.model_size_)
+        print("sct", self.standard_codetable_)
         return s
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
         n_transactions = (
-            max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
+                max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
         )
 
         D = pd.Series([set()] * n_transactions)
@@ -534,7 +517,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
             item_to_tids = {k: Bitmap(np.where(D[k])[0]) for k in D.columns}
         else:
-            # compute tids for each item in Roaring Bitmap
+            # compute tids for each item in Bitmap
             item_to_tids = _to_vertical(D)
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
@@ -543,7 +526,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         #  - cover(t) = all singletons in t
         #  - usage(X) = supp(X) (support is the number of transactions in X )
         usage = sct.map(len).astype(np.uint32)
-        usage = usage.nlargest(self.n_items)
+        usage = usage.nlargest(len(sct))
         # Descending Usage sorting
         sct = sct[usage.index]
 
@@ -555,7 +538,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         #   ]
         self.standard_codetable_ = sct
 
-        # Convert Standard Codetable pandas.Series in list of (  frozenset({.}), RoaringBitmap({...})   ,      ...    )
+        # Convert Standard Codetable pandas.Series in list of (  frozenset({.}), Bitmap({...})   ,      ...    )
         ct_it = ((frozenset([e]), tids) for e, tids in sct.items())
 
         # Sort Standard Codetable in standard_cover_order
@@ -633,6 +616,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         model_size = stand_codes_sum + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
+
         return data_size, model_size
 
     def _prune(self, codetable, prune_set, model_size, data_size):
@@ -656,7 +640,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         """
         prune_set = {k for k in prune_set if len(k) > 1}  # remove singletons
         while prune_set:
-            cand = min(prune_set, key=lambda e: len(codetable[e]))
+            cand = min(prune_set, key=lambda e: len(codetable[e]))  # select the element of decreased with the
+            # lowest usage in the codetable
             prune_set.discard(cand)
 
             ct = list(codetable)
@@ -667,7 +652,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             }  # TODO avoid data copies
             CTp = cover(D, ct)
             decreased = {
-                k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])
+                k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])  # TODO : check in CTc.items()
             }
 
             d_size, m_size = self._compute_sizes(CTp)

@@ -11,8 +11,8 @@ import skmine
 
 DISTNAME = 'scikit-mine'
 DESCRIPTION = 'Pattern mining in Python'
-MAINTAINER = 'R. Adon'
-MAINTAINER_EMAIL = 'remi.adon@gmail.com'
+MAINTAINER = 'scikit-mine team'
+MAINTAINER_EMAIL = 'skm-dev@inria.fr'
 URL = 'https://github.com/scikit-mine/scikit-mine'
 LICENSE = 'new BSD'
 DOWNLOAD_URL = 'https://github.com/scikit-mine/scikit-mine'
