@@ -1,6 +1,9 @@
-"""SLIM pattern discovery"""
+"""SLIM pattern discovery
+as described in `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descriptive_patterns-smets,vreeken.pdf
+"""
 
 # Authors: Rémi Adon <remi.adon@gmail.com>
+#          Thomas Betton <thomas.betton@irisa.fr>
 # License: BSD 3 clause
 
 from collections import Counter, defaultdict
@@ -108,8 +111,9 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
                 _best_usage = inter_len
                 best_XY = XY
 
-        if best_XY is not None:
-            yield best_XY, _best_usage
+        # if best_XY is not None:
+        #     yield best_XY, _best_usage
+            yield XY, inter_len
 
 
 def generate_candidates(codetable, stack=set()):
@@ -201,23 +205,37 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             or encoded as tabular binary data
         """
         self.prefit(D, y=y)
-        seen_cands = set()
 
         while True:
+            seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
+            print(f"nb candidates : {len(candidates)}")
+            best_data_size = None
+            best_model_size = None
+            best_usages = None
+            best_diff = 0
 
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-
-                if diff > 0:
-                    self.update(
-                        usages=usages, data_size=data_size, model_size=model_size
-                    )
+                if diff > best_diff:
+                    best_diff = diff
+                    best_data_size = data_size
+                    best_model_size = model_size
+                    best_usages = usages
 
             if not candidates:  # if empty candidate generation
                 Warning(f"all candidates have been listed")
                 break
+
+            if best_diff <= 0:
+                break
+
+            self.update(
+                usages=best_usages, data_size=best_data_size, model_size=best_model_size
+            )
+
+            print(f"total size : {best_data_size + best_model_size}")
 
         return self
 
@@ -311,13 +329,14 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         # Get the cover a standard codetable D with CT itemsets.
         # CTc is sorted in Standard Cover Order like D
         CTc = cover(D, ct)
-        decreased = set()
-        for iset, usage in self.codetable_.items():  # TODO useless is size is too big
-            if len(CTc[iset]) < len(usage):
-                decreased.add(iset)
+
+        # TODO : useful only for pruning
+        # decreased = set()
+        # for iset, usage in self.codetable_.items():  # TODO useless is size is too big
+        #     if len(CTc[iset]) < len(usage):
+        #         decreased.add(iset)
 
         data_size, model_size = self._compute_sizes(CTc)
-        print(f"total size : {data_size + model_size}")
 
         # if self.pruning:
         #     CTc, data_size, model_size = self._prune(
