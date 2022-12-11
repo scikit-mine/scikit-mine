@@ -202,7 +202,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
         return cand, diff, data_size, model_size, usages
 
-    def fit(self, D, y=None):  # pylint:disable = too-many-locals
+    def fit2(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
@@ -214,7 +214,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             Transactional dataset, either as an iterable of iterables
             or encoded as tabular binary data
         """
-        # Try parallel
         self.prefit(D, y=y)
 
         while True:
@@ -231,7 +230,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 Warning(f"all candidates have been listed")
                 break
 
-            evaluations = Parallel(n_jobs=self.n_jobs, verbose=10)(delayed(self.evaluate_candidate)(cand) for cand, _ in candidates)
+            evaluations = Parallel(n_jobs=self.n_jobs)(delayed(self.evaluate_candidate)(cand)
+                                                                   for cand, _ in candidates)
             for cand, diff, data_size, model_size, usages in evaluations:
                 if diff > best_diff:
                     best_cand = cand
@@ -251,7 +251,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         return self
 
-    def fit2(self, D, y=None):  # pylint:disable = too-many-locals
+    def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
@@ -391,14 +391,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         # CTc is sorted in Standard Cover Order like D
         CTc = cover(D, ct)
 
-        decreased = set()
-        for iset, usage in self.codetable_.items():  # TODO useless if size is too big
-            if len(CTc[iset]) < len(usage):
-                decreased.add(iset)
-
         data_size, model_size = self._compute_sizes(CTc)
 
         if self.pruning:
+            decreased = {
+                iset for iset, usage in self.codetable_.items() if len(iset) > 1 and len(CTc[iset]) < len(usage)
+            }
             CTc, data_size, model_size = self._prune(
                 CTc, decreased, model_size, data_size
             )
@@ -551,7 +549,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         return D.map(sorted)
 
     @lru_cache(maxsize=1024)
-    @delayed
+    # @delayed
     def get_support(self, *items):
         """
         Get support from an itemset
@@ -730,8 +728,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         prune_set = {k for k in prune_set if len(k) > 1}  # remove singletons
         while prune_set:
             cand = min(prune_set, key=lambda e: len(codetable[e]))  # select the element of decreased with the
-            # lowest usage in the codetable
-            prune_set.discard(cand)
+            # lowest usage in CTc
+            prune_set.discard(cand)  # remove cand from prune_set
 
             ct = list(codetable)
             ct.remove(cand)
@@ -740,13 +738,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 k: v.copy() for k, v in self.standard_codetable_.items()
             }  # TODO avoid data copies
             CTp = cover(D, ct)
-            decreased = {
-                k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])  # TODO : check in CTc.items()
-            }
 
             d_size, m_size = self._compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
+                decreased = {
+                    k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])
+                }
                 codetable.update(CTp)
                 del codetable[cand]
                 prune_set.update(decreased)
