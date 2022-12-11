@@ -118,17 +118,6 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
                 yield XY, inter_len
 
 
-def generate_candidates(codetable, stack=set()):
-    """
-    assumes codetable is sorted in Standard Candidate Order
-    """
-    return sorted(
-        generate_candidates_big(codetable, stack=stack),
-        key=lambda e: e[1],
-        reverse=True,  # sort the itemsets by decreasing usage
-    )
-
-
 class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     """SLIM: Directly Mining Descriptive Patterns
 
@@ -341,31 +330,14 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
     def generate_candidates(self, stack=set()):
         """
-        Generate candidates from the current codetable (SLIM is any-time)
-
-        Note that `stack` is updated during the execution of this method.
-
-        In practice, we do not need to materialise all candidates.
-        Instead, we traverse CT ordered on usage, employing branch-and-bound to find
-        the X∪Y with highest estimated gain; as we traverse the elements descending on usage,
-        we do not need to consider any element V or W with lower usage than the current best candidate X ∪ Y .
-        Moreover, suppose X is considered before Y .
-            Therefore usage(Y) ≤ usage(X), and we can first bound using usage(X ∪ Y) = usage(X).
-            Second, we can bound using usage(X ∪ Y) = usage(Y).
-            Then, if this bound is met, we need to calculate the expected usage usage(X ∪ Y) by intersecting the usage lists of X and Y .
-
-        Parameters
-        ----------
-        stack: set[frozenset], default=None
-            a stack of already-seen candidates to be excluded
-
-        Returns
-        -------
-        iterator[tuple(frozenset, Bitmap)]
+        assumes codetable is sorted in Standard Candidate Order
         """
-        # Sort CT in  Standard Candidate Order : supp_D(X) ↓ |X| ↓ lexicographically ↑
-        ct = SortedDict(self._standard_candidate_order, self.codetable_.items())  # This is a deep copy
-        return generate_candidates(ct, stack=stack)
+        codetable = SortedDict(self.codetable_.items())
+        return sorted(
+            generate_candidates_big(codetable, stack=stack),
+            key=lambda e: e[1],
+            reverse=True,  # sort the itemsets by decreasing usage
+        )
 
     def evaluate(self, candidate):
         """
@@ -573,14 +545,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         |X|↓ supp_D(X) ↓ lexicographically ↑
         """
         return -len(itemset), -len(self.get_support(*itemset)), tuple(itemset)
-
-    def _standard_candidate_order(self, itemset):
-        """
-        Returns a tuple associated with an itemset,
-        so that many itemsets can be sorted in Standard Candidate Order :
-        supp_D(X) ↓ |X| ↓ lexicographically ↑
-        """
-        return -len(self.get_support(*itemset)), -len(itemset), tuple(itemset)
 
     def prefit(self, D, y=None):
         """
