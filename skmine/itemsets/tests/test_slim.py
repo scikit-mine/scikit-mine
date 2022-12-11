@@ -140,6 +140,7 @@ def test_generate_candidate_1():
     print(new_candidates)
     assert new_candidates == [
         (frozenset("AB"), 6),
+        (frozenset("AC"), 5),
         (frozenset("BC"), 5),
     ]
 

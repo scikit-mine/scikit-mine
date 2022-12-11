@@ -1,5 +1,5 @@
 """SLIM pattern discovery
-as described in `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descriptive_patterns-smets,vreeken.pdf
+based on `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descriptive_patterns-smets,vreeken.pdf
 """
 
 # Authors: Rémi Adon <remi.adon@gmail.com>
@@ -9,6 +9,7 @@ as described in `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining
 from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
+from joblib import Parallel, delayed, parallel_backend
 
 import numpy as np
 import pandas as pd
@@ -99,21 +100,22 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
         # Init (best_XY=None,_best_usage=0) to retain the best couple (best_XY) /
         #                         usage(X∪Y') > usage(X∪Y) (>0)
         # for each Y after X in Standard Candidate Order (supp_D(X)↓|X|↓lexicographically↑)
-        _best_usage = 0
-        best_XY = None
+        # _best_usage = 0
+        # best_XY = None
         for y, y_usage in Y:
             XY = X.union(y)
             if XY in stack:
                 continue
             stack.add(XY)
             inter_len = y_usage.intersection_cardinality(X_usage)
-            if inter_len > _best_usage:
-                _best_usage = inter_len
-                best_XY = XY
+            # if inter_len > _best_usage:
+            #     _best_usage = inter_len
+            #     best_XY = XY
 
-        # if best_XY is not None:
-        #     yield best_XY, _best_usage
-            yield XY, inter_len
+            # if best_XY is not None:
+            #     yield best_XY, _best_usage
+            if inter_len > 0:
+                yield XY, inter_len
 
 
 def generate_candidates(codetable, stack=set()):
@@ -153,6 +155,11 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         As SLIM is highly dependant from the set of symbols from which
         it refines its codetable,
         lowering this argument will significantly improve runtime.
+    n_jobs : int, default=1
+        The number of jobs to use for the computation. Each single item is attributed a job to
+        discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**
+        over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you
+        have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
         Note: The reconstruction is lossless from this set of items. If the input data
         has more than `n_items` items, then the reconstruction will be lossy w.r.t this
@@ -165,7 +172,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).discover(singletons=True, usage_tids=True)
+    >>> SLIM().fit(D).discover(singletons=True, return_tids=True)
     (bananas, milk)    (0, 1)
     (butter, tea)         (2)
     (cookies,)         (1, 2)
@@ -181,18 +188,70 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, k=50, pruning=True):
+    def __init__(self, *, pruning=True, n_jobs=1):
         self._starting_codes = None
-        # self.n_items = n_items
-        # self.tol = tol
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
-        self.k = k
+        self.n_jobs = n_jobs
+
+    def evaluate_candidate(self, cand):
+        data_size, model_size, usages = self.evaluate(cand)
+        diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
+        return cand, diff, data_size, model_size, usages
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
+        """fit SLIM on a transactional dataset
+
+        This generates new candidate patterns and add those which improve compression,
+        iteratibely refining ``self.codetable_``
+
+        Parameters
+        ----------
+        D: iterable of iterables or array-like
+            Transactional dataset, either as an iterable of iterables
+            or encoded as tabular binary data
+        """
+        # Try parallel
+        self.prefit(D, y=y)
+
+        while True:
+            seen_cands = set(self.codetable_.keys())
+            candidates = self.generate_candidates(stack=seen_cands)
+            print(f"nb candidates : {len(candidates)}")
+            best_cand = None
+            best_data_size = None
+            best_model_size = None
+            best_usages = None
+            best_diff = 0
+
+            if not candidates:  # if empty candidate generation
+                Warning(f"all candidates have been listed")
+                break
+
+            evaluations = Parallel(n_jobs=self.n_jobs, verbose=10)(delayed(self.evaluate_candidate)(cand) for cand, _ in candidates)
+            for cand, diff, data_size, model_size, usages in evaluations:
+                if diff > best_diff:
+                    best_cand = cand
+                    best_diff = diff
+                    best_data_size = data_size
+                    best_model_size = model_size
+                    best_usages = usages
+
+            if best_diff <= 0:
+                break
+
+            self.update(
+                usages=best_usages, data_size=best_data_size, model_size=best_model_size
+            )
+
+            print(f"best cand : {best_cand}, total size : {best_data_size + best_model_size}")
+
+        return self
+
+    def fit2(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
@@ -210,6 +269,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
             print(f"nb candidates : {len(candidates)}")
+            best_cand = None
             best_data_size = None
             best_model_size = None
             best_usages = None
@@ -219,6 +279,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
                 if diff > best_diff:
+                    best_cand = cand
                     best_diff = diff
                     best_data_size = data_size
                     best_model_size = model_size
@@ -235,7 +296,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 usages=best_usages, data_size=best_data_size, model_size=best_model_size
             )
 
-            print(f"total size : {best_data_size + best_model_size}")
+            print(f"best cand : {best_cand,}, total size : {best_data_size + best_model_size}")
 
         return self
 
@@ -270,7 +331,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         discover
         """
         mat = self.cover(D)
-        code_lengths = self.discover(singletons=True, usage_tids=False)
+        code_lengths = self.discover(singletons=True, return_tids=False)
         ct_codes = code_lengths / code_lengths.sum()
         codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
         # positive sign on log2 to return negative distance : sklearn]
@@ -330,18 +391,17 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         # CTc is sorted in Standard Cover Order like D
         CTc = cover(D, ct)
 
-        # TODO : useful only for pruning
-        # decreased = set()
-        # for iset, usage in self.codetable_.items():  # TODO useless is size is too big
-        #     if len(CTc[iset]) < len(usage):
-        #         decreased.add(iset)
+        decreased = set()
+        for iset, usage in self.codetable_.items():  # TODO useless if size is too big
+            if len(CTc[iset]) < len(usage):
+                decreased.add(iset)
 
         data_size, model_size = self._compute_sizes(CTc)
 
-        # if self.pruning:
-        #     CTc, data_size, model_size = self._prune(
-        #         CTc, decreased, model_size, data_size
-        #     )
+        if self.pruning:
+            CTc, data_size, model_size = self._prune(
+                CTc, decreased, model_size, data_size
+            )
 
         return data_size, model_size, CTc
 
@@ -417,7 +477,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         else:  # transactional
             D_sct = _to_vertical(D)
 
-        isets = self.discover(singletons=True, usage_tids=False)
+        isets = self.discover(singletons=True, return_tids=False)
         isets = isets[isets.index.map(set(D_sct).issuperset)]
         covers = cover(D_sct, isets.index)
 
@@ -426,30 +486,41 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             mat[tids, idx] = True
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-    def discover(self, singletons=False, usage_tids=False, drop_null_usage=True):
+    def discover(self, singletons=False, return_tids=False, lexicographic_order=False, drop_null_usage=True,
+                 return_sizes=False):
         """Get a user-friendly copy of the codetable
 
         Parameters
         ----------
         singletons: bool, default=False
             Either to include itemsets of length 1 in the result
-        usage_tids: bool, default=False
-            Either to return transaction ids for an itemset (usage) or its codelength
+
+        return_tids: bool, default=False
+            Either returns the tids of each itemset associated with the coverage or simply the usage, i.e. the number of
+            times the itemset is used, if set to False.
+
+        lexicographic_order: bool, default=False
+            Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
+
         drop_null_usage: bool, default=True
             Either to include itemset with no usage in the training data
             (i.e itemsets under cover of other itemsets)
+
+        verbose_sizes: bool, default=False
+            Either to display the total size of the model (data_size + model_size) and the standard code table
 
         Example
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).discover(singletons=True, usage_tids=True, drop_null_usage=False)
-        (A, B)    (0, 1)
-        (B,)         (2)
-        (A,)          ()
-        (C,)      (0, 2)
-        (D,)         (2)
-        dtype: object
+        >>> SLIM().fit(D).discover(singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
+          itemset    tids
+        0  (A, B)  (0, 1)
+        1  (B, D)     (2)
+        2    (B,)      ()
+        3    (A,)      ()
+        4    (C,)  (0, 2)
+        5    (D,)      ()
 
         Returns
         -------
@@ -457,18 +528,16 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             codetable containing patterns and ids of transactions in which they are used
         """
         s = {
-            tuple(sorted(iset)): tids.copy()
+            (tuple(sorted(iset)) if lexicographic_order else tuple(iset)): (tids.copy() if return_tids else len(tids))
             for iset, tids in self.codetable_.items()
             if len(tids) >= drop_null_usage and len(iset) > (not singletons)
         }
-        s = pd.Series(list(s.values()), index=list(s.keys()))
-        if not usage_tids:
-            s = s.map(len).astype(np.uint32)
-        print("data_size", self.data_size_)
-        print("model_size", self.model_size_)
-        print("total_size", self.data_size_ + self.model_size_)
-        print("sct", self.standard_codetable_)
-        return s
+        df = pd.DataFrame(data={'itemset': list(s.keys()), ('tids' if return_tids else 'usage'): list(s.values())})
+        if return_sizes:
+            print("data_size", self.data_size_)
+            print("model_size", self.model_size_)
+            print("total_size", self.data_size_ + self.model_size_)
+        return df
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`"""
@@ -482,6 +551,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         return D.map(sorted)
 
     @lru_cache(maxsize=1024)
+    @delayed
     def get_support(self, *items):
         """
         Get support from an itemset
