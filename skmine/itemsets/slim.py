@@ -9,7 +9,7 @@ based on `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descri
 from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
-from joblib import Parallel, delayed, parallel_backend
+from joblib import Parallel, delayed
 
 import numpy as np
 import pandas as pd
@@ -207,7 +207,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 break
 
             evaluations = Parallel(n_jobs=self.n_jobs)(delayed(self.evaluate_candidate)(cand)
-                                                                   for cand, _ in candidates)
+                                                       for cand, _ in candidates)
             for cand, diff, data_size, model_size, usages in evaluations:
                 if diff > best_diff:
                     best_cand = cand
@@ -487,12 +487,14 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        s = {
-            (tuple(sorted(iset)) if lexicographic_order else tuple(iset)): (tids.copy() if return_tids else len(tids))
-            for iset, tids in self.codetable_.items()
-            if len(tids) >= drop_null_usage and len(iset) > (not singletons)
-        }
-        df = pd.DataFrame(data={'itemset': list(s.keys()), ('tids' if return_tids else 'usage'): list(s.values())})
+        itemset = []
+        tids_or_len = []
+        for iset, tids in self.codetable_.items():
+            if len(tids) >= drop_null_usage and len(iset) > (not singletons):
+                itemset.append(sorted(iset)) if lexicographic_order else iset
+                tids_or_len.append(tids) if return_tids else len(tids)
+
+        df = pd.DataFrame(data={'itemset': itemset, ('tids' if return_tids else 'usage'): tids_or_len})
         if return_sizes:
             print("data_size :", self.data_size_)
             print("model_size :", self.model_size_)
