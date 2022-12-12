@@ -73,10 +73,6 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
 
     The result is a python generator, not an in-memory list
 
-    This results in slightly less accurate candidate generation,
-    but avoids computing candidates that will never be evaluated,
-    if coupled with an early stopping strategy.
-
     Parameters
     ----------
     codetable: SortedDict[frozenset, Bitmap]
@@ -97,23 +93,14 @@ def generate_candidates_big(codetable, stack=set(), depth=None):
     #     for Y in CT(i+1:)
     for idx, (X, X_usage) in enumerate(codetable.items()):
         Y = codetable.items()[idx + 1: idx + 1 + depth]
-        # Init (best_XY=None,_best_usage=0) to retain the best couple (best_XY) /
-        #                         usage(X∪Y') > usage(X∪Y) (>0)
-        # for each Y after X in Standard Candidate Order (supp_D(X)↓|X|↓lexicographically↑)
-        # _best_usage = 0
-        # best_XY = None
+
         for y, y_usage in Y:
             XY = X.union(y)
             if XY in stack:
                 continue
             stack.add(XY)
             inter_len = y_usage.intersection_cardinality(X_usage)
-            # if inter_len > _best_usage:
-            #     _best_usage = inter_len
-            #     best_XY = XY
 
-            # if best_XY is not None:
-            #     yield best_XY, _best_usage
             if inter_len > 0:
                 yield XY, inter_len
 
@@ -328,10 +315,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
         return r
 
-    def generate_candidates(self, stack=set()):
+    def generate_candidates(self, stack=None):
         """
-        assumes codetable is sorted in Standard Candidate Order
+        Call generate_candidates_big to generate the candidates from a copy of the codetable and return the
+        candidates sorted in descending order of usage
         """
+        if stack is None:
+            stack = set()
         codetable = SortedDict(self.codetable_.items())
         return sorted(
             generate_candidates_big(codetable, stack=stack),
@@ -504,9 +494,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         }
         df = pd.DataFrame(data={'itemset': list(s.keys()), ('tids' if return_tids else 'usage'): list(s.values())})
         if return_sizes:
-            print("data_size", self.data_size_)
-            print("model_size", self.model_size_)
-            print("total_size", self.data_size_ + self.model_size_)
+            print("data_size :", self.data_size_)
+            print("model_size :", self.model_size_)
+            print("total_size :", self.data_size_ + self.model_size_)
         return df
 
     def reconstruct(self):
@@ -573,23 +563,15 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
-        # The Standard Codetable ST is composed of singletons as itemsets : so in ST
-        #  - cover(t) = all singletons in t
-        #  - usage(X) = supp(X) (support is the number of transactions in X )
         usage = sct.map(len).astype(np.uint32)
         usage = usage.nlargest(len(sct))
-        # Descending Usage sorting
+        # Descending usage sorting
         sct = sct[usage.index]
 
         # Build Standard Codetable <class 'pandas.core.series.Series'> in usage descending order :
-        #   [
-        #       singleton , tids      # first singleton with max usage
-        #       singleton , tids
-        #       ...
-        #   ]
         self.standard_codetable_ = sct
 
-        # Convert Standard Codetable pandas.Series in list of (  frozenset({.}), Bitmap({...})   ,      ...    )
+        # Convert Standard Codetable pandas.Series in list of (frozenset({.}), Bitmap({...}),...)
         ct_it = ((frozenset([e]), tids) for e, tids in sct.items())
 
         # Sort Standard Codetable in standard_cover_order
@@ -610,9 +592,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         #           = 2 * codes.sum()
         self.model_size_ = 2 * codes.sum()
 
-        # Compute the length of the encoding of the database D : L(D | CT )
+        # Compute the length of the encoding of the database D : L(D | CT)
         #
-        # L(D | CT ) is the sum of the sizes of the encoded transactions L(t|CT) for t ∈ D.
+        # L(D | CT) is the sum of the sizes of the encoded transactions L(t|CT) for t ∈ D.
         #
         #   The length of the encoding of the transaction L(t|CT) is simply the
         #   sum of the code lengths of the itemsets in its cover :
