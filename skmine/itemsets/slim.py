@@ -491,9 +491,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         tids_or_len = []
         for iset, tids in self.codetable_.items():
             if len(tids) >= drop_null_usage and len(iset) > (not singletons):
-                itemset.append(sorted(iset)) if lexicographic_order else iset
-                tids_or_len.append(tids) if return_tids else len(tids)
-
+                itemset.append(sorted(iset)) if lexicographic_order else itemset.append(list(iset))
+                tids_or_len.append(tids) if return_tids else tids_or_len.append(len(tids))
+        print(itemset)
+        print(tids_or_len)
         df = pd.DataFrame(data={'itemset': itemset, ('tids' if return_tids else 'usage'): tids_or_len})
         if return_sizes:
             print("data_size :", self.data_size_)
