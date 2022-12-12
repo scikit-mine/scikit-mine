@@ -503,7 +503,26 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         return df
 
     def reconstruct(self):
-        """reconstruct the original data from the current `self.codetable_`"""
+        """reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
+        lossless algorithm .
+
+        Example
+        -------
+        >>> from skmine.itemsets import SLIM
+        >>> D = ["ABC", "AB", "BCD"]
+        >>> slim = SLIM()
+        >>> slim.fit(D).discover()
+        >>> slim.reconstruct()
+        0    [A, B, C]
+        1       [A, B]
+        2    [B, C, D]
+        dtype: object
+
+        Returns
+        -------
+        pd.Series
+            original database containing a list of transactions
+        """
         n_transactions = (
                 max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
         )
