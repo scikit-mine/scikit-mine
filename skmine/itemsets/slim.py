@@ -446,28 +446,29 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             mat[tids, idx] = True
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-    def discover(self, singletons=False, return_tids=False, lexicographic_order=False, drop_null_usage=True,
-                 return_sizes=False):
+    def discover(self, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True,
+                 return_dl=False):
         """Get a user-friendly copy of the codetable
 
         Parameters
         ----------
-        singletons: bool, default=False
+        singletons: bool, default=True
             Either to include itemsets of length 1 in the result
 
         return_tids: bool, default=False
             Either returns the tids of each itemset associated with the coverage or simply the usage, i.e. the number of
             times the itemset is used, if set to False.
 
-        lexicographic_order: bool, default=False
+        lexicographic_order: bool, default=True
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
         drop_null_usage: bool, default=True
             Either to include itemset with no usage in the training data
             (i.e itemsets under cover of other itemsets)
 
-        verbose_sizes: bool, default=False
-            Either to display the total size of the model (data_size + model_size) and the standard code table
+        return_dl: bool, default=False
+            Display the total size of the model L(CT, D) according to MDL (Minimum Description Length) which is equal to
+            the sum of the encoded database size L(D | CT) and the encoded table code size L(CT | D).
 
         Example
         -------
@@ -493,10 +494,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             if len(tids) >= drop_null_usage and len(iset) > (not singletons):
                 itemset.append(sorted(iset)) if lexicographic_order else itemset.append(list(iset))
                 tids_or_len.append(tids) if return_tids else tids_or_len.append(len(tids))
-        print(itemset)
-        print(tids_or_len)
+
         df = pd.DataFrame(data={'itemset': itemset, ('tids' if return_tids else 'usage'): tids_or_len})
-        if return_sizes:
+        if return_dl:
             print("data_size :", self.data_size_)
             print("model_size :", self.model_size_)
             print("total_size :", self.data_size_ + self.model_size_)

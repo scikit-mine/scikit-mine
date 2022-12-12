@@ -132,7 +132,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
         return self  # for call .fit().discover() in DiscovererMixin()
 
-    def discover(self, *, return_tids=False, lexicographic_order=False, max_length=-1, out=None):
+    def discover(self, *, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
@@ -146,7 +146,7 @@ class LCM(BaseMiner, DiscovererMixin):
             Either to return transaction ids along with itemset.
             Default to False, will return supports instead
 
-        lexicographic_order: bool, default=False
+        lexicographic_order: bool, default=True
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
         max_length: int, default=-1 Maximum length of an itemset. By default, -1 means that LCM returns itemsets of
