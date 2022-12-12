@@ -475,12 +475,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> D = ["ABC", "AB", "BCD"]
         >>> SLIM().fit(D).discover(singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
           itemset    tids
-        0  (A, B)  (0, 1)
-        1  (B, D)     (2)
-        2    (B,)      ()
-        3    (A,)      ()
-        4    (C,)  (0, 2)
-        5    (D,)      ()
+        0  [A, B]  (0, 1)
+        1  [B, D]     (2)
+        2     [B]      ()
+        3     [A]      ()
+        4     [C]  (0, 2)
+        5     [D]      ()
 
         Returns
         -------
