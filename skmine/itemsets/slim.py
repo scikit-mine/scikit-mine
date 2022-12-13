@@ -9,6 +9,8 @@ based on `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descri
 from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
+
+import pandas
 from joblib import Parallel, delayed
 
 import numpy as np
@@ -447,7 +449,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
     def discover(self, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True,
-                 return_dl=False):
+                 return_dl=False, out=None):
         """Get a user-friendly copy of the codetable
 
         Parameters
@@ -470,6 +472,11 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             Display the total size of the model L(CT, D) according to MDL (Minimum Description Length) which is equal to
             the sum of the encoded database size L(D | CT) and the encoded table code size L(CT | D).
 
+        out : str, default=None
+            File where results are written. Discover return None. The file contains in parentheses the usage of the
+            itemset located after the closing parenthesis. If the 'return_tids' option is enabled then the line under
+            each itemset is a line of transaction ids containing the previous itemset.
+
         Example
         -------
         >>> from skmine.itemsets import SLIM
@@ -488,19 +495,31 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        itemset = []
-        tids_or_len = []
+        itemsets = []
+        itids = []
+        iusages = []
         for iset, tids in self.codetable_.items():
             if len(tids) >= drop_null_usage and len(iset) > (not singletons):
-                itemset.append(sorted(iset)) if lexicographic_order else itemset.append(list(iset))
-                tids_or_len.append(tids) if return_tids else tids_or_len.append(len(tids))
+                itemsets.append(sorted(iset)) if lexicographic_order else itemsets.append(list(iset))
+                itids.append(tids) if return_tids else []
+                iusages.append(len(tids))
 
-        df = pd.DataFrame(data={'itemset': itemset, ('tids' if return_tids else 'usage'): tids_or_len})
-        if return_dl:
-            print("data_size :", self.data_size_)
-            print("model_size :", self.model_size_)
-            print("total_size :", self.data_size_ + self.model_size_)
-        return df
+        if out is not None:
+            with open(out, 'w') as f:
+                for i, (itemset, usage) in enumerate(zip(itemsets, iusages)):
+                    line = "(" + str(usage) + ") " + " ".join(itemset) + "\n"
+                    if return_tids:
+                        line += " ".join(map(str, itids[i])) + "\n"
+                    f.write(line)
+            return None
+        else:
+            df = pd.DataFrame(data={'itemset': itemsets, ('tids' if return_tids else 'usage'): (itids if return_tids
+                                                                                                else iusages)})
+            if return_dl:
+                print("data_size :", self.data_size_)
+                print("model_size :", self.model_size_)
+                print("total_size :", self.data_size_ + self.model_size_)
+            return df
 
     def reconstruct(self):
         """reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
