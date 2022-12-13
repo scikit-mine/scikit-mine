@@ -358,9 +358,18 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         data_size, model_size = self._compute_sizes(CTc)
 
         if self.pruning:
-            decreased = {
-                iset for iset, usage in self.codetable_.items() if len(iset) > 1 and len(CTc[iset]) < len(usage)
-            }
+            decreased = set()
+            for iset, usage in self.codetable_.items():
+                if len(iset) > 1:
+                    # Force the pruning of itemsets longer than 1 that do not appear in the cover. This may prevent
+                    # to obtain the optimal code table, but it reduces the complexity of the algorithm
+                    if len(CTc[iset]) == 0:
+                        del CTc[iset]
+                    # Potentially prune the elements whose use has decreased
+                    elif len(CTc[iset]) < len(usage):
+                        decreased.add(iset)
+                    else:
+                        pass
             CTc, data_size, model_size = self._prune(
                 CTc, decreased, model_size, data_size
             )
