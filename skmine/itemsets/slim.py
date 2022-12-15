@@ -301,11 +301,11 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
             print(f"nb candidates : {len(candidates)}")
-            best_cand = None
-            best_data_size = None
-            best_model_size = None
-            best_usages = None
             best_diff = 0
+
+            if not candidates:  # if empty candidate generation
+                Warning(f"all candidates have been listed")
+                break
 
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
@@ -317,18 +317,15 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                     best_model_size = model_size
                     best_usages = usages
 
-            if not candidates:  # if empty candidate generation
-                Warning(f"all candidates have been listed")
-                break
+                    self.update(
+                        usages=best_usages, data_size=best_data_size, model_size=best_model_size
+                    )
+
+                    print(f"best cand : {best_cand,}, total size : {best_data_size + best_model_size}")
+                    break
 
             if best_diff <= 0:
                 break
-
-            self.update(
-                usages=best_usages, data_size=best_data_size, model_size=best_model_size
-            )
-
-            print(f"best cand : {best_cand,}, total size : {best_data_size + best_model_size}")
 
         return self
 
