@@ -280,21 +280,6 @@ def test_reconstruct(D):
     pd.testing.assert_series_equal(s, true_s)
 
 
-# def test_interactive(D):
-#     answers = [True, False]
-#     est_usages = [6, 5]
-#     slim = SLIM(pruning=False)
-#     slim.prefit(D)
-#     candidates = slim.generate_candidates()
-#     for true_est_usage, (cand, est_usage) in compress(
-#             zip(est_usages, candidates), answers
-#     ):
-#         assert est_usage == true_est_usage
-#         slim.update(cand)
-#
-#     assert len(slim.discover(singletons=False)) == sum(answers)
-
-
 # def test_standard_cover_order(codetable):
 #     slim = SLIM()
 #     slim.codetable_ = codetable

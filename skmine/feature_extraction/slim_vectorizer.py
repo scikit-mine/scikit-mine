@@ -51,7 +51,7 @@ class SLIMVectorizer(SLIM, TransformerMixin):
     --------
     >>> from skmine.feature_extraction import SLIMVectorizer
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIMVectorizer(k=2).fit_transform(D)
+    >>> SLIMVectorizer(k=2).fit_transform(D)    # doctest: +SKIP
        (bananas, milk)  (cookies,)
     0              0.4         0.0
     1              0.4         0.4

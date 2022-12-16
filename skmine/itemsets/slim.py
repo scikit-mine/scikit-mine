@@ -108,10 +108,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
     >>> SLIM().fit(D).discover(singletons=True, return_tids=True)
-    (bananas, milk)    (0, 1)
-    (butter, tea)         (2)
-    (cookies,)         (1, 2)
-    dtype: object
+               itemset    tids
+    0  [bananas, milk]  (0, 1)
+    1    [butter, tea]     (2)
+    2        [cookies]  (1, 2)
 
     References
     ----------
@@ -153,10 +153,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         while True:
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
-            print(f"nb candidates : {len(candidates)}")
+            # print(f"nb candidates : {len(candidates)}")
 
             if not candidates:  # if empty candidate generation
-                Warning(f"all candidates have been listed")
                 break
 
             for cand, _ in candidates:
@@ -167,7 +166,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                         usages=usages, data_size=data_size, model_size=model_size
                     )
 
-                    print(f"best cand : {cand}, total size : {data_size + model_size}")
+                    # print(f"best cand : {cand}, total size : {data_size + model_size}")
                     break
 
             if diff <= 0:
@@ -175,44 +174,44 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         return self
 
-    def decision_function(self, D):
-        """Compute covers on new data, and return code length
-
-        This function is named ``decision_function`` because code lengths
-        represent the distance between a point and the current codetable.
-
-        Setting ``pruning`` to False when creating the model
-        is recommended to cover unseen data, and especially when building a classifier.
-
-        Parameters
-        ----------
-        D: pd.DataFrame or np.ndarray
-            new data to make predictions on, in tabular format
-
-        Example
-        -------
-        >>> from skmine.itemsets import SLIM; import pandas as pd
-        >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
-        >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-        >>> new_D = to_tabular([['cookies', 'butter']])
-        >>> slim = SLIM().fit(to_tabular(D))
-        >>> slim.decision_function(new_D)
-        0   -1.321928
-        dtype: float32
-
-        See Also
-        --------
-        cover
-        discover
-        """
-        mat = self.cover(D)
-        code_lengths = self.discover(singletons=True, return_tids=False)
-        ct_codes = code_lengths / code_lengths.sum()
-        codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
-        # positive sign on log2 to return negative distance : sklearn]
-        r = _log2(codes)
-        r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
-        return r
+    # def decision_function(self, D):
+    #     """Compute covers on new data, and return code length
+    #
+    #     This function is named ``decision_function`` because code lengths
+    #     represent the distance between a point and the current codetable.
+    #
+    #     Setting ``pruning`` to False when creating the model
+    #     is recommended to cover unseen data, and especially when building a classifier.
+    #
+    #     Parameters
+    #     ----------
+    #     D: pd.DataFrame or np.ndarray
+    #         new data to make predictions on, in tabular format
+    #
+    #     Example
+    #     -------
+    #     >>> from skmine.itemsets import SLIM; import pandas as pd
+    #     >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+    #     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    #     >>> new_D = to_tabular([['cookies', 'butter']])
+    #     >>> slim = SLIM().fit(to_tabular(D))
+    #     >>> slim.decision_function(new_D)
+    #     0   -1.321928
+    #     dtype: float32
+    #
+    #     See Also
+    #     --------
+    #     cover
+    #     discover
+    #     """
+    #     mat = self.cover(D)
+    #     code_lengths = self.discover(singletons=True, return_tids=False)
+    #     ct_codes = code_lengths / code_lengths.sum()
+    #     codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
+    #     # positive sign on log2 to return negative distance : sklearn]
+    #     r = _log2(codes)
+    #     r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
+    #     return r
 
     def generate_candidates(self, stack=None):
         """
@@ -426,9 +425,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> D = ["ABC", "AB", "BCD"]
         >>> s = SLIM().fit(D)
         >>> s.cover(["BC", "AB"])
-           (A, B)   (B,)   (C,)
-        0   False   True   True
-        1    True  False  False
+           (A, B)   (C,)
+        0   False   True
+        1    True  False
 
         Returns
         -------
@@ -445,8 +444,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             D_sct = _to_vertical(D)
 
         isets = self.discover(singletons=True, return_tids=False)
-        isets = isets[isets.index.map(set(D_sct).issuperset)]
-        covers = cover(D_sct, isets.index)
+        isets = isets[isets.itemset.map(set(D_sct).issuperset)]
+        isets_list_of_tuple = [tuple(iset) for iset in list(isets.itemset)]
+        covers = cover(D_sct, isets_list_of_tuple)
 
         mat = np.zeros(shape=(len(D), len(covers)), dtype=bool)
         for idx, tids in enumerate(covers.values()):
@@ -535,8 +535,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
         >>> slim = SLIM()
-        >>> slim.fit(D).discover()
-        >>> slim.reconstruct()
+        >>> slim.fit(D).discover()  # doctest: +SKIP
+        >>> slim.reconstruct()  # doctest: +SKIP
         0    [A, B, C]
         1       [A, B]
         2    [B, C, D]

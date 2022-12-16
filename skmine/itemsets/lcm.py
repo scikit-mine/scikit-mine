@@ -69,9 +69,9 @@ class LCM(BaseMiner, DiscovererMixin):
         itemset support
     0      [58]    3195
     1      [52]    3185
-    2  [58, 52]    3184
+    2  [52, 58]    3184
     3      [29]    3181
-    4  [58, 29]    3180
+    4  [29, 58]    3180
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
@@ -185,7 +185,7 @@ class LCM(BaseMiner, DiscovererMixin):
         >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
              itemset support       tids
         0     [2, 5]       3  (0, 1, 2)
-        1  [2, 5, 3]       2     (0, 1)
+        1  [2, 3, 5]       2     (0, 1)
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
