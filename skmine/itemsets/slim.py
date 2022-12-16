@@ -250,9 +250,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         if stack is None:
             stack = set()
         assert isinstance(codetable, SortedDict)
-        # loop on all the couple of codetable itemset :
-        # for i,X in CT :
-        #     for Y in CT(i+1:)
+
         for idx, (x, x_usage) in enumerate(codetable.items()):
             Y = codetable.items()[idx + 1:]
             old_usage_X = len(codetable[x])

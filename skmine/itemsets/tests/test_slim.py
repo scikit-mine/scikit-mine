@@ -127,43 +127,15 @@ def test_complex_evaluate_2():
 
 
 def test_generate_candidate_1():
-    codetable = SortedDict(
-        {
-            frozenset("A"): Bitmap(range(0, 7)),
-            frozenset("B"): Bitmap([0, 1, 2, 3, 4, 5, 7]),
-            frozenset("C"): Bitmap(range(0, 5)),
-        }
-    )
-    print(codetable)
+    D = ['ABC', 'AB', 'BCD']
+    slim = SLIM().prefit(D)
+    seen_cands = set(slim.codetable_.keys())
+    candidates = slim.generate_candidates(stack=seen_cands)
 
-    new_candidates = generate_candidates(codetable)
-    print(new_candidates)
-    assert new_candidates == [
-        (frozenset("AB"), 6),
-        (frozenset("AC"), 5),
-        (frozenset("BC"), 5),
-    ]
-
-
-def test_generate_candidate_2():
-    usage = [Bitmap(_) for _ in (range(6), [6], [7], range(5))]
-
-    index = list(map(frozenset, ["AB", "A", "B", "C"]))
-    codetable = SortedDict(zip(index, usage))
-
-    new_candidates = generate_candidates(codetable)
-    assert new_candidates == [(frozenset("ABC"), 5)]
-
-
-def test_generate_candidate_stack():
-    usage = [Bitmap(_) for _ in (range(6), [6, 7], [6, 8], [])]
-
-    index = list(map(frozenset, ["ABC", "A", "B", "C"]))
-
-    codetable = SortedDict(zip(index, usage))
-
-    new_candidates = generate_candidates(codetable, stack={frozenset("AB")})
-    assert new_candidates == []
+    assert len(candidates) == 2  # only two candidates are returned out of the 6 potentials because only two have an
+    # estimated gain > 0
+    np.testing.assert_almost_equal(candidates[0][1], 2.39, 2)
+    np.testing.assert_almost_equal(candidates[1][1], 2.39, 2)
 
 
 @pytest.mark.parametrize("preproc", [to_tabular_df, _id])
@@ -229,56 +201,76 @@ def test_fit_no_pruning(D, preproc, pass_y):
     y = None if not pass_y else np.array([1] * len(D))
     D = preproc(D)
     self = slim.fit(D, y=y)
-    assert list(self.codetable_) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
+    assert list(self.codetable_) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
 
 
-def test_prune(D):
+def test_prune_empty(D):
     slim = SLIM(pruning=False).fit(D)
-    prune_set = [frozenset("AB")]
+    prune_set = [frozenset("AC"), frozenset("C")]
 
     new_codetable, new_data_size, new_model_size = slim._prune(
         slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
-    assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
+    # C is present because we do not prune itemsets of length 1 and AC is still present because his usage is 0 and he
+    # is prune in the evaluate method
+    assert list(new_codetable) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
     np.testing.assert_almost_equal(new_data_size, 12.92, 2)
 
     total_enc_size = new_data_size + new_model_size
     np.testing.assert_almost_equal(total_enc_size, 26, 0)
 
 
-def test_prune_empty(D):
-    slim = SLIM(pruning=False).fit(D)
-    prune_set = [frozenset("ABC")]
+def test_force_prune_with_evaluate(D):
+    slim = SLIM(pruning=True).prefit(D)
+    _, _, usages = slim.evaluate(frozenset("AC"))
+    slim.codetable_.update(usages)
+    assert frozenset("AC") in usages
+    _, _, usages = slim.evaluate(frozenset("ACB"))
+    assert frozenset("ACB") in usages
+    # AC has been removed because after the addition of ACB, its usage became null.
+    assert frozenset("AC") not in usages
 
-    # nothing to prune so we should get the exact same codetable
 
+def test_prune(D):
+    slim = SLIM(pruning=False).prefit(D)
+    # Add AB in the codetable -> usage(AB) = 6
+    _, _, usages = slim.evaluate(frozenset("AB"))
+    slim.codetable_.update(usages)
+
+    # Add ACB in the codetable -> usage(AB) = 1
+    data_size, model_size, usages = slim.evaluate(frozenset("ACB"))
+    slim.codetable_.update(usages)
+
+    # AB no longer improves compression, pruning must remove it
+    prune_set = [frozenset("AB")]
     new_codetable, new_data_size, new_model_size = slim._prune(
         slim.codetable_, prune_set, slim.model_size_, slim.data_size_
     )
 
-    assert list(new_codetable) == list(map(frozenset, ["ABC", "AB", "A", "B", "C"]))
+    assert data_size+model_size > new_data_size+new_model_size
+    assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
-def test_decision_function(D):
-    slim = SLIM(pruning=True).fit(D)
+# def test_decision_function(D):
+#     slim = SLIM(pruning=True).fit(D)
+#
+#     new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
+#     new_D = new_D.str.join("|").str.get_dummies(sep="|")
+#
+#     dists = slim.decision_function(new_D)
+#     assert dists.dtype == np.float32
+#     assert len(dists) == len(new_D)
+#     np.testing.assert_array_almost_equal(
+#         dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
+#     )
 
-    new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
-    new_D = new_D.str.join("|").str.get_dummies(sep="|")
 
-    dists = slim.decision_function(new_D)
-    assert dists.dtype == np.float32
-    assert len(dists) == len(new_D)
-    np.testing.assert_array_almost_equal(
-        dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
-    )
-
-
-def test_cover_discover_compat(D):
-    s = SLIM()
-    s.fit(D)
-    mat = s.discover(usage_tids=False, singletons=True) * s.cover(D)
-    assert mat.notna().sum().all()
+# def test_cover_discover_compat(D):
+#     s = SLIM()
+#     s.fit(D)
+#     mat = s.discover(usage_tids=False, singletons=True) * s.cover(D)
+#     assert mat.notna().sum().all()
 
 
 def test_reconstruct(D):
@@ -288,36 +280,30 @@ def test_reconstruct(D):
     pd.testing.assert_series_equal(s, true_s)
 
 
-@pytest.mark.parametrize("k", [1, 2])
-def test_k(D, k):
-    slim = SLIM(pruning=False, k=k).fit(D)
-    assert len(slim.discover()) == k
+# def test_interactive(D):
+#     answers = [True, False]
+#     est_usages = [6, 5]
+#     slim = SLIM(pruning=False)
+#     slim.prefit(D)
+#     candidates = slim.generate_candidates()
+#     for true_est_usage, (cand, est_usage) in compress(
+#             zip(est_usages, candidates), answers
+#     ):
+#         assert est_usage == true_est_usage
+#         slim.update(cand)
+#
+#     assert len(slim.discover(singletons=False)) == sum(answers)
 
 
-def test_interactive(D):
-    answers = [True, False]
-    est_usages = [6, 5]
-    slim = SLIM(pruning=False)
-    slim.prefit(D)
-    candidates = slim.generate_candidates()
-    for true_est_usage, (cand, est_usage) in compress(
-            zip(est_usages, candidates), answers
-    ):
-        assert est_usage == true_est_usage
-        slim.update(cand)
-
-    assert len(slim.discover(singletons=False)) == sum(answers)
-
-
-def test_standard_candidate_order(codetable):
-    slim = SLIM()
-    slim.codetable_ = codetable
-    sct = {
-        'bananas': Bitmap([0, 1]), 'milk': Bitmap([0, 1]), 'cookies': Bitmap([1, 2]), 'butter': Bitmap([2]),
-        'tea': Bitmap([2])
-    }
-    slim.standard_codetable_ = pd.Series(data=sct, index=['bananas', 'milk', 'cookies', 'butter', 'tea'])
-    print(slim.codetable_)
-    print(slim.standard_codetable_)
-    sorted_codetable = SortedDict(slim._standard_candidate_order, slim.codetable_)
-    print(sorted_codetable)
+# def test_standard_cover_order(codetable):
+#     slim = SLIM()
+#     slim.codetable_ = codetable
+#     sct = {
+#         'bananas': Bitmap([0, 1]), 'milk': Bitmap([0, 1]), 'cookies': Bitmap([1, 2]), 'butter': Bitmap([2]),
+#         'tea': Bitmap([2])
+#     }
+#     slim.standard_codetable_ = pd.Series(data=sct, index=['bananas', 'milk', 'cookies', 'butter', 'tea'])
+#     print(slim.codetable_)
+#     print(slim.standard_codetable_)
+#     sorted_codetable = SortedDict(slim._standard_candidate_order, slim.codetable_)
+#     print(sorted_codetable)
