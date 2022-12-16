@@ -69,98 +69,6 @@ def cover(sct: dict, itemsets: list):
     return covers
 
 
-def generate_candidates(codetable, stack=set()):
-    """
-    Generate candidates, but does not sort output by estimated gain
-
-    The result is a python generator, not an in-memory list
-
-    Parameters
-    ----------
-    codetable: SortedDict[frozenset, Bitmap]
-        A codetable, sorted in Standard Candidate Order
-
-    stack: set[frozenset], defaut=set()
-        A stack of already seen itemsets, which will not be considered in output
-        Note that this function updates the stack, passed as a reference
-
-    See Also
-    --------
-    generate_candidates
-    """
-    assert isinstance(codetable, SortedDict)
-    # loop on all the couple of codetable itemset :
-    # for i,X in CT :
-    #     for Y in CT(i+1:)
-    for idx, (x, x_usage) in enumerate(codetable.items()):
-        Y = codetable.items()[idx + 1:]
-        old_usage_X = len(codetable[x])
-
-        for y, y_usage in Y:
-            XY = x.union(y)
-            if XY in stack:
-                continue
-
-            # Gain estimate
-            old_usage_Y = len(codetable[y])
-            new_usage_XY = y_usage.intersection_cardinality(x_usage)
-            new_usage_X = old_usage_X - new_usage_XY
-            new_usage_Y = old_usage_Y - new_usage_XY
-            old_countsum = sum(len(usage) for usage in codetable.values())
-            new_countsum = old_countsum - new_usage_XY
-            old_num_codes_with_non_zero_usage = sum(1 if len(usage) > 0 else 0 for usage in codetable.values())
-            new_num_codes_with_non_zero_usage = old_num_codes_with_non_zero_usage + 1 \
-                                                - (1 if new_usage_X == 0 else 0) - (1 if new_usage_Y == 0 else 0)
-            log_values = _log2(np.array([old_usage_X, old_usage_Y, new_usage_XY, new_usage_X, new_usage_Y, old_countsum,
-                                         new_countsum]))
-
-            # Estimation of the size of the database gain
-            gain_db_XY = -1 * (-new_usage_XY * log_values[2] - new_usage_X * log_values[3] + old_usage_X * log_values[0]
-                               - new_usage_Y * log_values[4] + old_usage_Y * log_values[1] + new_countsum *
-                               log_values[6] - old_countsum * log_values[5])
-
-            # Estimation of the size of the codetable gain
-            gain_ct_XY = -log_values[2]
-            old_Y_size_code = -_log2(np.array([old_usage_Y/old_countsum]))[0]
-            old_X_size_code = -_log2(np.array([old_usage_X/old_countsum]))[0]
-            if new_usage_X != old_usage_X:
-                if new_usage_X != 0 and old_usage_X != 0:
-                    gain_ct_XY -= log_values[3]
-                    gain_ct_XY += log_values[0]
-                elif old_usage_X == 0:
-                    # code size X
-                    gain_ct_XY += old_X_size_code
-                    gain_ct_XY -= log_values[3]
-                elif new_usage_X == 0:
-                    # code size X
-                    gain_ct_XY -= old_X_size_code
-                    gain_ct_XY += log_values[0]
-
-            if new_usage_Y != old_usage_Y:
-                if new_usage_Y != 0 and old_usage_Y != 0:
-                    gain_ct_XY -= log_values[4]
-                    gain_ct_XY += log_values[1]
-                elif old_usage_Y == 0:
-                    # code size X
-                    gain_ct_XY += old_Y_size_code
-                    gain_ct_XY -= log_values[4]
-                elif new_usage_Y == 0:
-                    # code size X
-                    gain_ct_XY += old_Y_size_code
-                    gain_ct_XY -= log_values[1]
-
-            gain_ct_XY += new_num_codes_with_non_zero_usage * log_values[6]
-            gain_ct_XY -= old_num_codes_with_non_zero_usage * log_values[5]
-
-            # Total estimated gain
-            gain_XY = gain_db_XY - gain_ct_XY - min(old_X_size_code, old_Y_size_code)
-
-            stack.add(XY)
-
-            if gain_XY > 0:
-                yield XY, gain_XY
-
-
 class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     """SLIM: Directly Mining Descriptive Patterns
 
@@ -301,7 +209,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
             print(f"nb candidates : {len(candidates)}")
-            best_diff = 0
 
             if not candidates:  # if empty candidate generation
                 Warning(f"all candidates have been listed")
@@ -310,21 +217,15 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             for cand, _ in candidates:
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-                if diff > best_diff:
-                    best_cand = cand
-                    best_diff = diff
-                    best_data_size = data_size
-                    best_model_size = model_size
-                    best_usages = usages
-
+                if diff > 0:
                     self.update(
-                        usages=best_usages, data_size=best_data_size, model_size=best_model_size
+                        usages=usages, data_size=data_size, model_size=model_size
                     )
 
-                    print(f"best cand : {best_cand,}, total size : {best_data_size + best_model_size}")
+                    print(f"best cand : {cand}, total size : {data_size + model_size}")
                     break
 
-            if best_diff <= 0:
+            if diff <= 0:
                 break
 
         return self
@@ -377,10 +278,109 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             stack = set()
         codetable = SortedDict(self.codetable_.items())
         return sorted(
-            generate_candidates(codetable, stack=stack),
+            self.generate_candidates_big(codetable, stack=stack),
             key=lambda e: e[1],
             reverse=True,  # sort the itemsets by decreasing order gain
         )
+
+    def generate_candidates_big(self, codetable, stack=set()):
+        """
+        Generate candidates, but does not sort output by estimated gain
+
+        The result is a python generator, not an in-memory list
+
+        Parameters
+        ----------
+        codetable: SortedDict[frozenset, Bitmap]
+            A codetable, sorted in Standard Candidate Order
+
+        stack: set[frozenset], defaut=set()
+            A stack of already seen itemsets, which will not be considered in output
+            Note that this function updates the stack, passed as a reference
+
+        See Also
+        --------
+        generate_candidates
+        """
+        assert isinstance(codetable, SortedDict)
+        # loop on all the couple of codetable itemset :
+        # for i,X in CT :
+        #     for Y in CT(i+1:)
+        for idx, (x, x_usage) in enumerate(codetable.items()):
+            Y = codetable.items()[idx + 1:]
+            old_usage_X = len(codetable[x])
+            if old_usage_X == 0:
+                continue
+
+            for y, y_usage in Y:
+                XY = x.union(y)
+                if XY in stack:
+                    continue
+
+                # Gain estimate
+                old_usage_Y = len(codetable[y])
+                if old_usage_Y == 0:
+                    continue
+                new_usage_XY = y_usage.intersection_cardinality(x_usage)
+                if new_usage_XY == 0:
+                    continue
+                new_usage_X = old_usage_X - new_usage_XY
+                new_usage_Y = old_usage_Y - new_usage_XY
+                old_countsum = sum(len(usage) for usage in codetable.values())
+                new_countsum = old_countsum - new_usage_XY
+                old_num_codes_with_non_zero_usage = sum(1 if len(usage) > 0 else 0 for usage in codetable.values())
+                new_num_codes_with_non_zero_usage = old_num_codes_with_non_zero_usage + 1 \
+                                                    - (1 if new_usage_X == 0 else 0) - (1 if new_usage_Y == 0 else 0)
+                log_values = _log2(
+                    np.array([old_usage_X, old_usage_Y, new_usage_XY, new_usage_X, new_usage_Y, old_countsum,
+                              new_countsum]))
+
+                # Estimation of the size of the database gain
+                gain_db_XY = -1 * (
+                            -new_usage_XY * log_values[2] - new_usage_X * log_values[3] + old_usage_X * log_values[0]
+                            - new_usage_Y * log_values[4] + old_usage_Y * log_values[1] + new_countsum *
+                            log_values[6] - old_countsum * log_values[5])
+
+                # Estimation of the size of the codetable gain
+                gain_ct_XY = -log_values[2]
+                old_Y_size_code = sum(self._starting_codes[item] for item in y if item in self._starting_codes)
+                old_X_size_code = sum(self._starting_codes[item] for item in x if item in self._starting_codes)
+                if new_usage_X != old_usage_X:
+                    if new_usage_X != 0 and old_usage_X != 0:
+                        gain_ct_XY -= log_values[3]
+                        gain_ct_XY += log_values[0]
+                    elif old_usage_X == 0:
+                        # code size X
+                        gain_ct_XY += old_X_size_code
+                        gain_ct_XY -= log_values[3]
+                    elif new_usage_X == 0:
+                        # code size X
+                        gain_ct_XY -= old_X_size_code
+                        gain_ct_XY += log_values[0]
+
+                if new_usage_Y != old_usage_Y:
+                    if new_usage_Y != 0 and old_usage_Y != 0:
+                        gain_ct_XY -= log_values[4]
+                        gain_ct_XY += log_values[1]
+                    elif old_usage_Y == 0:
+                        # code size X
+                        gain_ct_XY += old_Y_size_code
+                        gain_ct_XY -= log_values[4]
+                    elif new_usage_Y == 0:
+                        # code size X
+                        gain_ct_XY += old_Y_size_code
+                        gain_ct_XY -= log_values[1]
+
+                gain_ct_XY += new_num_codes_with_non_zero_usage * log_values[6]
+                gain_ct_XY -= old_num_codes_with_non_zero_usage * log_values[5]
+
+                # Total estimated gain
+                gain_XY = gain_db_XY - gain_ct_XY - min(old_X_size_code, old_Y_size_code)
+
+                stack.add(XY)
+
+                if gain_XY > 0:
+                    yield XY, gain_XY
 
     def evaluate(self, candidate):
         """
