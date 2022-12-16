@@ -559,7 +559,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         return D.map(sorted)
 
     @lru_cache(maxsize=1024)
-    # @delayed
     def get_support(self, *items):
         """
         Get support from an itemset

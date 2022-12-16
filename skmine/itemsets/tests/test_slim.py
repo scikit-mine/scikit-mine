@@ -8,7 +8,7 @@ from sortedcontainers import SortedDict
 
 from pyroaring import BitMap as Bitmap
 
-from ..slim import SLIM, _to_vertical, generate_candidates, _log2
+from ..slim import SLIM, _to_vertical, _log2
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def test_complex_evaluate():
         B   C   D   E
     A   B   C   D   E
     """
-    slim = SLIM()
+    slim = SLIM() # by default pruning=True
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
     slim.prefit(D)
 
@@ -77,9 +77,9 @@ def test_complex_evaluate():
 
     diff = {k: v for k, v in updated.items() if k in u and u[k] != v}
 
-    assert len(diff) == 3
+    # the BC itemset has been pruned from CTc because its use is now null, so in diff we have only "DE" and "B".
+    assert len(diff) == 2
     assert len(updated[cand]) == 1  # {4}
-    assert len(updated[frozenset("BC")]) == 0  # {4} -> {}
     assert len(updated[frozenset("B")]) == 2  # {3} -> {3, 4}
     assert len(updated[frozenset("DE")]) == 1  # {4, 5} -> {5}
 
