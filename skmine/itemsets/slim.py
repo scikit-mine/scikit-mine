@@ -95,11 +95,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         As SLIM is highly dependant from the set of symbols from which
         it refines its codetable,
         lowering this argument will significantly improve runtime.
-    n_jobs : int, default=1
-        The number of jobs to use for the computation. Each single item is attributed a job to
-        discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**
-        over threads. **Carefully adjust the number of jobs** otherwise the results may be corrupted especially if you
-        have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.
 
         Note: The reconstruction is lossless from this set of items. If the input data
         has more than `n_items` items, then the reconstruction will be lossy w.r.t this
@@ -128,14 +123,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, pruning=True, n_jobs=1):
+    def __init__(self, *, pruning=True):
         self._starting_codes = None
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
-        self.n_jobs = n_jobs
 
     def evaluate_candidate(self, cand):
         data_size, model_size, usages = self.evaluate(cand)
@@ -222,8 +216,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
     def generate_candidates(self, stack=None):
         """
-        Call generate_candidates_big to generate the candidates from a copy of the codetable and return the
-        candidates sorted in descending order of usage
+        Call generate_candidates_generator to generate the candidates from a copy of the codetable and return the
+        candidates sorted in descending order of estimated gain
         """
         if stack is None:
             stack = set()
