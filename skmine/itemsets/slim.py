@@ -142,55 +142,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
         return cand, diff, data_size, model_size, usages
 
-    def fit2(self, D, y=None):  # pylint:disable = too-many-locals
-        """fit SLIM on a transactional dataset
-
-        This generates new candidate patterns and add those which improve compression,
-        iteratibely refining ``self.codetable_``
-
-        Parameters
-        ----------
-        D: iterable of iterables or array-like
-            Transactional dataset, either as an iterable of iterables
-            or encoded as tabular binary data
-        """
-        self.prefit(D, y=y)
-
-        while True:
-            seen_cands = set(self.codetable_.keys())
-            candidates = self.generate_candidates(stack=seen_cands)
-            print(f"nb candidates : {len(candidates)}")
-            best_cand = None
-            best_data_size = None
-            best_model_size = None
-            best_usages = None
-            best_diff = 0
-
-            if not candidates:  # if empty candidate generation
-                Warning(f"all candidates have been listed")
-                break
-
-            evaluations = Parallel(n_jobs=self.n_jobs)(delayed(self.evaluate_candidate)(cand)
-                                                       for cand, _ in candidates)
-            for cand, diff, data_size, model_size, usages in evaluations:
-                if diff > best_diff:
-                    best_cand = cand
-                    best_diff = diff
-                    best_data_size = data_size
-                    best_model_size = model_size
-                    best_usages = usages
-
-            if best_diff <= 0:
-                break
-
-            self.update(
-                usages=best_usages, data_size=best_data_size, model_size=best_model_size
-            )
-
-            print(f"best cand : {best_cand}, total size : {best_data_size + best_model_size}")
-
-        return self
-
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
@@ -278,12 +229,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             stack = set()
         codetable = SortedDict(self.codetable_.items())
         return sorted(
-            self.generate_candidates_big(codetable, stack=stack),
+            self.generate_candidates_generator(codetable, stack=stack),
             key=lambda e: e[1],
             reverse=True,  # sort the itemsets by decreasing order gain
         )
 
-    def generate_candidates_big(self, codetable, stack=set()):
+    def generate_candidates_generator(self, codetable, stack=None):
         """
         Generate candidates, but does not sort output by estimated gain
 
@@ -302,6 +253,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         --------
         generate_candidates
         """
+        if stack is None:
+            stack = set()
         assert isinstance(codetable, SortedDict)
         # loop on all the couple of codetable itemset :
         # for i,X in CT :
@@ -337,9 +290,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
                 # Estimation of the size of the database gain
                 gain_db_XY = -1 * (
-                            -new_usage_XY * log_values[2] - new_usage_X * log_values[3] + old_usage_X * log_values[0]
-                            - new_usage_Y * log_values[4] + old_usage_Y * log_values[1] + new_countsum *
-                            log_values[6] - old_countsum * log_values[5])
+                        -new_usage_XY * log_values[2] - new_usage_X * log_values[3] + old_usage_X * log_values[0]
+                        - new_usage_Y * log_values[4] + old_usage_Y * log_values[1] + new_countsum *
+                        log_values[6] - old_countsum * log_values[5])
 
                 # Estimation of the size of the codetable gain
                 gain_ct_XY = -log_values[2]
