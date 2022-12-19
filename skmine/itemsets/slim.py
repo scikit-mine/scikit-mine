@@ -26,11 +26,10 @@ def _to_vertical(D, stop_items=None, return_len=False):
     idx = 0
     for idx, transaction in enumerate(D):
         for e in transaction:
-            if e in stop_items:
-                continue
-            res[e].add(idx)
+            if e not in stop_items:
+                res[e].add(idx)
     if return_len:
-        return dict(res), idx + 1
+        return dict(res), idx + 1 # TODO : drop second  retrun , juste use sin slim_vecto
     return dict(res)
 
 
@@ -154,9 +153,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
                 if diff > 0:
-                    self.update(
-                        usages=usages, data_size=data_size, model_size=model_size
-                    )
+                    self.update(usages=usages, data_size=data_size, model_size=model_size)
 
                     # print(f"best cand : {cand}, total size : {data_size + model_size}")
                     break
@@ -213,11 +210,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         if stack is None:
             stack = set()
         codetable = SortedDict(self.codetable_.items())
-        return sorted(
-            self.generate_candidates_generator(codetable, stack=stack),
-            key=lambda e: e[1],
-            reverse=True,  # sort the itemsets by decreasing order gain
-        )
+        return sorted(self.generate_candidates_generator(codetable, stack=stack), key=lambda e: e[1], reverse=True)
+        # sort the itemsets by decreasing order gain
 
     def generate_candidates_generator(self, codetable, stack=None):
         """
@@ -357,9 +351,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                         decreased.add(iset)
                     else:
                         pass
-            CTc, data_size, model_size = self._prune(
-                CTc, decreased, model_size, data_size
-            )
+            CTc, data_size, model_size = self._prune(CTc, decreased, model_size, data_size)
 
         return data_size, model_size, CTc
 
@@ -394,8 +386,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         assert not (candidate is None and usages is None)
         if usages is None:
             data_size, model_size, usages = self.evaluate(candidate)
-        to_drop = {c for c in self.codetable_.keys() - usages.keys()
-                   if len(c) > 1}  # deletes itemsets but not the singletons that do not appear in the usages after
+        to_drop = {c for c in self.codetable_.keys() - usages.keys() if len(c) > 1}
+        # deletes itemsets but not the singletons that do not appear in the usages after
         # calculating the coverage
         self.codetable_.update(usages)
         for iset in to_drop:
@@ -427,11 +419,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         """
         if hasattr(D, "shape") and len(D.shape) == 2:  # tabular
             D = _check_D(D)
-            D_sct = {
-                k: Bitmap(np.where(D[k])[0])
-                for k in D.columns
-                if k in self.standard_codetable_
-            }
+            D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
         else:  # transactional
             D_sct = _to_vertical(D)
 
@@ -539,9 +527,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             original database containing a list of transactions
         """
-        n_transactions = (
-                max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1
-        )
+        n_transactions = (max(map(Bitmap.max, filter(lambda e: e, self.codetable_.values()))) + 1)
 
         D = pd.Series([set()] * n_transactions)
         for itemset, tids in self.codetable_.items():
@@ -680,9 +666,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         codes = -_log2(usages / usages.sum())
 
         counts = Counter(chain(*isets))
-        stand_codes_sum = sum(
-            self._starting_codes[item] * ctr for item, ctr in counts.items()
-        )
+        stand_codes_sum = sum(self._starting_codes[item] * ctr for item, ctr in counts.items())
 
         model_size = stand_codes_sum + codes.sum()  # L(CTc|D) = L(X|ST) + L(X|CTc)
         data_size = (codes * usages).sum()
@@ -717,17 +701,13 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             ct = list(codetable)
             ct.remove(cand)
 
-            D = {
-                k: v.copy() for k, v in self.standard_codetable_.items()
-            }  # TODO avoid data copies
+            D = {k: v.copy() for k, v in self.standard_codetable_.items()}  # TODO avoid data copies
             CTp = cover(D, ct)
 
             d_size, m_size = self._compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                decreased = {
-                    k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])
-                }
+                decreased = {k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])}
                 codetable.update(CTp)
                 del codetable[cand]
                 prune_set.update(decreased)
