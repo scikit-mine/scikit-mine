@@ -70,9 +70,7 @@ class SLIMVectorizer(SLIM, TransformerMixin):
     patterns should output matrices with very few zeros.
     """
 
-    def __init__(
-        self, strategy="codes", *, k=5, pruning=False, stop_items=None, **kwargs
-    ):
+    def __init__(self, strategy="codes", *, k=5, pruning=False, stop_items=None, **kwargs):
         super().__init__(**kwargs)
         self.k = k
         self.pruning = pruning
@@ -106,9 +104,7 @@ class SLIMVectorizer(SLIM, TransformerMixin):
         stop_items = self.stop_items or set()
         D_sct, _len = _to_vertical(D, stop_items=stop_items, return_len=True)
 
-        code_lengths = self.discover(
-            return_tids=False, singletons=True, drop_null_usage=False
-        )
+        code_lengths = self.discover(return_tids=False, singletons=True, drop_null_usage=False)
         code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
         code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]
 
