@@ -10,9 +10,6 @@ from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
 
-import pandas
-from joblib import Parallel, delayed
-
 import numpy as np
 import pandas as pd
 from sortedcontainers import SortedDict
@@ -130,11 +127,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
-
-    def evaluate_candidate(self, cand):
-        data_size, model_size, usages = self.evaluate(cand)
-        diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
-        return cand, diff, data_size, model_size, usages
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
