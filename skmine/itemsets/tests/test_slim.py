@@ -126,6 +126,29 @@ def test_complex_evaluate_2():
     assert len(updated[frozenset("C")]) == 1  # {0, 2} -> {2}
 
 
+def test_standard_cover_order():
+    D = ["ABC", "ABC", "ABCD", "C"]
+    slim = SLIM().prefit(D)
+    itemsets = slim.codetable_.keys()
+    # support(A) = 3
+    # support(B) = 3
+    # support(C) = 4
+    # support(D) = 1
+    assert itemsets[0] == frozenset("C")  # C has the largest support
+    assert itemsets[1] == frozenset("A")  # A has the same support as B but is before by lexicographic order
+    assert itemsets[2] == frozenset("B")
+    assert itemsets[3] == frozenset("D")  # D has the smallest support
+
+    slim.codetable_.update({frozenset("AB"): Bitmap([0])})
+    assert slim.codetable_.keys()[0] == frozenset("AB")  # AB is the longest itemset
+
+
+# def test_standard_cover_order_long_items():
+
+
+# def test_compute_size():
+
+
 def test_generate_candidate_1():
     D = ['ABC', 'AB', 'BCD']
     slim = SLIM().prefit(D)
