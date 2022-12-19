@@ -143,12 +143,6 @@ def test_standard_cover_order():
     assert slim.codetable_.keys()[0] == frozenset("AB")  # AB is the longest itemset
 
 
-# def test_standard_cover_order_long_items():
-
-
-# def test_compute_size():
-
-
 def test_generate_candidate_1():
     D = ['ABC', 'AB', 'BCD']
     slim = SLIM().prefit(D)
@@ -275,25 +269,28 @@ def test_prune(D):
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
-# def test_decision_function(D):
-#     slim = SLIM(pruning=True).fit(D)
-#
-#     new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
-#     new_D = new_D.str.join("|").str.get_dummies(sep="|")
-#
-#     dists = slim.decision_function(new_D)
-#     assert dists.dtype == np.float32
-#     assert len(dists) == len(new_D)
-#     np.testing.assert_array_almost_equal(
-#         dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
-#     )
+def test_decision_function(D):
+    slim = SLIM(pruning=True).fit(D)
+
+    new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
+    new_D = new_D.str.join("|").str.get_dummies(sep="|")
+
+    dists = slim.decision_function(new_D)
+    assert dists.dtype == np.float32
+    assert len(dists) == len(new_D)
+    np.testing.assert_array_almost_equal(
+        dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
+    )
 
 
-# def test_cover_discover_compat(D):
-#     s = SLIM()
-#     s.fit(D)
-#     mat = s.discover(usage_tids=False, singletons=True) * s.cover(D)
-#     assert mat.notna().sum().all()
+def test_cover_discover_compat(D):
+    s = SLIM()
+    s.fit(D)
+    s_discover = s.discover()
+    s_discover = pd.Series(s_discover["usage"].values, index=s_discover["itemset"].apply(tuple))
+    mat = s_discover * s.cover(D)
+
+    assert mat.notna().sum().all()
 
 
 def test_reconstruct(D):
@@ -301,17 +298,3 @@ def test_reconstruct(D):
     s = slim.reconstruct().map("".join)  # originally a string so we have to join
     true_s = pd.Series(["ABC"] * 5 + ["AB", "A", "B"])
     pd.testing.assert_series_equal(s, true_s)
-
-
-# def test_standard_cover_order(codetable):
-#     slim = SLIM()
-#     slim.codetable_ = codetable
-#     sct = {
-#         'bananas': Bitmap([0, 1]), 'milk': Bitmap([0, 1]), 'cookies': Bitmap([1, 2]), 'butter': Bitmap([2]),
-#         'tea': Bitmap([2])
-#     }
-#     slim.standard_codetable_ = pd.Series(data=sct, index=['bananas', 'milk', 'cookies', 'butter', 'tea'])
-#     print(slim.codetable_)
-#     print(slim.standard_codetable_)
-#     sorted_codetable = SortedDict(slim._standard_candidate_order, slim.codetable_)
-#     print(sorted_codetable)

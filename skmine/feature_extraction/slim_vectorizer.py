@@ -51,7 +51,7 @@ class SLIMVectorizer(SLIM, TransformerMixin):
     --------
     >>> from skmine.feature_extraction import SLIMVectorizer
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIMVectorizer(k=2).fit_transform(D)    # doctest: +SKIP
+    >>> SLIMVectorizer(k=2).fit_transform(D)
        (bananas, milk)  (cookies,)
     0              0.4         0.0
     1              0.4         0.4
@@ -107,8 +107,9 @@ class SLIMVectorizer(SLIM, TransformerMixin):
         D_sct, _len = _to_vertical(D, stop_items=stop_items, return_len=True)
 
         code_lengths = self.discover(
-            usage_tids=False, singletons=True, drop_null_usage=False
+            return_tids=False, singletons=True, drop_null_usage=False
         )
+        code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
         code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]
 
         isets = code_lengths.nlargest(self.k)  # real usages sorted in decreasing order

@@ -166,44 +166,45 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         return self
 
-    # def decision_function(self, D):
-    #     """Compute covers on new data, and return code length
-    #
-    #     This function is named ``decision_function`` because code lengths
-    #     represent the distance between a point and the current codetable.
-    #
-    #     Setting ``pruning`` to False when creating the model
-    #     is recommended to cover unseen data, and especially when building a classifier.
-    #
-    #     Parameters
-    #     ----------
-    #     D: pd.DataFrame or np.ndarray
-    #         new data to make predictions on, in tabular format
-    #
-    #     Example
-    #     -------
-    #     >>> from skmine.itemsets import SLIM; import pandas as pd
-    #     >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
-    #     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    #     >>> new_D = to_tabular([['cookies', 'butter']])
-    #     >>> slim = SLIM().fit(to_tabular(D))
-    #     >>> slim.decision_function(new_D)
-    #     0   -1.321928
-    #     dtype: float32
-    #
-    #     See Also
-    #     --------
-    #     cover
-    #     discover
-    #     """
-    #     mat = self.cover(D)
-    #     code_lengths = self.discover(singletons=True, return_tids=False)
-    #     ct_codes = code_lengths / code_lengths.sum()
-    #     codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
-    #     # positive sign on log2 to return negative distance : sklearn]
-    #     r = _log2(codes)
-    #     r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
-    #     return r
+    def decision_function(self, D):
+        """Compute covers on new data, and return code length
+
+        This function is named ``decision_function`` because code lengths
+        represent the distance between a point and the current codetable.
+
+        Setting ``pruning`` to False when creating the model
+        is recommended to cover unseen data, and especially when building a classifier.
+
+        Parameters
+        ----------
+        D: pd.DataFrame or np.ndarray
+            new data to make predictions on, in tabular format
+
+        Example
+        -------
+        >>> from skmine.itemsets import SLIM; import pandas as pd
+        >>> def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+        >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+        >>> new_D = to_tabular([['cookies', 'butter']])
+        >>> slim = SLIM().fit(to_tabular(D))
+        >>> slim.decision_function(new_D)
+        0   -1.321928
+        dtype: float32
+
+        See Also
+        --------
+        cover
+        discover
+        """
+        mat = self.cover(D)
+        code_lengths = self.discover(singletons=True, return_tids=False)
+        code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
+        ct_codes = code_lengths / code_lengths.sum()
+        codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
+        # positive sign on log2 to return negative distance : sklearn]
+        r = _log2(codes)
+        r[r == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
+        return r
 
     def generate_candidates(self, stack=None):
         """
@@ -436,9 +437,11 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             D_sct = _to_vertical(D)
 
         isets = self.discover(singletons=True, return_tids=False)
-        isets = isets[isets.itemset.map(set(D_sct).issuperset)]
-        isets_list_of_tuple = [tuple(iset) for iset in list(isets.itemset)]
-        covers = cover(D_sct, isets_list_of_tuple)
+        isets = pd.Series(isets["usage"].values, index=isets["itemset"].apply(tuple))
+        # isets = pd.Series(list(isets.usage), index=isets.itemset)
+        isets = isets[isets.index.map(set(D_sct).issuperset)]
+        # isets_list_of_tuple = [tuple(iset) for iset in list(isets.itemset)]
+        covers = cover(D_sct, isets.index)
 
         mat = np.zeros(shape=(len(D), len(covers)), dtype=bool)
         for idx, tids in enumerate(covers.values()):
@@ -492,6 +495,16 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
+        # s = {
+        #     tuple(sorted(iset)): tids.copy()
+        #     for iset, tids in self.codetable_.items()
+        #     if len(tids) >= drop_null_usage and len(iset) > (not singletons)
+        # }
+        # s = pd.Series(list(s.values()), index=list(s.keys()))
+        # if not return_tids:
+        #     s = s.map(len).astype(np.uint32)
+        # return s
+
         itemsets = []
         itids = []
         iusages = []
