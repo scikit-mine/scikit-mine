@@ -375,8 +375,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         if usages is None:
             data_size, model_size, usages = self.evaluate(candidate)
         to_drop = {c for c in self.codetable_.keys() - usages.keys() if len(c) > 1}
-        # deletes itemsets but not the singletons that do not appear in the usages after
-        # calculating the coverage
+        # deletes itemsets in the codetable before upgrade that do not appear in the new usages and longer than 1
         self.codetable_.update(usages)
         for iset in to_drop:
             del self.codetable_[iset]

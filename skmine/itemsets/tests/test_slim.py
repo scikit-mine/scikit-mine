@@ -89,6 +89,73 @@ def test_log2():
     assert logs['d'] == 0  # attention : for a value of 0, this function returns 0
 
 
+def test_update_no_candidate_and_usages(D):
+    slim = SLIM().prefit(D)
+    # Raises an AssertionError because the candidate and the uses cannot be None at the same time
+    with pytest.raises(AssertionError):
+        slim.update(candidate=None, model_size=10, data_size=20, usages=None) == AssertionError
+
+
+def test_update_no_candidate(D):
+    slim = SLIM().prefit(D)
+    usages = {
+        frozenset("ABC"): Bitmap([0, 1, 2, 3, 4]),
+        frozenset("A"): Bitmap([5, 6]),
+        frozenset("B"): Bitmap([5, 7])
+    }
+    slim.update(candidate=None, model_size=10, data_size=20, usages=usages)
+
+    assert slim.model_size_ == 10
+    assert slim.data_size_ == 20
+    assert len(slim.codetable_) == 4  # C is always in the code table even if it is not in usages
+    assert slim.codetable_.get(frozenset("ABC")) == Bitmap([0, 1, 2, 3, 4])
+    assert slim.codetable_.get(frozenset("A")) == Bitmap([5, 6])
+    assert slim.codetable_.get(frozenset("B")) == Bitmap([5, 7])
+    assert slim.codetable_.get(frozenset("C")) == Bitmap([0, 1, 2, 3, 4])  # C has not been updated but is present
+
+
+def test_update_no_usages(D):
+    slim = SLIM().prefit(D)
+    model_size = slim.model_size_
+    data_size = slim.data_size_
+    candidate = frozenset("ABC")
+    slim.update(candidate=candidate, model_size=None, data_size=None, usages=None)
+
+    assert slim.model_size_ != model_size
+    assert slim.data_size_ != data_size
+    assert len(slim.codetable_) == 4  # ABC has been added to the table in addition to the 3 singletons (A,B,C)
+    assert slim.codetable_.get(frozenset("ABC")) == Bitmap([0, 1, 2, 3, 4])
+    # the usages of A,B,C have been calculated
+    assert slim.codetable_.get(frozenset("A")) == Bitmap([5, 6])
+    assert slim.codetable_.get(frozenset("B")) == Bitmap([5, 7])
+    assert slim.codetable_.get(frozenset("C")) == Bitmap()  # C has not been updated but is present
+
+
+def test_update_to_drop(D):
+    slim = SLIM().prefit(D)
+    usages = {
+        frozenset("AB"): Bitmap([0, 1, 2, 3, 4, 5]),
+        frozenset("A"): Bitmap([6]),
+        frozenset("B"): Bitmap([7]),
+        frozenset("C"): Bitmap([0, 1, 2, 3, 4])
+    }
+    slim.update(candidate=None, model_size=15, data_size=20, usages=usages)
+    assert slim.codetable_.get(frozenset("AB")) == Bitmap([0, 1, 2, 3, 4, 5])
+    usages = {
+        frozenset("ABC"): Bitmap([0, 1, 2, 3, 4]),
+        frozenset("A"): Bitmap([5, 6]),
+        frozenset("B"): Bitmap([7]),
+        frozenset("C"): Bitmap()
+    }
+    slim.update(candidate=None, model_size=10, data_size=20, usages=usages)
+
+    assert slim.model_size_ == 10
+    assert slim.data_size_ == 20
+    assert len(slim.codetable_) == 4
+    assert slim.codetable_.get(frozenset("AB")) is None  # AB has been removed because it does not appear
+    # in the new usages
+
+
 def test_complex_evaluate():
     """
     A   B   C
