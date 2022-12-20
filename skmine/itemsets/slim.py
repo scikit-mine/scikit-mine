@@ -36,6 +36,21 @@ def _to_vertical(D, stop_items=None, return_len=False):
 
 
 def _log2(values):
+    """
+    This function calculates the log2 of a set of values.
+    Be careful, if one of the values is 0, the function will return 0.
+
+    Parameters
+    ----------
+    values: pd.Series
+        A set of values with a possible index (you can also pass as parameter an np.array without index)
+
+    Returns
+    -------
+    pd.Series
+        The set of values present in "values" after applying the log2 function with the correct index if there was one
+        in a pd.Series.
+    """
     res_index = values.index if isinstance(values, pd.Series) else None
     res = np.zeros(len(values), dtype=np.float32)
     res[values != 0] = np.log2(values[values != 0]).astype(np.float32)

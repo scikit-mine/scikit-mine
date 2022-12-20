@@ -7,7 +7,7 @@ from sortedcontainers import SortedDict
 
 from pyroaring import BitMap as Bitmap
 
-from ..slim import SLIM, _to_vertical, _log2
+from ..slim import SLIM, _to_vertical, _log2, cover
 
 
 @pytest.fixture
@@ -42,6 +42,53 @@ def test_to_vertical(D):
     assert list(vert2.keys()) == list("BC")
 
 
+def test_cover():
+    """
+    A   B   C
+    A   B
+        B   C   D
+    """
+    # D corresponds to the items and the transactions in which they appear, it is the standard code table
+    D = {
+        "B": Bitmap([0, 1, 2]),
+        "A": Bitmap([0, 1]),
+        "C": Bitmap([0, 2]),
+        "D": Bitmap([2])
+    }
+    # ct corresponds to the itemsets on which we want to calculate the cover
+    ct = [
+        frozenset("ABC"),
+        frozenset("AB"),
+        frozenset("BC"),
+        frozenset("A"),
+        frozenset("B"),
+        frozenset("C"),
+        frozenset("D")
+    ]
+    CTc = cover(D, ct)
+
+    assert CTc[frozenset("ABC")] == Bitmap([0])
+    assert CTc[frozenset("AB")] == Bitmap([1])  # AB appears only in tid_1 for usage because ABC is placed before in ct
+    # so the AB of the first transaction has been covered by ABC
+    assert CTc[frozenset("BC")] == Bitmap([2])
+    assert CTc[frozenset("A")] == Bitmap()
+    assert CTc[frozenset("B")] == Bitmap()
+    assert CTc[frozenset("C")] == Bitmap()
+    assert CTc[frozenset("D")] == Bitmap([2])
+
+
+def test_log2():
+    d = {'a': 1, 'b': 2, 'c': 3, 'd': 0}
+    d = pd.Series(data=d, index=['a', 'b', 'c', 'd'])
+    logs = _log2(d)
+
+    assert len(logs) == 4
+    assert logs["a"] == 0
+    assert logs["b"] == 1
+    np.testing.assert_almost_equal(logs["c"], 1.58, 2)
+    assert logs['d'] == 0  # attention : for a value of 0, this function returns 0
+
+
 def test_complex_evaluate():
     """
     A   B   C
@@ -51,7 +98,7 @@ def test_complex_evaluate():
         B   C   D   E
     A   B   C   D   E
     """
-    slim = SLIM() # by default pruning=True
+    slim = SLIM()  # by default pruning=True
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
     slim.prefit(D)
 
@@ -267,7 +314,7 @@ def test_prune(D):
         usages, slim.model_size_, slim.data_size_
     )
 
-    assert data_size+model_size > new_data_size+new_model_size
+    assert data_size + model_size > new_data_size + new_model_size
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
