@@ -1,5 +1,6 @@
 """SLIM pattern discovery
 based on `https://eda.mmci.uni-saarland.de/pubs/2012/slim_directly_mining_descriptive_patterns-smets,vreeken.pdf
+and https://eda.rg.cispa.io/pres/ida14-slimmer-poster.pdf
 """
 
 # Authors: Rémi Adon <remi.adon@gmail.com>
@@ -12,6 +13,7 @@ from itertools import chain
 
 import numpy as np
 import pandas as pd
+import time
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -28,8 +30,8 @@ def _to_vertical(D, stop_items=None, return_len=False):
         for e in transaction:
             if e not in stop_items:
                 res[e].add(idx)
-    if return_len:
-        return dict(res), idx + 1 # TODO : drop second  retrun , juste use sin slim_vecto
+    if return_len:  # correspond to the number of transactions
+        return dict(res), idx + 1
     return dict(res)
 
 
@@ -75,28 +77,20 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     - provide a natively interpretable modeling of this data
     - make predictions on new data, using this condensed representation as an encoding scheme
 
+    Note: The reconstruction of the initial dataset from the codetable itemsets is lossless.
 
     Parameters
     ----------
-    k: int, default=50
-        Number of non-singleton itemsets to mine.
-        A singleton is an itemset containing a single item.
     pruning: bool, default=True
         Either to activate pruning or not. Pruned itemsets may be useful at
         prediction time, so it is usually recommended to set it to `False`
         to build a classifier. The model will be less concise, but will lead
         to more accurate predictions on average.
-    n_items: int, default=200
-        Number of most frequent items to consider for mining.
-        As SLIM is highly dependant from the set of symbols from which
-        it refines its codetable,
-        lowering this argument will significantly improve runtime.
 
-        Note: The reconstruction is lossless from this set of items. If the input data
-        has more than `n_items` items, then the reconstruction will be lossy w.r.t this
-        input data.
-    tol: float, default=0.5
-        Minimum compression gain (in bits) for a candidate to be accepted
+    max_time : int, default=-1
+        Specify a maximum calculation time before SLIM returns the itemsets. This parameter is in seconds and is useful
+        for large datasets when SLIM may take a long time to return a table code. In addition, after a while, the
+        compression progress of the database gets weaker and weaker, so it may be useful to use this parameter.
 
 
     Examples
@@ -119,13 +113,15 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, pruning=True):
+    def __init__(self, *, pruning=True, max_time=-1):
         self._starting_codes = None
         self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
+        self.max_time = max_time
+        self.min_compression = -1
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
@@ -139,6 +135,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             Transactional dataset, either as an iterable of iterables
             or encoded as tabular binary data
         """
+        start = time.time()
         self.prefit(D, y=y)
 
         while True:
@@ -159,6 +156,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                     break
 
             if diff <= 0:
+                break
+
+            if self.max_time != -1 and time.time() - start > self.max_time:
                 break
 
         return self
@@ -281,11 +281,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                         gain_ct_XY -= log_values[3]
                         gain_ct_XY += log_values[0]
                     elif old_usage_X == 0:
-                        # code size X
                         gain_ct_XY += old_X_size_code
                         gain_ct_XY -= log_values[3]
                     elif new_usage_X == 0:
-                        # code size X
                         gain_ct_XY -= old_X_size_code
                         gain_ct_XY += log_values[0]
 
@@ -294,11 +292,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                         gain_ct_XY -= log_values[4]
                         gain_ct_XY += log_values[1]
                     elif old_usage_Y == 0:
-                        # code size X
                         gain_ct_XY += old_Y_size_code
                         gain_ct_XY -= log_values[4]
                     elif new_usage_Y == 0:
-                        # code size X
                         gain_ct_XY += old_Y_size_code
                         gain_ct_XY -= log_values[1]
 
@@ -333,7 +329,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         # Insert the candidate to the CT w.r.t the usage order
         ct.insert(idx, candidate)
         D = {k: v.copy() for k, v in self.standard_codetable_.items()}
-        # Get the cover a standard codetable D with CT itemsets.
+        # Get the cover a standard codetable D with CT itemsets
         # CTc is sorted in Standard Cover Order like D
         CTc = cover(D, ct)
 
@@ -426,9 +422,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         isets = self.discover(singletons=True, return_tids=False)
         isets = pd.Series(isets["usage"].values, index=isets["itemset"].apply(tuple))
-        # isets = pd.Series(list(isets.usage), index=isets.itemset)
         isets = isets[isets.index.map(set(D_sct).issuperset)]
-        # isets_list_of_tuple = [tuple(iset) for iset in list(isets.itemset)]
         covers = cover(D_sct, isets.index)
 
         mat = np.zeros(shape=(len(D), len(covers)), dtype=bool)
