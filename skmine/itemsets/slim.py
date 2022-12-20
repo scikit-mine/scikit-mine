@@ -140,7 +140,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         while True:
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
-            # print(f"nb candidates : {len(candidates)}")
 
             if not candidates:  # if empty candidate generation
                 break
@@ -150,11 +149,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
                 if diff > 0:
                     self.update(usages=usages, data_size=data_size, model_size=model_size)
-
-                    # print(f"best cand : {cand}, total size : {data_size + model_size}")
                     break
 
-            if diff <= 0:
+            if diff <= 0:  # if no more candidates are found that improve the model, we stop
                 break
 
             if self.max_time != -1 and time.time() - start > self.max_time:
@@ -204,36 +201,22 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
     def generate_candidates(self, stack=None):
         """
-        Call generate_candidates_generator to generate the candidates from a copy of the codetable and return the
-        candidates sorted in descending order of estimated gain
-        """
-        if stack is None:
-            stack = set()
-        codetable = SortedDict(self.codetable_.items())
-        return sorted(self.generate_candidates_generator(codetable, stack=stack), key=lambda e: e[1], reverse=True)
-        # sort the itemsets by decreasing order gain
-
-    def generate_candidates_generator(self, codetable, stack=None):
-        """
-        Generate candidates, but does not sort output by estimated gain.
+        Generate candidates  from a copy of the codetable and return the candidates sorted in descending order of
+        estimated gain.
         For each element of the codetable, the union with each following element is performed and an estimated gain is
         calculated. If this gain is positive, the union is returned.
 
-        The result is a python generator, not an in-memory list
+        The result is a in-memory list
 
         Parameters
         ----------
-        codetable: SortedDict[frozenset, Bitmap]
-            A codetable, sorted in Standard Candidate Order
-
         stack: set[frozenset], defaut=set()
             A stack of already seen itemsets, which will not be considered in output
             Note that this function updates the stack, passed as a reference
-
-        See Also
-        --------
-        generate_candidates
         """
+        codetable = SortedDict(self.codetable_.items())
+        candidates = []
+
         if stack is None:
             stack = set()
         assert isinstance(codetable, SortedDict)
@@ -309,7 +292,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 stack.add(XY)
 
                 if gain_XY > 0:
-                    yield XY, gain_XY
+                    candidates.append((XY, gain_XY))
+
+        # sort the itemsets by decreasing order gain
+        return sorted(candidates, key=lambda e: e[1], reverse=True)
 
     def evaluate(self, candidate):
         """
