@@ -121,7 +121,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
         self.max_time = max_time
-        self.min_compression = -1
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
@@ -216,7 +215,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
     def generate_candidates_generator(self, codetable, stack=None):
         """
-        Generate candidates, but does not sort output by estimated gain
+        Generate candidates, but does not sort output by estimated gain.
+        For each element of the codetable, the union with each following element is performed and an estimated gain is
+        calculated. If this gain is positive, the union is returned.
 
         The result is a python generator, not an in-memory list
 
@@ -239,6 +240,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         for idx, (x, x_usage) in enumerate(codetable.items()):
             Y = codetable.items()[idx + 1:]
+
             old_usage_X = len(codetable[x])
             if old_usage_X == 0:
                 continue
@@ -336,19 +338,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         data_size, model_size = self._compute_sizes(CTc)
 
         if self.pruning:
-            decreased = set()
-            for iset, usage in self.codetable_.items():
-                if len(iset) > 1:
-                    # Force the pruning of itemsets longer than 1 that do not appear in the cover. This may prevent
-                    # to obtain the optimal code table, but it reduces the complexity of the algorithm
-                    if len(CTc[iset]) == 0:
-                        del CTc[iset]
-                    # Potentially prune the elements whose use has decreased
-                    elif len(CTc[iset]) < len(usage):
-                        decreased.add(iset)
-                    else:
-                        pass
-            CTc, data_size, model_size = self._prune(CTc, decreased, model_size, data_size)
+            CTc, data_size, model_size = self._prune(CTc, model_size, data_size)
 
         return data_size, model_size, CTc
 
@@ -477,16 +467,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
-        # s = {
-        #     tuple(sorted(iset)): tids.copy()
-        #     for iset, tids in self.codetable_.items()
-        #     if len(tids) >= drop_null_usage and len(iset) > (not singletons)
-        # }
-        # s = pd.Series(list(s.values()), index=list(s.keys()))
-        # if not return_tids:
-        #     s = s.map(len).astype(np.uint32)
-        # return s
-
         itemsets = []
         itids = []
         iusages = []
@@ -680,14 +660,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         return data_size, model_size
 
-    def _prune(self, codetable, prune_set, model_size, data_size):
+    def _prune(self, CTc, model_size, data_size):
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
         ----------
-        codetable: SortedDict
-        prune_set: set
-            itemsets in ``codetable`` for which usage has decreased
+        CTc: SortedDict
         model_size: float
             current model_size for ``codetable``
         data_size: float
@@ -696,16 +674,26 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         Returns
         -------
         new_codetable, new_data_size, new_model_size: SortedDict, float, float
-            a tuple containing the pruned codetable, and new model size and data size
-            w.r.t this new codetable
         """
-        prune_set = {k for k in prune_set if len(k) > 1}  # remove singletons
+        prune_set = set()
+        for iset, usage in self.codetable_.items():
+            if len(iset) > 1:
+                # Force the pruning of itemsets longer than 1 that do not appear in the cover. This may prevent
+                # to obtain the optimal code table, but it reduces the complexity of the algorithm
+                if len(CTc[iset]) == 0:
+                    del CTc[iset]
+                # Potentially prune the elements whose use has decreased
+                elif len(CTc[iset]) < len(usage):
+                    prune_set.add(iset)
+                else:
+                    pass
+
         while prune_set:
-            cand = min(prune_set, key=lambda e: len(codetable[e]))  # select the element of decreased with the
+            cand = min(prune_set, key=lambda e: len(CTc[e]))  # select the element of decreased with the
             # lowest usage in CTc
             prune_set.discard(cand)  # remove cand from prune_set
 
-            ct = list(codetable)
+            ct = list(CTc)
             ct.remove(cand)
 
             D = {k: v.copy() for k, v in self.standard_codetable_.items()}  # TODO avoid data copies
@@ -714,10 +702,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             d_size, m_size = self._compute_sizes(CTp)
 
             if d_size + m_size < model_size + data_size:
-                decreased = {k for k, v in CTp.items() if len(k) > 1 and len(v) < len(codetable[k])}
-                codetable.update(CTp)
-                del codetable[cand]
+                decreased = {k for k, v in CTp.items() if len(k) > 1 and len(v) < len(CTc[k])}
+                CTc.update(CTp)
+                del CTc[cand]
                 prune_set.update(decreased)
                 data_size, model_size = d_size, m_size
 
-        return codetable, data_size, model_size
+        return CTc, data_size, model_size

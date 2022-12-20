@@ -220,17 +220,22 @@ def test_fit_no_pruning(D, preproc, pass_y):
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
 
 
-def test_prune_empty(D):
+def test_prune_usage_null(D):
     slim = SLIM(pruning=False).fit(D)
-    prune_set = [frozenset("AC"), frozenset("C")]
+    # Codetable :
+    # ABC : 0, 1, 2, 3, 4
+    # AC : x
+    # A : 5, 6
+    # B : 5, 7
+    # C : x
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, slim.model_size_, slim.data_size_
     )
 
-    # C is present because we do not prune itemsets of length 1 and AC is still present because his usage is 0 and he
-    # is prune in the evaluate method
-    assert list(new_codetable) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
+    # C is present because we do not prune itemsets of length 1 and AC is still removed because his usage is 0 and
+    # because its length is 2
+    assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
     np.testing.assert_almost_equal(new_data_size, 12.92, 2)
 
     total_enc_size = new_data_size + new_model_size
@@ -242,9 +247,9 @@ def test_force_prune_with_evaluate(D):
     _, _, usages = slim.evaluate(frozenset("AC"))
     slim.codetable_.update(usages)
     assert frozenset("AC") in usages
-    _, _, usages = slim.evaluate(frozenset("ACB"))
-    assert frozenset("ACB") in usages
-    # AC has been removed because after the addition of ACB, its usage became null.
+    _, _, usages = slim.evaluate(frozenset("ABC"))
+    assert frozenset("ABC") in usages
+    # AC has been removed because after the addition of ABC, its usage became null.
     assert frozenset("AC") not in usages
 
 
@@ -254,14 +259,12 @@ def test_prune(D):
     _, _, usages = slim.evaluate(frozenset("AB"))
     slim.codetable_.update(usages)
 
-    # Add ACB in the codetable -> usage(AB) = 1
-    data_size, model_size, usages = slim.evaluate(frozenset("ACB"))
-    slim.codetable_.update(usages)
+    # Add ABC in the codetable -> usage(AB) = 1
+    data_size, model_size, usages = slim.evaluate(frozenset("ABC"))
 
     # AB no longer improves compression, pruning must remove it
-    prune_set = [frozenset("AB")]
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
+        usages, slim.model_size_, slim.data_size_
     )
 
     assert data_size+model_size > new_data_size+new_model_size
