@@ -7,7 +7,7 @@ from sortedcontainers import SortedDict
 
 from pyroaring import BitMap as Bitmap
 
-from ..slim import SLIM, _to_vertical, _log2
+from ..slim import SLIM, _to_vertical, _log2, cover
 
 
 @pytest.fixture
@@ -42,6 +42,120 @@ def test_to_vertical(D):
     assert list(vert2.keys()) == list("BC")
 
 
+def test_cover():
+    """
+    A   B   C
+    A   B
+        B   C   D
+    """
+    # D corresponds to the items and the transactions in which they appear, it is the standard code table
+    D = {
+        "B": Bitmap([0, 1, 2]),
+        "A": Bitmap([0, 1]),
+        "C": Bitmap([0, 2]),
+        "D": Bitmap([2])
+    }
+    # ct corresponds to the itemsets on which we want to calculate the cover
+    ct = [
+        frozenset("ABC"),
+        frozenset("AB"),
+        frozenset("BC"),
+        frozenset("A"),
+        frozenset("B"),
+        frozenset("C"),
+        frozenset("D")
+    ]
+    CTc = cover(D, ct)
+
+    assert CTc[frozenset("ABC")] == Bitmap([0])
+    assert CTc[frozenset("AB")] == Bitmap([1])  # AB appears only in tid_1 for usage because ABC is placed before in ct
+    # so the AB of the first transaction has been covered by ABC
+    assert CTc[frozenset("BC")] == Bitmap([2])
+    assert CTc[frozenset("A")] == Bitmap()
+    assert CTc[frozenset("B")] == Bitmap()
+    assert CTc[frozenset("C")] == Bitmap()
+    assert CTc[frozenset("D")] == Bitmap([2])
+
+
+def test_log2():
+    d = {'a': 1, 'b': 2, 'c': 3, 'd': 0}
+    d = pd.Series(data=d, index=['a', 'b', 'c', 'd'])
+    logs = _log2(d)
+
+    assert len(logs) == 4
+    assert logs["a"] == 0
+    assert logs["b"] == 1
+    np.testing.assert_almost_equal(logs["c"], 1.58, 2)
+    assert logs['d'] == 0  # attention : for a value of 0, this function returns 0
+
+
+def test_update_no_candidate_and_usages(D):
+    slim = SLIM().prefit(D)
+    # Raises an AssertionError because the candidate and the uses cannot be None at the same time
+    with pytest.raises(AssertionError):
+        slim.update(candidate=None, model_size=10, data_size=20, usages=None) == AssertionError
+
+
+def test_update_no_candidate(D):
+    slim = SLIM().prefit(D)
+    usages = {
+        frozenset("ABC"): Bitmap([0, 1, 2, 3, 4]),
+        frozenset("A"): Bitmap([5, 6]),
+        frozenset("B"): Bitmap([5, 7])
+    }
+    slim.update(candidate=None, model_size=10, data_size=20, usages=usages)
+
+    assert slim.model_size_ == 10
+    assert slim.data_size_ == 20
+    assert len(slim.codetable_) == 4  # C is always in the code table even if it is not in usages
+    assert slim.codetable_.get(frozenset("ABC")) == Bitmap([0, 1, 2, 3, 4])
+    assert slim.codetable_.get(frozenset("A")) == Bitmap([5, 6])
+    assert slim.codetable_.get(frozenset("B")) == Bitmap([5, 7])
+    assert slim.codetable_.get(frozenset("C")) == Bitmap([0, 1, 2, 3, 4])  # C has not been updated but is present
+
+
+def test_update_no_usages(D):
+    slim = SLIM().prefit(D)
+    model_size = slim.model_size_
+    data_size = slim.data_size_
+    candidate = frozenset("ABC")
+    slim.update(candidate=candidate, model_size=None, data_size=None, usages=None)
+
+    assert slim.model_size_ != model_size
+    assert slim.data_size_ != data_size
+    assert len(slim.codetable_) == 4  # ABC has been added to the table in addition to the 3 singletons (A,B,C)
+    assert slim.codetable_.get(frozenset("ABC")) == Bitmap([0, 1, 2, 3, 4])
+    # the usages of A,B,C have been calculated
+    assert slim.codetable_.get(frozenset("A")) == Bitmap([5, 6])
+    assert slim.codetable_.get(frozenset("B")) == Bitmap([5, 7])
+    assert slim.codetable_.get(frozenset("C")) == Bitmap()  # C has not been updated but is present
+
+
+def test_update_to_drop(D):
+    slim = SLIM().prefit(D)
+    usages = {
+        frozenset("AB"): Bitmap([0, 1, 2, 3, 4, 5]),
+        frozenset("A"): Bitmap([6]),
+        frozenset("B"): Bitmap([7]),
+        frozenset("C"): Bitmap([0, 1, 2, 3, 4])
+    }
+    slim.update(candidate=None, model_size=15, data_size=20, usages=usages)
+    assert slim.codetable_.get(frozenset("AB")) == Bitmap([0, 1, 2, 3, 4, 5])
+    usages = {
+        frozenset("ABC"): Bitmap([0, 1, 2, 3, 4]),
+        frozenset("A"): Bitmap([5, 6]),
+        frozenset("B"): Bitmap([7]),
+        frozenset("C"): Bitmap()
+    }
+    slim.update(candidate=None, model_size=10, data_size=20, usages=usages)
+
+    assert slim.model_size_ == 10
+    assert slim.data_size_ == 20
+    assert len(slim.codetable_) == 4
+    assert slim.codetable_.get(frozenset("AB")) is None  # AB has been removed because it does not appear
+    # in the new usages
+
+
 def test_complex_evaluate():
     """
     A   B   C
@@ -51,7 +165,7 @@ def test_complex_evaluate():
         B   C   D   E
     A   B   C   D   E
     """
-    slim = SLIM() # by default pruning=True
+    slim = SLIM()  # by default pruning=True
     D = ["ABC", "AB", "AC", "B", "BCDE", "ABCDE"]
     slim.prefit(D)
 
@@ -220,17 +334,22 @@ def test_fit_no_pruning(D, preproc, pass_y):
     assert list(self.codetable_) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
 
 
-def test_prune_empty(D):
+def test_prune_usage_null(D):
     slim = SLIM(pruning=False).fit(D)
-    prune_set = [frozenset("AC"), frozenset("C")]
+    # Codetable :
+    # ABC : 0, 1, 2, 3, 4
+    # AC : x
+    # A : 5, 6
+    # B : 5, 7
+    # C : x
 
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
+        slim.codetable_, slim.model_size_, slim.data_size_
     )
 
-    # C is present because we do not prune itemsets of length 1 and AC is still present because his usage is 0 and he
-    # is prune in the evaluate method
-    assert list(new_codetable) == list(map(frozenset, ["ABC", "AC", "A", "B", "C"]))
+    # C is present because we do not prune itemsets of length 1 and AC is still removed because his usage is 0 and
+    # because its length is 2
+    assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
     np.testing.assert_almost_equal(new_data_size, 12.92, 2)
 
     total_enc_size = new_data_size + new_model_size
@@ -242,9 +361,9 @@ def test_force_prune_with_evaluate(D):
     _, _, usages = slim.evaluate(frozenset("AC"))
     slim.codetable_.update(usages)
     assert frozenset("AC") in usages
-    _, _, usages = slim.evaluate(frozenset("ACB"))
-    assert frozenset("ACB") in usages
-    # AC has been removed because after the addition of ACB, its usage became null.
+    _, _, usages = slim.evaluate(frozenset("ABC"))
+    assert frozenset("ABC") in usages
+    # AC has been removed because after the addition of ABC, its usage became null.
     assert frozenset("AC") not in usages
 
 
@@ -254,17 +373,15 @@ def test_prune(D):
     _, _, usages = slim.evaluate(frozenset("AB"))
     slim.codetable_.update(usages)
 
-    # Add ACB in the codetable -> usage(AB) = 1
-    data_size, model_size, usages = slim.evaluate(frozenset("ACB"))
-    slim.codetable_.update(usages)
+    # Add ABC in the codetable -> usage(AB) = 1
+    data_size, model_size, usages = slim.evaluate(frozenset("ABC"))
 
     # AB no longer improves compression, pruning must remove it
-    prune_set = [frozenset("AB")]
     new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, prune_set, slim.model_size_, slim.data_size_
+        usages, slim.model_size_, slim.data_size_
     )
 
-    assert data_size+model_size > new_data_size+new_model_size
+    assert data_size + model_size > new_data_size + new_model_size
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
