@@ -190,7 +190,6 @@ class LCM(BaseMiner, DiscovererMixin):
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
         self.max_length = max_length
-        print("NB items", len(list(self.item_to_tids.items())))
         if out is None:  # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=None) for item, tids in
@@ -227,7 +226,6 @@ class LCM(BaseMiner, DiscovererMixin):
             return None
 
     def _explore_root(self, item, tids, root_file=None):
-        print(f" item {item }")
         it = self._inner((frozenset(), tids), item)
         columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
         df = pd.DataFrame(data=it, columns=columns)
