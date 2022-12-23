@@ -395,18 +395,8 @@ def test_decision_function(D):
     assert dists.dtype == np.float32
     assert len(dists) == len(new_D)
     np.testing.assert_array_almost_equal(
-        dists.values, np.array([-1.17, -1.17, -1.17, -2.17, -2.17]), decimal=2
+        dists.values, np.array([-4.23, -4.23, -4.23, -5.81, -2.11]), decimal=2
     )
-
-
-def test_cover_discover_compat(D):
-    s = SLIM()
-    s.fit(D)
-    s_discover = s.discover()
-    s_discover = pd.Series(s_discover["usage"].values, index=s_discover["itemset"].apply(tuple))
-    mat = s_discover * s.cover(D)
-
-    assert mat.notna().sum().all()
 
 
 def test_reconstruct(D):

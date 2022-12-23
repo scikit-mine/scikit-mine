@@ -156,7 +156,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         while True:
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
-            print(f"nb_candidates : {len(candidates)}")
 
             if not candidates:  # if empty candidate generation
                 break
@@ -165,7 +164,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
                 if diff > 0:
-                    print(f"choosen candidate : {cand}, total_size : {model_size + data_size}")
                     self.update(usages=usages, data_size=data_size, model_size=model_size)
                     break
 
@@ -199,7 +197,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> new_D = to_tabular([['cookies', 'butter']])
         >>> slim = SLIM().fit(to_tabular(D))
         >>> slim.decision_function(new_D)
-        0   -1.321928
+        0   -5.584963
         dtype: float32
 
         See Also
@@ -398,9 +396,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         >>> D = ["ABC", "AB", "BCD"]
         >>> s = SLIM().fit(D)
         >>> s.cover(["BC", "AB"])
-           (A, B)   (C,)
-        0   False   True
-        1    True  False
+           (A, B)   (B,)   (A,)   (C,)
+        0   False   True  False   True
+        1    True  False  False  False
 
         Returns
         -------
@@ -707,7 +705,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             ct = list(CTc)
             ct.remove(cand)
 
-            D = {k: v.copy() for k, v in self.standard_codetable_.items_()}  # TODO avoid data copies
+            D = {k: v.copy() for k, v in self.standard_codetable_.items()}  # TODO avoid data copies
             CTp = cover(D, ct)
 
             d_size, m_size = self._compute_sizes(CTp)
