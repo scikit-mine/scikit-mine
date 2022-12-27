@@ -1,5 +1,8 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_array, check_X_y
+from sklearn.multiclass import check_classification_targets
 from .slim import SLIM
+
 import numpy as np
 from functools import reduce
 
@@ -18,6 +21,9 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         The list of items in the complete dataset not only the training set. This improves the accuracy of the model.
         Without this set of items, the classifier works but is less good.
 
+    pruning: bool, default=False
+        Indicates whether each SLIM classifier enables pruning
+
     Attributes
     ----------
     classes_ : A list of all the classes
@@ -26,11 +32,12 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
                 with the class from "classes_"  of the same index
     """
 
-    def __init__(self, items=None):
+    def __init__(self, items=None, pruning=False):
         self.models_ = None
         self.classes_X_ = None
         self.classes_ = None
         self.items = items
+        self.pruning = pruning
 
     def fit(self, X, y):
         """Fit the model according to the given training data.
@@ -73,6 +80,8 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         """
         if self.classes_ is None:
             raise ValueError("fit must be called first.")
+
+        # X = check_array(X, accept_sparse=['csr'])
 
         models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
         predictions = []

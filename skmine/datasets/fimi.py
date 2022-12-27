@@ -48,7 +48,7 @@ def _read_dat(filepath, int_values=True, separator=' '):
     return transactions
 
 
-def fetch_file(filepath, separator=' '):
+def fetch_file(filepath, separator=' ', int_values=False):
     """Loader for files in FIMI format
 
     Parameters
@@ -59,13 +59,17 @@ def fetch_file(filepath, separator=' '):
     separator : str
         Indicate a custom separator between the items. By default, it is a space.
 
+    int_values : bool, default=False
+        Specify if the items in the file are all integers. If not, then the items are considered as strings.
+        With integers, the algorithms are more efficient.
+
     Returns
     -------
     pd.Series
         Transactions from the requested dataset,
         as an in-memory pandas Series
     """
-    transactions = _read_dat(filepath, int_values=False, separator=separator)
+    transactions = _read_dat(filepath, int_values=int_values, separator=separator)
     s = pd.Series(transactions, name=os.path.splitext(os.path.basename(filepath))[0])
 
     return s
