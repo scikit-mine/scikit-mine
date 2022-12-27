@@ -583,12 +583,10 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         self.standard_codetable_ = sct
 
         if self.items is not None:
-            not_in_sct = []
-            for item in self.items:
-                if item not in self.standard_codetable_:
-                    not_in_sct.append(item)
-            not_in_sct_bitmap = [Bitmap() for _ in not_in_sct]
-            series_to_add = pd.Series(not_in_sct_bitmap, index=not_in_sct)
+            # Adds in the standard codetable, the items that do not appear in the transactions. Useful for
+            # classifiers mainly.
+            not_in_sct = [item for item in self.items if item not in self.standard_codetable_]
+            series_to_add = pd.Series([Bitmap() for item in not_in_sct], index=not_in_sct, dtype=object)
             self.standard_codetable_ = pd.concat([self.standard_codetable_, series_to_add])
 
         # Convert Standard Codetable pandas.Series in list of (frozenset({.}), Bitmap({...}),...)
@@ -695,8 +693,6 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 # Potentially prune the elements whose use has decreased
                 elif len(CTc[iset]) < len(usage):
                     prune_set.add(iset)
-                else:
-                    pass
 
         while prune_set:
             cand = min(prune_set, key=lambda e: len(CTc[e]))  # select the element of decreased with the
