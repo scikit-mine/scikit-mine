@@ -134,9 +134,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
-        self.pruning_ = pruning
-        self.max_time_ = max_time
-        self.items_ = items
+        self.pruning = pruning
+        self.max_time = max_time
+        self.items = items
 
     def fit(self, D, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
@@ -170,7 +170,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             if diff <= 0:  # if no more candidates are found that improve the model, we stop
                 break
 
-            if self.max_time_ != -1 and time.time() - start > self.max_time_:
+            if self.max_time != -1 and time.time() - start > self.max_time_:
                 break
 
         return self
@@ -207,10 +207,12 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         """
         mat = self.cover(D)
         code_lengths = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
+        # each code table is Laplace corrected : the usage of each itemset is increased by 1 in order that all seen
+        # items have a code
         code_lengths["usage"] += 1
-        code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
-        ct_codes = _log2(code_lengths / code_lengths.sum())
-        codes = (mat * ct_codes).sum(axis=1).astype(np.float32)
+        code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())
+        mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
+        codes = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
         codes[codes == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
         return codes
 
@@ -338,7 +340,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
 
         data_size, model_size = self._compute_sizes(CTc)
 
-        if self.pruning_:
+        if self.pruning:
             CTc, data_size, model_size = self._prune(CTc, model_size, data_size)
 
         return data_size, model_size, CTc
@@ -411,9 +413,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             D_sct = _to_vertical(D)
 
         isets = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
-        isets = pd.Series(isets["usage"].values, index=isets["itemset"].apply(tuple))
-        isets = isets[isets.index.map(set(D_sct).issuperset)]
-        covers = cover(D_sct, isets.index)
+        isets = [tuple(itemset) for itemset in isets[isets["itemset"].map(set(D_sct).issuperset)]["itemset"].to_list()]
+        covers = cover(D_sct, isets)
 
         mat = np.zeros(shape=(len(D), len(covers)), dtype=bool)
         for idx, tids in enumerate(covers.values()):
@@ -581,9 +582,9 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         # Build Standard Codetable <class 'pandas.core.series.Series'> in usage descending order :
         self.standard_codetable_ = sct
 
-        if self.items_ is not None:
+        if self.items is not None:
             not_in_sct = []
-            for item in self.items_:
+            for item in self.items:
                 if item not in self.standard_codetable_:
                     not_in_sct.append(item)
             not_in_sct_bitmap = [Bitmap() for _ in not_in_sct]
