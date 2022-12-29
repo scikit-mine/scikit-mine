@@ -20,7 +20,7 @@ from pyroaring import BitMap as Bitmap
 
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
 from ..utils import _check_D, supervised_to_unsupervised
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 
 def _to_vertical(D, stop_items=None, return_len=False):
