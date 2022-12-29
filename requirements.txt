@@ -6,4 +6,4 @@ sortedcontainers>=2.1.0
 dataclasses~=0.6
 networkx~=2.5.1
 wget~=3.2
-scikit-learn==1.2.0
+scikit-learn~=1.2.0

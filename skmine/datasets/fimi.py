@@ -77,7 +77,7 @@ def fetch_file(filepath, separator=' ', int_values=False):
     return s
 
 
-def fetch_any(filename, base_url, data_home=None):
+def fetch_any(filename, base_url=BASE_URL_FIMI, data_home=None):
     """Base loader for all datasets from the FIMI and CGI repository
     Each unique transaction will be represented as a Python list in the resulting pandas Series
 

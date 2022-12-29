@@ -34,7 +34,7 @@ def test_read_dat_text_separator_comma():
 
 
 def test_fetch_any_not_fetched():
-    transactions = fimi.fetch_any('chess.dat', './skmine/datasets/tests/')
+    transactions = fimi.fetch_any('chess.dat', data_home='./skmine/datasets/tests/')
     assert os.path.isfile('./skmine/datasets/tests/chess.dat')
     os.remove('./skmine/datasets/tests/chess.dat')
     assert transactions.name == 'chess'
@@ -43,7 +43,7 @@ def test_fetch_any_not_fetched():
 
 
 def test_fetch_any_already_fetched():
-    transactions = fimi.fetch_any('test_fimi_file_int.dat', './skmine/datasets/tests/')
+    transactions = fimi.fetch_any('test_fimi_file_int.dat', data_home='./skmine/datasets/tests/')
     assert len(transactions) == 4
     assert all(type(item) == int for transaction in transactions for item in transaction)
     pd.testing.assert_series_equal(pd.Series([[1, 2, 3], [4, 5], [2], [8, 9]], name='test_fimi_file_int'), transactions)
