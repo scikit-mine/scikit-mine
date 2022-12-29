@@ -4,9 +4,20 @@ import types
 import pandas as pd
 
 import pytest
+import requests
 
 from skmine.datasets import fimi
-from skmine.datasets import get_data_home
+
+def test_url_fimi():
+    url_fimi = "http://fimi.uantwerpen.be/data/"
+    resp = requests.get(url_fimi)
+    assert resp.status_code == 200
+
+
+def test_url_cgi():
+    url_cgi = "https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/"
+    resp = requests.get(url_cgi)
+    assert resp.status_code == 200
 
 
 def test_read_dat_fimi():
