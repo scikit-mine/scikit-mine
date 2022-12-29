@@ -5,7 +5,7 @@ SLIM vectorizer, using SLIM as a feature extraction scheme
 import numpy as np
 import pandas as pd
 
-from ..base import TransformerMixin, _get_tags
+from ..base import TransformerMixin
 from ..itemsets import SLIM
 from ..itemsets.slim import _to_vertical, cover
 
@@ -121,6 +121,3 @@ class SLIMVectorizer(SLIM, TransformerMixin):
             mat = (mat * ct_codes).astype(np.float32)
 
         return mat
-
-    def _get_tags(self):
-        return {**_get_tags(self), **{"stateless": True}}  # modfies output shape

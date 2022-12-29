@@ -17,8 +17,10 @@ import time
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
+
 from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
 from ..utils import _check_D, supervised_to_unsupervised
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 
 def _to_vertical(D, stop_items=None, return_len=False):
@@ -129,30 +131,35 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
     """
 
     def __init__(self, *, pruning=True, max_time=-1, items=None):
-        self._starting_codes = None
-        self.standard_codetable_ = None
-        self.codetable_ = SortedDict()
-        self.model_size_ = None  # L(CT|D)
-        self.data_size_ = None  # L(D|CT)
         self.pruning = pruning
         self.max_time = max_time
         self.items = items
 
-    def fit(self, D, y=None):  # pylint:disable = too-many-locals
+    def fit(self, X, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
         iteratibely refining ``self.codetable_``
 
+
         Parameters
         ----------
-        D: iterable of iterables or array-like
+        X: iterable of iterables or array-like
             Transactional dataset, either as an iterable of iterables
             or encoded as tabular binary data
-        """
-        start = time.time()
-        self.prefit(D, y=y)
 
+        y: Ignored
+            Not used, present here for API consistency by convention.
+        """
+        self.starting_codes_ = None
+        self.standard_codetable_ = None
+        self.codetable_ = SortedDict()
+        self.model_size_ = None  # L(CT|D)
+        self.data_size_ = None  # L(D|CT)
+        self.is_fitted_ = True
+
+        start = time.time()
+        self.prefit(X, y=y)
         while True:
             seen_cands = set(self.codetable_.keys())
             candidates = self.generate_candidates(stack=seen_cands)
@@ -161,6 +168,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
                 break
 
             for cand, _ in candidates:
+
                 data_size, model_size, usages = self.evaluate(cand)
                 diff = (self.model_size_ + self.data_size_) - (data_size + model_size)
                 if diff > 0:
@@ -170,7 +178,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
             if diff <= 0:  # if no more candidates are found that improve the model, we stop
                 break
 
-            if self.max_time != -1 and time.time() - start > self.max_time_:
+            if self.max_time != -1 and time.time() - start > self.max_time:
                 break
 
         return self
@@ -207,7 +215,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         """
         mat = self.cover(D)
         code_lengths = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
-        # each code table is Laplace corrected : the usage of each itemset is increased by 1 in order that all seen
+        # the codetable is Laplace corrected : the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
         code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())
@@ -468,6 +476,8 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         pd.Series
             codetable containing patterns and ids of transactions in which they are used
         """
+        check_is_fitted(self, "is_fitted_")
+
         itemsets = []
         itids = []
         iusages = []

@@ -1,7 +1,9 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_array, check_X_y
 from sklearn.multiclass import check_classification_targets
+from sklearn.utils.validation import check_is_fitted
 from .slim import SLIM
+from joblib import Parallel, delayed
 
 import numpy as np
 from functools import reduce
@@ -19,7 +21,7 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
     ----------
     items: set, default=None
         The list of items in the complete dataset not only the training set. This improves the accuracy of the model.
-        Without this set of items, the classifier works but is less good.
+        Without this set of items, the classifier works but is less good in particular with small datasets.
 
     pruning: bool, default=False
         Indicates whether each SLIM classifier enables pruning
@@ -33,9 +35,6 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
     """
 
     def __init__(self, items=None, pruning=False):
-        self.models_ = None
-        self.classes_X_ = None
-        self.classes_ = None
         self.items = items
         self.pruning = pruning
 
@@ -53,9 +52,13 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self : object
             An instance of the estimator
         """
+        # (X, y) = check_X_y(X, y)
+        # check_classification_targets(y)
+
         self.classes_ = np.unique(y)
         self.classes_X_ = []
         self.models_ = []
+
         for c in self.classes_:
             transactions_classes = [transaction for transaction, target in zip(X, y) if target == c]
             self.classes_X_.append(transactions_classes)
@@ -78,10 +81,10 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         y_pred : np.array of shape (n_samples,)
             Class labels for samples in X
         """
+        check_is_fitted(self, "classes_")
+
         if self.classes_ is None:
             raise ValueError("fit must be called first.")
-
-        # X = check_array(X, accept_sparse=['csr'])
 
         models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
         predictions = []
@@ -92,3 +95,6 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
             predictions.append(self.classes_[0] if best_index is None else self.classes_[best_index])
 
         return np.array(predictions)
+
+    def __copy__(self):
+        return SlimClassifier(items=self.items, pruning=self.pruning)

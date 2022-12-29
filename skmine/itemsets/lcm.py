@@ -6,7 +6,7 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 # Authors: Rémi Adon <remi.adon@gmail.com>
 #          Luis Galárraga <galarraga@luisgalarraga.de>
 #          Hermann Courteille <hermann.courteille@irisa.fr>
-#          Cyril Regan <cyril.regan@irisa.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
 #          Thomas Betton <thomas.betton@irisa.fr>
 #
 # License: BSD 3 clause
@@ -23,10 +23,10 @@ from pyroaring import BitMap as Bitmap
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
 
-from ..base import BaseMiner, DiscovererMixin
+from ..base import BaseMiner
 
 
-class LCM(BaseMiner, DiscovererMixin):
+class LCM(BaseMiner):
     """
     Linear time Closed item set Miner.
 
@@ -98,6 +98,9 @@ class LCM(BaseMiner, DiscovererMixin):
         D: pd.Series or iterable
             a transactional database. All entries in this D should be lists.
             If D is a pandas.Series, then `(D.map(type) == list).all()` should return `True`
+
+        y: Ignored
+            Not used, present here for API consistency by convention.
 
         Raises
         ------

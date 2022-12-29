@@ -105,4 +105,5 @@ class LabelCodes:
         return utils.encode_singleton(self, 2, edge_singleton_label)
 
     def __str__(self) -> str:
-        return "Edge label\n-----------------\n" + self.display_edge_lc() + "\nVertex label\n----------------------\n" + self.display_vertex_lc()
+        return "Edge label\n-----------------\n" + self.display_edge_lc() + "\nVertex label\n----------------------\n" \
+               + self.display_vertex_lc()

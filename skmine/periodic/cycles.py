@@ -12,7 +12,7 @@ import pandas as pd
 
 from pyroaring import BitMap as Bitmap
 
-from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
+from ..base import BaseMiner, MDLOptimizer
 from ..utils import intersect2d, sliding_window_view
 
 log = np.log2
@@ -369,7 +369,7 @@ def evaluate(cands: pd.DataFrame, k: int):
     return cands.loc[idx]
 
 
-class SingleEventCycleMiner(BaseMiner, DiscovererMixin):
+class SingleEventCycleMiner(BaseMiner):
     """
     Miner periodic cycles, but in the scope of a single event
 
@@ -472,7 +472,7 @@ class SingleEventCycleMiner(BaseMiner, DiscovererMixin):
         return np.array(alpha_occurrences)
 
 
-class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
+class PeriodicCycleMiner(BaseMiner, MDLOptimizer):
     """
     Mining periodic cycles with a MDL Criterion
 

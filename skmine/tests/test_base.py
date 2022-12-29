@@ -13,11 +13,11 @@ def test_inst_params():
         def fit(self, D):
             self._a = 12
 
-        discover = lambda self: pd.Series(self.__dict__)
+        discover = lambda self: pd.DataFrame()
 
     kwargs = dict(eps=4)
     miner = MyMiner(**kwargs)
-    assert miner.get_params() == kwargs
+    assert miner.get_params() == kwargs  # get_params returns only unprotected attributes so only eps
 
     kwargs.update(eps=10)
     miner.set_params(**kwargs)
@@ -34,10 +34,10 @@ def test_inst_params_no_init():
         def fit(self, D, y=None):
             return self
 
-        discover = lambda self: pd.Series(self.__dict__)
+        discover = lambda self: pd.DataFrame()
 
     miner = MyMiner()
-    assert miner.get_params() == dict()
+    assert miner.get_params() == dict()  # compared to the previous test, eps is not an attribute of the class
 
 
 def test_mdl_repr():
@@ -54,7 +54,9 @@ def test_mdl_repr():
         def generate_candidates(self):
             return list()
 
-        discover = lambda self: pd.Series(self.__dict__)
+        def discover(self):
+            itemsets, itids = zip(*[(iset, tids) for iset, tids in a.codetable_.items()])
+            return pd.DataFrame(data={'itemset': itemsets, 'tids': itids})
 
     a = A()
 

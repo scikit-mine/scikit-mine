@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from ..base import BaseMiner, DiscovererMixin
+from ..base import BaseMiner
 from ..itemsets.lcm import LCMMax
 from ..utils import _check_growth_rate, _check_min_supp, filter_maximal, filter_minimal
 
@@ -102,7 +102,7 @@ def borders_to_patterns(left, right, min_size=None):
     return pd.Series(patterns)
 
 
-class MBDLLBorder(BaseMiner, DiscovererMixin):
+class MBDLLBorder(BaseMiner):
     """
     MBD-LLBorder aims at discovering patterns characterizing the difference
     between two collections of data.
