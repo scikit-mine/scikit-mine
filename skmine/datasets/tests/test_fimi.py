@@ -47,3 +47,12 @@ def test_fetch_any_already_fetched():
     assert len(transactions) == 4
     assert all(type(item) == int for transaction in transactions for item in transaction)
     pd.testing.assert_series_equal(pd.Series([[1, 2, 3], [4, 5], [2], [8, 9]], name='test_fimi_file_int'), transactions)
+
+
+def test_fetch_any_not_fetched_gz():
+    transactions = fimi.fetch_any("iris.D19.N150.C3.num.gz", base_url="https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/", data_home="./skmine/datasets/tests/")
+    assert os.path.isfile('./skmine/datasets/tests/iris.D19.N150.C3.num.gz')
+    os.remove('./skmine/datasets/tests/iris.D19.N150.C3.num.gz')
+    assert transactions.name == 'iris.D19.N150.C3.num'
+    assert len(transactions) == 150
+    assert all(type(item) == int for transaction in transactions for item in transaction)
