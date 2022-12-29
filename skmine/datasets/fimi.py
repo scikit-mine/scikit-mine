@@ -381,7 +381,7 @@ def fetch_iris(data_home=None):
     ====================   ==============
     Nb of items                        19
     Nb of transactions                150
-    Avg transaction size           33.807
+    Avg transaction size                5
     Density                         26.32
     ====================   ==============
 
@@ -412,6 +412,7 @@ def fetch_breast(data_home=None):
     ====================   ==============
     Nb of items                        20
     Nb of transactions                699
+    Avg transaction size             9.98
     Density                            50
     ====================   ==============
 
@@ -442,6 +443,8 @@ def fetch_tictactoe(data_home=None):
     ====================   ==============
     Nb of items                        29
     Nb of transactions                958
+    Nb of transactions                699
+    Avg transaction size               10
     Density                         34.48
     ====================   ==============
 
