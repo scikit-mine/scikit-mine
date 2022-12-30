@@ -1,9 +1,6 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_array, check_X_y
-from sklearn.multiclass import check_classification_targets
 from sklearn.utils.validation import check_is_fitted
 from .slim import SLIM
-from joblib import Parallel, delayed
 
 import numpy as np
 from functools import reduce

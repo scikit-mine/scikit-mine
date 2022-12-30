@@ -87,8 +87,8 @@ def fetch_any(filename, base_url=BASE_URL_FIMI, data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
 
     filename : str
         Name of the file to fetch
@@ -129,8 +129,8 @@ def fetch_chess(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -154,8 +154,8 @@ def fetch_connect(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -166,7 +166,7 @@ def fetch_connect(data_home=None):
     return fetch_any("connect.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
-def fetch_mushroom(data_home=None, return_mush_y=False):
+def fetch_mushroom(data_home=None, return_y=False):
     """Fetch and return the mushroom dataset (Frequent Itemset Mining)
 
     The Mushroom data set includes descriptions of hypothetical samples corresponding
@@ -188,10 +188,10 @@ def fetch_mushroom(data_home=None, return_mush_y=False):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
-    return_mush_y: bool, default=False.
+    return_y: bool, default=False.
         If True, returns a tuple for both the data and the associated labels
         (0 for edible, 1 for poisonous)
 
@@ -202,14 +202,14 @@ def fetch_mushroom(data_home=None, return_mush_y=False):
         Each unique transaction is represented as a Python list.
 
     (mush, y) : tuple
-        if ``return_D_y`` is True
+        if ``return_y`` is True
 
     Examples
     --------
     >>> from skmine.datasets.fimi import fetch_mushroom
     >>> from skmine.datasets.utils import describe
-    >>> mush, y = fetch_mushroom(return_mush_y=True)
-    >>> describe(mush)['n_items']
+    >>> X, y = fetch_mushroom(return_y=True)
+    >>> describe(X)['n_items']
     119
     >>> y.value_counts()
     0    4208
@@ -217,9 +217,9 @@ def fetch_mushroom(data_home=None, return_mush_y=False):
     Name: mushroom, dtype: int64
     """
     mush = fetch_any("mushroom.dat", base_url=BASE_URL_FIMI, data_home=data_home)
-    if return_mush_y:
-        y = mush.str[0]
-        y = y.replace(2, 0)  # 2 is edible, 1 is poisonous
+    if return_y:
+        y = mush.str[0].replace(2, 0)  # 2 is edible, 1 is poisonous
+        X = mush.str[1:]
         return mush, y
 
     return mush
@@ -240,8 +240,8 @@ def fetch_pumsb(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -265,8 +265,8 @@ def fetch_pumsb_star(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -292,8 +292,8 @@ def fetch_kosarak(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -328,8 +328,8 @@ def fetch_retail(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -357,8 +357,8 @@ def fetch_accidents(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
 
     Returns
     -------
@@ -370,7 +370,7 @@ def fetch_accidents(data_home=None):
     return fetch_any("accidents.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
-def fetch_iris(data_home=None):
+def fetch_iris(data_home=None, return_y=False):
     """Fetch and return the discretized iris dataset (Frequent Itemset Mining)
 
     This dataset corresponds to the iris dataset which has been discretized into 19 items.
@@ -388,8 +388,11 @@ def fetch_iris(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
 
     Returns
     -------
@@ -398,10 +401,15 @@ def fetch_iris(data_home=None):
         Each unique transaction is represented as a Python list.
 
     """
-    return fetch_any("iris.D19.N150.C3.num.gz", base_url=BASE_URL_CGI, data_home=data_home)
+    iris = fetch_any("iris.D19.N150.C3.num.gz", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = iris.str[-1]
+        X = iris.str[:-1]
+        return X, y
+    return iris
 
 
-def fetch_breast(data_home=None):
+def fetch_breast(data_home=None, return_y=False):
     """Fetch and return the discretized breast dataset (Frequent Itemset Mining)
 
     This dataset corresponds to the breast dataset which has been discretized into 20 items.
@@ -419,8 +427,11 @@ def fetch_breast(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
 
     Returns
     -------
@@ -429,10 +440,15 @@ def fetch_breast(data_home=None):
         Each unique transaction is represented as a Python list.
 
     """
-    return fetch_any("breast.D20.N699.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    breast = fetch_any("breast.D20.N699.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = breast.str[-1]
+        X = breast.str[:-1]
+        return X, y
+    return breast
 
 
-def fetch_tictactoe(data_home=None):
+def fetch_tictactoe(data_home=None, return_y=False):
     """Fetch and return the discretized tictactoe dataset (Frequent Itemset Mining)
 
     This dataset corresponds to the tictactoe dataset which has been discretized into 29 items.
@@ -451,8 +467,11 @@ def fetch_tictactoe(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
 
     Returns
     -------
@@ -461,4 +480,9 @@ def fetch_tictactoe(data_home=None):
         Each unique transaction is represented as a Python list.
 
     """
-    return fetch_any("ticTacToe.D29.N958.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    tictactoe = fetch_any("ticTacToe.D29.N958.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = tictactoe.str[-1]
+        X = tictactoe.str[:-1]
+        return X, y
+    return tictactoe

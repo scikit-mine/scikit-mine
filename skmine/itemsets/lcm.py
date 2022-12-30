@@ -66,12 +66,12 @@ class LCM(BaseMiner):
     >>> lcm = LCM(min_supp=2000)
     >>> patterns = lcm.fit_discover(chess)
     >>> patterns.head()
-        itemset support
-    0      [58]    3195
-    1      [52]    3185
-    2  [52, 58]    3184
-    3      [29]    3181
-    4  [29, 58]    3180
+        itemset  support
+    0      [58]     3195
+    1      [52]     3185
+    2  [52, 58]     3184
+    3      [29]     3181
+    4  [29, 58]     3180
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
@@ -182,13 +182,13 @@ class LCM(BaseMiner):
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> LCM(min_supp=2).fit_discover(D, lexicographic_order=True)
-             itemset support
-        0     [2, 5]       3
-        1  [2, 3, 5]       2
+             itemset  support
+        0     [2, 5]        3
+        1  [2, 3, 5]        2
         >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
-             itemset support       tids
-        0     [2, 5]       3  (0, 1, 2)
-        1  [2, 3, 5]       2     (0, 1)
+             itemset  support       tids
+        0     [2, 5]        3  (0, 1, 2)
+        1  [2, 3, 5]        2     (0, 1)
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
