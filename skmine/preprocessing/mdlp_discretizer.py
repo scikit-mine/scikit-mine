@@ -63,8 +63,8 @@ class MDLPVectDiscretizer(MDLOptimizer):
     Basic block for the implementation of
     "Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning".
 
-    This class operates at a column level, i.e it finds the best cut points for a given feature
-    to fit a the corresponding labels
+    This class operates at a column level, i.e. it finds the best cut points for a given feature
+    to fit a corresponding labels
     """
 
     def __init__(self, min_depth=0):

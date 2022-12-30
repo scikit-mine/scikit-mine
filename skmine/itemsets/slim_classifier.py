@@ -39,7 +39,8 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         """Fit the model according to the given training data.
         Parameters
         ----------
-        X : containing n_transactions containing themselves n_items
+        X : iterable, {array_like}
+            containing n_transactions containing themselves n_items
 
         y : array-like of shape (n_samples,)
             Target vector relative to X.
@@ -49,9 +50,6 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self : object
             An instance of the estimator
         """
-        # (X, y) = check_X_y(X, y)
-        # check_classification_targets(y)
-
         self.classes_ = np.unique(y)
         self.classes_X_ = []
         self.models_ = []
