@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets._instacart &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>skmine.datasets._instacart &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -202,8 +202,8 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">LXML_INSTALLED</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">get_data_home</span>
-<span class="kn">from</span> <span class="nn">.conf</span> <span class="kn">import</span> <span class="n">urlopen</span>
+<span class="kn">from</span> <span class="nn">skmine.datasets._base</span> <span class="kn">import</span> <span class="n">get_data_home</span> <span class="c1"># TODO . relative import</span>
+<span class="kn">from</span> <span class="nn">skmine.datasets.conf</span> <span class="kn">import</span> <span class="n">urlopen</span>
 
 <span class="n">_IMPORT_MSG</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">lxml is required to install the instacart dataset.</span>
@@ -328,6 +328,16 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tar_filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">targz_data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tar_filename</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># data = fetch_instacart()</span>
+    <span class="n">data_link</span> <span class="o">=</span> <span class="s2">&quot;https://www.kaggle.com/c/instacart-market-basket-analysis/data&quot;</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">urlopen</span><span class="p">(</span><span class="n">data_link</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="n">buttons</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s2">&quot;//*[contains(@class, &#39;ic-btn ic-btn-success ic-btn-lg&#39;)]&quot;</span><span class="p">)</span>
+    <span class="n">download_link</span> <span class="o">=</span> <span class="n">buttons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
+    <span class="n">instacart_filedata</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">download_link</span><span class="p">)</span>
+    <span class="n">targz_data</span> <span class="o">=</span> <span class="n">instacart_filedata</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 
            </div>
@@ -341,7 +351,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Linear time Closed item set Miner &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>Linear time Closed item set Miner &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -109,7 +109,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Linear time Closed item set Miner</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#load-the-chess-dataset">load the chess dataset</a></li>
@@ -534,8 +534,8 @@ Name: chess, dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 473 ms, sys: 410 ms, total: 883 ms
-Wall time: 9.56 s
+CPU times: user 49.2 ms, sys: 28.9 ms, total: 78.1 ms
+Wall time: 1.51 s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -596,29 +596,29 @@ Wall time: 9.56 s
   </thead>
   <tbody>
     <tr>
-      <th>12</th>
-      <td>(5, 7, 17, 58)</td>
-      <td>2204</td>
-    </tr>
-    <tr>
       <th>14</th>
-      <td>(5, 9, 17, 58)</td>
-      <td>2088</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>(5, 7, 21, 58)</td>
-      <td>2034</td>
+      <td>[29, 40, 52, 58]</td>
+      <td>3143</td>
     </tr>
     <tr>
       <th>22</th>
-      <td>(5, 7, 25, 58)</td>
-      <td>2539</td>
+      <td>[29, 52, 58, 60]</td>
+      <td>3124</td>
     </tr>
     <tr>
-      <th>24</th>
-      <td>(5, 9, 25, 58)</td>
-      <td>2365</td>
+      <th>26</th>
+      <td>[40, 52, 58, 60]</td>
+      <td>3112</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>[29, 40, 58, 60]</td>
+      <td>3110</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>[29, 40, 52, 60]</td>
+      <td>3100</td>
     </tr>
     <tr>
       <th>...</th>
@@ -626,28 +626,28 @@ Wall time: 9.56 s
       <td>...</td>
     </tr>
     <tr>
-      <th>68956</th>
-      <td>(29, 40, 48, 52, 54)</td>
-      <td>2012</td>
+      <th>68960</th>
+      <td>[15, 52, 58, 60]</td>
+      <td>2003</td>
     </tr>
     <tr>
-      <th>68957</th>
-      <td>(36, 40, 48, 52, 54)</td>
-      <td>2012</td>
+      <th>68962</th>
+      <td>[15, 29, 58, 60]</td>
+      <td>2002</td>
     </tr>
     <tr>
       <th>68964</th>
-      <td>(29, 40, 52, 70)</td>
-      <td>2001</td>
-    </tr>
-    <tr>
-      <th>68965</th>
-      <td>(29, 40, 58, 70)</td>
+      <td>[29, 40, 58, 70]</td>
       <td>2006</td>
     </tr>
     <tr>
+      <th>68965</th>
+      <td>[29, 40, 52, 70]</td>
+      <td>2001</td>
+    </tr>
+    <tr>
       <th>68966</th>
-      <td>(29, 40, 52, 58, 70)</td>
+      <td>[29, 40, 52, 58, 70]</td>
       <td>2000</td>
     </tr>
   </tbody>
@@ -698,52 +698,52 @@ Wall time: 9.56 s
   <tbody>
     <tr>
       <th>0</th>
-      <td>(58,)</td>
+      <td>[58]</td>
       <td>3195</td>
     </tr>
     <tr>
-      <th>8824</th>
-      <td>(52,)</td>
+      <th>1</th>
+      <td>[52]</td>
       <td>3185</td>
     </tr>
     <tr>
-      <th>2670</th>
-      <td>(52, 58)</td>
+      <th>2</th>
+      <td>[52, 58]</td>
       <td>3184</td>
     </tr>
     <tr>
-      <th>10651</th>
-      <td>(29,)</td>
+      <th>3</th>
+      <td>[29]</td>
       <td>3181</td>
     </tr>
     <tr>
-      <th>29</th>
-      <td>(29, 58)</td>
+      <th>4</th>
+      <td>[29, 58]</td>
       <td>3180</td>
     </tr>
     <tr>
-      <th>8853</th>
-      <td>(29, 52)</td>
+      <th>5</th>
+      <td>[29, 52]</td>
       <td>3170</td>
     </tr>
     <tr>
-      <th>10686</th>
-      <td>(40,)</td>
+      <th>7</th>
+      <td>[40]</td>
       <td>3170</td>
     </tr>
     <tr>
-      <th>386</th>
-      <td>(40, 58)</td>
+      <th>6</th>
+      <td>[29, 52, 58]</td>
       <td>3169</td>
     </tr>
     <tr>
-      <th>2699</th>
-      <td>(29, 52, 58)</td>
+      <th>8</th>
+      <td>[40, 58]</td>
       <td>3169</td>
     </tr>
     <tr>
-      <th>9036</th>
-      <td>(40, 52)</td>
+      <th>9</th>
+      <td>[40, 52]</td>
       <td>3159</td>
     </tr>
   </tbody>
@@ -774,7 +774,7 @@ Wall time: 9.56 s
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

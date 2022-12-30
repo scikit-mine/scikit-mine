@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.periodic.cycles &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>skmine.periodic.cycles &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -199,7 +199,7 @@
 
 <span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">intersect2d</span><span class="p">,</span> <span class="n">sliding_window_view</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span>
@@ -556,7 +556,7 @@
     <span class="k">return</span> <span class="n">cands</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="SingleEventCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">SingleEventCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="SingleEventCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">SingleEventCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Miner periodic cycles, but in the scope of a single event</span>
 
@@ -659,7 +659,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">alpha_occurrences</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="PeriodicCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mining periodic cycles with a MDL Criterion</span>
 
@@ -908,7 +908,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

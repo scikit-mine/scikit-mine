@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SLIM for market basket analysis &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>SLIM for market basket analysis &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -109,7 +109,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">SLIM for market basket analysis</a></li>
@@ -513,7 +513,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">pruning</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -540,25 +540,30 @@ div.rendered_html tbody tr:hover {
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>itemset</th>
       <th>usage</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>(milk, bananas)</th>
-      <td>[0, 1, 4]</td>
+      <th>0</th>
+      <td>[bananas, milk]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(tea)</th>
-      <td>[2, 3, 4]</td>
+      <th>1</th>
+      <td>[tea]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(cookies)</th>
-      <td>[1, 2]</td>
+      <th>2</th>
+      <td>[cookies]</td>
+      <td>2</td>
     </tr>
     <tr>
-      <th>(butter)</th>
-      <td>[2]</td>
+      <th>3</th>
+      <td>[butter]</td>
+      <td>1</td>
     </tr>
   </tbody>
 </table>
@@ -596,7 +601,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span></span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -623,33 +628,35 @@ div.rendered_html tbody tr:hover {
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>itemset</th>
       <th>usage</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>(milk, bananas)</th>
-      <td>[0, 1, 4]</td>
+      <th>0</th>
+      <td>[bananas, milk]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(tea, butter)</th>
-      <td>[2]</td>
+      <th>1</th>
+      <td>[bananas, jelly]</td>
+      <td>1</td>
     </tr>
     <tr>
-      <th>(bananas)</th>
-      <td>[5]</td>
+      <th>2</th>
+      <td>[cookies]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(cookies)</th>
-      <td>[1, 2, 5]</td>
+      <th>3</th>
+      <td>[tea]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(tea)</th>
-      <td>[3, 4]</td>
-    </tr>
-    <tr>
-      <th>(jelly)</th>
-      <td>[5]</td>
+      <th>4</th>
+      <td>[butter]</td>
+      <td>1</td>
     </tr>
   </tbody>
 </table>
@@ -678,7 +685,7 @@ div.rendered_html tbody tr:hover {
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

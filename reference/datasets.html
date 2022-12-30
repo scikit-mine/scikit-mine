@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Datasets &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>Datasets &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -116,7 +116,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -227,13 +227,15 @@
 <h2>Standard datasets for itemset mining<a class="headerlink" href="#standard-datasets-for-itemset-mining" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_file">
-<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filepath</span></em>, <em class="sig-param"><span class="n">separator</span><span class="o">=</span><span class="default_value">' '</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filepath</span></em>, <em class="sig-param"><span class="n">separator</span><span class="o">=</span><span class="default_value">' '</span></em>, <em class="sig-param"><span class="n">int_values</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loader for files in FIMI format</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filepath</strong> (<em>str</em>) – Path of the file to load</p></li>
 <li><p><strong>separator</strong> (<em>str</em>) – Indicate a custom separator between the items. By default, it is a space.</p></li>
+<li><p><strong>int_values</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Specify if the items in the file are all integers. If not, then the items are considered as strings.
+With integers, the algorithms are more efficient.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -248,16 +250,18 @@ as an in-memory pandas Series</p>
 
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_any">
-<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_any</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_any" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base loader for all datasets from the FIMI repository
+<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_any</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">base_url</span><span class="o">=</span><span class="default_value">'http://fimi.uantwerpen.be/data/'</span></em>, <em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_any" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base loader for all datasets from the FIMI and CGI repository
 Each unique transaction will be represented as a Python list in the resulting pandas Series</p>
-<p>see: <a class="reference external" href="http://fimi.uantwerpen.be/data/">http://fimi.uantwerpen.be/data/</a></p>
+<p>see: <a class="reference external" href="http://fimi.uantwerpen.be/data/">http://fimi.uantwerpen.be/data/</a>
+<a class="reference external" href="https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/dataSets.html">https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/dataSets.html</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>~/scikit_mine_data/</cite> subfolders.</p></li>
+<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>~/scikit_mine_data/</cite> subfolders.</p></li>
 <li><p><strong>filename</strong> (<em>str</em>) – Name of the file to fetch</p></li>
+<li><p><strong>base_url</strong> (<em>str</em>) – URL indicating where to fetch the dataset</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -296,8 +300,8 @@ as an in-memory pandas Series</p>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the chess dataset, as an in-memory pandas Series.
@@ -335,8 +339,8 @@ Each unique transaction is represented as a Python list.</p>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the connect dataset, as an in-memory pandas Series.
@@ -350,7 +354,7 @@ Each unique transaction is represented as a Python list.</p>
 
 <dl class="py function">
 <dt id="skmine.datasets.fimi.fetch_mushroom">
-<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_mushroom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_mush_y</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_mushroom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_mushroom" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">skmine.datasets.fimi.</code><code class="sig-name descname">fetch_mushroom</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_y</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/fimi.html#fetch_mushroom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fimi.fetch_mushroom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch and return the mushroom dataset (Frequent Itemset Mining)</p>
 <p>The Mushroom data set includes descriptions of hypothetical samples corresponding
 to 23 species of gilled mushrooms in the Agaricus and Lepiota Family.</p>
@@ -381,9 +385,9 @@ These features were translated into 117 items.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
-<li><p><strong>return_mush_y</strong> (<em>bool</em><em>, </em><em>default=False.</em>) – If True, returns a tuple for both the data and the associated labels
+<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
+<li><p><strong>return_y</strong> (<em>bool</em><em>, </em><em>default=False.</em>) – If True, returns a tuple for both the data and the associated labels
 (0 for edible, 1 for poisonous)</p></li>
 </ul>
 </dd>
@@ -391,7 +395,7 @@ all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>mush</strong> (<em>pd.Series</em>) – Transactions from the mushroom dataset, as an in-memory pandas Series.
 Each unique transaction is represented as a Python list.</p></li>
-<li><p><strong>(mush, y)</strong> (<em>tuple</em>) – if <code class="docutils literal notranslate"><span class="pre">return_D_y</span></code> is True</p></li>
+<li><p><strong>(mush, y)</strong> (<em>tuple</em>) – if <code class="docutils literal notranslate"><span class="pre">return_y</span></code> is True</p></li>
 </ul>
 </p>
 </dd>
@@ -399,8 +403,8 @@ Each unique transaction is represented as a Python list.</p></li>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_mushroom</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.utils</span> <span class="kn">import</span> <span class="n">describe</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mush</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_mushroom</span><span class="p">(</span><span class="n">return_mush_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">mush</span><span class="p">)[</span><span class="s1">&#39;n_items&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_mushroom</span><span class="p">(</span><span class="n">return_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="s1">&#39;n_items&#39;</span><span class="p">]</span>
 <span class="go">119</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 <span class="go">0    4208</span>
@@ -437,8 +441,8 @@ Each unique transaction is represented as a Python list.</p></li>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the pumsb dataset, as an in-memory pandas Series.
@@ -476,8 +480,8 @@ Each unique transaction is represented as a Python list.</p>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the pumsb_star dataset, as an in-memory pandas Series.
@@ -516,8 +520,8 @@ Each unique transaction is represented as a Python list.</p>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the kosarak dataset, as an in-memory pandas Series.
@@ -561,8 +565,8 @@ The total amount of receipts being collected equals 88,163.</p>
 <p>In total, 5,133 customers have purchased at least one product during the data collection period</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default,
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the retail dataset, as an in-memory pandas Series.
@@ -602,8 +606,8 @@ Each unique transaction is represented as a Python list.</p>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
-all scikit-mine data is stored in <cite>~/scikit_mine_data</cite>.</p>
+<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>~/scikit_mine_data</cite>.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Transactions from the accidents dataset, as an in-memory pandas Series.
@@ -983,7 +987,7 @@ variable or programmatically by giving an explicit folder path.</p>
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

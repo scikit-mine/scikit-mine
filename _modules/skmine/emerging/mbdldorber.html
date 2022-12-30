@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -195,7 +195,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span>
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
 <span class="kn">from</span> <span class="nn">..itemsets.lcm</span> <span class="kn">import</span> <span class="n">LCMMax</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_growth_rate</span><span class="p">,</span> <span class="n">_check_min_supp</span><span class="p">,</span> <span class="n">filter_maximal</span><span class="p">,</span> <span class="n">filter_minimal</span>
 
@@ -289,7 +289,7 @@
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">patterns</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="MBDLLBorder"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder">[docs]</a><span class="k">class</span> <span class="nc">MBDLLBorder</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="MBDLLBorder"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder">[docs]</a><span class="k">class</span> <span class="nc">MBDLLBorder</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    MBD-LLBorder aims at discovering patterns characterizing the difference</span>
 <span class="sd">    between two collections of data.</span>
@@ -410,7 +410,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

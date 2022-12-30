@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API demo &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -109,7 +109,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -499,11 +499,11 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0    [3, 9, 13, 23, 25, 34, 36, 38, 40, 52, 54, 59,...
-1    [3, 9, 14, 23, 26, 34, 36, 39, 40, 52, 55, 59,...
-2    [4, 9, 15, 23, 27, 34, 36, 39, 41, 52, 55, 59,...
-3    [3, 10, 15, 23, 25, 34, 36, 38, 41, 52, 54, 59...
-4    [3, 9, 16, 24, 28, 34, 37, 39, 40, 53, 54, 59,...
+0    [1, 3, 9, 13, 23, 25, 34, 36, 38, 40, 52, 54, ...
+1    [2, 3, 9, 14, 23, 26, 34, 36, 39, 40, 52, 55, ...
+2    [2, 4, 9, 15, 23, 27, 34, 36, 39, 41, 52, 55, ...
+3    [1, 3, 10, 15, 23, 25, 34, 36, 38, 41, 52, 54,...
+4    [2, 3, 9, 16, 24, 28, 34, 37, 39, 40, 53, 54, ...
 Name: mushroom, dtype: object
 </pre></div></div>
 </div>
@@ -512,8 +512,8 @@ Name: mushroom, dtype: object
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># set n_iter_no_change to a high value so learning takes longer</span>
-<span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">n_iter_no_change</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span></span><span class="c1"># set max_time to a limit value so that the dataset compression is not too long</span>
+<span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">(</span><span class="n">max_time</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -560,7 +560,7 @@ Name: mushroom, dtype: object
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">%</span><span class="k">time</span> slim.fit(mushroom)
+<span></span><span class="o">%</span><span class="k">time</span> slim.fit(mushroom).discover()
 </pre></div>
 </div>
 </div>
@@ -569,8 +569,8 @@ Name: mushroom, dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 3.75 s, sys: 36.7 ms, total: 3.79 s
-Wall time: 3.8 s
+CPU times: user 30.1 s, sys: 112 ms, total: 30.2 s
+Wall time: 30.1 s
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -596,57 +596,69 @@ Wall time: 3.8 s
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>itemset</th>
       <th>usage</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>(36, 39, 116, 23, 56, 28, 93)</th>
-      <td>[305, 335, 384, 449, 632, 684, 873, 890, 917, ...</td>
+      <th>0</th>
+      <td>[2, 23, 28, 34, 36, 39, 53, 56, 59, 63, 85, 86...</td>
+      <td>864</td>
     </tr>
     <tr>
-      <th>(34, 85, 86, 90, 59, 63)</th>
-      <td>[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,...</td>
+      <th>1</th>
+      <td>[2, 23, 28, 34, 36, 39, 53, 56, 59, 63, 85, 86...</td>
+      <td>864</td>
     </tr>
     <tr>
-      <th>(110, 53, 102, 24, 58, 94)</th>
-      <td>[4023, 4100, 4104, 4196, 4200, 4329, 4376, 442...</td>
+      <th>2</th>
+      <td>[1, 24, 29, 34, 36, 39, 52, 56, 61, 66, 85, 86...</td>
+      <td>648</td>
     </tr>
     <tr>
-      <th>(66, 61, 36, 101, 39, 29)</th>
-      <td>[1816, 2128, 2178, 2238, 2385, 2443, 2533, 253...</td>
+      <th>3</th>
+      <td>[1, 24, 29, 34, 36, 39, 52, 56, 61, 66, 85, 86...</td>
+      <td>648</td>
     </tr>
     <tr>
-      <th>(67, 36, 39, 23, 76, 93)</th>
-      <td>[1, 2, 5, 6, 7, 9, 10, 11, 12, 20, 22, 23, 24,...</td>
+      <th>4</th>
+      <td>[1, 24, 34, 36, 38, 48, 53, 58, 59, 63, 85, 86...</td>
+      <td>432</td>
     </tr>
     <tr>
       <th>...</th>
       <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
-      <th>(49)</th>
-      <td>[5153, 5376, 5477, 5526, 5548, 5571, 5593, 560...</td>
+      <th>157</th>
+      <td>[22]</td>
+      <td>16</td>
     </tr>
     <tr>
-      <th>(82)</th>
-      <td>[4494, 5131, 5154, 5162, 5239, 5241, 5259, 526...</td>
+      <th>158</th>
+      <td>[75]</td>
+      <td>8</td>
     </tr>
     <tr>
-      <th>(22)</th>
-      <td>[4326, 4898, 5284, 5302, 5351, 5430, 5497, 552...</td>
+      <th>159</th>
+      <td>[89]</td>
+      <td>8</td>
     </tr>
     <tr>
-      <th>(8)</th>
-      <td>[5126, 5508, 7401, 7706]</td>
+      <th>160</th>
+      <td>[8]</td>
+      <td>4</td>
     </tr>
     <tr>
-      <th>(12)</th>
-      <td>[5107, 5126, 5128, 5717]</td>
+      <th>161</th>
+      <td>[12]</td>
+      <td>4</td>
     </tr>
   </tbody>
 </table>
-<p>236 rows × 1 columns</p>
+<p>162 rows × 2 columns</p>
 </div></div>
 </div>
 </section>
@@ -662,8 +674,6 @@ Wall time: 3.8 s
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data_size&#39;</span><span class="p">,</span> <span class="s1">&#39;model_size&#39;</span><span class="p">])</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">data_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">candidate_sizes</span><span class="p">):</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -675,7 +685,7 @@ Wall time: 3.8 s
 </div>
 </div>
 <hr class="docutils" />
-<p>And here is how the model size goes up</p>
+<p>Here is how the model size goes up</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -691,7 +701,7 @@ Wall time: 3.8 s
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;AxesSubplot:&gt;
+&lt;AxesSubplot: &gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -700,6 +710,53 @@ Wall time: 3.8 s
 <div class="output_area docutils container">
 <img alt="../../_images/tutorials_callbacks_callbacks_12_1.png" src="../../_images/tutorials_callbacks_callbacks_12_1.png" />
 </div>
+</div>
+<p>And finally the evolution of the total size of our dataset after compression via SLIM following MDL</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;model_size&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;data_size&#39;</span><span class="p">]</span>
+<span class="n">df</span><span class="o">.</span><span class="n">total_size</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;AxesSubplot: &gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/tutorials_callbacks_callbacks_14_1.png" src="../../_images/tutorials_callbacks_callbacks_14_1.png" />
+</div>
+</div>
+<p>From the sizes saved in df, we can determine the compression ratio of our dataset after applying SLIM</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">compression_percentage</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;total_size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span>
+<span class="n">compression_percentage</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+35.97993591669107
+</pre></div></div>
 </div>
 </section>
 </section>
@@ -725,7 +782,7 @@ Wall time: 3.8 s
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

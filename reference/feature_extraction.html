@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Feature Extraction &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>Feature Extraction &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -112,7 +112,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -273,8 +273,11 @@ patterns should output matrices with very few zeros.</p>
 iteratibely refining <code class="docutils literal notranslate"><span class="pre">self.codetable_</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>D</strong> (<em>iterable of iterables</em><em> or </em><em>array-like</em>) – Transactional dataset, either as an iterable of iterables
-or encoded as tabular binary data</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>iterable of iterables</em><em> or </em><em>array-like</em>) – Transactional dataset, either as an iterable of iterables
+or encoded as tabular binary data</p></li>
+<li><p><strong>y</strong> (<em>Ignored</em>) – Not used, present here for API consistency by convention.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -326,7 +329,7 @@ or encoded as tabular binary data</p>
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

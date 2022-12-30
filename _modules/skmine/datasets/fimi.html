@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets.fimi &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>skmine.datasets.fimi &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -191,15 +191,17 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">wget</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">get_data_home</span>
 
-<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;http://fimi.uantwerpen.be/data/&quot;</span>
+<span class="n">BASE_URL_FIMI</span> <span class="o">=</span> <span class="s2">&quot;http://fimi.uantwerpen.be/data/&quot;</span>
+<span class="n">BASE_URL_CGI</span> <span class="o">=</span> <span class="s2">&quot;https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">int_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">int_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="nb">zip</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read a local dataset file whose separator can be customized and whose values are either integers or strings.</span>
 
 <span class="sd">    Parameters</span>
@@ -218,24 +220,24 @@
 <span class="sd">    list</span>
 <span class="sd">        Return a transaction list composed for each transaction of a list of items</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The file </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> is already present in your data_home but it is a binary file, it must be &quot;</span>
-                  <span class="sa">f</span><span class="s2">&quot;deleted.&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">zip</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The file </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> is already present in your data_home but it is a binary file, it must be &quot;</span>
+              <span class="sa">f</span><span class="s2">&quot;deleted.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span>
 
-    <span class="n">transactions</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">tmp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)))</span> <span class="k">if</span> <span class="n">int_values</span> <span class="k">else</span> <span class="n">tmp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
-        <span class="n">transactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="n">transactions</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="n">int_values</span> <span class="k">else</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">transactions</span>
 
 
-<div class="viewcode-block" id="fetch_file"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_file">[docs]</a><span class="k">def</span> <span class="nf">fetch_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_file"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_file">[docs]</a><span class="k">def</span> <span class="nf">fetch_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">int_values</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Loader for files in FIMI format</span>
 
 <span class="sd">    Parameters</span>
@@ -246,32 +248,40 @@
 <span class="sd">    separator : str</span>
 <span class="sd">        Indicate a custom separator between the items. By default, it is a space.</span>
 
+<span class="sd">    int_values : bool, default=False</span>
+<span class="sd">        Specify if the items in the file are all integers. If not, then the items are considered as strings.</span>
+<span class="sd">        With integers, the algorithms are more efficient.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    pd.Series</span>
 <span class="sd">        Transactions from the requested dataset,</span>
 <span class="sd">        as an in-memory pandas Series</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">transactions</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">int_values</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="n">separator</span><span class="p">)</span>
+    <span class="n">transactions</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">int_values</span><span class="o">=</span><span class="n">int_values</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="n">separator</span><span class="p">)</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">transactions</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">s</span></div>
 
 
-<div class="viewcode-block" id="fetch_any"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_any">[docs]</a><span class="k">def</span> <span class="nf">fetch_any</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Base loader for all datasets from the FIMI repository</span>
+<div class="viewcode-block" id="fetch_any"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_any">[docs]</a><span class="k">def</span> <span class="nf">fetch_any</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base loader for all datasets from the FIMI and CGI repository</span>
 <span class="sd">    Each unique transaction will be represented as a Python list in the resulting pandas Series</span>
 
 <span class="sd">    see: http://fimi.uantwerpen.be/data/</span>
+<span class="sd">    https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/dataSets.html</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.</span>
 
 <span class="sd">    filename : str</span>
 <span class="sd">        Name of the file to fetch</span>
+
+<span class="sd">    base_url : str</span>
+<span class="sd">        URL indicating where to fetch the dataset</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -283,11 +293,11 @@
     <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_home</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_home</span><span class="p">):</span>  <span class="c1"># already fetched</span>
-        <span class="n">it</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="nb">zip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">base_url</span> <span class="o">==</span> <span class="n">BASE_URL_CGI</span> <span class="k">else</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># not fetched yet</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">BASE_URL</span> <span class="o">+</span> <span class="n">filename</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">base_url</span> <span class="o">+</span> <span class="n">filename</span>
         <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
-        <span class="n">it</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="nb">zip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">base_url</span> <span class="o">==</span> <span class="n">BASE_URL_CGI</span> <span class="k">else</span> <span class="n">_read_dat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
     <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">s</span></div>
@@ -306,8 +316,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -315,7 +325,7 @@
 <span class="sd">        Transactions from the chess dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;chess.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;chess.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_connect"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_connect">[docs]</a><span class="k">def</span> <span class="nf">fetch_connect</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -331,8 +341,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -340,10 +350,10 @@
 <span class="sd">        Transactions from the connect dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;connect.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;connect.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="fetch_mushroom"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">[docs]</a><span class="k">def</span> <span class="nf">fetch_mushroom</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_mush_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_mushroom"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_mushroom">[docs]</a><span class="k">def</span> <span class="nf">fetch_mushroom</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Fetch and return the mushroom dataset (Frequent Itemset Mining)</span>
 
 <span class="sd">    The Mushroom data set includes descriptions of hypothetical samples corresponding</span>
@@ -365,10 +375,10 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
-<span class="sd">    return_mush_y: bool, default=False.</span>
+<span class="sd">    return_y: bool, default=False.</span>
 <span class="sd">        If True, returns a tuple for both the data and the associated labels</span>
 <span class="sd">        (0 for edible, 1 for poisonous)</span>
 
@@ -379,24 +389,24 @@
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 
 <span class="sd">    (mush, y) : tuple</span>
-<span class="sd">        if ``return_D_y`` is True</span>
+<span class="sd">        if ``return_y`` is True</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.datasets.fimi import fetch_mushroom</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe</span>
-<span class="sd">    &gt;&gt;&gt; mush, y = fetch_mushroom(return_mush_y=True)</span>
-<span class="sd">    &gt;&gt;&gt; describe(mush)[&#39;n_items&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; X, y = fetch_mushroom(return_y=True)</span>
+<span class="sd">    &gt;&gt;&gt; describe(X)[&#39;n_items&#39;]</span>
 <span class="sd">    119</span>
 <span class="sd">    &gt;&gt;&gt; y.value_counts()</span>
 <span class="sd">    0    4208</span>
 <span class="sd">    1    3916</span>
 <span class="sd">    Name: mushroom, dtype: int64</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mush</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;mushroom.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">return_mush_y</span><span class="p">:</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># 2 is edible, 1 is poisonous</span>
+    <span class="n">mush</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;mushroom.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_y</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># 2 is edible, 1 is poisonous</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
         <span class="k">return</span> <span class="n">mush</span><span class="p">,</span> <span class="n">y</span>
 
     <span class="k">return</span> <span class="n">mush</span></div>
@@ -417,8 +427,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -426,7 +436,7 @@
 <span class="sd">        Transactions from the pumsb dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_pumsb_star"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_pumsb_star">[docs]</a><span class="k">def</span> <span class="nf">fetch_pumsb_star</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -442,8 +452,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -451,7 +461,7 @@
 <span class="sd">        Transactions from the pumsb_star dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb_star.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;pumsb_star.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_kosarak"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_kosarak">[docs]</a><span class="k">def</span> <span class="nf">fetch_kosarak</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -469,8 +479,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -478,7 +488,7 @@
 <span class="sd">        Transactions from the kosarak dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;kosarak.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;kosarak.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_retail"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_retail">[docs]</a><span class="k">def</span> <span class="nf">fetch_retail</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -505,8 +515,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default,</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -514,7 +524,7 @@
 <span class="sd">        Transactions from the retail dataset, as an in-memory pandas Series.</span>
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;retail.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;retail.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fetch_accidents"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_accidents">[docs]</a><span class="k">def</span> <span class="nf">fetch_accidents</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -534,8 +544,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default</span>
-<span class="sd">        all scikit-mine data is stored in `~/scikit_mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `~/scikit_mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -544,7 +554,125 @@
 <span class="sd">        Each unique transaction is represented as a Python list.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;accidents.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;accidents.dat&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_FIMI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">fetch_iris</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fetch and return the discretized iris dataset (Frequent Itemset Mining)</span>
+
+<span class="sd">    This dataset corresponds to the iris dataset which has been discretized into 19 items.</span>
+<span class="sd">    The last column (items: 17, 18, 19) corresponds to the targets and can be useful for classification.</span>
+
+<span class="sd">    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#iris</span>
+
+<span class="sd">    ====================   ==============</span>
+<span class="sd">    Nb of items                        19</span>
+<span class="sd">    Nb of transactions                150</span>
+<span class="sd">    Avg transaction size                5</span>
+<span class="sd">    Density                         26.32</span>
+<span class="sd">    ====================   ==============</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_home : optional, default: None</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `~/scikit_mine_data`.</span>
+
+<span class="sd">    return_y : bool, default: False</span>
+<span class="sd">        If True, returns a tuple for both the data and the associated labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">        Transactions from the iris dataset, as an in-memory pandas Series.</span>
+<span class="sd">        Each unique transaction is represented as a Python list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iris</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;iris.D19.N150.C3.num.gz&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_CGI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_y</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">iris</span>
+
+
+<span class="k">def</span> <span class="nf">fetch_breast</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fetch and return the discretized breast dataset (Frequent Itemset Mining)</span>
+
+<span class="sd">    This dataset corresponds to the breast dataset which has been discretized into 20 items.</span>
+<span class="sd">    The last column (items: 19, 20) corresponds to the targets and can be useful for classification.</span>
+
+<span class="sd">    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#breast</span>
+
+<span class="sd">    ====================   ==============</span>
+<span class="sd">    Nb of items                        20</span>
+<span class="sd">    Nb of transactions                699</span>
+<span class="sd">    Avg transaction size             9.98</span>
+<span class="sd">    Density                            50</span>
+<span class="sd">    ====================   ==============</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_home : optional, default: None</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `~/scikit_mine_data`.</span>
+
+<span class="sd">    return_y : bool, default: False</span>
+<span class="sd">        If True, returns a tuple for both the data and the associated labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">        Transactions from the breast dataset, as an in-memory pandas Series.</span>
+<span class="sd">        Each unique transaction is represented as a Python list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">breast</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;breast.D20.N699.C2.num&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_CGI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_y</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">breast</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">breast</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">breast</span>
+
+
+<span class="k">def</span> <span class="nf">fetch_tictactoe</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fetch and return the discretized tictactoe dataset (Frequent Itemset Mining)</span>
+
+<span class="sd">    This dataset corresponds to the tictactoe dataset which has been discretized into 29 items.</span>
+<span class="sd">    The last column (items: 28, 29) corresponds to the targets and can be useful for classification.</span>
+
+<span class="sd">    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#tictactoe</span>
+
+<span class="sd">    ====================   ==============</span>
+<span class="sd">    Nb of items                        29</span>
+<span class="sd">    Nb of transactions                958</span>
+<span class="sd">    Nb of transactions                699</span>
+<span class="sd">    Avg transaction size               10</span>
+<span class="sd">    Density                         34.48</span>
+<span class="sd">    ====================   ==============</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_home : optional, default: None</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `~/scikit_mine_data`.</span>
+
+<span class="sd">    return_y : bool, default: False</span>
+<span class="sd">        If True, returns a tuple for both the data and the associated labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">        Transactions from the breast dataset, as an in-memory pandas Series.</span>
+<span class="sd">        Each unique transaction is represented as a Python list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tictactoe</span> <span class="o">=</span> <span class="n">fetch_any</span><span class="p">(</span><span class="s2">&quot;ticTacToe.D29.N958.C2.num&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">BASE_URL_CGI</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="n">data_home</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_y</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tictactoe</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">tictactoe</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">tictactoe</span>
 </pre></div>
 
            </div>
@@ -558,7 +686,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

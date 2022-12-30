@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>skmine.preprocessing.mdlp_discretizer &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -106,7 +106,7 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
@@ -250,8 +250,8 @@
 <span class="sd">    Basic block for the implementation of</span>
 <span class="sd">    &quot;Multi-Interval Discretization of Continuous-Valued Attributes for Classification Learning&quot;.</span>
 
-<span class="sd">    This class operates at a column level, i.e it finds the best cut points for a given feature</span>
-<span class="sd">    to fit a the corresponding labels</span>
+<span class="sd">    This class operates at a column level, i.e. it finds the best cut points for a given feature</span>
+<span class="sd">    to fit a corresponding labels</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -321,7 +321,7 @@
                 <span class="n">search_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
                 <span class="n">search_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cut_points</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_points_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cut_points</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span>
 
 
@@ -451,7 +451,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>

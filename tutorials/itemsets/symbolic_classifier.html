@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Building a symbolic classifier &mdash; scikit-mine 0.0.8 documentation</title>
+  <title>Building a symbolic classifier &mdash; scikit-mine 0.0.9 documentation</title>
   
 
   
@@ -109,14 +109,18 @@
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SLIM.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Building a symbolic classifier</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#First-“predictions”">First “predictions”</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Built-in-interpretations">Built-in interpretations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Shortest-code-wins-!!">Shortest code wins !!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#SLIM-Classifier">SLIM Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#OneVsRest-classifier">OneVsRest classifier</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#First-“predictions”">First “predictions”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Built-in-interpretations">Built-in interpretations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Shortest-code-wins-!!">Shortest code wins !!</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
@@ -471,8 +475,220 @@ div.rendered_html tbody tr:hover {
 <p>MDL based algorithms encode data according to a given codetable</p>
 <p>When calling <code class="docutils literal notranslate"><span class="pre">.fit</span></code>, we iteratively look for the codetable that compress the training data the best</p>
 <p><strong>When we are done with training our model, we can benefit from the refined codetable to make some predictions</strong></p>
-<div class="nbinput nblast docutils container">
+<section id="SLIM-Classifier">
+<h2>SLIM Classifier<a class="headerlink" href="#SLIM-Classifier" title="Permalink to this headline">¶</a></h2>
+<p>An <strong>integrated classifier in scikit mine is available</strong> and allows to <strong>solve binary and multiclass problems</strong>. It uses the SLIM compression algorithm.</p>
+<p>To use it, we need to have <strong>discretized dataset</strong>. Let’s take for example the <strong>discretized iris dataset</strong>.</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_iris</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">fetch_iris</span><span class="p">(</span><span class="n">return_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># without return_y=True, the method would have returned the whole dataset in one variable</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X shape:&quot;</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;y shape:&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">X</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+X shape: (150,)
+y shape: (150,)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0     [2, 9, 12, 15]
+1    [1, 10, 11, 14]
+2    [5, 10, 13, 16]
+3     [2, 6, 12, 15]
+4     [1, 8, 11, 14]
+Name: iris.D19.N150.C3.num, dtype: object
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">y</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0    18
+1    17
+2    19
+3    18
+4    17
+Name: iris.D19.N150.C3.num, dtype: int64
+</pre></div></div>
+</div>
+<p>The purpose of this dataset is to <strong>predict the last column of db from the other 4</strong>. The possible targets are: 17, 18, 19. We can prepare our train and test data set.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X_train shape:&quot;</span><span class="p">,</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;y_train shape:&quot;</span><span class="p">,</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X_test shape:&quot;</span><span class="p">,</span> <span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;y_test shape:&quot;</span><span class="p">,</span> <span class="n">y_test</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+X_train shape: (120,) y_train shape: (120,)
+X_test shape: (30,) y_test shape: (30,)
+</pre></div></div>
+</div>
+<p>Now we can use our <strong>SlimClassifier</strong>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">skmine.itemsets.slim_classifier</span> <span class="kn">import</span> <span class="n">SlimClassifier</span>
+
+<span class="c1"># You can pass in parameter of your classifier the set of your items.</span>
+<span class="c1"># This will improve its performance especially on small data sets like iris.</span>
+<span class="n">items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">item</span> <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">X</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">transaction</span><span class="p">)</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">SlimClassifier</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">)</span>  <span class="c1"># You can also enable or disable the pruning of SLIM compressors via the `pruning` parameter</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.8333333333333334
+</pre></div></div>
+</div>
+<p>You can use many functions of sckit learn that are compatible with classifiers. For example, build a <strong>confusion matrix</strong>, use <strong>GridSearchCV</strong> or <strong>cross validation</strong>.</p>
+<ul class="simple">
+<li><p><strong>Confusion matrix</strong></p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[13,  1,  0],
+       [ 0,  8,  1],
+       [ 0,  3,  4]])
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p><strong>GridSearchCV</strong> (this method allows us to test many parameters for a classifier and to retain the best combination)</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
+
+<span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pruning&#39;</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span> <span class="s1">&#39;items&#39;</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">items</span><span class="p">]}</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+GridSearchCV(estimator=SlimClassifier(items={1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                             12, 13, 14, 15, 16}),
+             param_grid={&#39;items&#39;: [None,
+                                   {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                    14, 15, 16}],
+                         &#39;pruning&#39;: [False, True]})
+{&#39;items&#39;: {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, &#39;pruning&#39;: False}
+0.9833333333333333
+</pre></div></div>
+</div>
+<p>With GridSearchCV we get with the best parameters an <strong>accuracy of more than 98%</strong>, much better than the previous score. With this combination, the item list is passed as a parameter and pruning is disabled. Since pruning does not improve the compression of codetables in the SLIM algorithm on iris, it does not matter whether it is enabled or not.</p>
+<p>To be more sure of the quality of our results, we can use the cross validation of sklearn. - <strong>Cross validation</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+
+<span class="n">cross_validation</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cross_validation</span><span class="p">)</span>
+<span class="n">cross_validation</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[0.93333333 0.93333333 0.86666667 0.93333333 0.93333333 0.93333333
+ 1.         1.         1.         0.93333333]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.9466666666666667
+</pre></div></div>
+</div>
+<p>After cross validation, we see that the <strong>accuracy is almost 95% on average</strong>. So in 95% of the cases, the right type of flower is given.</p>
+</section>
+<hr class="docutils" />
+<section id="OneVsRest-classifier">
+<h2>OneVsRest classifier<a class="headerlink" href="#OneVsRest-classifier" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>SLIM algorithm</strong> is also compatible with <strong>scikit-learn</strong> to be used from other classifiers like <strong>One-vs-the-rest (OvR)</strong> (<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html</a>). The limitation of this method is that the classifier <strong>only works for multiclass classification</strong> problems while the embedded classifier works for both binary and multiclass problems.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -483,7 +699,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -495,7 +711,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -513,7 +729,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -588,17 +804,17 @@ div.rendered_html tbody tr:hover {
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span>
-<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -620,25 +836,30 @@ div.rendered_html tbody tr:hover {
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>itemset</th>
       <th>usage</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>(bananas, milk)</th>
-      <td>[0, 1, 4]</td>
+      <th>0</th>
+      <td>[bananas, milk]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(tea)</th>
-      <td>[2, 3, 4]</td>
+      <th>1</th>
+      <td>[tea]</td>
+      <td>3</td>
     </tr>
     <tr>
-      <th>(cookies)</th>
-      <td>[1, 2]</td>
+      <th>2</th>
+      <td>[cookies]</td>
+      <td>2</td>
     </tr>
     <tr>
-      <th>(butter)</th>
-      <td>[2]</td>
+      <th>3</th>
+      <td>[butter]</td>
+      <td>1</td>
     </tr>
   </tbody>
 </table>
@@ -647,10 +868,10 @@ div.rendered_html tbody tr:hover {
 <p>We keep this <strong>codetable</strong> in mind, as we will later use it <strong>to interpret our predictions</strong></p>
 <hr class="docutils" />
 <section id="First-“predictions”">
-<h2>First “predictions”<a class="headerlink" href="#First-“predictions”" title="Permalink to this headline">¶</a></h2>
+<h3>First “predictions”<a class="headerlink" href="#First-“predictions”" title="Permalink to this headline">¶</a></h3>
 <p>We define a new transactional dataset, and can call our <code class="docutils literal notranslate"><span class="pre">decision_function</span></code> on it. This will yield <code class="docutils literal notranslate"><span class="pre">distances</span></code> w.r.t the encoding scheme provided by our codetable</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -671,12 +892,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/usr/local/Caskroom/miniconda/base/envs/scikit-mine/lib/python3.6/site-packages/sklearn/preprocessing/_label.py:995: UserWarning: unknown class(es) [&#39;sirup&#39;] will be ignored
-  .format(sorted(unknown, key=str)))
+/home/tbetton/Documents/F-WIN/scikit-mine/venv_3.11/lib64/python3.11/site-packages/sklearn/preprocessing/_label.py:895: UserWarning: unknown class(es) [&#39;sirup&#39;] will be ignored
+  warnings.warn(
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -751,7 +972,7 @@ div.rendered_html tbody tr:hover {
 </div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -760,7 +981,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -769,7 +990,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -799,36 +1020,35 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>0</th>
       <td>[bananas, milk]</td>
-      <td>-1.58496</td>
+      <td>-1.906891</td>
     </tr>
     <tr>
       <th>1</th>
       <td>[milk, sirup, cookies]</td>
-      <td>-2.16992</td>
+      <td>-6.228819</td>
     </tr>
     <tr>
       <th>2</th>
       <td>[butter, tea]</td>
-      <td>-1.16992</td>
+      <td>-4.813781</td>
     </tr>
     <tr>
       <th>3</th>
       <td>[tea]</td>
-      <td>-1.58496</td>
+      <td>-1.906891</td>
     </tr>
     <tr>
       <th>4</th>
       <td>[milk, bananas, tea]</td>
-      <td>-0.584962</td>
+      <td>-3.813781</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 </section>
-<hr class="docutils" />
 <section id="Built-in-interpretations">
-<h2>Built-in interpretations<a class="headerlink" href="#Built-in-interpretations" title="Permalink to this headline">¶</a></h2>
+<h3>Built-in interpretations<a class="headerlink" href="#Built-in-interpretations" title="Permalink to this headline">¶</a></h3>
 <p>Now we can interpret codes for the new data, directly by <strong>looking at the codetable inferred from training data</strong></p>
 <p>First observations</p>
 <ul class="simple">
@@ -836,9 +1056,8 @@ div.rendered_html tbody tr:hover {
 <li><p>Entry 4 has the lowest distance. It contains <code class="docutils literal notranslate"><span class="pre">bananas</span></code> and <code class="docutils literal notranslate"><span class="pre">milk</span></code>, which are grouped together in the codetable and have high occurence in the training data.</p></li>
 </ul>
 </section>
-<hr class="docutils" />
 <section id="Shortest-code-wins-!!">
-<h2>Shortest code wins !!<a class="headerlink" href="#Shortest-code-wins-!!" title="Permalink to this headline">¶</a></h2>
+<h3>Shortest code wins !!<a class="headerlink" href="#Shortest-code-wins-!!" title="Permalink to this headline">¶</a></h3>
 <p>Next, we are going to use an ensemble of SLIM encoding schemes, and utilize them via a <code class="docutils literal notranslate"><span class="pre">OneVsRest</span></code> methodology, to perform <strong>multi-class classification</strong>. The methodology is very simple</p>
 <ol class="arabic simple">
 <li><p>We clone our base estimator as many time as we need (one per class)</p></li>
@@ -847,7 +1066,7 @@ div.rendered_html tbody tr:hover {
 <li><p>The shorted code wins : we choose the class with the lowest distance for a given transaction</p></li>
 </ol>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -857,7 +1076,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -869,7 +1088,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -895,7 +1114,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -906,7 +1125,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1021,7 +1240,7 @@ div.rendered_html tbody tr:hover {
 </div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1030,7 +1249,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1040,18 +1259,16 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[&lt;skmine.itemsets.slim.SLIM at 0x1a1e392cc0&gt;,
- &lt;skmine.itemsets.slim.SLIM at 0x1a1e392908&gt;,
- &lt;skmine.itemsets.slim.SLIM at 0x1a1e3a8ba8&gt;]
+[SLIM(), SLIM(), SLIM()]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1060,7 +1277,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1090,52 +1307,52 @@ div.rendered_html tbody tr:hover {
   <tbody>
     <tr>
       <th>0</th>
-      <td>-inf</td>
-      <td>-1.584962</td>
-      <td>-inf</td>
+      <td>-7.169925</td>
+      <td>-4.584963</td>
+      <td>-7.614710</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-1.584962</td>
-      <td>-1.584962</td>
-      <td>-2.0</td>
+      <td>-10.754888</td>
+      <td>-9.754888</td>
+      <td>-7.252140</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-inf</td>
-      <td>-inf</td>
-      <td>-2.0</td>
+      <td>-3.584963</td>
+      <td>-3.584963</td>
+      <td>-2.222392</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>-inf</td>
-      <td>-inf</td>
-      <td>-1.0</td>
+      <td>-7.169925</td>
+      <td>-7.169925</td>
+      <td>-5.029747</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>-1.584962</td>
-      <td>-0.584962</td>
-      <td>-inf</td>
+      <td>-7.169925</td>
+      <td>-4.584963</td>
+      <td>-6.614710</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>-0.584962</td>
-      <td>-1.584962</td>
-      <td>-inf</td>
+      <td>-2.584963</td>
+      <td>-6.169925</td>
+      <td>-6.614710</td>
     </tr>
     <tr>
       <th>6</th>
-      <td>-1.584962</td>
-      <td>-1.584962</td>
-      <td>-inf</td>
+      <td>-2.584963</td>
+      <td>-9.169926</td>
+      <td>-11.422065</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1144,15 +1361,16 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([&#39;foodstore&#39;, &#39;foodstore&#39;, &#39;newspaper&#39;, &#39;newspaper&#39;, &#39;foodstore&#39;,
-       &#39;bakery&#39;, &#39;foodstore&#39;], dtype=&#39;&lt;U9&#39;)
+array([&#39;foodstore&#39;, &#39;newspaper&#39;, &#39;newspaper&#39;, &#39;newspaper&#39;, &#39;foodstore&#39;,
+       &#39;bakery&#39;, &#39;bakery&#39;], dtype=&#39;&lt;U9&#39;)
 </pre></div></div>
 </div>
+</section>
 </section>
 </section>
 
@@ -1177,7 +1395,7 @@ array([&#39;foodstore&#39;, &#39;foodstore&#39;, &#39;newspaper&#39;, &#39;newsp
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright 2020, Rémi Adon
+        &copy; Copyright 2022, scikit-mine team
 
     </p>
   </div>
