@@ -134,7 +134,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
                 search_intervals.append((start, k, depth + 1))
                 search_intervals.append((k, end, depth + 1))
 
-        self.cut_points_ = np.array(list(cut_points))
+        self.cut_points_ = np.array(sorted(list(cut_points)))
         return self
 
 

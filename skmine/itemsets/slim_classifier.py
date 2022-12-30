@@ -25,10 +25,15 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
 
     Attributes
     ----------
-    classes_ : A list of all the classes
-    models_ : A list of SLIM instances corresponding to "classes_"
-    classes_X_ : A list where each element is a subset of X and each element contains the transactions of X associated
-                with the class from "classes_"  of the same index
+    classes_ : array-like
+        All the unique classes
+
+    models_ : list
+        A list of SLIM instances corresponding to *classes_*
+
+    classes_X_ : list
+        A list where each element is a subset of X and each element contains the transactions of X associated
+        with the class from *classes_*  of the same index
     """
 
     def __init__(self, items=None, pruning=False):
@@ -37,12 +42,13 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         """Fit the model according to the given training data.
+
         Parameters
         ----------
-        X : iterable, {array_like}
+        X: iterable, {array_like}
             containing n_transactions containing themselves n_items
 
-        y : array-like of shape (n_samples,)
+        y: array-like of shape (n_samples,)
             Target vector relative to X.
 
         Returns
@@ -69,7 +75,7 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
 
         Parameters
         ----------
-        X : list of list containing n_transactions containing themselves n_items
+        X : iterable containing n_transactions containing themselves n_items
 
         Returns
         -------

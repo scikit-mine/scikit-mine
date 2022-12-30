@@ -215,7 +215,7 @@ class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
         """
         mat = self.cover(D)
         code_lengths = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
-        # the codetable is Laplace corrected : the usage of each itemset is increased by 1 in order that all seen
+        # the codetable is Laplace corrected: the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
         code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())

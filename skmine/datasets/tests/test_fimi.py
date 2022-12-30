@@ -4,20 +4,18 @@ import types
 import pandas as pd
 
 import pytest
-import requests
+from urllib.request import urlopen
 
 from skmine.datasets import fimi
 
 def test_url_fimi():
     url_fimi = "http://fimi.uantwerpen.be/data/"
-    resp = requests.get(url_fimi)
-    assert resp.status_code == 200
+    assert urlopen(url_fimi).getcode() == 200
 
 
 def test_url_cgi():
     url_cgi = "https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/"
-    resp = requests.get(url_cgi)
-    assert resp.status_code == 200
+    assert urlopen(url_cgi).getcode() == 200
 
 
 def test_read_dat_fimi():

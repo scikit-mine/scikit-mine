@@ -7,4 +7,3 @@ dataclasses~=0.6
 networkx~=2.5.1
 wget~=3.2
 scikit-learn
-requests
