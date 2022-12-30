@@ -200,8 +200,8 @@ class LCM(BaseMiner):
             )  # dfs is a list of dataframe
             # make sure we have something to concat
             columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
-            dfs.append(pd.DataFrame(columns=columns))
-            df = pd.concat(dfs, axis=0, ignore_index=True)
+            df = pd.concat([pd.DataFrame(columns=columns)] + dfs, axis=0, ignore_index=True)
+            df["support"] = pd.to_numeric(df["support"])
 
             return df
 
