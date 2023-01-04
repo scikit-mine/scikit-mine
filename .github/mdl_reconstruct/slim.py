@@ -15,7 +15,7 @@ import time
 if __name__ == "__main__":
     Ds = [fetch_any(k) for k in ("chess.dat", "connect.dat", "mushroom.dat")]
 
-    miners = [SLIM(pruning=False, k=100), SLIM(pruning=True, k=100)]
+    miners = [SLIM(pruning=False, max_time=5), SLIM(pruning=True, max_time=5)]
     for D in Ds:
         for miner in miners:
             print(
