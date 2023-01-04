@@ -39,9 +39,8 @@ class LCM(BaseMiner, DiscovererMixin):
     Parameters
     ----------
     min_supp: int or float, default=0.2
-        The minimum support for itemsets to be rendered in the output
-        Either an int representing the absolute support, or a float for relative support
-        Default to 0.2 (20%)
+        The minimum support for itemsets to be rendered in the output either an int representing the absolute support,
+        or a float for relative support. By Default to 0.2 (20%)
 
     n_jobs : int, default=1 The number of jobs to use for the computation. Each single item is attributed a job to
         discover potential itemsets, considering this item as a root in the search space. **Processes are preferred**
