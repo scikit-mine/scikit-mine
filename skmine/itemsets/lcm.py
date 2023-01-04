@@ -23,10 +23,10 @@ from pyroaring import BitMap as Bitmap
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
 
-from ..base import BaseMiner
+from ..base import BaseMiner, DiscovererMixin
 
 
-class LCM(BaseMiner):
+class LCM(BaseMiner, DiscovererMixin):
     """
     Linear time Closed item set Miner.
 

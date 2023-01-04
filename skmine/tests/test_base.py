@@ -54,9 +54,7 @@ def test_mdl_repr():
         def generate_candidates(self):
             return list()
 
-        def discover(self):
-            itemsets, itids = zip(*[(iset, tids) for iset, tids in a.codetable_.items()])
-            return pd.DataFrame(data={'itemset': itemsets, 'tids': itids})
+        discover = lambda self: pd.Series(self.__dict__)
 
     a = A()
 

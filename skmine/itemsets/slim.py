@@ -18,7 +18,7 @@ from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
 
-from ..base import BaseMiner, InteractiveMiner, MDLOptimizer
+from ..base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
 from ..utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
 
@@ -84,7 +84,7 @@ def cover(sct: dict, itemsets: list):
     return covers
 
 
-class SLIM(BaseMiner, MDLOptimizer, InteractiveMiner):
+class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
     """SLIM: Directly Mining Descriptive Patterns
 
     SLIM looks for a compressed representation of transactional data.
