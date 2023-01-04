@@ -469,8 +469,27 @@ div.rendered_html tbody tr:hover {
 <h1>Callback API demo<a class="headerlink" href="#Callback-API-demo" title="Permalink to this headline">¶</a></h1>
 <p>In this demo we are going to use the callback API to <strong>track some useful information while training</strong> a SLIM miner</p>
 <p>We simply define custom python functions, and submit them to create an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">skmine</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This tutorial was tested with the following version of skmine :&quot;</span><span class="p">,</span> <span class="n">skmine</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+This tutorial was tested with the following version of skmine : 0.0.9
+</pre></div></div>
+</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -681,7 +700,7 @@ Wall time: 30.1 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_10_0.png" src="../../_images/tutorials_callbacks_callbacks_10_0.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_11_0.png" src="../../_images/tutorials_callbacks_callbacks_11_0.png" />
 </div>
 </div>
 <hr class="docutils" />
@@ -708,7 +727,7 @@ Wall time: 30.1 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_12_1.png" src="../../_images/tutorials_callbacks_callbacks_12_1.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_13_1.png" src="../../_images/tutorials_callbacks_callbacks_13_1.png" />
 </div>
 </div>
 <p>And finally the evolution of the total size of our dataset after compression via SLIM following MDL</p>
@@ -735,7 +754,7 @@ Wall time: 30.1 s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/tutorials_callbacks_callbacks_14_1.png" src="../../_images/tutorials_callbacks_callbacks_14_1.png" />
+<img alt="../../_images/tutorials_callbacks_callbacks_15_1.png" src="../../_images/tutorials_callbacks_callbacks_15_1.png" />
 </div>
 </div>
 <p>From the sizes saved in df, we can determine the compression ratio of our dataset after applying SLIM</p>

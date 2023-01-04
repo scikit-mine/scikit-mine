@@ -472,6 +472,25 @@ div.rendered_html tbody tr:hover {
 </style>
 <section id="Building-a-symbolic-classifier">
 <h1>Building a symbolic classifier<a class="headerlink" href="#Building-a-symbolic-classifier" title="Permalink to this headline">¶</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">skmine</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This tutorial was tested with the following version of skmine :&quot;</span><span class="p">,</span> <span class="n">skmine</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+This tutorial was tested with the following version of skmine : 0.0.9
+</pre></div></div>
+</div>
 <p>MDL based algorithms encode data according to a given codetable</p>
 <p>When calling <code class="docutils literal notranslate"><span class="pre">.fit</span></code>, we iteratively look for the codetable that compress the training data the best</p>
 <p><strong>When we are done with training our model, we can benefit from the refined codetable to make some predictions</strong></p>

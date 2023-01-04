@@ -199,7 +199,7 @@
 
 <span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
+<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">intersect2d</span><span class="p">,</span> <span class="n">sliding_window_view</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span>
@@ -556,7 +556,7 @@
     <span class="k">return</span> <span class="n">cands</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="SingleEventCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">SingleEventCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
+<div class="viewcode-block" id="SingleEventCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">SingleEventCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Miner periodic cycles, but in the scope of a single event</span>
 
@@ -659,7 +659,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">alpha_occurrences</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="PeriodicCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mining periodic cycles with a MDL Criterion</span>
 

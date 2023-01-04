@@ -263,10 +263,10 @@ usage of <a class="reference external" href="https://en.wikipedia.org/wiki/Minim
 <dl class="py class">
 <dt id="skmine.base.BaseMiner">
 <em class="property">class </em><code class="sig-prename descclassname">skmine.base.</code><code class="sig-name descname">BaseMiner</code><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all miners in scikit-mine compatible with BaseEstimator from scikit-learn</p>
+<dd><p>Base class for all miners in scikit-mine.</p>
 <dl class="py method">
 <dt id="skmine.base.BaseMiner.fit">
-<em class="property">abstract </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.fit" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit method to be implemented.</p>
 </dd></dl>
 
@@ -277,8 +277,49 @@ usage of <a class="reference external" href="https://en.wikipedia.org/wiki/Minim
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.base.BaseMiner.fit_discover">
-<code class="sig-name descname">fit_discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.fit_discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.fit_discover" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.base.BaseMiner.get_params">
+<code class="sig-name descname">get_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">deep</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.get_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get parameters for this estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>params</strong> – Parameter names mapped to their values.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>mapping of string to any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.base.BaseMiner.set_params">
+<code class="sig-name descname">set_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#BaseMiner.set_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.BaseMiner.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameters of this estimator.
+The method works on simple estimators as well as on nested objects
+(such as pipelines). The latter have parameters of the form
+<code class="docutils literal notranslate"><span class="pre">&lt;component&gt;__&lt;parameter&gt;</span></code> so that it’s possible to update each
+component of a nested object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**params</strong> (<em>dict</em>) – Estimator parameters.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>self</strong> – Estimator instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skmine.base.DiscovererMixin">
+<em class="property">class </em><code class="sig-prename descclassname">skmine.base.</code><code class="sig-name descname">DiscovererMixin</code><a class="reference internal" href="../_modules/skmine/base.html#DiscovererMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.DiscovererMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mixin for all pattern discovery models in scikit-mine</p>
+<dl class="py method">
+<dt id="skmine.base.DiscovererMixin.fit_discover">
+<code class="sig-name descname">fit_discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/base.html#DiscovererMixin.fit_discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.base.DiscovererMixin.fit_discover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit to data, the extract patterns</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -288,7 +329,7 @@ usage of <a class="reference external" href="https://en.wikipedia.org/wiki/Minim
 <dd class="field-even"><p>patterns discovered by a mining algorithm</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>pd.Dataframe</p>
+<dd class="field-odd"><p>pd.Series</p>
 </dd>
 </dl>
 </dd></dl>

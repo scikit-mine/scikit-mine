@@ -397,7 +397,7 @@
 <span class="sd">    &gt;&gt;&gt; from skmine.datasets.utils import describe</span>
 <span class="sd">    &gt;&gt;&gt; X, y = fetch_mushroom(return_y=True)</span>
 <span class="sd">    &gt;&gt;&gt; describe(X)[&#39;n_items&#39;]</span>
-<span class="sd">    119</span>
+<span class="sd">    117</span>
 <span class="sd">    &gt;&gt;&gt; y.value_counts()</span>
 <span class="sd">    0    4208</span>
 <span class="sd">    1    3916</span>
@@ -407,9 +407,9 @@
     <span class="k">if</span> <span class="n">return_y</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># 2 is edible, 1 is poisonous</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">mush</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="k">return</span> <span class="n">mush</span><span class="p">,</span> <span class="n">y</span>
-
-    <span class="k">return</span> <span class="n">mush</span></div>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mush</span></div>
 
 
 <div class="viewcode-block" id="fetch_pumsb"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fimi.fetch_pumsb">[docs]</a><span class="k">def</span> <span class="nf">fetch_pumsb</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -593,7 +593,8 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
-    <span class="k">return</span> <span class="n">iris</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">iris</span>
 
 
 <span class="k">def</span> <span class="nf">fetch_breast</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -632,7 +633,8 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">breast</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">breast</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
-    <span class="k">return</span> <span class="n">breast</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">breast</span>
 
 
 <span class="k">def</span> <span class="nf">fetch_tictactoe</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_y</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -672,7 +674,8 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">tictactoe</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">tictactoe</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
-    <span class="k">return</span> <span class="n">tictactoe</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tictactoe</span>
 </pre></div>
 
            </div>

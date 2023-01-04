@@ -13,7 +13,26 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "This tutorial was tested with the following version of skmine : 0.0.9\n"
+     ]
+    }
+   ],
+   "source": [
+    "import skmine\n",
+    "\n",
+    "print(\"This tutorial was tested with the following version of skmine :\", skmine.__version__)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
    "metadata": {},
    "outputs": [],
    "source": [
