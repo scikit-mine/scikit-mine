@@ -473,8 +473,8 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
 
         Returns
         -------
-        pd.Series
-            codetable containing patterns and ids of transactions in which they are used
+        pd.Dataframe
+            codetable containing patterns and their usages or ids of transactions in which they are used
         """
         check_is_fitted(self, "is_fitted_")
 
