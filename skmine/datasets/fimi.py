@@ -210,7 +210,7 @@ def fetch_mushroom(data_home=None, return_y=False):
     >>> from skmine.datasets.utils import describe
     >>> X, y = fetch_mushroom(return_y=True)
     >>> describe(X)['n_items']
-    119
+    117
     >>> y.value_counts()
     0    4208
     1    3916
@@ -220,9 +220,9 @@ def fetch_mushroom(data_home=None, return_y=False):
     if return_y:
         y = mush.str[0].replace(2, 0)  # 2 is edible, 1 is poisonous
         X = mush.str[1:]
-        return mush, y
-
-    return mush
+        return X, y
+    else:
+        return mush
 
 
 def fetch_pumsb(data_home=None):
@@ -406,7 +406,8 @@ def fetch_iris(data_home=None, return_y=False):
         y = iris.str[-1]
         X = iris.str[:-1]
         return X, y
-    return iris
+    else:
+        return iris
 
 
 def fetch_breast(data_home=None, return_y=False):
@@ -445,7 +446,8 @@ def fetch_breast(data_home=None, return_y=False):
         y = breast.str[-1]
         X = breast.str[:-1]
         return X, y
-    return breast
+    else:
+        return breast
 
 
 def fetch_tictactoe(data_home=None, return_y=False):
@@ -485,4 +487,5 @@ def fetch_tictactoe(data_home=None, return_y=False):
         y = tictactoe.str[-1]
         X = tictactoe.str[:-1]
         return X, y
-    return tictactoe
+    else:
+        return tictactoe

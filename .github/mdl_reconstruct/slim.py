@@ -18,9 +18,7 @@ if __name__ == "__main__":
     miners = [SLIM(pruning=False, max_time=5), SLIM(pruning=True, max_time=5)]
     for D in Ds:
         for miner in miners:
-            print(
-                f"RUN {type(miner)} RECONSTRUCTION ON {D.name} WITH PARAMS {miner.get_params()}"
-            )
+            print(f"RUN {type(miner)} RECONSTRUCTION ON {D.name} WITH PARAMS {miner.get_params()}")
             start = time.time()
             miner.fit(D)
             print(f"fitted in {time.time() - start} seconds")

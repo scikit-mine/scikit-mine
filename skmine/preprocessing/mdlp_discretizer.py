@@ -79,6 +79,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
         Evaluate vector y of size ``end`` - ``start``,
         given a ``cutpoint``
         """
+
         entropy1, k1 = get_entropy_nb_ones(y[start:cut_point])
         entropy2, k2 = get_entropy_nb_ones(y[cut_point:end])
         whole_entropy, k0 = get_entropy_nb_ones(y[start:end])
@@ -86,9 +87,7 @@ class MDLPVectDiscretizer(MDLOptimizer):
         N = end - start
 
         part1 = 1 / N * ((cut_point - start) * entropy1 + (end - cut_point) * entropy2)
-        delta = np.log2(pow(3, k0) - 2) - (
-            k0 * whole_entropy - k1 * entropy1 - k2 * entropy2
-        )
+        delta = np.log2(pow(3, k0) - 2) - (k0 * whole_entropy - k1 * entropy1 - k2 * entropy2)
 
         gain = whole_entropy - part1
 
@@ -181,10 +180,8 @@ class MDLPDiscretizer(BaseMiner):
     """
 
     def __init__(self, random_state=None, n_jobs=1):
-        self.cut_points_ = dict()
         self.random_state = random_state
         self.n_jobs = n_jobs
-        self.discretizers_ = []
 
     def fit(self, X, y):
         """fit the MLDP discretizer on an input matrix ``X``, given a label vector ``y``.
@@ -198,7 +195,11 @@ class MDLPDiscretizer(BaseMiner):
         y : np.ndarray of pd.Series of shape(n_samples,)
             The label vector used to discretize ``X``
         """
+        self.cut_points_ = dict()
+        self.discretizers_ = []
+
         assert y is not None and np.issubdtype(y.dtype, np.integer)
+
         random_state = _check_random_state(self.random_state)
         permutation = random_state.permutation(len(X))
         _X = X.values if isinstance(X, pd.DataFrame) else X
@@ -220,9 +221,13 @@ class MDLPDiscretizer(BaseMiner):
         else:
             self.cut_points_ = dict(enumerate(cut_points))
 
+        # self.is_fitted_ = True
+
         return self
 
     def discover(self):
+        # check_is_fitted(self, "is_fitted_")
+
         """user-friendly view on cut points"""
         return pd.Series(self.cut_points_, dtype=object)
 
@@ -231,6 +236,8 @@ class MDLPDiscretizer(BaseMiner):
 
         This applies the cutpoints their respective columns
         """
+        # check_is_fitted(self, "is_fitted_")
+
         if isinstance(X, pd.DataFrame) and not set(self.cut_points_) == set(X.columns):
             raise ValueError(f"X columns should be {self.cut_points_.keys()}")
         _X = X.values if isinstance(X, pd.DataFrame) else X
