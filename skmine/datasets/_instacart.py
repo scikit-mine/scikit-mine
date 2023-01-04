@@ -15,8 +15,8 @@ try:
 except ImportError:
     LXML_INSTALLED = False
 
-from ._base import get_data_home
-from .conf import urlopen
+from skmine.datasets._base import get_data_home # TODO . relative import
+from skmine.datasets.conf import urlopen
 
 _IMPORT_MSG = """
 lxml is required to install the instacart dataset.
@@ -141,3 +141,13 @@ def _download(data_home):
         with open(tar_filename, "wb") as f:
             f.write(targz_data)
     return tar_filename
+
+
+if __name__ == '__main__':
+    # data = fetch_instacart()
+    data_link = "https://www.kaggle.com/c/instacart-market-basket-analysis/data"
+    tree = html.fromstring(urlopen(data_link).read())
+    buttons = tree.xpath("//*[contains(@class, 'ic-btn ic-btn-success ic-btn-lg')]")
+    download_link = buttons[0].attrib["href"]
+    instacart_filedata = urlopen(download_link)
+    targz_data = instacart_filedata.read()

@@ -8,7 +8,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: 3.7
+          python-version: 3.x
       - name: Install external dependencies
         run: pip install scikit-learn
       - name: check compatibility

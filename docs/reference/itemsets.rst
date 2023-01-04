@@ -10,6 +10,9 @@ SLIM
 -------
 .. autoclass:: skmine.itemsets.SLIM
 
+SLIM Classifier
+-------
+.. autoclass:: skmine.itemsets.slim_classifier.SlimClassifier
 
 LCM
 -------

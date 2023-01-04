@@ -1,8 +1,8 @@
 name: publish on pypi
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
 jobs:
   run:
     runs-on: ubuntu-latest

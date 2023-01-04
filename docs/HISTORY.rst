@@ -2,6 +2,16 @@
 History
 =======
 
+
+0.0.8 (2022-11-28)
+------------------
+* Support python up to 3.11
+* add itemset length option for LCM
+
+0.0.7 (2022-11-04)
+------------------
+* Fix and improve LCM
+
 0.0.6 (2021-05-12)
 ------------------
 * SLIM has a k-parameters
