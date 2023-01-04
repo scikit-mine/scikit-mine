@@ -4,15 +4,17 @@ All datasets are available here : `http://fimi.uantwerpen.be/data/`
 """
 import os
 import wget
+import gzip
 
 import pandas as pd
 
 from ._base import get_data_home
 
-BASE_URL = "http://fimi.uantwerpen.be/data/"
+BASE_URL_FIMI = "http://fimi.uantwerpen.be/data/"
+BASE_URL_CGI = "https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/"
 
 
-def _read_dat(filepath, int_values=True, separator=' '):
+def _read_dat(filepath, int_values=True, separator=' ', zip=False):
     """Read a local dataset file whose separator can be customized and whose values are either integers or strings.
 
     Parameters
@@ -31,24 +33,24 @@ def _read_dat(filepath, int_values=True, separator=' '):
     list
         Return a transaction list composed for each transaction of a list of items
     """
-    with open(filepath, 'r') as f:
-        try:
-            lines = f.read().splitlines()
-        except UnicodeDecodeError:
-            print(f"The file {filepath} is already present in your data_home but it is a binary file, it must be "
-                  f"deleted.")
-            raise
+    try:
+        if zip:
+            with gzip.open(filepath, 'rt') as f:
+                lines = f.read().splitlines()
+        else:
+            with open(filepath, 'r') as f:
+                lines = f.read().splitlines()
+    except UnicodeDecodeError:
+        print(f"The file {filepath} is already present in your data_home but it is a binary file, it must be "
+              f"deleted.")
+        raise
 
-    transactions = []
-    for line in lines:
-        tmp = line.rstrip()
-        tmp = list(map(int, tmp.split(separator))) if int_values else tmp.split(separator)
-        transactions.append(tmp)
+    transactions = [[int(item) if int_values else item for item in line.rstrip().split(separator)] for line in lines]
 
     return transactions
 
 
-def fetch_file(filepath, separator=' '):
+def fetch_file(filepath, separator=' ', int_values=False):
     """Loader for files in FIMI format
 
     Parameters
@@ -59,32 +61,40 @@ def fetch_file(filepath, separator=' '):
     separator : str
         Indicate a custom separator between the items. By default, it is a space.
 
+    int_values : bool, default=False
+        Specify if the items in the file are all integers. If not, then the items are considered as strings.
+        With integers, the algorithms are more efficient.
+
     Returns
     -------
     pd.Series
         Transactions from the requested dataset,
         as an in-memory pandas Series
     """
-    transactions = _read_dat(filepath, int_values=False, separator=separator)
+    transactions = _read_dat(filepath, int_values=int_values, separator=separator)
     s = pd.Series(transactions, name=os.path.splitext(os.path.basename(filepath))[0])
 
     return s
 
 
-def fetch_any(filename, data_home=None):
-    """Base loader for all datasets from the FIMI repository
+def fetch_any(filename, base_url=BASE_URL_FIMI, data_home=None):
+    """Base loader for all datasets from the FIMI and CGI repository
     Each unique transaction will be represented as a Python list in the resulting pandas Series
 
     see: http://fimi.uantwerpen.be/data/
+    https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/dataSets.html
 
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data/` subfolders.
 
     filename : str
         Name of the file to fetch
+
+    base_url : str
+        URL indicating where to fetch the dataset
 
     Returns
     -------
@@ -96,11 +106,11 @@ def fetch_any(filename, data_home=None):
     filepath = os.path.join(data_home, filename)
     name, _ = os.path.splitext(filename)
     if filename in os.listdir(data_home):  # already fetched
-        it = _read_dat(filepath)
+        it = _read_dat(filepath, zip=True) if base_url == BASE_URL_CGI else _read_dat(filepath)
     else:  # not fetched yet
-        url = BASE_URL + filename
+        url = base_url + filename
         wget.download(url, filepath)
-        it = _read_dat(filepath)
+        it = _read_dat(filepath, zip=True) if base_url == BASE_URL_CGI else _read_dat(filepath)
 
     s = pd.Series(it, name=name)
     return s
@@ -119,8 +129,8 @@ def fetch_chess(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -128,7 +138,7 @@ def fetch_chess(data_home=None):
         Transactions from the chess dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("chess.dat", data_home=data_home)
+    return fetch_any("chess.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
 def fetch_connect(data_home=None):
@@ -144,8 +154,8 @@ def fetch_connect(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -153,10 +163,10 @@ def fetch_connect(data_home=None):
         Transactions from the connect dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("connect.dat", data_home=data_home)
+    return fetch_any("connect.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
-def fetch_mushroom(data_home=None, return_mush_y=False):
+def fetch_mushroom(data_home=None, return_y=False):
     """Fetch and return the mushroom dataset (Frequent Itemset Mining)
 
     The Mushroom data set includes descriptions of hypothetical samples corresponding
@@ -178,10 +188,10 @@ def fetch_mushroom(data_home=None, return_mush_y=False):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
-    return_mush_y: bool, default=False.
+    return_y: bool, default=False.
         If True, returns a tuple for both the data and the associated labels
         (0 for edible, 1 for poisonous)
 
@@ -192,27 +202,27 @@ def fetch_mushroom(data_home=None, return_mush_y=False):
         Each unique transaction is represented as a Python list.
 
     (mush, y) : tuple
-        if ``return_D_y`` is True
+        if ``return_y`` is True
 
     Examples
     --------
     >>> from skmine.datasets.fimi import fetch_mushroom
     >>> from skmine.datasets.utils import describe
-    >>> mush, y = fetch_mushroom(return_mush_y=True)
-    >>> describe(mush)['n_items']
-    119
+    >>> X, y = fetch_mushroom(return_y=True)
+    >>> describe(X)['n_items']
+    117
     >>> y.value_counts()
     0    4208
     1    3916
     Name: mushroom, dtype: int64
     """
-    mush = fetch_any("mushroom.dat", data_home=data_home)
-    if return_mush_y:
-        y = mush.str[0]
-        y = y.replace(2, 0)  # 2 is edible, 1 is poisonous
-        return mush, y
-
-    return mush
+    mush = fetch_any("mushroom.dat", base_url=BASE_URL_FIMI, data_home=data_home)
+    if return_y:
+        y = mush.str[0].replace(2, 0)  # 2 is edible, 1 is poisonous
+        X = mush.str[1:]
+        return X, y
+    else:
+        return mush
 
 
 def fetch_pumsb(data_home=None):
@@ -230,8 +240,8 @@ def fetch_pumsb(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -239,7 +249,7 @@ def fetch_pumsb(data_home=None):
         Transactions from the pumsb dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("pumsb.dat", data_home=data_home)
+    return fetch_any("pumsb.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
 def fetch_pumsb_star(data_home=None):
@@ -255,8 +265,8 @@ def fetch_pumsb_star(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -264,7 +274,7 @@ def fetch_pumsb_star(data_home=None):
         Transactions from the pumsb_star dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("pumsb_star.dat", data_home=data_home)
+    return fetch_any("pumsb_star.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
 def fetch_kosarak(data_home=None):
@@ -282,8 +292,8 @@ def fetch_kosarak(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -291,7 +301,7 @@ def fetch_kosarak(data_home=None):
         Transactions from the kosarak dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("kosarak.dat", data_home=data_home)
+    return fetch_any("kosarak.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
 def fetch_retail(data_home=None):
@@ -318,8 +328,8 @@ def fetch_retail(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default,
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -327,7 +337,7 @@ def fetch_retail(data_home=None):
         Transactions from the retail dataset, as an in-memory pandas Series.
         Each unique transaction is represented as a Python list.
     """
-    return fetch_any("retail.dat", data_home=data_home)
+    return fetch_any("retail.dat", base_url=BASE_URL_FIMI, data_home=data_home)
 
 
 def fetch_accidents(data_home=None):
@@ -347,8 +357,8 @@ def fetch_accidents(data_home=None):
     Parameters
     ----------
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `~/scikit_mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
 
     Returns
     -------
@@ -357,4 +367,125 @@ def fetch_accidents(data_home=None):
         Each unique transaction is represented as a Python list.
 
     """
-    return fetch_any("accidents.dat", data_home=data_home)
+    return fetch_any("accidents.dat", base_url=BASE_URL_FIMI, data_home=data_home)
+
+
+def fetch_iris(data_home=None, return_y=False):
+    """Fetch and return the discretized iris dataset (Frequent Itemset Mining)
+
+    This dataset corresponds to the iris dataset which has been discretized into 19 items.
+    The last column (items: 17, 18, 19) corresponds to the targets and can be useful for classification.
+
+    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#iris
+
+    ====================   ==============
+    Nb of items                        19
+    Nb of transactions                150
+    Avg transaction size                5
+    Density                         26.32
+    ====================   ==============
+
+    Parameters
+    ----------
+    data_home : optional, default: None
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
+
+    Returns
+    -------
+    pd.Series
+        Transactions from the iris dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
+
+    """
+    iris = fetch_any("iris.D19.N150.C3.num.gz", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = iris.str[-1]
+        X = iris.str[:-1]
+        return X, y
+    else:
+        return iris
+
+
+def fetch_breast(data_home=None, return_y=False):
+    """Fetch and return the discretized breast dataset (Frequent Itemset Mining)
+
+    This dataset corresponds to the breast dataset which has been discretized into 20 items.
+    The last column (items: 19, 20) corresponds to the targets and can be useful for classification.
+
+    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#breast
+
+    ====================   ==============
+    Nb of items                        20
+    Nb of transactions                699
+    Avg transaction size             9.98
+    Density                            50
+    ====================   ==============
+
+    Parameters
+    ----------
+    data_home : optional, default: None
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
+
+    Returns
+    -------
+    pd.Series
+        Transactions from the breast dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
+
+    """
+    breast = fetch_any("breast.D20.N699.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = breast.str[-1]
+        X = breast.str[:-1]
+        return X, y
+    else:
+        return breast
+
+
+def fetch_tictactoe(data_home=None, return_y=False):
+    """Fetch and return the discretized tictactoe dataset (Frequent Itemset Mining)
+
+    This dataset corresponds to the tictactoe dataset which has been discretized into 29 items.
+    The last column (items: 28, 29) corresponds to the targets and can be useful for classification.
+
+    see: https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/exmpleDNnotes.html#tictactoe
+
+    ====================   ==============
+    Nb of items                        29
+    Nb of transactions                958
+    Nb of transactions                699
+    Avg transaction size               10
+    Density                         34.48
+    ====================   ==============
+
+    Parameters
+    ----------
+    data_home : optional, default: None
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `~/scikit_mine_data`.
+
+    return_y : bool, default: False
+        If True, returns a tuple for both the data and the associated labels.
+
+    Returns
+    -------
+    pd.Series
+        Transactions from the breast dataset, as an in-memory pandas Series.
+        Each unique transaction is represented as a Python list.
+
+    """
+    tictactoe = fetch_any("ticTacToe.D29.N958.C2.num", base_url=BASE_URL_CGI, data_home=data_home)
+    if return_y:
+        y = tictactoe.str[-1]
+        X = tictactoe.str[:-1]
+        return X, y
+    else:
+        return tictactoe

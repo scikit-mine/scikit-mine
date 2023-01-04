@@ -16,7 +16,8 @@ class CodeTable:
         It's composed by the non singleton pattern and their information (usage, ports) who represented by a row
         And the singleton pattern stored in a dictionary if there is one.
 
-        The separation between singleton and non-singleton pattern make easily their treatments and reduces the execution time.
+        The separation between singleton and non-singleton pattern make easily their treatments and reduces the
+        execution time.
 
         Parameters
         ----------

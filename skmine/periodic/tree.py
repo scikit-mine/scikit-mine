@@ -16,7 +16,7 @@ import pandas as pd
 from sortedcontainers import SortedKeyList
 from pyroaring import BitMap as Bitmap
 
-from ..base import BaseMiner, DiscovererMixin, InteractiveMiner
+from ..base import BaseMiner, InteractiveMiner
 from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
@@ -519,7 +519,7 @@ def greedy_cover(candidates: List[Tree], D, dS, k=10, **event_frequencies):
     return big_P
 
 
-class PeriodicPatternMiner(BaseMiner, InteractiveMiner, DiscovererMixin):
+class PeriodicPatternMiner(BaseMiner, InteractiveMiner):
     """
     Mining Periodic Pattern with a MDL criterion
 

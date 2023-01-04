@@ -6,7 +6,7 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 # Authors: Rémi Adon <remi.adon@gmail.com>
 #          Luis Galárraga <galarraga@luisgalarraga.de>
 #          Hermann Courteille <hermann.courteille@irisa.fr>
-#          Cyril Regan <cyril.regan@irisa.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
 #          Thomas Betton <thomas.betton@irisa.fr>
 #
 # License: BSD 3 clause
@@ -66,12 +66,12 @@ class LCM(BaseMiner, DiscovererMixin):
     >>> lcm = LCM(min_supp=2000)
     >>> patterns = lcm.fit_discover(chess)
     >>> patterns.head()
-        itemset support
-    0      [58]    3195
-    1      [52]    3185
-    2  [58, 52]    3184
-    3      [29]    3181
-    4  [58, 29]    3180
+        itemset  support
+    0      [58]     3195
+    1      [52]     3185
+    2  [52, 58]     3184
+    3      [29]     3181
+    4  [29, 58]     3180
     >>> patterns[patterns.itemset.map(len) > 3]  # doctest: +SKIP
     """
 
@@ -98,6 +98,9 @@ class LCM(BaseMiner, DiscovererMixin):
         D: pd.Series or iterable
             a transactional database. All entries in this D should be lists.
             If D is a pandas.Series, then `(D.map(type) == list).all()` should return `True`
+
+        y: Ignored
+            Not used, present here for API consistency by convention.
 
         Raises
         ------
@@ -132,7 +135,7 @@ class LCM(BaseMiner, DiscovererMixin):
 
         return self  # for call .fit().discover() in DiscovererMixin()
 
-    def discover(self, *, return_tids=False, lexicographic_order=False, max_length=-1, out=None):
+    def discover(self, *, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
@@ -146,7 +149,7 @@ class LCM(BaseMiner, DiscovererMixin):
             Either to return transaction ids along with itemset.
             Default to False, will return supports instead
 
-        lexicographic_order: bool, default=False
+        lexicographic_order: bool, default=True
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
         max_length: int, default=-1 Maximum length of an itemset. By default, -1 means that LCM returns itemsets of
@@ -179,18 +182,17 @@ class LCM(BaseMiner, DiscovererMixin):
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
         >>> LCM(min_supp=2).fit_discover(D, lexicographic_order=True)
-             itemset support
-        0     [2, 5]       3
-        1  [2, 3, 5]       2
+             itemset  support
+        0     [2, 5]        3
+        1  [2, 3, 5]        2
         >>> LCM(min_supp=2).fit_discover(D, return_tids=True)
-             itemset support       tids
-        0     [2, 5]       3  (0, 1, 2)
-        1  [2, 5, 3]       2     (0, 1)
+             itemset  support       tids
+        0     [2, 5]        3  (0, 1, 2)
+        1  [2, 3, 5]        2     (0, 1)
         """
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
         self.max_length = max_length
-
         if out is None:  # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=None) for item, tids in
@@ -198,8 +200,8 @@ class LCM(BaseMiner, DiscovererMixin):
             )  # dfs is a list of dataframe
             # make sure we have something to concat
             columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
-            dfs.append(pd.DataFrame(columns=columns))
-            df = pd.concat(dfs, axis=0, ignore_index=True)
+            df = pd.concat([pd.DataFrame(columns=columns)] + dfs, axis=0, ignore_index=True)
+            df["support"] = pd.to_numeric(df["support"])
 
             return df
 

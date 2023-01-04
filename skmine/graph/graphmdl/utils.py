@@ -585,7 +585,7 @@ def draw_graph(g: Graph):
     pos = nx.spring_layout(g, seed=7)
     edge_labels = dict([((u, v,), d['label']) for u, v, d in g.edges(data=True)])
     node_labels = dict([(u, d['label']) for u, d in g.nodes(data=True) if 'label' in d])
-    nx.draw(g, pos, with_labels=True)
+    nx.draw_networkx(g, pos, with_labels=True)
     nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels, font_color="red", font_weight="bold", font_size=14)
     nx.draw_networkx_labels(g, pos, node_labels, font_color="red", font_weight="bold", font_size=14)
 

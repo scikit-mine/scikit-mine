@@ -60,11 +60,10 @@ class BaseMiner(ABC):
         # to represent
         init_signature = inspect.signature(init)
         # Consider the constructor parameters excluding 'self'
-        parameters = [
-            p
-            for p in init_signature.parameters.values()
-            if p.name != "self" and p.kind != p.VAR_KEYWORD
-        ]
+        parameters = [p
+                      for p in init_signature.parameters.values()
+                      if p.name != "self" and p.kind != p.VAR_KEYWORD
+                      ]
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
 
@@ -108,12 +107,9 @@ class BaseMiner(ABC):
 
         for key, value in params.items():
             if key not in valid_params:
-                raise ValueError(
-                    "Invalid parameter %s for estimator %s. "
-                    "Check the list of available parameters "
-                    "with `estimator.get_params().keys()`." % (key, self)
-                )
-
+                raise ValueError("Invalid parameter %s for estimator %s. Check the list of available parameters "
+                                 "with `estimator.get_params().keys()`." % (key, self)
+                                 )
             setattr(self, key, value)
             valid_params[key] = value
 
@@ -138,14 +134,15 @@ class DiscovererMixin:
         """
         if y is None:
             return self.fit(D).discover(**kwargs)
-        return self.fit(D, y=y).discover(**kwargs)
+        else:
+            return self.fit(D, y=y).discover(**kwargs)
 
 
 class TransformerMixin:
     """Base Mixin for transformers in scikit-mine"""
 
     def fit_transform(self, X, y=None):
-        "fit on X and y, then transform X"
+        """fit on X and y, then transform X"""
         return self.fit(X, y).transform(X)
 
     decision_function = None
@@ -193,17 +190,15 @@ class MDLOptimizer(ABC):
             usage of `(two-part) crude MDL
             <https://en.wikipedia.org/wiki/Minimum_description_length#Two-Part_Codes>`_.
         """
-        return (
-            0,
-            0,
-        )
+        return (0, 0,)
 
     def _repr_html_(self):
         s = self.discover()  # call discover with default parameters
         df = s.to_frame(name="usage")
         if not df.empty:
             return df._repr_html_()  # pylint: disable=protected-access
-        return repr(self)
+        else:
+            return repr(self)
 
 
 class InteractiveMiner(ABC):

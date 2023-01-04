@@ -20,8 +20,8 @@ import skmine
 
 # -- Project information -----------------------------------------------------
 project = 'scikit-mine'
-copyright = '2020, Rémi Adon'
-author = 'Rémi Adon'
+copyright = '2022, scikit-mine team'
+author = 'scikit-mine team'
 
 # The full version
 parsed_version = parse(skmine.__version__)
@@ -107,9 +107,7 @@ html_static_path = ['_static']
 
 html_theme = 'sphinx_rtd_theme'
 html_logo = 'skmine_logo.png'
-html_theme_options = {
-    'logo_only': True
-}
+html_theme_options = {'logo_only': True}
 html_scaled_image_link = False
 
 nbsphinx_execute = 'always'

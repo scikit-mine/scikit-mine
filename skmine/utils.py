@@ -21,17 +21,13 @@ def _check_random_state(seed):
         return np.random.RandomState(seed)
     if isinstance(seed, np.random.RandomState):
         return seed
-    raise ValueError(
-        f"{seed} cannot be used to seed a numpy.random.RandomState instance"
-    )
+    raise ValueError(f"{seed} cannot be used to seed a numpy.random.RandomState instance")
 
 
 def _check_min_supp(min_supp, accept_absolute=True):
     if isinstance(min_supp, int):
         if not accept_absolute:
-            raise ValueError(
-                "Absolute support is prohibited, please provide a float value between 0 and 1"
-            )
+            raise ValueError("Absolute support is prohibited, please provide a float value between 0 and 1")
         if min_supp < 1:
             raise ValueError("Minimum support must be strictly positive")
     elif isinstance(min_supp, float):
@@ -187,15 +183,15 @@ def intersect2d(ar1, ar2, return_indices=True):
     x, y = ar1[x_ind], ar2[y_ind]
     xy_where = np.argwhere((x == y).all(axis=1)).reshape(-1)
     x_ind = x_ind[xy_where]
+
     if return_indices:
         y_ind = y_ind[xy_where]
         return ar1[x_ind], x_ind, y_ind
-    return ar1[x_ind]
+    else:
+        return ar1[x_ind]
 
 
-def _sliding_window_view_dispatcher(
-    x, window_shape, axis=None, *, subok=None, writeable=None
-):
+def _sliding_window_view_dispatcher(x, window_shape, axis=None, *, subok=None, writeable=None):
     return (x,)
 
 
@@ -291,20 +287,13 @@ def sliding_window_view(x, window_shape, axis=None, *, subok=False, writeable=Fa
     if axis is None:
         axis = tuple(range(x.ndim))
         if len(window_shape) != len(axis):
-            raise ValueError(
-                f"Since axis is `None`, must provide "
-                f"window_shape for all dimensions of `x`; "
-                f"got {len(window_shape)} window_shape elements "
-                f"and `x.ndim` is {x.ndim}."
-            )
+            raise ValueError(f"Since axis is `None`, must provide window_shape for all dimensions of `x`; "
+                             f"got {len(window_shape)} window_shape elements and `x.ndim` is {x.ndim}.")
     else:
         axis = normalize_axis_tuple(axis, x.ndim, allow_duplicate=True)
         if len(window_shape) != len(axis):
-            raise ValueError(
-                f"Must provide matching length window_shape and "
-                f"axis; got {len(window_shape)} window_shape "
-                f"elements and {len(axis)} axes elements."
-            )
+            raise ValueError(f"Must provide matching length window_shape and "
+                             f"axis; got {len(window_shape)} window_shape elements and {len(axis)} axes elements.")
 
     out_strides = x.strides + tuple(x.strides[ax] for ax in axis)
 
@@ -315,9 +304,7 @@ def sliding_window_view(x, window_shape, axis=None, *, subok=False, writeable=Fa
             raise ValueError("window shape cannot be larger than input array shape")
         x_shape_trimmed[ax] -= dim - 1
     out_shape = tuple(x_shape_trimmed) + window_shape
-    return as_strided(
-        x, strides=out_strides, shape=out_shape, subok=subok, writeable=writeable
-    )
+    return as_strided(x, strides=out_strides, shape=out_shape, subok=subok, writeable=writeable)
 
 
 def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
@@ -331,7 +318,7 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
     """
     if not candidates and not excluded and clique is not None and len(clique) > 2:
         yield [_ for _ in clique]
-        return
+        return None
 
     # pass None as default arg instead of dict()
     # fix collisions in pytest, really obscure
@@ -339,7 +326,7 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
     excluded = excluded or dict()
 
     if depth > 20:
-        return
+        return None
 
     for node, neighbours in list(candidates.items()):
         new_clique = {**{node: neighbours}, **clique}
@@ -350,4 +337,3 @@ def bron_kerbosch(candidates: dict, clique=None, excluded=None, depth=0):
 
         del candidates[node]
         excluded[node] = neighbours
-

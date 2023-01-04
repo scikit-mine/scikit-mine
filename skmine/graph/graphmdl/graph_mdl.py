@@ -27,11 +27,12 @@ class GraphMDL(BaseMiner):
 
         References
         ----------
-         F. Bariatti, "Mining Tractable Sets of Graph Patterns with the Minimum Description Length Principle", PhD thesis, Université de Rennes 1, 2021. Available: https://hal.inria.fr/tel-03523742
+         F. Bariatti, "Mining Tractable Sets of Graph Patterns with the Minimum Description Length Principle",
+         PhD thesis, Université de Rennes 1, 2021. Available: https://hal.inria.fr/tel-03523742
 
-         F. Bariatti, P. Cellier, and S. Ferré. "GraphMDL+ : interleaving the generation and MDL-based selection of graph patterns", in Proceedings of the 36th Annual ACM Symposium on Applied Computing, Mar. 2021, pp. 355–363. doi: 10.1145/3412841.3441917.
-
-
+         F. Bariatti, P. Cellier, and S. Ferré. "GraphMDL+ : interleaving the generation and MDL-based selection of
+         graph patterns", in Proceedings of the 36th Annual ACM Symposium on Applied Computing, Mar. 2021, pp. 355–363.
+         doi: 10.1145/3412841.3441917.
     """
 
     def __init__(self):
