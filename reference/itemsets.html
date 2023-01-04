@@ -583,9 +583,8 @@ a transactional dataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>min_supp</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=0.2</em>) – The minimum support for itemsets to be rendered in the output
-Either an int representing the absolute support, or a float for relative support
-Default to 0.2 (20%)</p></li>
+<li><p><strong>min_supp</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default=0.2</em>) – The minimum support for itemsets to be rendered in the output either an int representing the absolute support,
+or a float for relative support. By Default to 0.2 (20%)</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>default=1 The number of jobs to use for the computation. Each single item is attributed a job to</em>) – discover potential itemsets, considering this item as a root in the search space. <strong>Processes are preferred</strong>
 over threads. <strong>Carefully adjust the number of jobs</strong> otherwise the results may be corrupted especially if you
 have the following warning: UserWarning: A worker stopped while some jobs were given to the executor.</p></li>
