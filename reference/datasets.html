@@ -713,55 +713,6 @@ Downloading preprocessd dataset from zenodo.org is something we consider.</p>
 </section>
 <section id="instacart-market-basket-analysis">
 <h2>Instacart Market Basket Analysis<a class="headerlink" href="#instacart-market-basket-analysis" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="skmine.datasets.fetch_instacart">
-<code class="sig-prename descclassname">skmine.datasets.</code><code class="sig-name descname">fetch_instacart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_home</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/datasets/_instacart.html#fetch_instacart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.datasets.fetch_instacart" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetch/load function for the instacart dataset</p>
-<p>see: <a class="reference external" href="https://www.instacart.com/datasets/grocery-shopping-2017">https://www.instacart.com/datasets/grocery-shopping-2017</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
-all scikit-mine data is stored in <cite>~/scikit_mine_data/</cite> subfolders.</p>
-</dd>
-</dl>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets">1</span></dt>
-<dd><p>“The Instacart Online Grocery Shopping Dataset 2017”
-Accessed from <a class="reference external" href="https://www.instacart.com/datasets/grocery-shopping-2017">https://www.instacart.com/datasets/grocery-shopping-2017</a></p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>This returns instacart transactions as a pd.Series, note that you still have access to all
-other data downloaded in your <code class="docutils literal notranslate"><span class="pre">data_home</span></code> path</p>
-<p>As instacart is a big dataset, <code class="docutils literal notranslate"><span class="pre">fetch_instacart</span></code> is designed to make the less computation
-as possible. If you already have downloaded the instacart dataset, just place
-<cite>instacart.tar.gz</cite> in your <code class="docutils literal notranslate"><span class="pre">data_home</span></code>, or pass a <code class="docutils literal notranslate"><span class="pre">data_home</span></code> argument
-and <code class="docutils literal notranslate"><span class="pre">fetch_instacart</span></code> will start from there.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ImportError</strong> – In case download is necessary and the <code class="docutils literal notranslate"><span class="pre">lxml</span></code> package is not installed.</p>
-</dd>
-</dl>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#skmine.datasets.get_data_home" title="skmine.datasets.get_data_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_data_home</span></code></a></p>
-</div>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">fetch_instacart</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">fetch_instacart</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="s1">&#39;~/scikit_mine_data/&#39;</span><span class="p">)</span>  
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Customers orders. Each unique transaction will be represented as a Python list</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>pd.Series</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="synthetic-data-generation">
 <h2>Synthetic data generation<a class="headerlink" href="#synthetic-data-generation" title="Permalink to this headline">¶</a></h2>
@@ -785,7 +736,7 @@ for reproducible output across multiple function calls.</p></li>
 </dl>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span></dt>
+<dt class="label" id="id2"><span class="brackets">1</span></dt>
 <dd><p>F. Flouvat, F. De Marchi, JM. Petit
 “A new classification of datasets for frequent itemsets”, 2009</p>
 </dd>
