@@ -135,6 +135,9 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         self.max_time = max_time
         self.items = items
 
+    # def __getstate__(self):
+    #     out = self.__dict__.copy()
+    #     return out
     def fit(self, X, y=None):  # pylint:disable = too-many-locals
         """fit SLIM on a transactional dataset
 
@@ -152,7 +155,6 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
             Not used, present here for API consistency by convention.
         """
         self.starting_codes_ = None
-        self.standard_codetable_ = None
         self.codetable_ = SortedDict()
         self.model_size_ = None  # L(CT|D)
         self.data_size_ = None  # L(D|CT)
@@ -581,6 +583,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         else:
             # compute tids for each item in Bitmap
             item_to_tids = _to_vertical(D)
+
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t

@@ -19,7 +19,8 @@ import shutil
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
-
+from sklearn.utils.validation import check_array
+import sklearn.utils.estimator_checks
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
 
@@ -75,17 +76,14 @@ class LCM(BaseMiner, DiscovererMixin):
     """
 
     def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
-        _check_min_supp(min_supp)
         self.min_supp = min_supp  # cf docstring: minimum support provided by user
-        self.max_length = -1  # maximum length of an itemset
-        self.verbose = verbose
-        self._min_supp = _check_min_supp(self.min_supp)
-        self.item_to_tids = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this
-        # item
-        self.ord_item_freq = []  # list of ordered item by decreasing frequency
         self.n_jobs = n_jobs  # number of jobs launched by joblib
-        self.lexicographic_order = False  # if true, the items of each itemset are returned in lexicographical order
-        self.return_tids = False
+        # self.max_length = -1  # maximum length of an itemset
+        self.verbose = verbose
+        # self.min_supp_ = _check_min_supp(self.min_supp)
+        # self.item_to_tids = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this
+        # item
+        # self.ord_item_freq = []  # list of ordered item by decreasing frequency
 
     def fit(self, D, y=None):
         """
@@ -107,6 +105,12 @@ class LCM(BaseMiner, DiscovererMixin):
             if any entry in D is not iterable itself OR if any item is not **hashable**
             OR if all items are not **comparable** with each other.
         """
+        # print(type(D))
+        D = check_array(D, accept_sparse=False, ensure_2d=False, ensure_min_samples=1, dtype='numeric',
+                        force_all_finite=True) #[int, str])
+        # print("OHOHHHH\n", D)
+        # print(type(D), D.shape)
+        # print("after\n", D)
         n_transactions_ = 0
         item_to_tids_ = defaultdict(Bitmap)
         for transaction in D:
@@ -114,10 +118,13 @@ class LCM(BaseMiner, DiscovererMixin):
                 item_to_tids_[item].add(n_transactions_)
             n_transactions_ += 1
 
+        _check_min_supp(self.min_supp)
         if isinstance(self.min_supp, float):  # make support absolute if needed
-            self._min_supp = self.min_supp * n_transactions_
+            self.min_supp_ = self.min_supp * n_transactions_
+        else:
+            self.min_supp_ = self.min_supp
 
-        low_supp_items = [k for k, v in item_to_tids_.items() if len(v) < self._min_supp]
+        low_supp_items = [k for k, v in item_to_tids_.items() if len(v) < self.min_supp_]
         for item in low_supp_items:  # drop low freq items
             del item_to_tids_[item]
 
@@ -129,9 +136,9 @@ class LCM(BaseMiner, DiscovererMixin):
             ord_item_freq.append(item)
             ord_freq_dic[idx] = tid  # rename most frequent item like cat by 0, second  dog by 1
 
-        self.item_to_tids = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}
-        self.ord_item_freq = ord_item_freq  # [cat, dog, '0', ...]
-
+        self.item_to_tids_ = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}
+        self.ord_item_freq_ = ord_item_freq  # [cat, dog, '0', ...]
+        self.n_features_in_ = D.shape[-1]
         return self  # for call .fit().discover() in DiscovererMixin()
 
     def discover(self, *, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
@@ -192,12 +199,11 @@ class LCM(BaseMiner, DiscovererMixin):
         self.lexicographic_order = lexicographic_order
         self.return_tids = return_tids
         self.max_length = max_length
+
         if out is None:  # store results in memory
-            dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(self._explore_root)(item, tids, root_file=None) for item, tids in
-                list(self.item_to_tids.items())
-            )  # dfs is a list of dataframe
-            # make sure we have something to concat
+            dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(delayed(self._explore_root)(item, tids, root_file=None)
+                                                                   for item, tids in list(self.item_to_tids_.items()))
+            # dfs is a list of dataframe    # make sure we have something to concat
             columns = ["itemset", "support"] if not self.return_tids else ["itemset", "support", "tids"]
             df = pd.concat([pd.DataFrame(columns=columns)] + dfs, axis=0, ignore_index=True)
             df["support"] = pd.to_numeric(df["support"])
@@ -211,14 +217,11 @@ class LCM(BaseMiner, DiscovererMixin):
             os.mkdir(temp_dir)  # create dir TEMP_dir
 
             Parallel(n_jobs=self.n_jobs, prefer="processes")(
-                delayed(self._explore_root)(
-                    item, tids, root_file=f"{temp_dir}/root{k}.dat") for k, (
-                    item, tids) in enumerate(list(self.item_to_tids.items()))
-            )
-
+                delayed(self._explore_root)(item, tids, root_file=f"{temp_dir}/root{k}.dat")
+                for k, (item, tids) in enumerate(list(self.item_to_tids_.items())))
+            print("OOOOO outfile ", out)
             with open(out, 'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
-                for fname in [f"{temp_dir}/root{k}.dat" for k in
-                              range(len(list(self.item_to_tids.items())))]:  # all items root files
+                for fname in [f"{temp_dir}/root{k}.dat" for k in range(len(list(self.item_to_tids_.items())))]:  # all items root files
                     with open(fname) as infile:
                         for line in infile:
                             if line.strip():  # to skip empty lines
@@ -251,7 +254,7 @@ class LCM(BaseMiner, DiscovererMixin):
         # project and reduce DB w.r.t P
         cp = (
             item
-            for item, ids in reversed(self.item_to_tids.items())
+            for item, ids in reversed(self.item_to_tids_.items())
             if tids.issubset(ids)
             if item not in p
         )
@@ -262,7 +265,7 @@ class LCM(BaseMiner, DiscovererMixin):
         if max_k is not None and max_k == limit:
             p_prime = (p | set(cp) | {max_k})  # max_k has been consumed when calling next()
             # sorted items in ouput for better reproducibility
-            itemset = [self.ord_item_freq[ind] for ind in list(p_prime)]
+            itemset = [self.ord_item_freq_[ind] for ind in list(p_prime)]
             itemset = sorted(itemset) if self.lexicographic_order else itemset
 
             if len(itemset) <= self.max_length or self.max_length == -1:
@@ -271,11 +274,11 @@ class LCM(BaseMiner, DiscovererMixin):
                 else:
                     yield itemset, len(tids), tids
 
-            candidates = self.item_to_tids.keys() - p_prime
+            candidates = self.item_to_tids_.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
             for new_limit in candidates:
-                ids = self.item_to_tids[new_limit]
-                if tids.intersection_cardinality(ids) >= self._min_supp:
+                ids = self.item_to_tids_[new_limit]
+                if tids.intersection_cardinality(ids) >= self.min_supp_:
                     # new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit)
@@ -316,7 +319,7 @@ class LCMMax(LCM):
         # project and reduce DB w.r.t P
         cp = (
             item
-            for item, ids in reversed(self.item_to_tids.items())
+            for item, ids in reversed(self.item_to_tids_.items())
             if tids.issubset(ids)
             if item not in p
         )
@@ -324,20 +327,20 @@ class LCMMax(LCM):
 
         if max_k is not None and max_k == limit:
             p_prime = (p | set(cp) | {max_k})  # max_k has been consumed when calling next()
-            candidates = self.item_to_tids.keys() - p_prime
+            candidates = self.item_to_tids_.keys() - p_prime
             candidates = candidates[: candidates.bisect_left(limit)]
             no_cand = True
 
             for new_limit in candidates:
-                ids = self.item_to_tids[new_limit]
-                if tids.intersection_cardinality(ids) >= self._min_supp:
+                ids = self.item_to_tids_[new_limit]
+                if tids.intersection_cardinality(ids) >= self.min_supp_:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
                     yield from self._inner(new_p_tids, new_limit)
 
             if no_cand:  # only if no child node. This is how we PRE-check for maximality
-                itemset = set([self.ord_item_freq[ind] for ind in p_prime])
+                itemset = set([self.ord_item_freq_[ind] for ind in p_prime])
 
                 if not self.return_tids:
                     yield itemset, len(tids)

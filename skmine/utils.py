@@ -1,5 +1,5 @@
 """
-utils functions
+Utils functions
 """
 
 import numbers
@@ -14,7 +14,7 @@ from numpy.lib.stride_tricks import as_strided
 from sortedcontainers import SortedList
 
 
-def _check_random_state(seed):
+def _check_random_state(seed) -> None:
     if seed is None or seed is np.random:
         return np.random.mtrand._rand
     if isinstance(seed, numbers.Integral):
@@ -24,7 +24,7 @@ def _check_random_state(seed):
     raise ValueError(f"{seed} cannot be used to seed a numpy.random.RandomState instance")
 
 
-def _check_min_supp(min_supp, accept_absolute=True):
+def _check_min_supp(min_supp, accept_absolute=True) -> None:
     if isinstance(min_supp, int):
         if not accept_absolute:
             raise ValueError("Absolute support is prohibited, please provide a float value between 0 and 1")
@@ -35,13 +35,13 @@ def _check_min_supp(min_supp, accept_absolute=True):
             raise ValueError("Minimum support must be between 0 and 1")
     else:
         raise TypeError("Mimimum support must be of type int or float")
-    return min_supp
 
 
 def _check_growth_rate(gr):
     if not gr > 1:
         raise ValueError("growth ratio should be greater than 1")
-    return gr
+    else:
+        return gr
 
 
 def filter_maximal(itemsets):
@@ -145,15 +145,17 @@ def _check_y(y):
 
 
 def _check_D_y(D, y=None):
+
     D = _check_D(D)
     if y is not None:
         y = _check_y(y)
+
     return D, y
 
 
 def intersect2d(ar1, ar2, return_indices=True):
     """
-    Find the intersection of two 2 dimnesional arrays
+    Find the intersection of two 2 dimensional arrays
 
     Return the sorted, unique rows that are both of the input arrays
 
@@ -171,10 +173,10 @@ def intersect2d(ar1, ar2, return_indices=True):
     intersect2d: ndarray
         Sorted 2D array of common and unique rows
     comm1: ndarray
-        The indices of the first occurences of the common rows in `ar1`.
+        The indices of the first occurrences of the common rows in `ar1`.
         Only provided if `return_indices` is True
     comm2: ndarray
-        The indices of the first occurences of the common rows in `ar2`.
+        The indices of the first occurrences of the common rows in `ar2`.
         Only provided if `return_indices` is True
     """
     ar1, ar2 = np.asanyarray(ar1), np.asanyarray(ar2)

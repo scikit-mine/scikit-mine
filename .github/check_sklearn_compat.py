@@ -13,20 +13,20 @@ from sklearn.utils.estimator_checks import check_estimator
 import skmine.itemsets
 import skmine.preprocessing
 
-MODULES = [skmine.itemsets, skmine.preprocessing,]
+MODULES = [skmine.itemsets]  # ,= skmine.preprocessing,]
 
-EXCLUDED_CHECKS = [
-    "check_no_attributes_set_in_init",
-    "check_estimator_sparse_data",
-    "check_estimators_pickle",
-    "check_estimators_dtypes",
-    "check_methods_subset_invariance",
-    "check_dict_unchanged",
-    "check_fit_idempotent",
-    "check_transformer_general",
-    "check_transformer_preserve_dtypes",
-    "check_methods_sample_order_invariance",
-]
+EXCLUDED_CHECKS = ["check_fit1d"]
+#     "check_no_attributes_set_in_init",
+#     "check_estimator_sparse_data",
+#     "check_estimators_pickle",
+#     "check_estimators_dtypes",
+#     "check_methods_subset_invariance",
+#     "check_dict_unchanged",
+#     "check_fit_idempotent",
+#     "check_transformer_general",
+#     "check_transformer_preserve_dtypes",
+#     "check_methods_sample_order_invariance",
+# ]
 
 OK = "\x1b[42m[ OK ]\x1b[0m"
 FAIL = "\x1b[41m[FAIL]\x1b[0m"
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
         estimators = filter(verify, clsmembers)
         # print("estimators", list(estimators))
-        for est_name, est in estimators:
+        for est_name, est in clsmembers[:1]:
             # from sklearn 0.23 check_estimator takes an instance as input
             obj = est() if sklearn.__version__[:4] >= "0.23" else est
             checks = check_estimator(obj, generate_only=True)

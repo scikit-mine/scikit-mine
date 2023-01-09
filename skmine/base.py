@@ -8,27 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def _get_tags(self):
-    return {
-        "non_deterministic": False,
-        "requires_positive_X": False,
-        "requires_positive_y": False,
-        "X_types": ["2darray"],
-        "poor_score": False,
-        "no_validation": True,
-        "multioutput": False,
-        "allow_nan": False,
-        "stateless": False,
-        "multilabel": False,
-        "_skip_test": False,
-        "_xfail_checks": False,
-        "multioutput_only": False,
-        "binary_only": False,
-        "requires_fit": True,
-        "preserves_dtype": [np.float64],
-        "requires_y": False,
-        "pairwise": False,
-    }
+
 
 
 class BaseMiner(ABC):
@@ -44,8 +24,27 @@ class BaseMiner(ABC):
         """discover method to be implemented."""
         return pd.Series()
 
-    _get_tags = _get_tags
-
+    def _get_tags(self):
+        return {
+            "non_deterministic": False,
+            "requires_positive_X": False,
+            "requires_positive_y": False,
+            "X_types": ['2darray'] , #["2darray"],
+            "poor_score": False,
+            "no_validation": False,
+            "multioutput": False,
+            "allow_nan": False,
+            "stateless": True,
+            "multilabel": False,
+            "_skip_test": False,
+            "_xfail_checks": False,
+            "multioutput_only": False,
+            "binary_only": False,
+            "requires_fit": True,
+            "preserves_dtype": [np.float64],
+            "requires_y": False,
+            "pairwise": False,
+        }
     @classmethod
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
@@ -60,8 +59,7 @@ class BaseMiner(ABC):
         # to represent
         init_signature = inspect.signature(init)
         # Consider the constructor parameters excluding 'self'
-        parameters = [p
-                      for p in init_signature.parameters.values()
+        parameters = [p for p in init_signature.parameters.values()
                       if p.name != "self" and p.kind != p.VAR_KEYWORD
                       ]
         # Extract and sort argument names excluding 'self'
@@ -108,8 +106,7 @@ class BaseMiner(ABC):
         for key, value in params.items():
             if key not in valid_params:
                 raise ValueError("Invalid parameter %s for estimator %s. Check the list of available parameters "
-                                 "with `estimator.get_params().keys()`." % (key, self)
-                                 )
+                                 "with `estimator.get_params().keys()`." % (key, self))
             setattr(self, key, value)
             valid_params[key] = value
 

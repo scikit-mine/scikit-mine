@@ -3,7 +3,6 @@ Base IO for all periodic datasets
 """
 import os
 import warnings
-
 import pandas as pd
 
 from ._base import get_data_home
@@ -111,9 +110,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     kwargs = dict(header=None, squeeze=True, dtype="string", index_col=0,)
 
     if filename not in os.listdir(data_home):
-        s = pd.read_csv(
-            "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs
-        )
+        s = pd.read_csv("https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs)
         s.to_csv(p, index=True, header=False)
     else:
         s = pd.read_csv(p, **kwargs)

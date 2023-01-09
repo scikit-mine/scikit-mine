@@ -1,9 +1,9 @@
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_is_fitted
-from .slim import SLIM
-
 import numpy as np
 from functools import reduce
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_is_fitted
+
+from .slim import SLIM
 
 
 class SlimClassifier(BaseEstimator, ClassifierMixin):
