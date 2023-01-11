@@ -114,7 +114,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).discover(singletons=True, return_tids=True)
+    >>> SLIM().fit(D).transform(singletons=True, return_tids=True)
                itemset    tids
     0  [bananas, milk]  (0, 1)
     1    [butter, tea]     (2)
@@ -464,7 +464,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).discover(singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
+        >>> SLIM().fit(D).transform(singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
           itemset    tids
         0  [A, B]  (0, 1)
         1  [B, D]     (2)
@@ -515,7 +515,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
         >>> slim = SLIM()
-        >>> slim.fit(D).discover()  # doctest: +SKIP
+        >>> slim.fit(D).transform()  # doctest: +SKIP
         >>> slim.reconstruct()  # doctest: +SKIP
         0    [A, B, C]
         1       [A, B]

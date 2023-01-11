@@ -15,7 +15,7 @@ import skmine.preprocessing
 
 MODULES = [skmine.itemsets]  # ,= skmine.preprocessing,]
 
-EXCLUDED_CHECKS = ["check_fit1d"]
+EXCLUDED_CHECKS = [ ]# "check_fit1d"]
 #     "check_no_attributes_set_in_init",
 #     "check_estimator_sparse_data",
 #     "check_estimators_pickle",
@@ -27,7 +27,16 @@ EXCLUDED_CHECKS = ["check_fit1d"]
 #     "check_transformer_preserve_dtypes",
 #     "check_methods_sample_order_invariance",
 # ]
-
+# EXCLUDED_CHECKS = ["check_pipeline_consistency",
+#                    "check_estimators_nan_inf",
+#                    "check_estimators_pickle",
+#                    "check_transformer_data_not_an_array",
+#                    "check_fit_idempotent",
+#                    "check_methods_subset_invariance",
+#                    "check_transformer_general",
+#                    "check_transformer_preserve_dtypes",
+#                    "check_methods_sample_order_invariance",
+#                    ]
 OK = "\x1b[42m[ OK ]\x1b[0m"
 FAIL = "\x1b[41m[FAIL]\x1b[0m"
 

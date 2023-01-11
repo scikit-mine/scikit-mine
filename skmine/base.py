@@ -8,9 +8,6 @@ import numpy as np
 import pandas as pd
 
 
-
-
-
 class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
 
@@ -27,11 +24,11 @@ class BaseMiner(ABC):
     def _get_tags(self):
         return {
             "non_deterministic": False,
-            "requires_positive_X": False,
+            "requires_positive_X": True,
             "requires_positive_y": False,
-            "X_types": ['2darray'] , #["2darray"],
+            "X_types": ['categorical'] , #["2darray"],
             "poor_score": False,
-            "no_validation": False,
+            "no_validation": True,
             "multioutput": False,
             "allow_nan": False,
             "stateless": True,

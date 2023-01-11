@@ -180,8 +180,8 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         D1, D2 = D[y == labels[0]], D[y == labels[1]]
 
         # TODO : replace LCMMax by some more efficient method
-        right_border_d1 = LCMMax(min_supp=self.min_supp).fit_discover(D1)
-        right_border_d2 = LCMMax(min_supp=self.min_growth_rate * self.min_supp).fit_discover(D2)
+        right_border_d1 = LCMMax(min_supp=self.min_supp).fit_transform(D1)
+        right_border_d2 = LCMMax(min_supp=self.min_growth_rate * self.min_supp).fit_transform(D2)
 
         right_border_d1 = right_border_d1.itemset.map(set).tolist()
         right_border_d2 = right_border_d2.itemset.map(set).tolist()
