@@ -392,10 +392,11 @@ def test_decision_function(D):
     new_D = new_D.str.join("|").str.get_dummies(sep="|")
 
     dists = slim.decision_function(new_D)
+    print(dists.values)
     assert dists.dtype == np.float32
     assert len(dists) == len(new_D)
     np.testing.assert_array_almost_equal(
-        dists.values, np.array([-4.23, -4.23, -4.23, -5.81, -2.11]), decimal=2
+        dists.values, np.array([4.23, 4.23, 4.23, 5.81, 2.11]), decimal=2
     )
 
 

@@ -431,7 +431,7 @@ if __name__ == '__main__':
         [1, 4, 6],
         [3, 4, 6],
     ]
-    # # TRY SET_OUTPUTS, input should have index like pd.Series + same len of input(D) and output(patterns)
+    # TRY SET_OUTPUTS, input should have index like pd.Series + same len of input(D) and output(patterns)
     # import pandas as pd
     # D = pd.Series(D)
     # print(D)
@@ -448,3 +448,29 @@ if __name__ == '__main__':
     # ohe = MultiLabelBinarizer().fit_transform(D)
     # print(ohe,type(ohe))
     # print("TAGS LCM estimators\n", lcm._get_tags() )
+    # [ OK ] LCM === check_no_attributes_set_in_init
+    # [ OK ] LCM === check_estimators_dtypes
+    # [ OK ] LCM === check_fit_score_takes_y
+    # [ OK ] LCM === check_estimators_fit_returns_self
+    # [ OK ] LCM === check_estimators_fit_returns_self
+    # [FAIL] LCM === check_pipeline_consistency ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+    # [ OK ] LCM === check_estimators_overwrite_params
+    # [ OK ] LCM === check_estimator_sparse_data
+    # [FAIL] LCM === check_estimators_pickle ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+    # [ OK ] LCM === check_estimator_get_tags_default_keys
+    # [FAIL] LCM === check_transformer_general
+    # [FAIL] LCM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
+    # [FAIL] LCM === check_transformer_general
+    # [ OK ] LCM === check_transformers_unfitted
+    # [ OK ] LCM === check_transformer_n_iter
+    # [ OK ] LCM === check_parameters_default_constructible
+    # [FAIL] LCM === check_methods_sample_order_invariance "None of [Int64Index([0, 1, 9, 5, 14, 16, 4, 19, 7, 18, 8, 3, 12, 10, 11, 6, 13, 2, 17,\n            15],\n           dtype='int64')] are in the [columns]"
+    # [FAIL] LCM === check_methods_subset_invariance ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+    # [ OK ] LCM === check_fit2d_1sample
+    # [ OK ] LCM === check_fit2d_1feature
+    # [ OK ] LCM === check_get_params_invariance
+    # [ OK ] LCM === check_set_params
+    # [ OK ] LCM === check_dict_unchanged
+    # [ OK ] LCM === check_dont_overwrite_parameters
+    # [FAIL] LCM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
+    # [ OK ] LCM === check_fit_check_is_fitted

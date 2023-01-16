@@ -3,6 +3,7 @@ SLIM vectorizer, using SLIM as a feature extraction scheme
 """
 
 import numpy as np
+import pandas
 import pandas as pd
 
 from ..base import TransformerMixin
@@ -17,7 +18,7 @@ def _filter_stop_items(D, stop_items):
         yield set(t).difference(stop_items)
 
 
-class SLIMVectorizer(SLIM, TransformerMixin):
+class SLIMVectorizer(SLIM):
     """SLIM mining, turned into a feature extraction step for sklearn
 
     `k` new itemsets (associations of one or more items) are learned at training time
@@ -84,7 +85,7 @@ class SLIMVectorizer(SLIM, TransformerMixin):
             D = _filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
-    def transform(self, D, y=None):
+    def transform(self, newD, **tsf_params) -> pandas.DataFrame:
         """Transform new data
 
         Parameters
@@ -102,9 +103,9 @@ class SLIMVectorizer(SLIM, TransformerMixin):
         skmine.itemsets.SLIM.cover
         """
         stop_items = self.stop_items or set()
-        D_sct, _len = _to_vertical(D, stop_items=stop_items, return_len=True)
-
-        code_lengths = self.discover(return_tids=False, singletons=True, drop_null_usage=False)
+        D_sct, _len = _to_vertical(newD, stop_items=stop_items, return_len=True)
+        X = 12
+        code_lengths = super().transform(return_tids=False, singletons=True, drop_null_usage=False)
         code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
         code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]
 

@@ -17,13 +17,13 @@ import time
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
-
-from ..base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
-from ..utils import _check_D, supervised_to_unsupervised
+# from skmine.base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
+from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def _to_vertical(D, stop_items=None, return_len=False):
+def _to_vertical(D, stop_items=None, return_len=False):  # -> tuple | dict
     if stop_items is None:
         stop_items = set()
     res = defaultdict(Bitmap)
@@ -37,7 +37,7 @@ def _to_vertical(D, stop_items=None, return_len=False):
     return dict(res)
 
 
-def _log2(values):
+def _log2(values) -> pd.Series:
     """
     This function calculates the log2 of a set of values.
     Be careful, if one of the values is 0, the function will return 0.
@@ -59,14 +59,14 @@ def _log2(values):
     return pd.Series(res, index=res_index)
 
 
-def cover(sct: dict, itemsets: list):
+def cover(sct: dict, itemsets: list) -> dict:
     """
     cover a standard codetable sct given itemsets
 
     Parameters
     ----------
     sct: dict[object, Bitmap]
-        a standard codetable, i.e the vertical representation of a dataset
+        a standard codetable, i.e. the vertical representation of a dataset
     itemsets: list[frozenset]
         itemsets from a given codetable
 
@@ -84,7 +84,7 @@ def cover(sct: dict, itemsets: list):
     return covers
 
 
-class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
+class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
     """SLIM: Directly Mining Descriptive Patterns
 
     SLIM looks for a compressed representation of transactional data.
@@ -130,7 +130,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         "Slimmer, outsmarting Slim", 2014
     """
 
-    def __init__(self, *, pruning=True, max_time=-1, items=None):
+    def __init__(self, pruning=True, max_time=-1, items=None):
         self.pruning = pruning
         self.max_time = max_time
         self.items = items
@@ -138,7 +138,32 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
     # def __getstate__(self):
     #     out = self.__dict__.copy()
     #     return out
-    def fit(self, X, y=None):  # pylint:disable = too-many-locals
+    def _more_tags(self):  # tags for sklearn check_estimators)
+        return {
+            "non_deterministic": True,  # default
+            # "requires_positive_X": True,
+            # "requires_positive_y": False,  # default
+            # "X_types": ['2darray'],  # ["categorical"],  # default
+            # # "poor_score": False,  # default
+            "no_validation": True,
+        }
+
+    def fit_transform(self, X, y=None, **tsf_params):
+        """
+        Overide to apply parameters to transform and not to fit method
+        Returns
+        -------
+        df_new : pandas.Dataframe
+            Codetable fitted from X data.
+        """
+        if y is None:
+            # fit method of arity 1 (unsupervised transformation)
+            return self.fit(X).transform(tsf_params)
+        else:
+            # fit method of arity 2 (supervised transformation)
+            return self.fit(X, y).transform(tsf_params)
+
+    def fit(self, X, y=None):  # -> self
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
@@ -154,12 +179,9 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         y: Ignored
             Not used, present here for API consistency by convention.
         """
-        self.starting_codes_ = None
-        self.codetable_ = SortedDict()
-        self.model_size_ = None  # L(CT|D)
-        self.data_size_ = None  # L(D|CT)
-        self.is_fitted_ = True
-
+        self._validate_data(X, force_all_finite=False, accept_sparse=False,
+                            ensure_2d=False, ensure_min_samples=1, dtype=list)
+        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)
         start = time.time()
         self.prefit(X, y=y)
         while True:
@@ -183,6 +205,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
             if self.max_time != -1 and time.time() - start > self.max_time:
                 break
 
+        self.is_fitted_ = True
         return self
 
     def decision_function(self, D):
@@ -196,7 +219,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
 
         Parameters
         ----------
-        D: pd.DataFrame or np.ndarray
+        D: np.ndarray or pd.DataFrame
             new data to make predictions on, in tabular format
 
         Example
@@ -215,16 +238,28 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         cover
         discover
         """
+        # print("D\n", D)
         mat = self.cover(D)
-        code_lengths = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
+        # self.singletons_ = True
+        # self.return_tids_ = False
+        # self.drop_null_usage_ = False  # change in dict estimator ! not sklearn check_dict_unchanged()
+        code_lengths = self.transform(singletons=True, return_tids=False, drop_null_usage=False)
         # the codetable is Laplace corrected: the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
-        code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())
+        code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
+        # print("mat\n", mat)
+        # print("code_lengths\n", code_lengths)
+        # print("mapping\n", mapping)
+        # # print("self.codetable_")
+        # for k, v in self.codetable_.items():
+        #     print(set(k), ":", v)
+
         codes = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        codes[codes == 0] = -np.inf  # zeros would fool a `shortest code wins` strategy
-        return codes
+        codes[codes == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
+        # print("final codes\n", codes)
+        return codes  # -np.log2(codes/2)
 
     def generate_candidates(self, stack=None):
         """
@@ -274,9 +309,8 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
                 old_num_codes_with_non_zero_usage = sum(1 if len(usage) > 0 else 0 for usage in codetable.values())
                 new_num_codes_with_non_zero_usage = old_num_codes_with_non_zero_usage + 1 \
                                                     - (1 if new_usage_X == 0 else 0) - (1 if new_usage_Y == 0 else 0)
-                log_values = _log2(
-                    np.array([old_usage_X, old_usage_Y, new_usage_XY, new_usage_X, new_usage_Y, old_countsum,
-                              new_countsum]))
+                log_values = _log2(np.array([old_usage_X, old_usage_Y, new_usage_XY,
+                                             new_usage_X, new_usage_Y, old_countsum, new_countsum]))
 
                 # Estimation of the size of the database gain
                 gain_db_XY = -1 * (
@@ -324,7 +358,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         # sort the itemsets by decreasing order gain
         return sorted(candidates, key=lambda e: e[1], reverse=True)
 
-    def evaluate(self, candidate):
+    def evaluate(self, candidate) -> tuple[float, float, dict]:
         """
         Evaluate ``candidate``, considering the current codetable and a dataset ``D``
 
@@ -341,13 +375,10 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         # Get the id (``idx``) of the insertion of ``candidate`` in codetable w.r.t the standard cover order
         idx = self.codetable_.bisect(candidate)
         ct = list(self.codetable_)
-        # Insert the candidate to the CT w.r.t the usage order
-        ct.insert(idx, candidate)
+        ct.insert(idx, candidate)  # Insert the candidate to the CT w.r.t the usage order
         D = {k: v.copy() for k, v in self.standard_codetable_.items()}
         # Get the cover a standard codetable D with CT itemsets
-        # CTc is sorted in Standard Cover Order like D
-        CTc = cover(D, ct)
-
+        CTc = cover(D, ct)  # CTc is sorted in Standard Cover Order like D
         data_size, model_size = self._compute_sizes(CTc)
 
         if self.pruning:
@@ -355,7 +386,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
 
         return data_size, model_size, CTc
 
-    def update(self, candidate=None, model_size=None, data_size=None, usages=None):
+    def update(self, candidate=None, model_size=None, data_size=None, usages=None) -> None:
         """
         Update the current codetable.
 
@@ -375,8 +406,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
             new data size (in bits) to be set
 
         usages: dict, default=None
-            optional for usage outside this class
-            eg. if one simply needs to include an itemset in the current codetable
+            optional for usage outside this class e.g.if simply needs to include an itemset in the current codetable
             as in interactive data mining
 
         Raises
@@ -395,7 +425,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         self.data_size_ = data_size
         self.model_size_ = model_size
 
-    def cover(self, D):
+    def cover(self, D) -> pd.DataFrame:
         """
         cover unseen data
 
@@ -417,22 +447,25 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         pd.DataFrame
         """
         if hasattr(D, "shape") and len(D.shape) == 2:  # tabular
+            # print("POP", type(D))
             D = _check_D(D)
             D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
         else:  # transactional
             D_sct = _to_vertical(D)
 
-        isets = self.discover(singletons=True, return_tids=False, drop_null_usage=False)
+        isets = self.transform(singletons=True, return_tids=False, drop_null_usage=False)
         isets = [tuple(itemset) for itemset in isets[isets["itemset"].map(set(D_sct).issuperset)]["itemset"].to_list()]
         covers = cover(D_sct, isets)
 
         mat = np.zeros(shape=(len(D), len(covers)), dtype=bool)
         for idx, tids in enumerate(covers.values()):
             mat[tids, idx] = True
+
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-    def discover(self, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True,
-                 return_dl=False, out=None):
+    def transform(self, *, singletons=True, return_tids=False, lexicographic_order=True,
+                  drop_null_usage=True, return_dl=False, out=None):
+
         """Get a user-friendly copy of the codetable
 
         Parameters
@@ -448,8 +481,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
         drop_null_usage: bool, default=True
-            Either to include itemset with no usage in the training data
-            (i.e itemsets under cover of other itemsets)
+            Either to include itemset with no usage in the training data (i.e itemsets under cover of other itemsets)
 
         return_dl: bool, default=False
             Display the total size of the model L(CT, D) according to MDL (Minimum Description Length) which is equal to
@@ -478,35 +510,44 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         pd.Dataframe
             codetable containing patterns and their usages or ids of transactions in which they are used
         """
-        check_is_fitted(self, "is_fitted_")
 
+        check_is_fitted(self, "is_fitted_")
+        self.drop_null_usage_ = drop_null_usage
+        self.singletons_ = singletons
+        self.lexicographic_order_ = lexicographic_order
+        self.return_tids_ = return_tids
+        self.out_ = out
+        self.return_dl_ = return_dl
+        # self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False, ensure_min_samples=1,
+        #                     dtype=list)
         itemsets = []
         itids = []
         iusages = []
         for iset, tids in self.codetable_.items():
-            if len(tids) >= drop_null_usage and len(iset) > (not singletons):
-                itemsets.append(sorted(iset)) if lexicographic_order else itemsets.append(list(iset))
-                itids.append(tids) if return_tids else []
+            if len(tids) >= self.drop_null_usage_ and len(iset) > (not self.singletons_):
+                itemsets.append(sorted(iset)) if self.lexicographic_order_ else itemsets.append(list(iset))
+                itids.append(tids) if self.return_tids_ else []
                 iusages.append(len(tids))
 
-        if out is not None:
-            with open(out, 'w') as f:
+        if self.out_ is not None:
+            with open(self.out_, 'w') as f:
                 for i, (itemset, usage) in enumerate(zip(itemsets, iusages)):
                     line = "(" + str(usage) + ") " + " ".join(itemset) + "\n"
-                    if return_tids:
+                    if self.return_tids_:
                         line += " ".join(map(str, itids[i])) + "\n"
                     f.write(line)
             return None
         else:
-            df = pd.DataFrame(data={'itemset': itemsets, ('tids' if return_tids else 'usage'): (itids if return_tids
-                                                                                                else iusages)})
-            if return_dl:
+            df = pd.DataFrame(data={'itemset': itemsets,
+                                    ('tids' if self.return_tids_ else 'usage'): (
+                                        itids if self.return_tids_ else iusages)})
+            if self.return_dl_:
                 print("data_size :", self.data_size_)
                 print("model_size :", self.model_size_)
                 print("total_size :", self.data_size_ + self.model_size_)
             return df
 
-    def reconstruct(self):
+    def reconstruct(self) -> pd.Series:
         """reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
         lossless algorithm .
 
@@ -515,7 +556,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
         >>> slim = SLIM()
-        >>> slim.fit(D).transform()  # doctest: +SKIP
+        >>> slim.fit(D).transform(D)  # doctest: +SKIP
         >>> slim.reconstruct()  # doctest: +SKIP
         0    [A, B, C]
         1       [A, B]
@@ -549,9 +590,10 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         tids = self.standard_codetable_[a]
         if len(items) > 1:
             return tids & self.get_support(*items[:-1])
-        return tids
+        else:
+            return tids
 
-    def _standard_cover_order(self, itemset):
+    def _standard_cover_order(self, itemset) -> tuple:
         """
         Returns a tuple associated with an itemset,
         so that many itemsets can be sorted in Standard Cover Order :
@@ -559,7 +601,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         """
         return -len(itemset), -len(self.get_support(*itemset)), tuple(itemset)
 
-    def prefit(self, D, y=None):
+    def prefit(self, D, y=None):  # -> self
         """
         Parameters
         ----------
@@ -650,7 +692,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
 
         return self
 
-    def _compute_sizes(self, codetable):
+    def _compute_sizes(self, codetable) -> tuple[float, float]:
         """
         Compute sizes for both the data and the model
 
@@ -667,9 +709,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
         tuple(float, float)
             (data_size, model_size)
         """
-        isets, usages = zip(
-            *((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0)
-        )
+        isets, usages = zip(*((_[0], len(_[1])) for _ in codetable.items() if len(_[1]) > 0))
         usages = np.array(usages, dtype=np.uint32)
         codes = -_log2(usages / usages.sum())
 
@@ -681,7 +721,7 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
 
         return data_size, model_size
 
-    def _prune(self, CTc, model_size, data_size):
+    def _prune(self, CTc, model_size, data_size) -> tuple[dict, float, float]:
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
@@ -728,3 +768,57 @@ class SLIM(BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
                 data_size, model_size = d_size, m_size
 
         return CTc, data_size, model_size
+
+
+if __name__ == '__main__':
+    from skmine.itemsets import SLIM
+
+    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    print(*D, sep='\n')
+    slim = SLIM()
+    slim.fit(D)
+    # for k, v in slim.__dict__.items():
+    #     print("->", k ,' : ', v)
+    # res = slim.transform(D)
+    new_itemset = [['cookies', 'butter']]
+
+    print("score", slim.decision_function(new_itemset))
+
+
+    def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+
+
+    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    new_D = to_tabular([['cookies', 'butter']])
+    slim2 = SLIM().fit(to_tabular(D))
+    print("score", slim2.decision_function(new_D))
+
+    # print(slim.__dict__)
+    # for k, v in slim.__dict__.items():
+    #     print("->", k, ' : ', v)
+    # print(res)
+    #
+    # [ OK ] SLIM === check_no_attributes_set_in_init
+    # [ OK ] SLIM === check_estimators_dtypes
+    # [ OK ] SLIM === check_fit_score_takes_y
+    # [ OK ] SLIM === check_estimators_fit_returns_self
+    # [ OK ] SLIM === check_estimators_fit_returns_self
+    # [FAIL] SLIM === check_pipeline_consistency SLIM is non deterministic
+    # [ OK ] SLIM === check_estimators_overwrite_params
+    # [ OK ] SLIM === check_estimator_sparse_data
+    # [FAIL] SLIM === check_estimators_pickle 'SLIM' object has no attribute 'standard_codetable_'
+    # [ OK ] SLIM === check_estimator_get_tags_default_keys
+    # [FAIL] SLIM === check_transformer_general
+    # [FAIL] SLIM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
+    # [FAIL] SLIM === check_transformer_general
+    # [ OK ] SLIM === check_transformers_unfitted
+    # [ OK ] SLIM === check_transformer_n_iter
+    # [ OK ] SLIM === check_parameters_default_constructible
+    # [ OK ] SLIM === check_fit2d_1sample
+    # [ OK ] SLIM === check_fit2d_1feature
+    # [ OK ] SLIM === check_get_params_invariance
+    # [ OK ] SLIM === check_set_params
+    # [FAIL] SLIM === check_dict_unchanged Estimator changes __dict__ during decision_function
+    # [ OK ] SLIM === check_dont_overwrite_parameters
+    # [FAIL] SLIM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
+    # [ OK ] SLIM === check_fit_check_is_fitted
