@@ -6,7 +6,6 @@ import numpy as np
 import pandas
 import pandas as pd
 
-from ..base import TransformerMixin
 from ..itemsets import SLIM
 from ..itemsets.slim import _to_vertical, cover
 
@@ -71,7 +70,7 @@ class SLIMVectorizer(SLIM):
     patterns should output matrices with very few zeros.
     """
 
-    def __init__(self, strategy="codes", *, k=5, pruning=False, stop_items=None, **kwargs):
+    def __init__(self, strategy="codes", k=5, pruning=False, stop_items=None, **kwargs):
         super().__init__(**kwargs)
         self.k = k
         self.pruning = pruning
@@ -85,7 +84,7 @@ class SLIMVectorizer(SLIM):
             D = _filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
-    def transform(self, newD, **tsf_params) -> pandas.DataFrame:
+    def transform(self, newD) -> pandas.DataFrame:
         """Transform new data
 
         Parameters
@@ -104,7 +103,6 @@ class SLIMVectorizer(SLIM):
         """
         stop_items = self.stop_items or set()
         D_sct, _len = _to_vertical(newD, stop_items=stop_items, return_len=True)
-        X = 12
         code_lengths = super().transform(return_tids=False, singletons=True, drop_null_usage=False)
         code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
         code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]

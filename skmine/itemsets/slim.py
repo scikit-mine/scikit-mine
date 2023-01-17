@@ -158,10 +158,10 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
         if y is None:
             # fit method of arity 1 (unsupervised transformation)
-            return self.fit(X).transform(tsf_params)
+            return self.fit(X).transform(X, tsf_params)
         else:
             # fit method of arity 2 (supervised transformation)
-            return self.fit(X, y).transform(tsf_params)
+            return self.fit(X, y).transform(X, tsf_params)
 
     def fit(self, X, y=None):  # -> self
         """fit SLIM on a transactional dataset
@@ -247,7 +247,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         # the codetable is Laplace corrected: the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
-        code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
+        code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
         # print("mat\n", mat)
         # print("code_lengths\n", code_lengths)
@@ -257,7 +257,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         #     print(set(k), ":", v)
 
         codes = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        codes[codes == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
+        codes[codes == 0] = - np.inf  # zeros would fool a `shortest code wins` strategy
         # print("final codes\n", codes)
         return codes  # -np.log2(codes/2)
 

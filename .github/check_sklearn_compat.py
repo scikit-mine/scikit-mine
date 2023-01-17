@@ -51,6 +51,7 @@ def verify(e):
 
 if __name__ == "__main__":
     ret_code = 0
+
     for module in MODULES:
         clsmembers = inspect.getmembers(module, inspect.isclass)
         print('Modules ', module, '\n clsmembers ', clsmembers)
