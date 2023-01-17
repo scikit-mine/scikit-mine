@@ -150,7 +150,7 @@ if __name__ == '__main__':
             return self
 
         def transform(self, X):
-            return MultiLabelBinarizer(sparse_output=False).fit_transform(X);
+            return MultiLabelBinarizer(sparse_output=False).fit_transform(X)
 
 
     slim_onehot = Pipeline([

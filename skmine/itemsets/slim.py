@@ -157,11 +157,9 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             Codetable fitted from X data.
         """
         if y is None:
-            # fit method of arity 1 (unsupervised transformation)
-            return self.fit(X).transform(X, tsf_params)
+            return self.fit(X).transform(tsf_params)
         else:
-            # fit method of arity 2 (supervised transformation)
-            return self.fit(X, y).transform(X, tsf_params)
+            return self.fit(X, y).transform(tsf_params)
 
     def fit(self, X, y=None):  # -> self
         """fit SLIM on a transactional dataset
@@ -358,7 +356,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         # sort the itemsets by decreasing order gain
         return sorted(candidates, key=lambda e: e[1], reverse=True)
 
-    def evaluate(self, candidate) -> tuple[float, float, dict]:
+    def evaluate(self, candidate) -> tuple:  # -> tuple[float, float, dict]:
         """
         Evaluate ``candidate``, considering the current codetable and a dataset ``D``
 
@@ -692,7 +690,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return self
 
-    def _compute_sizes(self, codetable) -> tuple[float, float]:
+    def _compute_sizes(self, codetable) -> tuple:  # tuple[float, float]:
         """
         Compute sizes for both the data and the model
 
