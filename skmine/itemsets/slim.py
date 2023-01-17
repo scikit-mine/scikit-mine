@@ -719,7 +719,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return data_size, model_size
 
-    def _prune(self, CTc, model_size, data_size) -> tuple[dict, float, float]:
+    def _prune(self, CTc, model_size, data_size) -> tuple : # tuple[dict, float, float]:
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
