@@ -14,6 +14,8 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 import time
+
+import scipy
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -147,20 +149,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             # # "poor_score": False,  # default
             "no_validation": True,
         }
-
-    def fit_transform(self, X, y=None, **tsf_params):
-        """
-        Overide to apply parameters to transform and not to fit method
-        Returns
-        -------
-        df_new : pandas.Dataframe
-            Codetable fitted from X data.
-        """
-        if y is None:
-            return self.fit(X).transform(tsf_params)
-        else:
-            return self.fit(X, y).transform(tsf_params)
-
     def fit(self, X, y=None):  # -> self
         """fit SLIM on a transactional dataset
 
@@ -206,11 +194,21 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         self.is_fitted_ = True
         return self
 
-    def decision_function(self, D):
-        """Compute covers on new data, and return code length
+    def fit_transform(self, X, y=None, **tsf_params): # TODO see if necessary
+        """
+        Overide to apply parameters to transform and not to fit method
+        Returns
+        -------
+        df_new : pandas.Dataframe
+            Codetable fitted from X data.
+        """
+        if y is None:
+            return self.fit(X).transform(X,tsf_params)
+        else:
+            return self.fit(X, y).transform(X, tsf_params)
 
-        This function is named ``decision_function`` because code lengths
-        represent the distance between a point and the current codetable.
+    def get_code_length(self, D):
+        """Compute covers on new data, and return code length
 
         Setting ``pruning`` to False when creating the model
         is recommended to cover unseen data, and especially when building a classifier.
@@ -218,8 +216,12 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         Parameters
         ----------
         D: np.ndarray or pd.DataFrame
-            new data to make predictions on, in tabular format
+          new data to make predictions on, in tabular format
 
+        Returns
+        -------
+        codes_length : pandas.Series
+            codes length  for all itemset in D (float32)
         Example
         -------
         >>> from skmine.itemsets import SLIM; import pandas as pd
@@ -227,8 +229,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
         >>> new_D = to_tabular([['cookies', 'butter']])
         >>> slim = SLIM().fit(to_tabular(D))
-        >>> slim.decision_function(new_D)
-        0   -5.584963
+        >>> slim.get_code_length(new_D)
+        0   5.584963
         dtype: float32
 
         See Also
@@ -236,28 +238,53 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         cover
         discover
         """
-        # print("D\n", D)
+
         mat = self.cover(D)
-        # self.singletons_ = True
-        # self.return_tids_ = False
-        # self.drop_null_usage_ = False  # change in dict estimator ! not sklearn check_dict_unchanged()
         code_lengths = self.transform(singletons=True, return_tids=False, drop_null_usage=False)
         # the codetable is Laplace corrected: the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
-        code_lengths["code"] = _log2(code_lengths["usage"] / code_lengths["usage"].sum())
+        code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
-        # print("mat\n", mat)
-        # print("code_lengths\n", code_lengths)
-        # print("mapping\n", mapping)
-        # # print("self.codetable_")
-        # for k, v in self.codetable_.items():
-        #     print(set(k), ":", v)
+        codes_length_D = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
+        # codes[codes == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
 
-        codes = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        codes[codes == 0] = - np.inf  # zeros would fool a `shortest code wins` strategy
-        # print("final codes\n", codes)
-        return codes  # -np.log2(codes/2)
+        return codes_length_D
+
+    def decision_function(self, D):
+
+        """ Function use by a classifier predict method, like in sklearn.multiclass.OneVsRestClassifier
+        which seek to the highest values of decision_function among all classes
+
+        IThe shorter code length (cl) of D is, the higher is the probability for D to belong to same class.
+        Therefore, mapping function _fonc(.)  should be monotonically decreasing on $]0 + \infty[$
+        We choose by defaukt _fonc(x) = exp(-0.2 * x) to get probability in ]0,1] but other can be coded like _fonc(x)=-x
+
+        Parameters
+        ----------
+        D: np.ndarray or pd.DataFrame
+          new data to make predictions on, in tabular format
+
+        Returns
+        -------
+         prob : pandas.Series
+            probability for D to belong to the same class
+        """
+
+        _fonc = lambda x: np.exp(-0.2 * x)
+        # print("code length\n", code_l, " \n-> decision function \n ", fonc(code_l))
+        return _fonc(self.get_code_length(D))
+
+    # def predict_proba(self, D): #attempt to unify binary and multi-class
+    # see predict_proba in https://scikit-learn.org/stable/glossary.html#term-decision_function
+    #     def fonc(x):
+    #         return np.exp(-x)
+    #
+    #     code_l = self.get_code_length(D)
+    #     print("code length\n", code_l, " \n predict proba ->\n ", fonc(code_l))
+    #     y = scipy.sparse.csc_matrix(fonc(code_l))
+    #     print(y.toarray())
+    #     return y
 
     def generate_candidates(self, stack=None):
         """
@@ -719,7 +746,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return data_size, model_size
 
-    def _prune(self, CTc, model_size, data_size) -> tuple : # tuple[dict, float, float]:
+    def _prune(self, CTc, model_size, data_size) -> tuple:  # tuple[dict, float, float]:
         """post prune a codetable considering itemsets for which usage has decreased
 
         Parameters
