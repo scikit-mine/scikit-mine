@@ -14,8 +14,6 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 import time
-
-import scipy
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -149,6 +147,22 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             # # "poor_score": False,  # default
             "no_validation": True,
         }
+
+    def fit_transform(self, X, y=None, **tsf_params):
+        """
+        Overide to apply parameters to transform and not to fit method
+        Returns
+        -------
+        df_new : pandas.Dataframe
+            Codetable fitted from X data.
+        """
+        print("tsf_params", tsf_params)
+
+        if y is None:
+            return self.fit(X).transform(X, tsf_params)
+        else:
+            return self.fit(X, y).transform(X, tsf_params)
+
     def fit(self, X, y=None):  # -> self
         """fit SLIM on a transactional dataset
 
@@ -193,19 +207,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         self.is_fitted_ = True
         return self
-
-    def fit_transform(self, X, y=None, **tsf_params): # TODO see if necessary
-        """
-        Overide to apply parameters to transform and not to fit method
-        Returns
-        -------
-        df_new : pandas.Dataframe
-            Codetable fitted from X data.
-        """
-        if y is None:
-            return self.fit(X).transform(X,tsf_params)
-        else:
-            return self.fit(X, y).transform(X, tsf_params)
 
     def get_code_length(self, D):
         """Compute covers on new data, and return code length
