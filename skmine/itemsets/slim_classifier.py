@@ -66,7 +66,8 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self.models_ = []
 
         for c in self.classes_:
-            transactions_classes = [transaction for transaction, target in zip(X, y) if target == c]
+            transactions_classes = [
+                transaction for transaction, target in zip(X, y) if target == c]
             self.classes_X_.append(transactions_classes)
             self.models_.append(SLIM(items=self.items))
 
@@ -89,13 +90,16 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         """
         check_is_fitted(self, "classes_")
 
-        models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
+        models_scores = {i: model.decision_function(
+            X).values for i, model in enumerate(self.models_)}
         predictions = []
 
         for i in range(len(X)):
             scores = [model[i] for model in models_scores.values()]
-            best_index = scores.index(reduce(lambda x, y: x if abs(y) > abs(x) else y, scores))
-            predictions.append(self.classes_[0] if best_index is None else self.classes_[best_index])
+            best_index = scores.index(
+                reduce(lambda x, y: x if abs(y) > abs(x) else y, scores))
+            predictions.append(
+                self.classes_[0] if best_index is None else self.classes_[best_index])
 
         return np.array(predictions)
 
@@ -123,7 +127,8 @@ if __name__ == '__main__':
     # est = KBinsDiscretizer(n_bins=nbins, encode='ordinal', strategy='uniform')
     # Xt = est.fit_transform(X)
 
-    (X_train, X_test, y_train, y_test) = train_test_split(X, y, random_state=1, test_size=0.2, shuffle=True)
+    (X_train, X_test, y_train, y_test) = train_test_split(
+        X, y, random_state=1, test_size=0.2, shuffle=True)
     print("X_train shape:", X_train.shape, "y_train shape:", y_train.shape)
     print("X_test shape:", X_test.shape, "y_test shape:", y_test.shape)
     # You can pass in parameter of your classifier the set of your items.
@@ -131,7 +136,8 @@ if __name__ == '__main__':
     items = set(item for transaction in X for item in transaction)
 
     clf = Pipeline([
-        ('discretizer', KBinsDiscretizer(n_bins=nbins, encode='ordinal', strategy='uniform')),
+        ('discretizer', KBinsDiscretizer(
+            n_bins=nbins, encode='ordinal', strategy='uniform')),
         ('OvRslim', OneVsRestClassifier(SLIM())),
     ])
 
@@ -144,14 +150,12 @@ if __name__ == '__main__':
     print(conf_mat)
     print('*' * 60, '\n OneVsRestClassifier fit ')
 
-
     class CustomMultiLabelBinarizer(BaseEstimator, TransformerMixin):
         def fit(self, X, y=None):
             return self
 
         def transform(self, X):
             return MultiLabelBinarizer(sparse_output=False).fit_transform(X)
-
 
     slim_onehot = Pipeline([
         ('transaction_encoder', CustomMultiLabelBinarizer()),
@@ -165,7 +169,7 @@ if __name__ == '__main__':
     print("SCORE ", slim_onehot.score(X_test, y_test))
     print(conf_mat)
 
-    import pandas as pd
+    # import pandas as pd
 
     # from skmine.itemsets import SLIM
 
@@ -176,22 +180,22 @@ if __name__ == '__main__':
     #         return pd.DataFrame(data=_X, columns=self.classes_)
     #
 
-    # transactions = [
-    #     ['bananas', 'milk'],
-    #     ['milk', 'bananas', 'cookies'],
-    #     ['cookies', 'butter', 'tea'],
-    #     ['tea'],
-    #     ['milk', 'bananas', 'tea'],
-    # ]
+    transactions = [
+        ['bananas', 'milk'],
+        ['milk', 'bananas', 'cookies'],
+        ['cookies', 'butter', 'tea'],
+        ['tea'],
+        ['milk', 'bananas', 'tea'],
+    ]
     # # # te = TransactionEncoder()
     # # # D = te.fit(transactions).transform(transactions)
     # print(transactions)
     # binar = MultiLabelBinarizer(sparse_output=False)
     # D = binar.fit_transform(transactions)
     # print(pd.DataFrame(data=D, columns=binar.classes_))
-    # slim = SLIM()
-    # res = slim.fit(transactions).transform(transactions)
-    # # print(res)
+    slim = SLIM()
+    res = slim.fit(transactions).transform(transactions)
+    print(res)
     # new_transactions = [
     #     ['bananas', 'milk'],
     #     ['milk', 'sirup', 'cookies'],
