@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 import time
 
-from sklearn.preprocessing import MultiLabelBinarizer
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -23,6 +22,7 @@ from pyroaring import BitMap as Bitmap
 from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import MultiLabelBinarizer
 
 
 def _to_vertical(D, stop_items=None, return_len=False):  # -> tuple | dict
@@ -261,12 +261,11 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
         codes_length_D = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        codes_length_D[codes_length_D == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
+        # codes_length_D[codes_length_D == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
 
         return codes_length_D
 
     def decision_function(self, D):
-
         """ Function use by a classifier predict method, like in sklearn.multiclass.OneVsRestClassifier
         which seek to the highest values of decision_function among all classes
 
@@ -656,8 +655,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
-        if hasattr(D, "ndim") and D.ndim == 2: # TODO check and transform input outside ?
-            print(D)
+        if hasattr(D, "ndim") and D.ndim == 2:
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
@@ -665,7 +663,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         else:
             # compute tids for each item in Bitmap
             item_to_tids = _to_vertical(D)
-        print(item_to_tids)
+
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
