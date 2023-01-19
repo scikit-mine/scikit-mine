@@ -14,6 +14,8 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 import time
+
+from sklearn.preprocessing import MultiLabelBinarizer
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -84,6 +86,14 @@ def cover(sct: dict, itemsets: list) -> dict:
     return covers
 
 
+class OneHotDataframe(MultiLabelBinarizer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def transform(self, Z):
+        return pd.DataFrame(super().transform(Z), columns=self.classes_)
+
+
 class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
     """SLIM: Directly Mining Descriptive Patterns
 
@@ -149,8 +159,9 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         }
 
     def fit_transform(self, X, y=None, **tsf_params):
-        """
-        Overide to apply parameters to transform and not to fit method
+        """   Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
+        Returns a transformed version of `X`: i.e. the fitted codetable
+
         Returns
         -------
         df_new : pandas.Dataframe
@@ -179,6 +190,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         y: Ignored
             Not used, present here for API consistency by convention.
         """
+        # X = one_hot_dataframe(X)
+
         self._validate_data(X, force_all_finite=False, accept_sparse=False,
                             ensure_2d=False, ensure_min_samples=1, dtype=list)
         self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)
@@ -241,14 +254,14 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         mat = self.cover(D)
-        code_lengths = self.transform(singletons=True, return_tids=False, drop_null_usage=False)
+        code_lengths = self.transform(D, singletons=True, return_tids=False, drop_null_usage=False)
         # the codetable is Laplace corrected: the usage of each itemset is increased by 1 in order that all seen
         # items have a code
         code_lengths["usage"] += 1
         code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
         codes_length_D = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        # codes[codes == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
+        codes_length_D[codes_length_D == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
 
         return codes_length_D
 
@@ -479,7 +492,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         else:  # transactional
             D_sct = _to_vertical(D)
 
-        isets = self.transform(singletons=True, return_tids=False, drop_null_usage=False)
+        isets = self.transform(D, singletons=True, return_tids=False, drop_null_usage=False)
         isets = [tuple(itemset) for itemset in isets[isets["itemset"].map(set(D_sct).issuperset)]["itemset"].to_list()]
         covers = cover(D_sct, isets)
 
@@ -489,7 +502,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-    def transform(self, *, singletons=True, return_tids=False, lexicographic_order=True,
+    def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True,
                   drop_null_usage=True, return_dl=False, out=None):
 
         """Get a user-friendly copy of the codetable
@@ -643,7 +656,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
-        if hasattr(D, "ndim") and D.ndim == 2:
+        if hasattr(D, "ndim") and D.ndim == 2: # TODO check and transform input outside ?
+            print(D)
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
@@ -651,7 +665,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         else:
             # compute tids for each item in Bitmap
             item_to_tids = _to_vertical(D)
-
+        print(item_to_tids)
         sct = pd.Series(item_to_tids)  # sct for "standard code table"
         # The usage of an itemset X ∈ CT (Code Table) is the number of transactions t ∈ D which have X in their cover.
         # A cover(t) is the set of itemsets X ∈ CT used to encode a transaction t
@@ -795,56 +809,64 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return CTc, data_size, model_size
 
-
-if __name__ == '__main__':
-    from skmine.itemsets import SLIM
-
-    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    print(*D, sep='\n')
-    slim = SLIM()
-    slim.fit(D)
-    # for k, v in slim.__dict__.items():
-    #     print("->", k ,' : ', v)
-    # res = slim.transform(D)
-    new_itemset = [['cookies', 'butter']]
-
-    print("score", slim.decision_function(new_itemset))
-
-
-    def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
-
-
-    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    new_D = to_tabular([['cookies', 'butter']])
-    slim2 = SLIM().fit(to_tabular(D))
-    print("score", slim2.decision_function(new_D))
-
-    # print(slim.__dict__)
-    # for k, v in slim.__dict__.items():
-    #     print("->", k, ' : ', v)
-    # print(res)
-    #
-    # [ OK ] SLIM === check_no_attributes_set_in_init
-    # [ OK ] SLIM === check_estimators_dtypes
-    # [ OK ] SLIM === check_fit_score_takes_y
-    # [ OK ] SLIM === check_estimators_fit_returns_self
-    # [ OK ] SLIM === check_estimators_fit_returns_self
-    # [FAIL] SLIM === check_pipeline_consistency SLIM is non deterministic
-    # [ OK ] SLIM === check_estimators_overwrite_params
-    # [ OK ] SLIM === check_estimator_sparse_data
-    # [FAIL] SLIM === check_estimators_pickle 'SLIM' object has no attribute 'standard_codetable_'
-    # [ OK ] SLIM === check_estimator_get_tags_default_keys
-    # [FAIL] SLIM === check_transformer_general
-    # [FAIL] SLIM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
-    # [FAIL] SLIM === check_transformer_general
-    # [ OK ] SLIM === check_transformers_unfitted
-    # [ OK ] SLIM === check_transformer_n_iter
-    # [ OK ] SLIM === check_parameters_default_constructible
-    # [ OK ] SLIM === check_fit2d_1sample
-    # [ OK ] SLIM === check_fit2d_1feature
-    # [ OK ] SLIM === check_get_params_invariance
-    # [ OK ] SLIM === check_set_params
-    # [FAIL] SLIM === check_dict_unchanged Estimator changes __dict__ during decision_function
-    # [ OK ] SLIM === check_dont_overwrite_parameters
-    # [FAIL] SLIM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
-    # [ OK ] SLIM === check_fit_check_is_fitted
+#
+# if __name__ == '__main__':
+#     from skmine.itemsets import SLIM
+#
+#
+#     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+#
+#
+#     D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+#     new_D = [['cookies', 'butter']]  # to_tabular(
+#     # slim = SLIM().fit(D)
+#     # print("SCORE \n", slim.decision_function(new_D))
+#     # print("CODE LENGTH\n", slim.get_code_length(new_D))
+#
+#
+#     onehot = OneHotDataframe()
+#     Done = onehot.fit_transform(D)
+#     new_Done = onehot.transform(new_D)
+#     print(pd.DataFrame(Done, columns=onehot.classes_))
+#     print(pd.DataFrame(new_Done, columns=onehot.classes_))
+#
+#     slim2 = SLIM().fit(Done)
+#     # print("SCORE \n", slim2.decision_function(new_Done))
+#     # print("CODE LENGTH\n", slim2.get_code_length(new_Done))
+#
+#     # from sklearn.preprocessing import MultiLabelBinarizer
+#     #
+#     # binar = MultiLabelBinarizer()
+#     # # binar.set_output(transform="pandas")
+#     # print(binar.fit_transform(D))
+#     # pd.DataFrame(binar.fit_transform(D), columns=binar.classes_)
+#
+#     # print(slim.__dict__)
+#     # for k, v in slim.__dict__.items():
+#     #     print("->", k, ' : ', v)
+#     # print(res)
+#     #
+#     # [ OK ] SLIM === check_no_attributes_set_in_init
+#     # [ OK ] SLIM === check_estimators_dtypes
+#     # [ OK ] SLIM === check_fit_score_takes_y
+#     # [ OK ] SLIM === check_estimators_fit_returns_self
+#     # [ OK ] SLIM === check_estimators_fit_returns_self
+#     # [FAIL] SLIM === check_pipeline_consistency SLIM is non deterministic
+#     # [ OK ] SLIM === check_estimators_overwrite_params
+#     # [ OK ] SLIM === check_estimator_sparse_data
+#     # [FAIL] SLIM === check_estimators_pickle 'SLIM' object has no attribute 'standard_codetable_'
+#     # [ OK ] SLIM === check_estimator_get_tags_default_keys
+#     # [FAIL] SLIM === check_transformer_general
+#     # [FAIL] SLIM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
+#     # [FAIL] SLIM === check_transformer_general
+#     # [ OK ] SLIM === check_transformers_unfitted
+#     # [ OK ] SLIM === check_transformer_n_iter
+#     # [ OK ] SLIM === check_parameters_default_constructible
+#     # [ OK ] SLIM === check_fit2d_1sample
+#     # [ OK ] SLIM === check_fit2d_1feature
+#     # [ OK ] SLIM === check_get_params_invariance
+#     # [ OK ] SLIM === check_set_params
+#     # [FAIL] SLIM === check_dict_unchanged Estimator changes __dict__ during decision_function
+#     # [ OK ] SLIM === check_dont_overwrite_parameters
+#     # [FAIL] SLIM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
+#     # [ OK ] SLIM === check_fit_check_is_fitted

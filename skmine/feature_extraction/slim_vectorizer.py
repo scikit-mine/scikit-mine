@@ -84,7 +84,7 @@ class SLIMVectorizer(SLIM):
             D = _filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
-    def transform(self, newD) -> pandas.DataFrame:
+    def transform(self, newD, **tsf_params) -> pandas.DataFrame:
         """Transform new data
 
         Parameters
@@ -103,7 +103,7 @@ class SLIMVectorizer(SLIM):
         """
         stop_items = self.stop_items or set()
         D_sct, _len = _to_vertical(newD, stop_items=stop_items, return_len=True)
-        code_lengths = super().transform(return_tids=False, singletons=True, drop_null_usage=False)
+        code_lengths = super().transform(newD, return_tids=False, singletons=True, drop_null_usage=False)
         code_lengths = pd.Series(code_lengths["usage"].values, index=code_lengths["itemset"].apply(tuple))
         code_lengths = code_lengths[code_lengths.index.map(set(D_sct).issuperset)]
 

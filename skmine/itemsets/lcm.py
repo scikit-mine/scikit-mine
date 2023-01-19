@@ -99,7 +99,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             # "non_deterministic": False,  # default
             # "requires_positive_X": True,
             # "requires_positive_y": False,  # default
-            # "X_types": ['2darray'],  # ["categorical"],  # default
+            # "X_types": ['2darray'], 2dlabels # ["categorical"],  # default
             # # "poor_score": False,  # default
             "no_validation": True,
             # "multioutput": False,  # default
