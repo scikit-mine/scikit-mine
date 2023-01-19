@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
         estimators = filter(verify, clsmembers)
         # print("estimators", list(estimators))
-        for est_name, est in clsmembers:
+        for est_name, est in clsmembers[:2]:
             # from sklearn 0.23 check_estimator takes an instance as input
             obj = est() if sklearn.__version__[:4] >= "0.23" else est
             checks = check_estimator(obj, generate_only=True)

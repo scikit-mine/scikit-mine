@@ -57,7 +57,7 @@ def _log2(values) -> pd.Series:
     """
     res_index = values.index if isinstance(values, pd.Series) else None
     res = np.zeros(len(values), dtype=np.float32)
-    res[values != 0] = np.log2(values[values != 0]).astype(np.float32)
+    res[values != 0] = np.log2(values[values != 0]).astype(np.float32) # TODO : see if pb in 0 issue Alex
     return pd.Series(res, index=res_index)
 
 
@@ -156,7 +156,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             "no_validation": True,
         }
 
-    def fit_transform(self, X, y=None, **tsf_params):
+    def fit_transform(self, X, y=None, **tsf_params): # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
         """   Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
         Returns a transformed version of `X`: i.e. the fitted codetable
 
@@ -191,7 +191,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
-        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)  # TODO : drop not significant
+        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)
+        # TODO : significant for one-hot D ,not for list of itemset
         start = time.time()
         self.prefit(X, y=y)
         while True:
@@ -227,7 +228,11 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         Parameters
         ----------
         D: list or np.ndarray or pd.DataFrame
-          new data to make predictions on, in tabular format
+          new data to make predictions on, in tabular format.
+
+        Note
+        ----
+        type of input D should be the same as in one ingest in fit method
 
         Returns
         -------
@@ -280,6 +285,10 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         ----------
         D: list or np.ndarray or pd.DataFrame
           new data to make predictions on, in tabular format
+
+        Note
+        ----
+        type of input D should be the same as in one ingest in fit method
 
         Returns
         -------
@@ -810,21 +819,21 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         return CTc, data_size, model_size
 
 
-#
-# if __name__ == '__main__':
-#     from skmine.itemsets import SLIM
-#
-#     D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-#     new_D = [['cookies', 'butter']]  # to_tabular(
-#     slim = SLIM().fit(D)
-#     print("SCORE \n", slim.decision_function(new_D))
-#     print("CODE LENGTH\n", slim.get_code_length(new_D))
-#     onehot = OneHotDataframe()
-#     Done = onehot.fit_transform(D)
-#     new_Done = onehot.transform(new_D)
-#     slim2 = SLIM().fit(Done)
-#     print("SCORE \n", slim2.decision_function(new_Done))
-#     print("CODE LENGTH\n", slim2.get_code_length(new_Done))
+
+if __name__ == '__main__':
+    from skmine.itemsets import SLIM
+
+    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    new_D = [['cookies', 'butter']]  # to_tabular(
+    slim = SLIM().fit(D)
+    print("SCORE \n", slim.decision_function(new_D))
+    print("CODE LENGTH\n", slim.get_code_length(new_D))
+    onehot = OneHotDataframe()
+    Done = onehot.fit_transform(D)
+    new_Done = onehot.transform(new_D)
+    slim2 = SLIM().fit(Done)
+    print("SCORE \n", slim2.decision_function(new_Done))
+    print("CODE LENGTH\n", slim2.get_code_length(new_Done))
 #
 #
 #     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")

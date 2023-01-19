@@ -1,6 +1,5 @@
 import numpy as np
-from functools import reduce
-from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skmine.itemsets.slim import SLIM
@@ -88,7 +87,6 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
             Class labels for samples in X
         """
         check_is_fitted(self, "classes_")
-
         # self.models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
         self.models_scores = np.vstack([model.decision_function(X).values for model in self.models_]).T
 
@@ -99,6 +97,7 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         #     best_index = np.argmax(scores)
         #     predictions.append(self.classes_[0] if best_index is None else self.classes_[best_index])
         # return np.array(predictions)
+
         return self.classes_[self.models_scores.argmax(axis=1)]
 
     def __copy__(self):

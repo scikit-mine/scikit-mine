@@ -25,10 +25,7 @@ from sklearn.utils.validation import check_array, check_is_fitted
 import sklearn.utils.estimator_checks
 from skmine.utils import _check_min_supp
 from skmine.utils import filter_maximal
-
-# from ..base import BaseMiner, DiscovererMixin
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import MultiLabelBinarizer
 
 
 class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #TransformerMixin, BaseEstimator) : :
@@ -89,7 +86,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         # item
         # self.ord_item_freq = []  # list of ordered item by decreasing frequency
 
-    def get_feature_names_out(self, input_features=None):
+    def get_feature_names_out(self, input_features=None): # TODO effect on set_output ?
         columns = ["itemset", "support"] if not self.return_tids_ else ["itemset", "support", "tids"]
 
         return columns
@@ -239,7 +236,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         # accept_sparse=False, force_all_finite=True, ensure_min_samples=1, dtype=int)  # [int, str])
         check_is_fitted(self, 'n_features_in_')
         n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D)
-        if n_features_in_ != self.n_features_in_:
+        if n_features_in_ != self.n_features_in_: # TODO : significant for one-hot D ,not for list of itemset
             raise ValueError('Shape of input is different from what was seen in `fit`')
 
         # Input validation
@@ -441,7 +438,7 @@ if __name__ == '__main__':
     # print(patterns)
 
     # TRY ONE HOT ENCODING inputs
-    patterns = LCM(min_supp=3).fit_transform(D, return_tids=True)
+    patterns = LCM(min_supp=3).fit_transform(D, return_tids=True) # TODO : pb of signature expecting dict ? super()
     print(patterns)
     # from sklearn.preprocessing import MultiLabelBinarizer
     #
