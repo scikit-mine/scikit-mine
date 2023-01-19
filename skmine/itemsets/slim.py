@@ -89,7 +89,8 @@ def cover(sct: dict, itemsets: list) -> dict:
 class OneHotDataframe(MultiLabelBinarizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
+    def fit_transform(self, y):
+        return pd.DataFrame(super().fit_transform(y), columns=self.classes_)
     def transform(self, Z):
         return pd.DataFrame(super().transform(Z), columns=self.classes_)
 
@@ -145,9 +146,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         self.max_time = max_time
         self.items = items
 
-    # def __getstate__(self):
-    #     out = self.__dict__.copy()
-    #     return out
     def _more_tags(self):  # tags for sklearn check_estimators)
         return {
             "non_deterministic": True,  # default
@@ -167,7 +165,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         df_new : pandas.Dataframe
             Codetable fitted from X data.
         """
-        print("tsf_params", tsf_params)
 
         if y is None:
             return self.fit(X).transform(X, tsf_params)
@@ -192,9 +189,9 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
         # X = one_hot_dataframe(X)
 
-        self._validate_data(X, force_all_finite=False, accept_sparse=False,
-                            ensure_2d=False, ensure_min_samples=1, dtype=list)
-        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)
+        self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
+                            ensure_min_samples=1, dtype=list)
+        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)  # TODO : drop not significant
         start = time.time()
         self.prefit(X, y=y)
         while True:
@@ -229,7 +226,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         Parameters
         ----------
-        D: np.ndarray or pd.DataFrame
+        D: list or np.ndarray or pd.DataFrame
           new data to make predictions on, in tabular format
 
         Returns
@@ -266,16 +263,22 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         return codes_length_D
 
     def decision_function(self, D):
-        """ Function use by a classifier predict method, like in sklearn.multiclass.OneVsRestClassifier
-        which seek to the highest values of decision_function among all classes
+        """ Function use to predict class of itemset D (can be a list of iterable of itemset).
+         It is used by a classifier predict method, like in sklearn.multiclass.OneVsRestClassifier where
+         the highest values of decision_function among all classes.
 
-        IThe shorter code length (cl) of D is, the higher is the probability for D to belong to same class.
+        The shorter code length ($cl \in ]0 + \infty[$) of D is,
+        the higher is the probability for D to belong to same class.
         Therefore, mapping function _fonc(.)  should be monotonically decreasing on $]0 + \infty[$
-        We choose by defaukt _fonc(x) = exp(-0.2 * x) to get probability in ]0,1] but other can be coded like _fonc(x)=-x
+        We choose by default $_fonc(x)=exp(-0.2*x)$ to get probability in $]0,1]$ but other can be coded like
+        $_fonc(x)=-x$
+
+        Unlike to sklearn-convention (https://scikit-learn.org/stable/glossary.html#term-decision_function),
+        this decision function doesn't return a signed distance from a boundary because it's not easy to compute it.
 
         Parameters
         ----------
-        D: np.ndarray or pd.DataFrame
+        D: list or np.ndarray or pd.DataFrame
           new data to make predictions on, in tabular format
 
         Returns
@@ -288,8 +291,10 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         # print("code length\n", code_l, " \n-> decision function \n ", fonc(code_l))
         return _fonc(self.get_code_length(D))
 
+    # TODO see if predict_proba (in place of decision function) allow easy binary classification
     # def predict_proba(self, D): #attempt to unify binary and multi-class
     # see predict_proba in https://scikit-learn.org/stable/glossary.html#term-decision_function
+    # https://github.com/scikit-learn/scikit-learn/blob/98cf537f5c538fdbc9d27b851cf03ce7611b8a48/sklearn/multiclass.py#L455
     #     def fonc(x):
     #         return np.exp(-x)
     #
@@ -534,14 +539,11 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit(D).transform(singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
-          itemset    tids
-        0  [A, B]  (0, 1)
-        1  [B, D]     (2)
-        2     [B]      ()
-        3     [A]      ()
-        4     [C]  (0, 2)
-        5     [D]      ()
+        >>> SLIM().fit_transform(D, singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
+          itemset  usage
+        0  [A, B]      2
+        1  [B, D]      1
+        2     [C]      2
 
         Returns
         -------
@@ -594,8 +596,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
         >>> slim = SLIM()
-        >>> slim.fit(D).transform(D)  # doctest: +SKIP
-        >>> slim.reconstruct()  # doctest: +SKIP
+        >>> slim.fit(D) # doctest: +SKIP
+        >>> slim.reconstruct() # doctest: +SKIP
         0    [A, B, C]
         1       [A, B]
         2    [B, C, D]
@@ -807,31 +809,26 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return CTc, data_size, model_size
 
+
 #
 # if __name__ == '__main__':
 #     from skmine.itemsets import SLIM
 #
-#
-#     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
-#
-#
 #     D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
 #     new_D = [['cookies', 'butter']]  # to_tabular(
-#     # slim = SLIM().fit(D)
-#     # print("SCORE \n", slim.decision_function(new_D))
-#     # print("CODE LENGTH\n", slim.get_code_length(new_D))
-#
-#
+#     slim = SLIM().fit(D)
+#     print("SCORE \n", slim.decision_function(new_D))
+#     print("CODE LENGTH\n", slim.get_code_length(new_D))
 #     onehot = OneHotDataframe()
 #     Done = onehot.fit_transform(D)
 #     new_Done = onehot.transform(new_D)
-#     print(pd.DataFrame(Done, columns=onehot.classes_))
-#     print(pd.DataFrame(new_Done, columns=onehot.classes_))
-#
 #     slim2 = SLIM().fit(Done)
-#     # print("SCORE \n", slim2.decision_function(new_Done))
-#     # print("CODE LENGTH\n", slim2.get_code_length(new_Done))
+#     print("SCORE \n", slim2.decision_function(new_Done))
+#     print("CODE LENGTH\n", slim2.get_code_length(new_Done))
 #
+#
+#     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+
 #     # from sklearn.preprocessing import MultiLabelBinarizer
 #     #
 #     # binar = MultiLabelBinarizer()
