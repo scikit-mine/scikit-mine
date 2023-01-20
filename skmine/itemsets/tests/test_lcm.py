@@ -150,10 +150,10 @@ def test_lcm_empty_fit():
     assert res.empty
 
     # # 2. test with empty data  # !!!  not with check_estimators ensure_min_samples
-    lcm = LCM(min_supp=3)
-    res = lcm.fit_transform([])
-    assert isinstance(res, pd.DataFrame)
-    assert res.empty
+    # lcm = LCM(min_supp=3)
+    # res = lcm.fit_transform([])
+    # assert isinstance(res, pd.DataFrame)
+    # assert res.empty
 
 
 def test_lcm_discover():

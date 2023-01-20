@@ -18,7 +18,7 @@ import time
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
-# from skmine.base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
+## from skmine.base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
 from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -57,7 +57,7 @@ def _log2(values) -> pd.Series:
     """
     res_index = values.index if isinstance(values, pd.Series) else None
     res = np.zeros(len(values), dtype=np.float32)
-    res[values != 0] = np.log2(values[values != 0]).astype(np.float32) # TODO : see if pb in 0 issue Alex
+    res[values != 0] = np.log2(values[values != 0]).astype(np.float32)  # TODO : see if pb in 0 issue Alex
     return pd.Series(res, index=res_index)
 
 
@@ -89,8 +89,10 @@ def cover(sct: dict, itemsets: list) -> dict:
 class OneHotDataframe(MultiLabelBinarizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
     def fit_transform(self, y):
         return pd.DataFrame(super().fit_transform(y), columns=self.classes_)
+
     def transform(self, Z):
         return pd.DataFrame(super().transform(Z), columns=self.classes_)
 
@@ -149,14 +151,11 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
     def _more_tags(self):  # tags for sklearn check_estimators)
         return {
             "non_deterministic": True,  # default
-            # "requires_positive_X": True,
-            # "requires_positive_y": False,  # default
             # "X_types": ['2darray'],  # ["categorical"],  # default
-            # # "poor_score": False,  # default
             "no_validation": True,
         }
 
-    def fit_transform(self, X, y=None, **tsf_params): # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
+    def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
         """   Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
         Returns a transformed version of `X`: i.e. the fitted codetable
 
@@ -191,7 +190,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
-        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X)
+        self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X[-1])
         # TODO : significant for one-hot D ,not for list of itemset
         start = time.time()
         self.prefit(X, y=y)
@@ -297,10 +296,10 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         _fonc = lambda x: np.exp(-0.2 * x)
-        # print("code length\n", code_l, " \n-> decision function \n ", fonc(code_l))
+
         return _fonc(self.get_code_length(D))
 
-    # TODO see if predict_proba (in place of decision function) allow easy binary classification
+    # TOSEE if predict_proba (in place of decision function) allow easy binary classification
     # def predict_proba(self, D): #attempt to unify binary and multi-class
     # see predict_proba in https://scikit-learn.org/stable/glossary.html#term-decision_function
     # https://github.com/scikit-learn/scikit-learn/blob/98cf537f5c538fdbc9d27b851cf03ce7611b8a48/sklearn/multiclass.py#L455
@@ -666,7 +665,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         2. track bitmaps for the top `self.n_items` frequent items from `D`
         3. set `self.data_size_` and `self.model_size` given the standard codetable
         """
-        if hasattr(D, "ndim") and D.ndim == 2:
+        if hasattr(D, "ndim") and D.ndim == 2:  # TODO, refactor in fit method, with sklearn input checking !
             D = _check_D(D)
             if y is not None:
                 D = supervised_to_unsupervised(D, y)  # SKLEARN_COMPAT
@@ -819,9 +818,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         return CTc, data_size, model_size
 
 
-
 if __name__ == '__main__':
-    from skmine.itemsets import SLIM
 
     D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
     new_D = [['cookies', 'butter']]  # to_tabular(
@@ -845,32 +842,3 @@ if __name__ == '__main__':
 #     # print(binar.fit_transform(D))
 #     # pd.DataFrame(binar.fit_transform(D), columns=binar.classes_)
 #
-#     # print(slim.__dict__)
-#     # for k, v in slim.__dict__.items():
-#     #     print("->", k, ' : ', v)
-#     # print(res)
-#     #
-#     # [ OK ] SLIM === check_no_attributes_set_in_init
-#     # [ OK ] SLIM === check_estimators_dtypes
-#     # [ OK ] SLIM === check_fit_score_takes_y
-#     # [ OK ] SLIM === check_estimators_fit_returns_self
-#     # [ OK ] SLIM === check_estimators_fit_returns_self
-#     # [FAIL] SLIM === check_pipeline_consistency SLIM is non deterministic
-#     # [ OK ] SLIM === check_estimators_overwrite_params
-#     # [ OK ] SLIM === check_estimator_sparse_data
-#     # [FAIL] SLIM === check_estimators_pickle 'SLIM' object has no attribute 'standard_codetable_'
-#     # [ OK ] SLIM === check_estimator_get_tags_default_keys
-#     # [FAIL] SLIM === check_transformer_general
-#     # [FAIL] SLIM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
-#     # [FAIL] SLIM === check_transformer_general
-#     # [ OK ] SLIM === check_transformers_unfitted
-#     # [ OK ] SLIM === check_transformer_n_iter
-#     # [ OK ] SLIM === check_parameters_default_constructible
-#     # [ OK ] SLIM === check_fit2d_1sample
-#     # [ OK ] SLIM === check_fit2d_1feature
-#     # [ OK ] SLIM === check_get_params_invariance
-#     # [ OK ] SLIM === check_set_params
-#     # [FAIL] SLIM === check_dict_unchanged Estimator changes __dict__ during decision_function
-#     # [ OK ] SLIM === check_dont_overwrite_parameters
-#     # [FAIL] SLIM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
-#     # [ OK ] SLIM === check_fit_check_is_fitted

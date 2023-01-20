@@ -14,15 +14,13 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 from collections import defaultdict
 from itertools import takewhile
 
-import numpy as np
 import pandas as pd
 import os
 import shutil
 from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
-from sklearn.utils.validation import check_array, check_is_fitted
-import sklearn.utils.estimator_checks
+from sklearn.utils.validation import check_is_fitted
 from skmine.utils import _check_min_supp
 from skmine.utils import filter_maximal
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -79,17 +77,11 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
     def __init__(self, *, min_supp=0.2, n_jobs=1, verbose=False):
         self.min_supp = min_supp  # cf docstring: minimum support provided by user
         self.n_jobs = n_jobs  # number of jobs launched by joblib
-        # self.max_length = -1  # maximum length of an itemset
         self.verbose = verbose
-        # self.min_supp_ = _check_min_supp(self.min_supp)
-        # self.item_to_tids = SortedDict()  # Dict : key item ordered by decreasing frequency , value : tids for this
-        # item
-        # self.ord_item_freq = []  # list of ordered item by decreasing frequency
 
-    def get_feature_names_out(self, input_features=None): # TODO effect on set_output ?
-        columns = ["itemset", "support"] if not self.return_tids_ else ["itemset", "support", "tids"]
-
-        return columns
+    # def get_feature_names_out(self, input_features=None):  # for  set_output(transform='pandas') ?
+    #     columns = ["itemset", "support"] if not self.return_tids_ else ["itemset", "support", "tids"]
+    #     return columns
 
     def _more_tags(self):
         return {
@@ -133,15 +125,9 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             if any entry in D is not iterable itself OR if any item is not **hashable**
             OR if all items are not **comparable** with each other.
         """
-        # print(type(D))
-        # D_one_hot = MultiLabelBinarizer().fit_transform(D)
-        #
-        # D_one_hot = check_array(D_one_hot, accept_sparse=False, ensure_2d=True, ensure_min_samples=1, dtype=int,
-        #                 force_all_finite=True)  # [int, str])
-        # print("OHOHHHH\n", D)
-        # print(type(D), D.shape)
-        # print("after\n", D)
-        self._validate_data(D, force_all_finite=False, accept_sparse=False, ensure_2d=False, ensure_min_samples=0, dtype=list)
+
+        self._validate_data(D, force_all_finite=False, accept_sparse=False, ensure_2d=False, ensure_min_samples=1,
+                            dtype=list)
         n_transactions_ = 0
         item_to_tids_ = defaultdict(Bitmap)
         for transaction in D:
@@ -167,14 +153,15 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             ord_item_freq.append(item)
             ord_freq_dic[idx] = tid  # rename most frequent item like cat by 0, second  dog by 1
 
-        self.item_to_tids_ = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}
-        self.ord_item_freq_ = ord_item_freq  # [cat, dog, '0', ...]
+        self.item_to_tids_ = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}key item ordered by decreasing frequency
+        self.ord_item_freq_ = ord_item_freq  # [cat, dog, '0', ...] list of ordered item by decreasing frequency
         self.lexicographic_order_ = lexicographic_order
         self.return_tids_ = return_tids
-        self.max_length_ = max_length
+        self.max_length_ = max_length  # maximum length of an itemset,  -1 by default
         self.out_ = out
-        self.n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D)
-        return self  # for call .fit().discover() in DiscovererMixin()
+        self.n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
+
+        return self
 
     def transform(self, D):
         """Return the set of closed itemsets, with respect to the minimum support
@@ -222,24 +209,20 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         -------
         >>> from skmine.itemsets import LCM
         >>> D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]
-        >>> LCM(min_supp=2).fit_transform(D, dict(lexicographic_order=True))
+        >>> LCM(min_supp=2).fit_transform(D, lexicographic_order=True)
              itemset  support
         0     [2, 5]        3
         1  [2, 3, 5]        2
-        >>> LCM(min_supp=2).fit_transform(D, dict(return_tids=True))
+        >>> LCM(min_supp=2).fit_transform(D, return_tids=True)
              itemset  support       tids
         0     [2, 5]        3  (0, 1, 2)
         1  [2, 3, 5]        2     (0, 1)
         """
 
-        # D_one_hot = MultiLabelBinarizer().fit_transform(D) D_one_hot = check_array(D_one_hot, ensure_2d=True,
-        # accept_sparse=False, force_all_finite=True, ensure_min_samples=1, dtype=int)  # [int, str])
         check_is_fitted(self, 'n_features_in_')
-        n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D)
-        if n_features_in_ != self.n_features_in_: # TODO : significant for one-hot D ,not for list of itemset
+        n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
+        if n_features_in_ != self.n_features_in_:  # TODO : significant for one-hot D ,not for list of itemset
             raise ValueError('Shape of input is different from what was seen in `fit`')
-
-        # Input validation
 
         if self.out_ is None:  # store results in memory
             dfs = Parallel(n_jobs=self.n_jobs, prefer="processes")(
@@ -262,7 +245,8 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
                 delayed(self._explore_root)(item, tids, root_file=f"{temp_dir}/root{k}.dat")
                 for k, (item, tids) in enumerate(list(self.item_to_tids_.items())))
             print("OOOOO outfile ", self.out_)
-            with open(self.out_, 'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
+            with open(self.out_,
+                      'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
                 for fname in [f"{temp_dir}/root{k}.dat" for k in
                               range(len(list(self.item_to_tids_.items())))]:  # all items root files
                     with open(fname) as infile:
@@ -418,56 +402,21 @@ class LCMMax(LCM, TransformerMixin):
     setattr(transform, "__doc__", LCM.transform.__doc__.split("Example")[0])
 
 
-if __name__ == '__main__':
-    D = [
-        [1, 2, 3, 4, 5, 6],
-        [2, 3, 5],
-        [2, 5],
-        [1, 2, 4, 5, 6],
-        [2, 4],
-        [1, 4, 6],
-        [3, 4, 6],
-    ]
-    # TRY SET_OUTPUTS, input should have index like pd.Series + same len of input(D) and output(patterns)
-    # import pandas as pd
-    # D = pd.Series(D)
-    # print(D)
-    # lcm = LCM(min_supp=3).set_output(transform='pandas')
-    # lcm.fit(D, dict(lexicographic_order=True))
-    # patterns = lcm.transform(D)
-    # print(patterns)
+# if __name__ == '__main__':
+#     D = [
+#         [1, 2, 3, 4, 5, 6],
+#         [2, 3, 5],
+#         [2, 5],
+#         [1, 2, 4, 5, 6],
+#         [2, 4],
+#         [1, 4, 6],
+#         [3, 4, 6],
+#     ]
+#     # TRY SET_OUTPUTS, input should have index like pd.Series + same len of input(D) and output(patterns)
+#     D = pd.Series(D)
+#     print(D)
+#     lcm = LCM(min_supp=3)  # .set_output(transform='pandas')
+#     lcm.fit(D, lexicographic_order=True)
+#     patterns = lcm.transform(D)
+#     print(patterns)
 
-    # TRY ONE HOT ENCODING inputs
-    patterns = LCM(min_supp=3).fit_transform(D, return_tids=True) # TODO : pb of signature expecting dict ? super()
-    print(patterns)
-    # from sklearn.preprocessing import MultiLabelBinarizer
-    #
-    # ohe = MultiLabelBinarizer().fit_transform(D)
-    # print(ohe,type(ohe))
-    # print("TAGS LCM estimators\n", lcm._get_tags() )
-    # [ OK ] LCM === check_no_attributes_set_in_init
-    # [ OK ] LCM === check_estimators_dtypes
-    # [ OK ] LCM === check_fit_score_takes_y
-    # [ OK ] LCM === check_estimators_fit_returns_self
-    # [ OK ] LCM === check_estimators_fit_returns_self
-    # [FAIL] LCM === check_pipeline_consistency ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
-    # [ OK ] LCM === check_estimators_overwrite_params
-    # [ OK ] LCM === check_estimator_sparse_data
-    # [FAIL] LCM === check_estimators_pickle ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
-    # [ OK ] LCM === check_estimator_get_tags_default_keys
-    # [FAIL] LCM === check_transformer_general
-    # [FAIL] LCM === check_transformer_preserve_dtypes 'DataFrame' object has no attribute 'dtype'
-    # [FAIL] LCM === check_transformer_general
-    # [ OK ] LCM === check_transformers_unfitted
-    # [ OK ] LCM === check_transformer_n_iter
-    # [ OK ] LCM === check_parameters_default_constructible
-    # [FAIL] LCM === check_methods_sample_order_invariance "None of [Int64Index([0, 1, 9, 5, 14, 16, 4, 19, 7, 18, 8, 3, 12, 10, 11, 6, 13, 2, 17,\n            15],\n           dtype='int64')] are in the [columns]"
-    # [FAIL] LCM === check_methods_subset_invariance ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
-    # [ OK ] LCM === check_fit2d_1sample
-    # [ OK ] LCM === check_fit2d_1feature
-    # [ OK ] LCM === check_get_params_invariance
-    # [ OK ] LCM === check_set_params
-    # [ OK ] LCM === check_dict_unchanged
-    # [ OK ] LCM === check_dont_overwrite_parameters
-    # [FAIL] LCM === check_fit_idempotent 'DataFrame' object has no attribute 'dtype'
-    # [ OK ] LCM === check_fit_check_is_fitted

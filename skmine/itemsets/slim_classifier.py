@@ -103,49 +103,49 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
     def __copy__(self):
         return SlimClassifier(items=self.items, pruning=self.pruning)
 
-#
-# if __name__ == '__main__':
-#     from skmine.datasets.fimi import fetch_iris
-#     from sklearn.preprocessing import KBinsDiscretizer
-#     from sklearn.pipeline import Pipeline
-#     from sklearn.multiclass import OneVsRestClassifier
-#     from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer, OneHotEncoder, LabelBinarizer
-#     from sklearn.metrics import confusion_matrix
-#     from sklearn.datasets import load_iris
-#     from sklearn.model_selection import train_test_split
-#     import pandas as pd
-#     from skmine.itemsets import SLIM
-#
-#
-#     # # X, y = fetch_iris(return_y=True)
-#     # # y = y - 17
-#     # X, y = load_iris(return_X_y=True)
-#     # nbins = 10
-#     # encode = 'onehot-dense'
-#     # # without return_y=True, the method would have returned the whole dataset in one variable
-#     # print("X shape:", X.shape, "y shape:", y.shape)
-#     #
-#     # est = KBinsDiscretizer(n_bins=nbins, encode=encode, strategy='uniform')
-#     # Xt = est.fit_transform(X)
-#     # print(Xt[:5])
-#     # print("Xt.shape", Xt.shape)
-#     #
-#     # (X_train, X_test, y_train, y_test) = train_test_split(X, y, random_state=1, test_size=0.2, shuffle=True)
-#     # print("X_train shape:", X_train.shape, "y_train shape:", y_train.shape)
-#     # print("X_test shape:", X_test.shape, "y_test shape:", y_test.shape)
-#     # # You can pass in parameter of your classifier the set of your items.
-#     # # This will improve its performance especially on small data sets like iris.
-#     # # items = set(item for transaction in X for item in transaction)
-#     #
-#     # clf = Pipeline([
-#     #     ('discretizer', KBinsDiscretizer(n_bins=nbins, encode=encode, strategy='uniform')),
-#     #     ('OvRslim',  OneVsRestClassifier(SLIM())), # SlimClassifier(items=np.unique(Xt).tolist()) ),
-#     # ])
-#     # #
+
+if __name__ == '__main__':
+    from skmine.datasets.fimi import fetch_iris
+    from sklearn.preprocessing import KBinsDiscretizer
+    from sklearn.pipeline import Pipeline
+    from sklearn.multiclass import OneVsRestClassifier
+    from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer, OneHotEncoder, LabelBinarizer
+    from sklearn.metrics import confusion_matrix
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import train_test_split
+    import pandas as pd
+    from skmine.itemsets import SLIM
+
+
+    # # X, y = fetch_iris(return_y=True)
+    # # y = y - 17
+    X, y = load_iris(return_X_y=True)
+    nbins = 10
+    encode = 'onehot-dense'
+    # # without return_y=True, the method would have returned the whole dataset in one variable
+    # print("X shape:", X.shape, "y shape:", y.shape)
+    #
+    # est = KBinsDiscretizer(n_bins=nbins, encode=encode, strategy='uniform')
+    # Xt = est.fit_transform(X)
+    # print(Xt[:5])
+    # print("Xt.shape", Xt.shape)
+    #
+    (X_train, X_test, y_train, y_test) = train_test_split(X, y, random_state=1, test_size=0.2, shuffle=True)
+    print("X_train shape:", X_train.shape, "y_train shape:", y_train.shape)
+    print("X_test shape:", X_test.shape, "y_test shape:", y_test.shape)
+    # You can pass in parameter of your classifier the set of your items.
+    # This will improve its performance especially on small data sets like iris.
+    # items = set(item for transaction in X for item in transaction)
+
+    clf = Pipeline([
+        ('discretizer', KBinsDiscretizer(n_bins=nbins, encode=encode, strategy='uniform')),
+        ('OvRslim',  OneVsRestClassifier(SLIM())), # SlimClassifier(items=np.unique(Xt).tolist()) ),
+    ])
+    #
 #     # # # clf = SlimClassifier(items=items)
-#     # clf.fit(X_train, y_train)
-#     # print("SCORE ", clf.score(X_test, y_test) * 100, ' %')
-#     # #
+    clf.fit(X_train, y_train)
+    print("SCORE ", clf.score(X_test, y_test) * 100, ' %')
+    #
 #     # y_pred = clf.predict(X_test)
 #     # conf_mat = confusion_matrix(y_test, y_pred)
 #     # print(conf_mat)
