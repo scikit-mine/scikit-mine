@@ -297,29 +297,29 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         _fonc = lambda x: np.exp(-0.2 * x)
-        z = np.array(_fonc(self.get_code_length(D))) # Convert from pd.Series to np vector
-        res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1)
+        # z = np.array(_fonc(self.get_code_length(D))) # Convert from pd.Series to np vector
+        # res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
 
-        return res
+        return _fonc(self.get_code_length(D))
 
-    def predict(self, X):
-        """
-        Predict class labels for samples in X.
-        Parameters
-        ----------
-        X : {array-like, sparse matrix} of shape (n_samples, n_features)
-            The data matrix for which we want to get the predictions.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            Vector containing the class labels for each sample.
-        """
-        from sklearn.utils._array_api import get_namespace
-        xp, _ = get_namespace(X)
-        scores = self.decision_function(X)
-        indices = xp.argmax(scores, axis=1)
-
-        return xp.take(self.items, indices, axis=0)
+    # def predict(self, X):
+    #     """
+    #     Predict class labels for samples in X.
+    #     Parameters
+    #     ----------
+    #     X : {array-like, sparse matrix} of shape (n_samples, n_features)
+    #         The data matrix for which we want to get the predictions.
+    #     Returns
+    #     -------
+    #     y_pred : ndarray of shape (n_samples,)
+    #         Vector containing the class labels for each sample.
+    #     """
+    #     from sklearn.utils._array_api import get_namespace
+    #     xp, _ = get_namespace(X)
+    #     scores = self.decision_function(X)
+    #     indices = xp.argmax(scores, axis=1)
+    #
+    #     return xp.take(self.items, indices, axis=0)
 
     # TOSEE if predict_proba (in place of decision function) allow easy binary classification
     # def predict_proba(self, D): #attempt to unify binary and multi-class
