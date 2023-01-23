@@ -36,9 +36,6 @@ Logs datasets for periodic pattern mining
 .. autofunction:: skmine.datasets.fetch_canadian_tv
 
 
-Instacart Market Basket Analysis
---------------------------------
-.. autofunction:: skmine.datasets.fetch_instacart
 
 
 Synthetic data generation
