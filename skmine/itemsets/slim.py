@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import time
 
+from sklearn.multiclass import OneVsOneClassifier
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
@@ -296,8 +297,10 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         _fonc = lambda x: np.exp(-0.2 * x)
+        z = np.array(_fonc(self.get_code_length(D))) # Convert from pd.Series to np vector
+        res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1)
 
-        return _fonc(self.get_code_length(D))
+        return res
 
     def predict(self, X):
         """
@@ -838,18 +841,46 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
 
 if __name__ == '__main__':
+    transactions = [
+        ['milk', 'bananas'],
+        ['tea', 'New York Times', 'El Pais'],
+        ['New York Times'],
+        ['El Pais', 'The Economist'],
+        ['milk', 'tea'],
+    ]
+    target = [
+        'foodstore',
+        'newspaper',
+        'newspaper',
+        'newspaper',
+        'foodstore',
+    ]
 
-    D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    new_D = [['cookies', 'butter']]  # to_tabular(
-    slim = SLIM().fit(D)
-    print("SCORE \n", slim.decision_function(new_D))
-    print("CODE LENGTH\n", slim.get_code_length(new_D))
-    onehot = OneHotDataframe()
-    Done = onehot.fit_transform(D)
-    new_Done = onehot.transform(new_D)
-    slim2 = SLIM().fit(Done)
-    print("SCORE \n", slim2.decision_function(new_Done))
-    print("CODE LENGTH\n", slim2.get_code_length(new_Done))
+
+    class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
+        def transform(self, X):
+            _X = super().transform(X)
+            return pd.DataFrame(data=_X, columns=self.classes_)
+
+    te = TransactionEncoder()
+    D = te.fit(transactions).transform(transactions)
+    ovo = OneVsOneClassifier(SLIM())
+    ovo.fit(D, y=target)
+    ovo.estimators_
+    print(ovo.decision_function(D))
+    print(ovo.predict(D))
+
+    # D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+    # new_D = [['cookies', 'butter']]  # to_tabular(
+    # slim = SLIM().fit(D)
+    # print("SCORE \n", slim.decision_function(new_D))
+    # print("CODE LENGTH\n", slim.get_code_length(new_D))
+    # onehot = OneHotDataframe()
+    # Done = onehot.fit_transform(D)
+    # new_Done = onehot.transform(new_D)
+    # slim2 = SLIM().fit(Done)
+    # print("SCORE \n", slim2.decision_function(new_Done))
+    # print("CODE LENGTH\n", slim2.get_code_length(new_Done))
 #
 #
 #     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
