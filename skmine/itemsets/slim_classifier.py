@@ -104,69 +104,17 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         return SlimClassifier(items=self.items, pruning=self.pruning)
 
 
-if __name__ == '__main__':
-    from skmine.datasets.fimi import fetch_iris
-    from sklearn.preprocessing import KBinsDiscretizer
-    from sklearn.pipeline import Pipeline
-    from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
-    from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer, OneHotEncoder, LabelBinarizer
-    from sklearn.metrics import confusion_matrix
-    from sklearn.datasets import load_iris
-    from sklearn.model_selection import train_test_split
-    import pandas as pd
-    from skmine.itemsets import SLIM
-
-    transactions = [
-        ['milk', 'bananas'],
-        ['tea', 'New York Times', 'El Pais'],
-        ['New York Times'],
-        ['El Pais', 'The Economist'],
-        ['milk', 'tea'],
-        ['croissant', 'tea'],
-        ['croissant', 'chocolatine', 'milk'],
-        ['Monde diplo', 'Game of Thrones', 'Harry Potter'],
-        ['New York Times', 'Harry Potter'],
-    ]
-    target = [
-        'foodstore',
-        'newspaper',
-        'newspaper',
-        'newspaper',
-        'foodstore',
-        'bakery',
-        'bakery',
-        'library',
-        'library',
-    ]
-
-
-    class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
-        def transform(self, X):
-            _X = super().transform(X)
-            return pd.DataFrame(data=_X, columns=self.classes_)
-
-    te = TransactionEncoder()
-    D = te.fit(transactions).transform(transactions)
-    D
-
-    ovo = OneVsOneClassifier(SLIM())
-    ovo.fit(D, y=target)
-    ovo.estimators_
-    ovo.predict(D)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# if __name__ == '__main__':
+    # from skmine.datasets.fimi import fetch_iris
+    # from sklearn.preprocessing import KBinsDiscretizer
+    # from sklearn.pipeline import Pipeline
+    # from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
+    # from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer, OneHotEncoder, LabelBinarizer
+    # from sklearn.metrics import confusion_matrix
+    # from sklearn.datasets import load_iris
+    # from sklearn.model_selection import train_test_split
+    # import pandas as pd
+    # from skmine.itemsets import SLIM
 
 #     # # X, y = fetch_iris(return_y=True)
 #     # # y = y - 17

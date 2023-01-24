@@ -23,7 +23,7 @@ from pyroaring import BitMap as Bitmap
 from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder
 
 
 def _to_vertical(D, stop_items=None, return_len=False):  # -> tuple | dict
@@ -154,6 +154,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             "non_deterministic": True,  # default
             # "X_types": ['2darray'],  # ["categorical"],  # default
             "no_validation": True,
+            # "pairwise": True
         }
 
     def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
@@ -188,6 +189,9 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             Not used, present here for API consistency by convention.
         """
         # X = one_hot_dataframe(X)
+        if y is not None:
+            self.classes_ = np.unique(y)
+        # self._validate_params()
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
@@ -297,29 +301,32 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         _fonc = lambda x: np.exp(-0.2 * x)
-        # z = np.array(_fonc(self.get_code_length(D))) # Convert from pd.Series to np vector
-        # res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
+        z = self.get_code_length(D)
+        z = _fonc(z)
+        z = np.array(z) # Convert from pd.Series to np vector
+        res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
 
-        return _fonc(self.get_code_length(D))
+        return res #_fonc(self.get_code_length(D))
 
-    # def predict(self, X):
-    #     """
-    #     Predict class labels for samples in X.
-    #     Parameters
-    #     ----------
-    #     X : {array-like, sparse matrix} of shape (n_samples, n_features)
-    #         The data matrix for which we want to get the predictions.
-    #     Returns
-    #     -------
-    #     y_pred : ndarray of shape (n_samples,)
-    #         Vector containing the class labels for each sample.
-    #     """
-    #     from sklearn.utils._array_api import get_namespace
-    #     xp, _ = get_namespace(X)
-    #     scores = self.decision_function(X)
-    #     indices = xp.argmax(scores, axis=1)
-    #
-    #     return xp.take(self.items, indices, axis=0)
+    def predict(self, X):
+        """
+        Predict class labels for samples in X.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The data matrix for which we want to get the predictions.
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            Vector containing the class labels for each sample.
+        """
+        # from sklearn.utils._array_api import get_namespace
+        # xp, _ = get_namespace(X)
+        scores = self.decision_function(X)
+        print("SCORES" , scores)
+        # indices = xp.argmax(scores, axis=1)
+
+        return self.classes_[scores.argmax(axis=1)] #xp.take(self.items, indices, axis=0)
 
     # TOSEE if predict_proba (in place of decision function) allow easy binary classification
     # def predict_proba(self, D): #attempt to unify binary and multi-class
@@ -847,15 +854,28 @@ if __name__ == '__main__':
         ['New York Times'],
         ['El Pais', 'The Economist'],
         ['milk', 'tea'],
-    ]
-    target = [
-        'foodstore',
-        'newspaper',
-        'newspaper',
-        'newspaper',
-        'foodstore',
+        ['croissant', 'tea'],
+        ['croissant', 'chocolatine', 'milk'],
     ]
 
+    labels = [
+        'foodstore',
+        'newspaper',
+        'newspaper',
+        'newspaper',
+        'foodstore',
+        'bakery',
+        'bakery',
+    ]
+
+    new_transaction = [
+        ['bananas', 'tea'],
+        ['El Pais', 'tea']
+    ]
+    new_labels = [
+        'foodstore',
+        'newspaper'
+    ]
 
     class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
         def transform(self, X):
@@ -864,11 +884,14 @@ if __name__ == '__main__':
 
     te = TransactionEncoder()
     D = te.fit(transactions).transform(transactions)
+    new_D = te.transform(new_transaction)
     ovo = OneVsOneClassifier(SLIM())
-    ovo.fit(D, y=target)
-    ovo.estimators_
-    print(ovo.decision_function(D))
-    print(ovo.predict(D))
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    ovo.fit(D, y=labels)
+    print(ovo.estimators_)
+    print(ovo.decision_function(new_D))
+    # print(ovo.predict(new_D))
 
     # D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
     # new_D = [['cookies', 'butter']]  # to_tabular(
