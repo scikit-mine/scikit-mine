@@ -301,12 +301,12 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
 
         _fonc = lambda x: np.exp(-0.2 * x)
-        z = self.get_code_length(D)
-        z = _fonc(z)
-        z = np.array(z) # Convert from pd.Series to np vector
-        res = np.expand_dims(z, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
+        x = self.get_code_length(D)
+        prob = _fonc(x)
+        # prob = np.array(prob) # Convert from pd.Series to np vector
+        # prob = np.expand_dims(prob, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
 
-        return res #_fonc(self.get_code_length(D))
+        return prob
 
     def predict(self, X):
         """
