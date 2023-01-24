@@ -323,7 +323,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         # from sklearn.utils._array_api import get_namespace
         # xp, _ = get_namespace(X)
         scores = self.decision_function(X)
-        print("SCORES" , scores)
+        # print("SCORES" , scores)
         # indices = xp.argmax(scores, axis=1)
 
         return self.classes_[scores.argmax(axis=1)] #xp.take(self.items, indices, axis=0)

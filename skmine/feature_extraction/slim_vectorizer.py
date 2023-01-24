@@ -3,11 +3,10 @@ SLIM vectorizer, using SLIM as a feature extraction scheme
 """
 
 import numpy as np
-import pandas
 import pandas as pd
 
-from ..itemsets import SLIM
-from ..itemsets.slim import _to_vertical, cover
+from skmine.itemsets import SLIM
+from skmine.itemsets.slim import _to_vertical, cover
 
 STRATEGIES = ("codes", "one-hot")
 
@@ -51,7 +50,8 @@ class SLIMVectorizer(SLIM):
     --------
     >>> from skmine.feature_extraction import SLIMVectorizer
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIMVectorizer(k=2).fit_transform(D)
+    >>> res  = SLIMVectorizer(k=2).fit_transform(D)
+    >>> print(res.to_string())
        (bananas, milk)  (cookies,)
     0              0.4         0.0
     1              0.4         0.4
@@ -84,7 +84,7 @@ class SLIMVectorizer(SLIM):
             D = _filter_stop_items(D, stop_items=self.stop_items)
         return super().fit(D)
 
-    def transform(self, newD, **tsf_params) -> pandas.DataFrame:
+    def transform(self, newD, y=None, **tsf_params) -> pd.DataFrame:
         """Transform new data
 
         Parameters

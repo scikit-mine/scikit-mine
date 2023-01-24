@@ -49,8 +49,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
 
     References
     ----------
-    .. [1]
-        Takeaki Uno, Masashi Kiyomi, Hiroki Arimura
+    .. [1] Takeaki Uno, Masashi Kiyomi, Hiroki Arimura
         "LCM ver. 2: Efficient mining algorithms for frequent/closed/maximal itemsets", 2004
 
     .. [2] Alexandre Termier
