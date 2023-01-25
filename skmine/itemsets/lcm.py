@@ -21,8 +21,8 @@ from joblib import Parallel, delayed
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 from sklearn.utils.validation import check_is_fitted
-from skmine.utils import _check_min_supp
-from skmine.utils import filter_maximal
+from ..utils import _check_min_supp
+from ..utils import filter_maximal
 from sklearn.base import BaseEstimator, TransformerMixin
 
 

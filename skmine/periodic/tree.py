@@ -20,9 +20,7 @@ from ..base import BaseMiner, InteractiveMiner
 from ..utils import bron_kerbosch
 from .cycles import PeriodicCycleMiner, extract_triples, merge_triples
 
-L_PARENTHESIS = -np.log2(
-    1 / 3
-)  # length of either `(` or `)` when encoding tree patterns
+L_PARENTHESIS = -np.log2(1 / 3)  # length of either `(` or `)` when encoding tree patterns
 
 shift_array = partial(array.array, "i")  # shifts are signed integers
 
@@ -124,9 +122,7 @@ class Node:
 
     def __post_init__(self):
         if self.children and (not len(self.children) - 1 == len(self.children_dists)):
-            raise ValueError(
-                "There should be exactly `|children| - 1` inter-child distances"
-            )
+            raise ValueError("There should be exactly `|children| - 1` inter-child distances")
 
         d_sum = sum(self.children_dists)
         if d_sum > self.p:
@@ -142,9 +138,7 @@ class Node:
         # assert len(n_t) == 2
 
         self._size = 1 + len(self._leaves) + sum((c._size for c in self._nodes))
-        self._n_occs = self.r * (
-            len(self._leaves) + sum((c._n_occs) for c in self._nodes)
-        )
+        self._n_occs = self.r * (len(self._leaves) + sum((c._n_occs) for c in self._nodes))
 
     def mdl_cost_R(self, **event_frequencies):
         occs_min = -np.log2(min(map(event_frequencies.__getitem__, self._leaves)))
@@ -222,9 +216,7 @@ class Node:
     def __str__(self):
         children_str = list(map(str, self.children))  # recursive call here
         dists_str = map(str, self.children_dists)
-        event_str = [val for pair in zip(children_str, dists_str) for val in pair] + [
-            children_str[-1]
-        ]
+        event_str = [val for pair in zip(children_str, dists_str) for val in pair] + [children_str[-1]]
         event_str = " - ".join(event_str)
         repeat = "{" + f"r={self.r}, p={self.p}" + "}"
         return f"{repeat} ({event_str})"
@@ -369,13 +361,7 @@ class Tree(Node):
         node_str = string[tau_match.end() :]
         tau = tau_constructor(tau_match.group())
         node = Node.from_str(node_str)
-        return cls(
-            tau,
-            r=node.r,
-            p=node.p,
-            children=node.children,
-            children_dists=node.children_dists,
-        )
+        return cls(tau, r=node.r, p=node.p, children=node.children, children_dists=node.children_dists,)
 
     def __eq__(self, o):
         """Comparing trees, transactions ids are not checked, on purpose."""
@@ -420,10 +406,7 @@ def combine_vertically(H: list):
                 sub_C = [_ for _ in C if _.tau in cycle_batch[idx]]
                 tids = Bitmap.union(*(_.tids for _ in sub_C))
                 taus_diffs = np.diff(taus) - p
-                E = [
-                    sub_C[idx].E.tolist() + [taus_diffs[idx]]
-                    for idx in range(len(taus_diffs))
-                ] + [sub_C[-1].E.tolist()]
+                E = [sub_C[idx].E.tolist() + [taus_diffs[idx]] for idx in range(len(taus_diffs))] + [sub_C[-1].E.tolist()]
                 E = list(chain(*E))
                 K = Tree(tau, r=r, p=p, children=[Tc.to_node()], tids=tids, E=E)
                 # TODO : check cost (line 8 from algorithm 4)
@@ -504,11 +487,7 @@ def greedy_cover(candidates: List[Tree], D, dS, k=10, **event_frequencies):
     candidates = candidates.copy()
 
     for _ in range(k):
-        p = min(
-            candidates,
-            key=lambda p: p.mdl_cost(D, dS, **event_frequencies)
-            / (len(p.tids - big_O) or 0.001),
-        )
+        p = min(candidates, key=lambda p: p.mdl_cost(D, dS, **event_frequencies)/ (len(p.tids - big_O) or 0.001),)
         big_O |= p.tids
         big_P.append(p)
         candidates.remove(p)
@@ -612,9 +591,7 @@ class PeriodicPatternMiner(BaseMiner, InteractiveMiner):
         return list(zip(trees, costs))
 
     def update(self, t: Tree):
-        self.codetable.append(
-            (t, 0)
-        )  # FIXME cost of 0 here, just for interactive mining, but to be fixed
+        self.codetable.append((t, 0))  # FIXME cost of 0 here, just for interactive mining, but to be fixed
         if len(self.codetable) > self.k:
             warnings.warn("current number of trees exceeds the `k` parameter")
 

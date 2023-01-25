@@ -17,11 +17,7 @@ from ..utils import intersect2d, sliding_window_view
 
 log = np.log2
 
-INDEX_TYPES = (
-    pd.DatetimeIndex,
-    pd.RangeIndex,
-    pd.Int64Index,
-)
+INDEX_TYPES = (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index,)
 
 
 def residual_length(S_alpha, n_occs_tot, dS):
@@ -40,9 +36,7 @@ def residual_length(S_alpha, n_occs_tot, dS):
     dS: int
         max - min from original events
     """
-    card = (
-        S_alpha.shape[0] if isinstance(S_alpha, np.ndarray) else 1
-    )  # TODO : remove me
+    card = (S_alpha.shape[0] if isinstance(S_alpha, np.ndarray) else 1)  # TODO : remove me
     return log(dS + 1) - log(card / float(n_occs_tot))
 
 
@@ -152,6 +146,7 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
                     score_left = score_one * (im - ia + 1)
                 else:
                     score_left = scores[(ia, im)]
+
                 if iz - im < 3:
                     score_right = score_one * (iz - im)
                 else:
@@ -160,6 +155,7 @@ def get_table_dyn(S: pd.Index, n_tot: int, max_length=100):
                 if score_left + score_right < best_score:
                     best_score = score_left + score_right
                     cut_point = im
+
             scores[(ia, iz)] = best_score
             cut_points[(ia, iz)] = cut_point
 
@@ -182,7 +178,6 @@ def extract_triples(S, l_max=None):
     """
     triples = list()
     l_max = l_max or np.median(np.diff(S))
-
     # TODO : precompute diffs instead of for loop inner computation
 
     for idx, occ in enumerate(S[1:-1], 1):
@@ -323,24 +318,10 @@ def generate_candidates(S_a, n_occs_tot, max_length=100):
         E = np.diff(cand_batch, axis=1)
         period = np.floor(np.median(E, axis=1)).astype("int64")
         dE = (E.T - period).T
-        tids = [
-            Bitmap(_)
-            for _ in np.searchsorted(S_a, cand_batch.reshape(-1)).reshape(
-                cand_batch.shape
-            )
-        ]
-
+        tids = [Bitmap(_) for _ in np.searchsorted(S_a, cand_batch.reshape(-1)).reshape(cand_batch.shape)]
         mdl_cost = sum(cycle_length(cand_batch, E, n_occs_tot, S_a[-1] - S_a[0]))
         df = pd.DataFrame(
-            dict(
-                start=cand_batch[:, 0],
-                length=length,
-                period=period,
-                dE=dE.tolist(),
-                tids=tids,
-                cost=mdl_cost,
-            )
-        )
+            dict(start=cand_batch[:, 0], length=length, period=period, dE=dE.tolist(), tids=tids, cost=mdl_cost,))
         res.append(df)
 
     res = pd.concat(res, ignore_index=True) if res else pd.DataFrame()
@@ -573,8 +554,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
             if "tids" in miner.cycles_.columns:
                 # FIXME: this is highly inefficient
                 miner.cycles_.tids = miner.cycles_.tids.map(
-                    lambda tids: Bitmap(
-                        np.searchsorted(S.index, alpha_groups[event][tids])
+                    lambda tids: Bitmap(np.searchsorted(S.index, alpha_groups[event][tids])
                     )
                 )
 
@@ -626,9 +606,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         if not series:
             return pd.DataFrame()  # FIXME
         cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
-            10 ** self.n_zeros_
-        )
+        cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (10 ** self.n_zeros_)
 
         if shifts:
             cycles.loc[:, "dE"] = cycles.dE.map(np.array) * (10 ** self.n_zeros_)
@@ -658,10 +636,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         -----
         The index of the resulting pd.Series will not be sorted
         """
-        series = [
-            pd.Series(event, index=miner.reconstruct())
-            for event, miner in self.miners_.items()
-        ]
+        series = [pd.Series(event, index=miner.reconstruct()) for event, miner in self.miners_.items()]
         S = pd.concat(series)
         S.index *= 10 ** self.n_zeros_
         if self.is_datetime_:
@@ -698,10 +673,7 @@ class PeriodicCycleMiner(BaseMiner, MDLOptimizer, DiscovererMixin):
         pd.Series
             residual events
         """
-        series = [
-            pd.Series(event, index=miner.residuals_)
-            for event, miner in self.miners_.items()
-        ]
+        series = [pd.Series(event, index=miner.residuals_) for event, miner in self.miners_.items()]
         residuals = pd.concat(series)
         if not residuals.empty:
             residuals.index *= 10 ** self.n_zeros_
