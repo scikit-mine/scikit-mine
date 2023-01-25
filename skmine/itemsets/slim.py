@@ -15,14 +15,14 @@ import numpy as np
 import pandas as pd
 import time
 
-from sklearn.multiclass import OneVsOneClassifier
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
 ## from skmine.base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
 from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
 from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder
 
 
@@ -154,7 +154,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             "non_deterministic": True,  # default
             # "X_types": ['2darray'],  # ["categorical"],  # default
             "no_validation": True,
-            # "pairwise": True
+            # "pairwise": True,
         }
 
     def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
@@ -190,7 +190,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         """
         # X = one_hot_dataframe(X)
         if y is not None:
-            self.classes_ = np.unique(y)
+            self.classes_ = np.unique(y)  # for OvO to test
         # self._validate_params()
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
@@ -267,7 +267,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         code_lengths["code"] = -_log2(code_lengths["usage"] / code_lengths["usage"].sum())
         mapping = {tuple(row['itemset']): row['code'] for _, row in code_lengths.iterrows()}
         codes_length_D = mat.replace(True, mapping).sum(axis=1).astype(np.float32)
-        # codes_length_D[codes_length_D == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
+        codes_length_D[codes_length_D == 0] = + np.inf  # zeros would fool a `shortest code wins` strategy
 
         return codes_length_D
 
@@ -303,43 +303,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         _fonc = lambda x: np.exp(-0.2 * x)
         x = self.get_code_length(D)
         prob = _fonc(x)
-        # prob = np.array(prob) # Convert from pd.Series to np vector
-        # prob = np.expand_dims(prob, axis=1)  # to np 2d matrix (n,1) -> FOR OneVsOne
-
         return prob
-
-    def predict(self, X):
-        """
-        Predict class labels for samples in X.
-        Parameters
-        ----------
-        X : {array-like, sparse matrix} of shape (n_samples, n_features)
-            The data matrix for which we want to get the predictions.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            Vector containing the class labels for each sample.
-        """
-        # from sklearn.utils._array_api import get_namespace
-        # xp, _ = get_namespace(X)
-        scores = self.decision_function(X)
-        # print("SCORES" , scores)
-        # indices = xp.argmax(scores, axis=1)
-
-        return self.classes_[scores.argmax(axis=1)] #xp.take(self.items, indices, axis=0)
-
-    # TOSEE if predict_proba (in place of decision function) allow easy binary classification
-    # def predict_proba(self, D): #attempt to unify binary and multi-class
-    # see predict_proba in https://scikit-learn.org/stable/glossary.html#term-decision_function
-    # https://github.com/scikit-learn/scikit-learn/blob/98cf537f5c538fdbc9d27b851cf03ce7611b8a48/sklearn/multiclass.py#L455
-    #     def fonc(x):
-    #         return np.exp(-x)
-    #
-    #     code_l = self.get_code_length(D)
-    #     print("code length\n", code_l, " \n predict proba ->\n ", fonc(code_l))
-    #     y = scipy.sparse.csc_matrix(fonc(code_l))
-    #     print(y.toarray())
-    #     return y
 
     def generate_candidates(self, stack=None):
         """
@@ -846,52 +810,59 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return CTc, data_size, model_size
 
+    def __copy__(self):
+        return SLIM(items=self.items, pruning=self.pruning)
 
-if __name__ == '__main__':
-    transactions = [
-        ['milk', 'bananas'],
-        ['tea', 'New York Times', 'El Pais'],
-        ['New York Times'],
-        ['El Pais', 'The Economist'],
-        ['milk', 'tea'],
-        ['croissant', 'tea'],
-        ['croissant', 'chocolatine', 'milk'],
-    ]
 
-    labels = [
-        'foodstore',
-        'newspaper',
-        'newspaper',
-        'newspaper',
-        'foodstore',
-        'bakery',
-        'bakery',
-    ]
-
-    new_transaction = [
-        ['bananas', 'tea'],
-        ['El Pais', 'tea']
-    ]
-    new_labels = [
-        'foodstore',
-        'newspaper'
-    ]
-
-    class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
-        def transform(self, X):
-            _X = super().transform(X)
-            return pd.DataFrame(data=_X, columns=self.classes_)
-
-    te = TransactionEncoder()
-    D = te.fit(transactions).transform(transactions)
-    new_D = te.transform(new_transaction)
-    ovo = OneVsOneClassifier(SLIM())
-    le = LabelEncoder()
-    labels = le.fit_transform(labels)
-    ovo.fit(D, y=labels)
-    print(ovo.estimators_)
-    print(ovo.decision_function(new_D))
-    # print(ovo.predict(new_D))
+# if __name__ == '__main__':
+#     transactions = [
+#         ['milk', 'bananas'],
+#         ['tea', 'New York Times', 'El Pais'],
+#         ['New York Times'],
+#         ['El Pais', 'The Economist'],
+#         ['milk', 'tea'],
+#         ['croissant', 'tea'],
+#         ['croissant', 'chocolatine', 'milk'],
+#     ]
+#
+#     labels = [
+#         'foodstore',
+#         'newspaper',
+#         'newspaper',
+#         'newspaper',
+#         'foodstore',
+#         'bakery',
+#         'bakery',
+#     ]
+#
+#     new_transaction = [
+#         ['croissant', 'chocolatine', 'milk'],
+#         ['El Pais', 'tea']
+#     ]
+#     new_labels = [
+#         'bakery',
+#         'newspaper'
+#     ]
+#
+#
+#     class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
+#         def transform(self, X):
+#             _X = super().transform(X)
+#             return pd.DataFrame(data=_X, columns=self.classes_)
+#
+#
+#     te = TransactionEncoder()
+#     D = te.fit(transactions).transform(transactions)
+#     new_D = te.transform(new_transaction)
+#     ovr = OneVsRestClassifier(SLIM())
+#     le = LabelEncoder()
+#     num_labels = le.fit_transform(labels)
+#
+#     print(list(zip(labels, num_labels)))
+#     ovr.fit(D, y=num_labels)
+#     print(ovr.estimators_)
+#     print(ovr.decision_function(new_D))
+#     print(ovr.predict(new_D))
 
     # D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
     # new_D = [['cookies', 'butter']]  # to_tabular(
@@ -914,4 +885,9 @@ if __name__ == '__main__':
 #     # # binar.set_output(transform="pandas")
 #     # print(binar.fit_transform(D))
 #     # pd.DataFrame(binar.fit_transform(D), columns=binar.classes_)
+#     from sklearn.base import is_classifier
 #
+#     slim = SLIM()
+#     for k, v in slim._get_tags().items():
+#         print(f"{k} :{v}")
+#     print("is_classifier(slim) : ", is_classifier(slim))
