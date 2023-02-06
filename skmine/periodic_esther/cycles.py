@@ -35,6 +35,31 @@ def _remove_zeros(numbers: pd.Series):
     return numbers, n
 
 
+def _reconstruct(start, period, dE):
+    """
+    Reconstruct occurrences,
+    starting from `start`, and
+    correcting `period` with a delta for all deltas in `dE`,
+    `len(dE)` occurrences are reconstructed
+
+    Parameters
+    ----------
+    start: int or datetime
+        starting point for the event
+    period: int or timedelta
+        period between two occurrences
+    d_E: np.array of [int|timedelta]
+        inters occurrences deltas
+    """
+    occurrences = [start]
+    current = start
+    for d_e in dE:
+        e = current + period + d_e
+        occurrences.append(e)
+        current = e
+    return occurrences
+
+
 class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     # (BaseMiner, MDLOptimizer, DiscovererMixin):
     """
@@ -94,6 +119,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.max_length = max_length
         self.keep_residuals = keep_residuals
+        self.alpha_groups = {}
+        self.cycles = None
 
     def fit(self, S):
         """fit PeriodicCycleMiner on data logs
@@ -123,27 +150,27 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             S = S.groupby(S.index).first()
 
         S = S.copy()
+
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
         # TODO : do this in SingleEventCycleMiner?
 
-        n_occs_tot = S.shape[0]
-        S.index = S.index.astype(int)
+        # n_occs_tot = S.shape[0]
+        # S.index = S.index.astype(int)
 
-        alpha_groups = S.groupby(S.values).groups
+        self.alpha_groups = S.groupby(S.values).groups
 
         #  ========================================================================================
         #  ****************************************************************************************
         #  TODO : Connection with Esther routine here :
 
-        results, cpool = mine_seqs(dict(alpha_groups), fn_basis=None)
-        # event (α), length (r), period (p), starting point (τ) and shift corrections (E)
-
+        cpool = mine_seqs(dict(self.alpha_groups), fn_basis=None)
         self.miners_ = cpool.getCandidates()
 
         # pid = 0
         # pids = [0, 1]
         # cid = 0
         # cid = 0
+        # # event (α), length (r), period (p), starting point (τ) and shift corrections (E)
         # print("isNewPid(pid)", cpool.isNewPid(pid))
         # print("areNewPids(pids)", cpool.areNewPids(pids))
         # print("getPidsForCid(cid)", cpool.getPidsForCid(cid))
@@ -226,19 +253,25 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         """
 
         series = list()
-
         for _, miner in self.miners_.items():
             dic_miner = {}
             dic_miner["start"] = miner.getT0()
             dic_miner["length"] = miner.getNbUOccs()
             dic_miner["period"] = miner.getMajorP()
             dic_miner["cost"] = miner.getCost()
-            dic_miner["event"] = miner.getEvent()
 
-            if tids:
-                dic_miner["cost"] = miner.getOccs()
-            if shifts:
-                dic_miner["dE"] = miner.getE()
+            id_to_event = list(self.alpha_groups.keys())
+            if isinstance(miner.getEvent(), list):
+                dic_miner["event"] = [
+                    id_to_event[int(k)] for k in miner.getEvent()]
+            else:
+                dic_miner["event"] = [id_to_event[int(miner.getEvent())]]
+
+            # if tids:
+            # dic_miner["tids"] = miner.getOccs()
+            # if shifts:miner.getOccs()
+            dic_miner["dE"] = miner.getE()
+
             series.append(dic_miner)
 
         #     disc = miner.discover()
@@ -247,22 +280,26 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         # if not series:
         #     return pd.DataFrame()  # FIXME
 
-        cycles = pd.DataFrame(series)
-
-        # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        cycles.loc[:, ["start", "period"]] = cycles[["start", "period"]] * (
+        self.cycles = pd.DataFrame(series)
+        # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
+        self.cycles.loc[:, ["start", "period"]] = self.cycles[["start", "period"]] * (
             10 ** self.n_zeros_
         )
 
-        if shifts:
-            cycles.loc[:, "dE"] = cycles.dE.map(
-                np.array) * (10 ** self.n_zeros_)
+        # if shifts:
+        self.cycles.loc[:, "dE"] = self.cycles.dE.map(
+            np.array) * (10 ** self.n_zeros_)
 
+        # self.cycles.loc[:, "dE"] = self.cycles.loc[:, "dE"] * (10 ** self.n_zeros_)
+        disc_print = self.cycles.copy()
         if self.is_datetime_:
-            cycles.loc[:, "start"] = cycles.start.astype("datetime64[ns]")
-            cycles.loc[:, "period"] = cycles.period.astype("timedelta64[ns]")
-
-        return cycles
+            disc_print.loc[:, "start"] = disc_print.start.astype(
+                "datetime64[ns]")
+            disc_print.loc[:, "period"] = disc_print.period.astype(
+                "timedelta64[ns]")
+        if not shifts:
+            disc_print = disc_print.drop('dE', axis=1)
+        return disc_print
 
     def reconstruct(self):
         """Reconstruct the original occurrences from the current cycles.
@@ -283,19 +320,43 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         -----
         The index of the resulting pd.Series will not be sorted
         """
-        series = [
-            pd.Series(event, index=miner.reconstruct())
-            for event, miner in self.miners_.items()
-        ]
-        S = pd.concat(series)
-        S.index *= 10 ** self.n_zeros_
-        if self.is_datetime_:
-            S.index = S.index.astype("datetime64[ns]")
 
-        # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
-        S = S.groupby(S.index).first()
+        # series = [
+        #     pd.Series(event, index=miner.reconstruct())
+        #     for event, miner in self.miners_.items()
+        # ]
+        # S = pd.concat(series)
+        # S.index *= 10 ** self.n_zeros_
+        # if self.is_datetime_:
+        #     S.index = S.index.astype("datetime64[ns]")
 
-        return S
+        # # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
+        # S = S.groupby(S.index).first()
+
+        # all_occ = []
+        # for _, cycle in self.cycles.iterrows():  # TODO : to OPtimize with a mapping or other thing
+        #     occ = {}
+        #     alpha_occurrences = list()
+        #     start, period, dE, event = cycle["start"], cycle["period"], cycle["dE"], cycle["event"]
+        #     occurrences = _reconstruct(start, period, dE)
+        #     alpha_occurrences.extend(occurrences)
+        #     # alpha_occurrences.extend(self.residuals_)
+        #     alpha_occurrences = np.array(alpha_occurrences)
+        #     all_occ.append(
+        #         {"event": event, "occurence":  alpha_occurrences})
+
+        # print("alpha_occurrences", alpha_occurrences)
+        # print("cycle", cycle["tids"])
+        # return pd.DataFrame(all_occ)
+
+        series = list()
+        for _, miner in self.miners_.items():
+            dic_miner = {}
+            dic_miner["occs"] = [occ * (10 ** self.n_zeros_)
+                                 for occ in miner.getOccs()]
+            series.append(dic_miner)
+
+        return pd.DataFrame(series)
 
     def generate_candidates(self, S):
         """
