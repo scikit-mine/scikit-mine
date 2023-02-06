@@ -1348,7 +1348,7 @@ def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
     # print("\n\n\n ac-tac_comb", tac-tac_comb)
     # print("\n\n\n\n tac",  tac)
 
-    return results, cpool
+    return cpool
 
 
 def writePCout(pc, ds, fn_basis, suff, fo_log=None):
