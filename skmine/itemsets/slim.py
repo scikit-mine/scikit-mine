@@ -5,6 +5,8 @@ and https://eda.rg.cispa.io/pres/ida14-slimmer-poster.pdf
 
 # Authors: Rémi Adon <remi.adon@gmail.com>
 #          Thomas Betton <thomas.betton@irisa.fr>
+#          Hermann Courteille <hermann.courteille@irisa.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
 # License: BSD 3 clause
 
 from collections import Counter, defaultdict
@@ -813,81 +815,3 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
     def __copy__(self):
         return SLIM(items=self.items, pruning=self.pruning)
 
-
-# if __name__ == '__main__':
-#     transactions = [
-#         ['milk', 'bananas'],
-#         ['tea', 'New York Times', 'El Pais'],
-#         ['New York Times'],
-#         ['El Pais', 'The Economist'],
-#         ['milk', 'tea'],
-#         ['croissant', 'tea'],
-#         ['croissant', 'chocolatine', 'milk'],
-#     ]
-#
-#     labels = [
-#         'foodstore',
-#         'newspaper',
-#         'newspaper',
-#         'newspaper',
-#         'foodstore',
-#         'bakery',
-#         'bakery',
-#     ]
-#
-#     new_transaction = [
-#         ['croissant', 'chocolatine', 'milk'],
-#         ['El Pais', 'tea']
-#     ]
-#     new_labels = [
-#         'bakery',
-#         'newspaper'
-#     ]
-#
-#
-#     class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
-#         def transform(self, X):
-#             _X = super().transform(X)
-#             return pd.DataFrame(data=_X, columns=self.classes_)
-#
-#
-#     te = TransactionEncoder()
-#     D = te.fit(transactions).transform(transactions)
-#     new_D = te.transform(new_transaction)
-#     ovr = OneVsRestClassifier(SLIM())
-#     le = LabelEncoder()
-#     num_labels = le.fit_transform(labels)
-#
-#     print(list(zip(labels, num_labels)))
-#     ovr.fit(D, y=num_labels)
-#     print(ovr.estimators_)
-#     print(ovr.decision_function(new_D))
-#     print(ovr.predict(new_D))
-
-    # D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    # new_D = [['cookies', 'butter']]  # to_tabular(
-    # slim = SLIM().fit(D)
-    # print("SCORE \n", slim.decision_function(new_D))
-    # print("CODE LENGTH\n", slim.get_code_length(new_D))
-    # onehot = OneHotDataframe()
-    # Done = onehot.fit_transform(D)
-    # new_Done = onehot.transform(new_D)
-    # slim2 = SLIM().fit(Done)
-    # print("SCORE \n", slim2.decision_function(new_Done))
-    # print("CODE LENGTH\n", slim2.get_code_length(new_Done))
-#
-#
-#     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
-
-#     # from sklearn.preprocessing import MultiLabelBinarizer
-#     #
-#     # binar = MultiLabelBinarizer()
-#     # # binar.set_output(transform="pandas")
-#     # print(binar.fit_transform(D))
-#     # pd.DataFrame(binar.fit_transform(D), columns=binar.classes_)
-#     from sklearn.base import is_classifier
-#
-#     slim = SLIM()
-#     for k, v in slim._get_tags().items():
-#         print(f"{k} :{v}")
-#     print("is_classifier(slim) : ", is_classifier(slim))

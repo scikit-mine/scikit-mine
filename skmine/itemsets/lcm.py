@@ -399,23 +399,3 @@ class LCMMax(LCM, TransformerMixin):
 
     setattr(transform, "__doc__", LCM.transform.__doc__.replace("closed", "maximal"))
     setattr(transform, "__doc__", LCM.transform.__doc__.split("Example")[0])
-
-
-# if __name__ == '__main__':
-#     D = [
-#         [1, 2, 3, 4, 5, 6],
-#         [2, 3, 5],
-#         [2, 5],
-#         [1, 2, 4, 5, 6],
-#         [2, 4],
-#         [1, 4, 6],
-#         [3, 4, 6],
-#     ]
-#     # TRY SET_OUTPUTS, input should have index like pd.Series + same len of input(D) and output(patterns)
-#     D = pd.Series(D)
-#     print(D)
-#     lcm = LCM(min_supp=3)  # .set_output(transform='pandas')
-#     lcm.fit(D, lexicographic_order=True)
-#     patterns = lcm.transform(D)
-#     print(patterns)
-
