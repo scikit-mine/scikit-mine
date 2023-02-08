@@ -155,6 +155,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             "non_deterministic": True,  # default
             # "X_types": ['2darray'],  # ["categorical"],  # default
             "no_validation": True,
+            "preserves_dtype": False,
             # "pairwise": True,
         }
 

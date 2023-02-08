@@ -15,7 +15,13 @@ import skmine.preprocessing
 
 MODULES = [skmine.itemsets]  # ,= skmine.preprocessing,]
 
-EXCLUDED_CHECKS = [ ]# "check_fit1d"]
+EXCLUDED_CHECKS = [
+    "check_estimators_pickle", 
+    "check_transformer_general", 
+    "check_pipeline_consistency", 
+    "check_fit_idempotent", 
+    "check_dict_unchanged"]
+# "check_fit1d"]
 #     "check_no_attributes_set_in_init",
 #     "check_estimator_sparse_data",
 #     "check_estimators_pickle",

@@ -40,7 +40,8 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self.pruning = pruning
 
     def _more_tags(self):
-        return {"no_validation": True}
+        return {
+            "no_validation": True}
 
     def fit(self, X, y):
         """Fit the model according to the given training data.
