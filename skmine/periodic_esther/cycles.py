@@ -14,7 +14,7 @@ from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ..periodic.cycles import SingleEventCycleMiner
-
+from .class_patterns import PatternCollection
 from .run_mine import mine_seqs
 
 
@@ -121,8 +121,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.keep_residuals = keep_residuals
         self.alpha_groups = {}
         self.cycles = None
+        self.data_details = None
 
-    def fit(self, S):
+    def fit(self, S, complex=True):
         """fit PeriodicCycleMiner on data logs
 
         This generate new candidate cycles and evaluate them.
@@ -163,8 +164,27 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #  ****************************************************************************************
         #  TODO : Connection with Esther routine here :
 
-        cpool = mine_seqs(dict(self.alpha_groups), fn_basis=None)
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
+                                            fn_basis=None, complex=complex)
+
+        self.data_details = data_details
+
         self.miners_ = cpool.getCandidates()
+
+        # print("\n\n\n\n *********** Candidates *************\n\n\n\n")
+        # print("nbCandidates()", cpool.nbCandidates())
+
+        # print("\n\n *********** pc *************\n\n")
+        # print("__len__ pc", pc.__len__())
+        # print("\n\n nbPatternsByType", pc.nbPatternsByType())
+        # print("setPatterns", pc.setPatterns( patterns=[]))
+        # print("addPatterns", pc.addPatterns(patterns))
+        # print("\n\n getPatterns", pc.getPatterns()[0:10])
+        # print("\n\ngetCoveredOccs", pc.getCoveredOccs()[0:10])
+        # print("getUncoveredOccs", pc.getUncoveredOccs(data_seq))
+        # print("getNbUncoveredOccsByEv", pc.getNbUncoveredOccsByEv(data_seq))
+        # print("\n\ngetOccLists", pc.getOccLists()[0:10])
+        # print("codeLength", pc.codeLength(data_seq))
 
         # pid = 0
         # pids = [0, 1]
@@ -260,6 +280,11 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             dic_miner["period"] = miner.getMajorP()
             dic_miner["cost"] = miner.getCost()
 
+            # residuals
+            pc = PatternCollection([miner.getPattT0E()])
+            pc.getUncoveredOccs(self.data_details)
+            dic_miner["residuals"] = pc.getUncoveredOccs(self.data_details)
+
             id_to_event = list(self.alpha_groups.keys())
             if isinstance(miner.getEvent(), list):
                 dic_miner["event"] = [
@@ -282,9 +307,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         self.cycles = pd.DataFrame(series)
         # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        self.cycles.loc[:, ["start", "period"]] = self.cycles[["start", "period"]] * (
-            10 ** self.n_zeros_
-        )
+        self.cycles.loc[:, ["start", "period"]] *= 10 ** self.n_zeros_
 
         # if shifts:
         self.cycles.loc[:, "dE"] = self.cycles.dE.map(
@@ -384,13 +407,28 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         pd.Series
             residual events
         """
-        series = [
-            pd.Series(event, index=miner.residuals_)
-            for event, miner in self.miners_.items()
-        ]
-        residuals = pd.concat(series)
-        if not residuals.empty:
-            residuals.index *= 10 ** self.n_zeros_
-        if self.is_datetime_:
-            residuals.index = residuals.index.astype("datetime64[ns]")
-        return residuals
+
+        # series = [pd.Series(event, index=miner.residuals_) for event, miner in self.miners_.items()]
+        # residuals = pd.concat(series)
+        # if not residuals.empty:
+        #     residuals.index *= 10 ** self.n_zeros_
+        # if self.is_datetime_:
+        #     residuals.index = residuals.index.astype("datetime64[ns]")
+        # return residuals
+
+        residuals_form = []
+
+        for _, res in self.cycles.loc[:, "residuals"].items():
+            if len(res) == 0:
+                residuals_form.append(res)
+            else:
+                res_pd = pd.DataFrame(
+                    np.array(list(res)), columns=['time', 'event'])
+                res_pd['time'] = res_pd['time']*10 ** self.n_zeros_
+                if self.is_datetime_:
+                    res_pd['time'] = res_pd['time'].astype("datetime64[ns]")
+                    res_pd['time'] = res_pd['time'].astype("str")
+                res_set = set([tuple(res) for res in list(res_pd.values)])
+                residuals_form.append(res_set)
+
+        return pd.Series(residuals_form)

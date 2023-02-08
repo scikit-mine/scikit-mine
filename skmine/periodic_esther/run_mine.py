@@ -17,7 +17,7 @@ numpy.set_printoptions(suppress=True)
 
 
 OFFSETS_T = [0, 1, -1]
-MINE_CPLX = True
+# MINE_CPLX = True
 TOP_KEACH = 5
 USE_GRIDS = False  # True
 CHECK_HORDER = True
@@ -52,8 +52,7 @@ series_params["sacha_18_rel"] = {
 # series_params["sacha_18_rel_2000"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
 #                                  "timestamp": False, "drop_event_codes":[0, 126, 33]}
 # series_params["sacha_18_abs_2000W"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
-#                                  "timestamp": True, "max_len": 2000, "max_p": 7*24*60}
-
+#                                  "timestamp": True, "max_len": 2000, "max_p": 7*24*60
 # print("UUUUU UbiqLog_")
 All = glob.glob(DATA_REP+"UbiqLog/prepared/*_data.dat")
 for f in glob.glob(DATA_REP+"UbiqLog/prepared/*_data.dat"):
@@ -579,7 +578,8 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
             P_minor = [cpool.getCandidate(cid) for cid in cand["cids"][hw]]
             for cci, P in enumerate(P_minor):
                 first_rs.append(P.getMajorR()-cand["lefts"][hw][cci])
-                tmp = P.getMajorO()[first_rs[-1]                                    :first_rs[-1]+cand["dims"][1-hw]]
+                tmp = P.getMajorO()[first_rs[-1]
+                                  :first_rs[-1]+cand["dims"][1-hw]]
                 Poccs_major.append(tmp[0])
                 Pdiffs_minor.extend(numpy.diff(tmp))
 
@@ -1093,7 +1093,9 @@ def disp_seqs(seqs, ffo_log=None):
     log_write(fo_log, ds.getInfoStr()+"\n")
 
 
-def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
+def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None):
+    MINE_CPLX = True if complex else False
+
     if writePCout_fun is None:
         writePCout_fun = writePCout
     if fn_basis is None:
@@ -1126,6 +1128,8 @@ def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
         evs = []
     else:
         evs = ds.getEvents()
+
+    # print("\n\n\n\n data_details", data_details)
 
     results["ev"] = []
     results["alpha"] = []
@@ -1175,8 +1179,6 @@ def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
     tic_sel = datetime.datetime.now()
     cdict = cpool.getCandidates()
 
-    # print("\n cdict", cdict)
-
     # print("\n\n **********SIMPLE    Candidates**********")
 
     # print(" getCandidate(0) getPattern", cpool.getCandidate(0).getPattern())
@@ -1192,14 +1194,17 @@ def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
     # log_write(fo_log, "[INTER] Simple selection (%d candidates) at %s\n" % (
     #    len(cdict), tic_sel))
     results["Nb candidates"] = len(cdict)
+    # print("\n Nb candidates",  len(cdict), "\n")
+    # print("\n simple_cids", simple_cids, "\n")
+    # print("\n\n\n cdict", simple_cids, "\n\n\n")
     results["time candidates"] = str(tic_sel)
     selected = filter_candidates_cover(
         cdict, dcosts, min_cov=3, adjust_occs=True)
 
-    # print("\n selected", selected)
+    # print("\n\n\n\n\n\n selected", selected)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
 
-    # print("\n PatternCollection", pc)
+    # print("\n\n\n\n\n PatternCollection", len(pc))
 
     writePCout_fun(pc, ds, fn_basis, "-simple", fo_log)
     tac_sel = datetime.datetime.now()
@@ -1348,7 +1353,7 @@ def mine_seqs(seqs, fn_basis="-", max_p=None, writePCout_fun=None):
     # print("\n\n\n ac-tac_comb", tac-tac_comb)
     # print("\n\n\n\n tac",  tac)
 
-    return cpool
+    return cpool, ds, pc
 
 
 def writePCout(pc, ds, fn_basis, suff, fo_log=None):
@@ -1465,22 +1470,17 @@ if __name__ == "__main__":
         if not re.match("_", run_id):
             run_id = "_" + run_id
     N = len(lseries)
-    print("lseries", lseries)
-    print("\n\n\n series_params", series_params, "\n\n\n")
 
     for series in (pbar := tqdm.tqdm(lseries)):
         # print(f"{idx}/{N} : ")
         if series is None or series in series_params:
             params = dict(pargs)
-            print("\n\nparams", params, "\n\n series",
-                  series, "\n\n lseries", lseries, "\n\n series_params", series_params, "\n\n ")
+            # print("\n\nparams", params, "\n\n series",
+            #   series, "\n\n lseries", lseries, "\n\n series_params", series_params, "\n\n ")
             if series is not None:
-                print("series is not None")
                 params.update(series_params[series])
-                print("params", params)
                 input_name = series
                 xps_rep = params.get("output_folder", XPS_REP)
-                print("xps_rep", xps_rep)
                 if "filename" not in params:
                     params["filename"] = params.get(
                         "input_folder", DATA_REP)+params.get("input_file")
