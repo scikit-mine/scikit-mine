@@ -17,15 +17,14 @@ import numpy as np
 import pandas as pd
 import time
 
-from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
-## from skmine.base import BaseMiner, DiscovererMixin, InteractiveMiner, MDLOptimizer
-from skmine.utils import _check_D, supervised_to_unsupervised
 from sklearn.utils.validation import check_is_fitted
-from sklearn.base import BaseEstimator, TransformerMixin, ClassifierMixin
-from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import MultiLabelBinarizer
+
+from ..utils import _check_D, supervised_to_unsupervised
 
 
 def _to_vertical(D, stop_items=None, return_len=False):  # -> tuple | dict
@@ -815,3 +814,83 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
     def __copy__(self):
         return SLIM(items=self.items, pruning=self.pruning)
 
+<<<<<<< HEAD
+=======
+# if __name__ == '__main__':
+#     transactions = [
+#         ['milk', 'bananas'],
+#         ['tea', 'New York Times', 'El Pais'],
+#         ['New York Times'],
+#         ['El Pais', 'The Economist'],
+#         ['milk', 'tea'],
+#         ['croissant', 'tea'],
+#         ['croissant', 'chocolatine', 'milk'],
+#     ]
+#
+#     labels = [
+#         'foodstore',
+#         'newspaper',
+#         'newspaper',
+#         'newspaper',
+#         'foodstore',
+#         'bakery',
+#         'bakery',
+#     ]
+#
+#     new_transaction = [
+#         ['croissant', 'chocolatine', 'milk'],
+#         ['El Pais', 'tea']
+#     ]
+#     new_labels = [
+#         'bakery',
+#         'newspaper'
+#     ]
+#
+#
+#     class TransactionEncoder(MultiLabelBinarizer):  # pandas DataFrames are easier to read ;)
+#         def transform(self, X):
+#             _X = super().transform(X)
+#             return pd.DataFrame(data=_X, columns=self.classes_)
+#
+#
+#     te = TransactionEncoder()
+#     D = te.fit(transactions).transform(transactions)
+#     new_D = te.transform(new_transaction)
+#     ovo = OneVsOneClassifier(SLIM())
+#     le = LabelEncoder()
+#     num_labels = le.fit_transform(labels)
+#
+#     print(list(zip(labels, num_labels)))
+#     ovo.fit(D, y=num_labels)
+#     print(ovo.estimators_)
+#     print(ovr.decision_function(new_D))
+#     print(ovr.predict(new_D))
+
+# D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
+# new_D = [['cookies', 'butter']]  # to_tabular(
+# slim = SLIM().fit(D)
+# print("SCORE \n", slim.decision_function(new_D))
+# print("CODE LENGTH\n", slim.get_code_length(new_D))
+# onehot = OneHotDataframe()
+# Done = onehot.fit_transform(D)
+# new_Done = onehot.transform(new_D)
+# slim2 = SLIM().fit(Done)
+# print("SCORE \n", slim2.decision_function(new_Done))
+# print("CODE LENGTH\n", slim2.get_code_length(new_Done))
+#
+#
+#     def to_tabular(D): return pd.Series(D).str.join('|').str.get_dummies(sep="|")
+
+#     # from sklearn.preprocessing import MultiLabelBinarizer
+#     #
+#     # binar = MultiLabelBinarizer()
+#     # # binar.set_output(transform="pandas")
+#     # print(binar.fit_transform(D))
+#     # pd.DataFrame(binar.fit_transform(D), columns=binar.classes_)
+#     from sklearn.base import is_classifier
+#
+#     slim = SLIM()
+#     for k, v in slim._get_tags().items():
+#         print(f"{k} :{v}")
+#     print("is_classifier(slim) : ", is_classifier(slim))
+>>>>>>> 43526f81a51d70c19936dcd720ece4853529a189

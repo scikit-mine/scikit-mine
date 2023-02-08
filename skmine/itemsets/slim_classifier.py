@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_is_fitted
 
-from skmine.itemsets.slim import SLIM
+from ..itemsets.slim import SLIM
 
 
 class SlimClassifier(BaseEstimator, ClassifierMixin):
