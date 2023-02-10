@@ -81,19 +81,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     - :math:`\\tau` is the index of the first occurrence, called the `cycle starting point`
     - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`
 
-
-    Parameters
-    ----------
-    max_length: int, default=20
-        maximum length for a candidate cycle, when running the dynamic programming heuristic
-    keep_residuals: bool, default=False
-        Either to keep track of residuals (occurrences not covered by any cycle) or not.
-        Residuals are required for a lossless reconstruction of the original data.
-    n_jobs : int, default=1
-        The number of jobs to use for the computation. Each single event is attributed a job
-        to discover potential cycles.
-        Threads are preffered over processes.
-
     Examples
     --------
     >>> from skmine.periodic import PeriodicCycleMiner
@@ -101,9 +88,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
     >>> pcm = PeriodicCycleMiner().fit(S)
     >>> pcm.discover()
-                   start  length  period       cost
-    ring_a_bell 1     10       3      11  23.552849
-                0     40       4      20  24.665780
+       start  length  period       cost                             residuals 	event
+    0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]
+    1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]
 
     References
     ----------
@@ -112,13 +99,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self, *, max_length=20, keep_residuals=False, n_jobs=1):
+    def __init__(self):
         self.miners_ = dict()
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.n_jobs = n_jobs
-        self.max_length = max_length
-        self.keep_residuals = keep_residuals
         self.alpha_groups = {}
         self.cycles = None
         self.data_details = None
@@ -136,6 +120,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             logs, represented as a pandas Series
             This pandas Series must have an index of type in
             (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)
+
+        complex: boolean
+            True : compute complex pattern with horizontal and vertical combinations. 
+            False: compute only simple cycles. 
         """
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
@@ -242,7 +230,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
     # evaluate = SingleEventCycleMiner.evaluate
 
-    def discover(self, shifts=False, tids=False):
+    def discover(self):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
@@ -255,21 +243,20 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 start       when the cycle starts
                 length      number of occurrences in the event
                 period      inter-occurrence delay
-                dE          shift corrections, if shifts=True
-                tids        Transactions ids covered, if tids=True
+                dE          shift corrections
                 cost        MDL cost
                 ==========  ======================================
 
-        Example
-        -------
-        >>> from skmine.periodic import PeriodicCycleMiner
-        >>> import pandas as pd
-        >>> S = pd.Series("ring", [10, 20, 32, 40, 60, 79, 100, 240])
-        >>> pcm = PeriodicCycleMiner().fit(S)
-        >>> pcm.discover()
-                start  length  period       cost
-        ring 1     10       3      11  23.552849
-             0     40       4      20  24.665780
+            Examples
+            --------
+            >>> from skmine.periodic import PeriodicCycleMiner
+            >>> import pandas as pd
+            >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
+            >>> pcm = PeriodicCycleMiner().fit(S)
+            >>> pcm.discover()
+            start  length  period       cost                                residuals 	        event              dE
+            0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]
+            1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
         """
 
         series = list()
@@ -309,7 +296,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
         self.cycles.loc[:, ["start", "period"]] *= 10 ** self.n_zeros_
 
-        # if shifts:
         self.cycles.loc[:, "dE"] = self.cycles.dE.map(
             np.array) * (10 ** self.n_zeros_)
 
@@ -320,8 +306,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 "datetime64[ns]")
             disc_print.loc[:, "period"] = disc_print.period.astype(
                 "timedelta64[ns]")
-        if not shifts:
-            disc_print = disc_print.drop('dE', axis=1)
+
         return disc_print
 
     def reconstruct(self):
