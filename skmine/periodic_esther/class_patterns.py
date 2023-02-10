@@ -405,6 +405,110 @@ class PatternCollection(object):
                 cl, 100*cl/clRonly, clRonly)
         return out_str, pl_str
 
+    def output_pattern_list_and_cost(self, data_seq, print_simple=True):
+        cl = 0
+        data_details = data_seq.getDetails()
+        ocls = self.getOccLists()
+        map_ev = data_seq.getNumToEv()
+        str_out = " ---- COLLECTION PATTERNS\n"
+        patterns_list_of_dict = []
+        for pi, (p, t0, E) in enumerate(self.patterns):
+            dict_pattern = {}
+
+            clp = p.codeLength(t0, E, data_details)
+            if print_simple or not p.isSimpleCycle():
+                str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
+                    map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])), p.getTypeStr())
+
+            # print("\n pi, t0, E", pi, t0, E)
+            # print("p.pattMinorKey()", p.pattMinorKey())
+            # print("p.pattMajorKey()_list())", p.pattMajorKey_list())
+            # print("p.pattMajorKey()_list()[0])", p.pattMajorKey_list()[0])
+            # print("p.pattMajorKey()_list()[1])", p.pattMajorKey_list()[1])
+            # print("p.nodeP()", p.nodeP())
+            # print("p.nodeR()", p.nodeR())
+            # print("p.nodeEv()", p.nodeEv())
+            # print("p.pattKey()", p.pattKey())
+            # print("p.pattKey()", p.pattKey())
+            # print("p.getAllNidKeys", p.getAllNidKeys())
+            # print("p.getNidsLeftmostLeaves", p.getNidsLeftmostLeaves())
+            # print("p.getNidsRightmostLeaves", p.getNidsRightmostLeaves())
+            # print("p.getOccsStar", p.getOccsStar())
+            # print("p.getTimesNidsRefs", p.getTimesNidsRefs())
+            # print("p.getOccsRefs", p.getOccsRefs())
+            # print("p.getKeyFromNid", p.getKeyFromNid())
+            # print("p.getKeyLFromNid", p.getKeyLFromNid())
+            # print("p.getOccsStarMatch", p.getOccsStarMatch())
+            # print("p.getEventsList", p.getEventsList())
+            # print("p.getEventsMinor", p.getEventsMinor())
+            # print("p.getTreeStr \n", p.getTreeStr())
+            # print("p.getCyclePs", p.getCyclePs())
+            # print("p.getCycleRs", p.getCycleRs())
+            # print("p.getNbLeaves", p.getNbLeaves())
+            # print("p.getNbOccs", p.getNbOccs())
+            # print("p.getDepth", p.getDepth())
+            # print("p.getWidth", p.getWidth())
+            # print("p.getAlphabet", p.getAlphabet())
+            # print("p.getTypeStr", p.getTypeStr())
+            # print("p.getRVals", p.getRVals())
+            # print("p str", p.__str__(
+            #     map_ev=map_ev, leaves_first=True))
+
+            dict_pattern["t0"] = t0
+            dict_pattern["event"] = p.__str__(
+                map_ev=map_ev, leaves_first=True)
+            dict_pattern["length_major"] = p.pattMajorKey_list()[0]
+            dict_pattern["period_major"] = p.pattMajorKey_list()[1]
+            dict_pattern["cost"] = clp
+            dict_pattern["type"] = p.getTypeStr()
+
+            patterns_list_of_dict.append(dict_pattern)
+
+            # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
+            # print("sum(|E|)=%d  E=%s" % (numpy.sum(numpy.abs(E)), E))
+            # print("Occs:", ocls[pi], len(ocls[pi]), len(set(ocls[pi])))
+            cl += clp
+
+        return patterns_list_of_dict, cl
+
+    def output_detailed(self, data_seq, print_simple=True):
+        nbs = self.nbPatternsByType()
+        data_details = data_seq.getDetails()
+
+        patterns_list_of_dict, cl = self.output_pattern_list_and_cost(
+            data_seq, print_simple)
+
+        # nbs_str = ("Total=%d " % len(self)) + " ".join(
+        #     ["nb_%s=%d" % (k, v) for (k, v) in sorted(nbs.items(), key=lambda x: -x[1])])
+        # out_str = " ---- COLLECTION STATS (%s)\n" % nbs_str
+        global_stat_dict = {}
+        global_stat_dict["Total patterns nb"] = len(self)
+        for (k, v) in sorted(nbs.items(), key=lambda x: -x[1]):
+            global_stat_dict[k] = v
+        nbU = self.getNbUncoveredOccsByEv(data_seq)
+        clR = 0
+        nbR = 0
+        for (ev, nb) in nbU.items():
+            nbR += nb
+            clR += nb*cost_one(data_details, ev)
+
+        # out_str += "Code length patterns (%d): %f\n" % (len(self), cl)
+        # out_str += "Code length residuals (%d): %f\n" % (nbR, clR)
+        global_stat_dict[f"Code length patterns"] = cl
+        global_stat_dict[f"Code length residuals"] = clR
+        global_stat_dict["Total residual nb"] = nbR
+
+        cl += clR
+        clRonly = data_seq.codeLengthResiduals()
+        if clRonly > 0:
+            # out_str += "-- Total code length = %f (%f%% of %f)\n" % (
+            #     cl, 100*cl/clRonly, clRonly)
+            global_stat_dict["Code length total"] = cl
+            global_stat_dict["Total compression ratio"] = 100*cl/clRonly
+            global_stat_dict["Code length residuals only"] = clRonly
+
+        return global_stat_dict, patterns_list_of_dict
+
 
 class Pattern(object):
     LOG_DETAILS = 0  # 1: basic text, 2: LaTeX table
@@ -952,6 +1056,14 @@ class Pattern(object):
         else:
             return "[]"
 
+    def pattMajorKey_list(self, nid=0):
+        if not self.isNode(nid):
+            return []
+        if self.isInterm(nid):
+            return [self.nodes[nid]["r"], self.nodes[nid]["p"]]
+        else:
+            return []
+
     def nodeP(self, nid=0):
         if not self.isNode(nid) or not self.isInterm(nid):
             return 0
@@ -1142,6 +1254,7 @@ class Pattern(object):
         else:
             return "other"
 
+    # L(α) = − log(fr (α)) = − log(∣ ∣S(α)∣ ∣ / |S|)
     def codeLengthEvents(self, adjFreqs, nid=0):
         if not self.isNode(nid):
             return 0
@@ -1177,6 +1290,7 @@ class Pattern(object):
         else:
             return []
 
+    # L(r) = log(∣ ∣S(α)∣ ∣),
     def codeLengthR(self, nbOccs, nid=0):
         # determine the code length for r_X
         # based on info on the least occurring event in each block
@@ -1210,6 +1324,7 @@ class Pattern(object):
         return self.getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
     ####
 
+    # L(E) = 2 + ∑_{e∈E} |e| ? ( It should not be     :  2 |E| + ∑_{e∈E} |e|     ? )
     def codeLengthE(self, E, nid=0):
         clE = numpy.sum([2+numpy.abs(e) for e in E])  # -1
         if Pattern.LOG_DETAILS == 1:
@@ -1218,6 +1333,8 @@ class Pattern(object):
         if Pattern.LOG_DETAILS == 2:
             print("$\\Csc$ & $\\LL{%s}$ & & $%.3f$ \\\\" % (E, clE))
         return clE
+
+    # L(p) = log ( (∆(S) − σ(E))   /  (r−1) ⌋) .
 
     def codeLengthPTop(self, deltaT, EC_za=None, nid=0):
         if EC_za is None:  # "bare"
@@ -1232,6 +1349,7 @@ class Pattern(object):
                   (self.nodes[nid]["p"], maxv, clP))
         return clP
 
+    # L(τ ) = log(∆(S) − σ(E) − (r − 1)p + 1) .
     def codeLengthT0(self, deltaT, EC_za=None, nid=0, t0=0, tstart=0):
         if EC_za is None:  # "bare"
             EC_za = 0
@@ -1428,7 +1546,8 @@ class Pattern(object):
                 clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
 
         # print("CL ev=%.3f rs=%.3f p0=%.3f t0=%.3f pds=%.3f E=%.3f" % (clEv,clRs,clP0,clT0,clPDs,clE))
-        return clEv+clRs+clP0+clT0+clPDs+clE
+        # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
+        return clEv+clRs+clP0+clT0+clPDs + clE
         # cl = self.codeLengthEvents(data_details["adjFreqs"], nid=nid)
         # cl += self.codeLengthR(data_details["nbOccs"], nid=nid)
         # cl += self.codeLengthPTop(data_details["deltaT"], EC_za, nid=nid)

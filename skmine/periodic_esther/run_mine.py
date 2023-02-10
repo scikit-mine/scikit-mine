@@ -578,8 +578,7 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
             P_minor = [cpool.getCandidate(cid) for cid in cand["cids"][hw]]
             for cci, P in enumerate(P_minor):
                 first_rs.append(P.getMajorR()-cand["lefts"][hw][cci])
-                tmp = P.getMajorO()[first_rs[-1]
-                                  :first_rs[-1]+cand["dims"][1-hw]]
+                tmp = P.getMajorO()[first_rs[-1]:first_rs[-1]+cand["dims"][1-hw]]
                 Poccs_major.append(tmp[0])
                 Pdiffs_minor.extend(numpy.diff(tmp))
 
@@ -991,7 +990,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
             cis = list(cands.keys())
         else:
             cis = list(range(len(cands)))
-
     for ci in cis:
         cands[ci].initUncovered()
 
@@ -1001,11 +999,11 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
         return selected
     cis.sort(key=lambda x: cands[x].getCostUncoveredRatio())
     max_eff = numpy.min(list(dcosts.values()))
+
     while len(cis) > 0:
         nxti = cis.pop(0)
         if cands[nxti].getCostUncoveredRatio() <= max_eff:
             if cands[nxti].getNbUncovered() >= min_cov and cands[nxti].isEfficient(dcosts):
-
                 if not cands[nxti].isPattern() and adjust_occs:
                     cands[nxti].adjustOccs()
 
@@ -1024,6 +1022,7 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
                     cis.sort(key=lambda x: cands[x].getCostUncoveredRatio())
         else:
             cids = []
+
     return selected
 
 
@@ -1119,6 +1118,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
     tic = datetime.datetime.now()
     dT_sel = datetime.timedelta()
+
     tic_ev = tic
     # log_write(fo_log, "[TIME] Start --- %s\n" % tic)
     results["TIME Start"] = str(tic)
@@ -1148,6 +1148,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
         cycles_alpha = mine_cycles_alpha(
             seq, alpha, data_details, dcosts[alpha], fo_log, max_p=max_p)
+
         cpool.addCands(cycles_alpha, costOne=dcosts[alpha])
         tac_ev = datetime.datetime.now()
         # log_write(fo_log, "[TIME] Cycle extraction event %s done in %s\n" % (
@@ -1198,13 +1199,12 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     # print("\n simple_cids", simple_cids, "\n")
     # print("\n\n\n cdict", simple_cids, "\n\n\n")
     results["time candidates"] = str(tic_sel)
+
     selected = filter_candidates_cover(
         cdict, dcosts, min_cov=3, adjust_occs=True)
 
     # print("\n\n\n\n\n\n selected", selected)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
-
-    # print("\n\n\n\n\n PatternCollection", len(pc))
 
     writePCout_fun(pc, ds, fn_basis, "-simple", fo_log)
     tac_sel = datetime.datetime.now()

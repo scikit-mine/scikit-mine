@@ -122,8 +122,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)
 
         complex: boolean
-            True : compute complex pattern with horizontal and vertical combinations. 
-            False: compute only simple cycles. 
+            True : compute complex pattern with horizontal and vertical combinations.
+            False: compute only simple cycles.
         """
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
@@ -156,8 +156,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                                             fn_basis=None, complex=complex)
 
         self.data_details = data_details
-
-        self.miners_ = cpool.getCandidates()
+        self.miners_ = pc
 
         # print("\n\n\n\n *********** Candidates *************\n\n\n\n")
         # print("nbCandidates()", cpool.nbCandidates())
@@ -259,32 +258,43 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
         """
 
-        series = list()
-        for _, miner in self.miners_.items():
-            dic_miner = {}
-            dic_miner["start"] = miner.getT0()
-            dic_miner["length"] = miner.getNbUOccs()
-            dic_miner["period"] = miner.getMajorP()
-            dic_miner["cost"] = miner.getCost()
+        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
+            self.data_details)
 
-            # residuals
-            pc = PatternCollection([miner.getPattT0E()])
-            pc.getUncoveredOccs(self.data_details)
-            dic_miner["residuals"] = pc.getUncoveredOccs(self.data_details)
+        out_str, pl_str = self.miners_.strDetailed(self.data_details)
+        print(out_str)
 
-            id_to_event = list(self.alpha_groups.keys())
-            if isinstance(miner.getEvent(), list):
-                dic_miner["event"] = [
-                    id_to_event[int(k)] for k in miner.getEvent()]
-            else:
-                dic_miner["event"] = [id_to_event[int(miner.getEvent())]]
+        # print(pd.DataFrame([global_stat_dict]))
 
-            # if tids:
-            # dic_miner["tids"] = miner.getOccs()
-            # if shifts:miner.getOccs()
-            dic_miner["dE"] = miner.getE()
+        if not patterns_list_of_dict:
+            return pd.DataFrame()  # FIXME
 
-            series.append(dic_miner)
+        # for detail in patterns_list_of_dict:
+        #     dic_miner = {}
+        #     dic_miner["start"] = T0
+        #     dic_miner["length"] = pattern.getNbUOccs()
+        #     dic_miner["period"] = pattern.getMajorP()
+        #     dic_miner["cost"] = pattern.getCost()
+
+        #     # residuals
+        #     # pc = PatternCollection([miner.getPattT0E()])
+        #     # pc.getUncoveredOccs(self.data_details)
+        #     dic_miner["residuals"] = pattern.getUncoveredOccs(
+        #         self.data_details)
+
+        #     id_to_event = list(self.alpha_groups.keys())
+        #     if isinstance(miner.getEvent(), list):
+        #         dic_miner["event"] = [
+        #             id_to_event[int(k)] for k in miner.getEvent()]
+        #     else:
+        #         dic_miner["event"] = [id_to_event[int(miner.getEvent())]]
+
+        #     # if tids:
+        #     # dic_miner["tids"] = miner.getOccs()
+        #     # if shifts:miner.getOccs()
+        #     dic_miner["dE"] = miner.getE()
+
+        #     series.append(dic_miner)
 
         #     disc = miner.discover()
         #     if not disc.empty:
@@ -292,22 +302,22 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         # if not series:
         #     return pd.DataFrame()  # FIXME
 
-        self.cycles = pd.DataFrame(series)
+        self.cycles = pd.DataFrame(patterns_list_of_dict)
         # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        self.cycles.loc[:, ["start", "period"]] *= 10 ** self.n_zeros_
+        # self.cycles.loc[:, ["start", "period"]] *= 10 ** self.n_zeros_
 
-        self.cycles.loc[:, "dE"] = self.cycles.dE.map(
-            np.array) * (10 ** self.n_zeros_)
+        # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
+        #     np.array) * (10 ** self.n_zeros_)
 
         # self.cycles.loc[:, "dE"] = self.cycles.loc[:, "dE"] * (10 ** self.n_zeros_)
-        disc_print = self.cycles.copy()
-        if self.is_datetime_:
-            disc_print.loc[:, "start"] = disc_print.start.astype(
-                "datetime64[ns]")
-            disc_print.loc[:, "period"] = disc_print.period.astype(
-                "timedelta64[ns]")
+        # disc_print = self.cycles.copy()
+        # if self.is_datetime_:
+        #     disc_print.loc[:, "start"] = disc_print.start.astype(
+        #         "datetime64[ns]")
+        #     disc_print.loc[:, "period (major)"] = disc_print.period.astype(
+        #         "timedelta64[ns]")
 
-        return disc_print
+        return self.cycles
 
     def reconstruct(self):
         """Reconstruct the original occurrences from the current cycles.
@@ -358,10 +368,11 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         # return pd.DataFrame(all_occ)
 
         series = list()
-        for _, miner in self.miners_.items():
+
+        for pi, (p, t0, E) in enumerate(self.miners_.getPatterns()):
             dic_miner = {}
-            dic_miner["occs"] = [occ * (10 ** self.n_zeros_)
-                                 for occ in miner.getOccs()]
+            dic_miner["occs"] = p.getOccsStarMatch()
+
             series.append(dic_miner)
 
         return pd.DataFrame(series)
@@ -401,19 +412,19 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #     residuals.index = residuals.index.astype("datetime64[ns]")
         # return residuals
 
-        residuals_form = []
+        # residuals_form = []
 
-        for _, res in self.cycles.loc[:, "residuals"].items():
-            if len(res) == 0:
-                residuals_form.append(res)
-            else:
-                res_pd = pd.DataFrame(
-                    np.array(list(res)), columns=['time', 'event'])
-                res_pd['time'] = res_pd['time']*10 ** self.n_zeros_
-                if self.is_datetime_:
-                    res_pd['time'] = res_pd['time'].astype("datetime64[ns]")
-                    res_pd['time'] = res_pd['time'].astype("str")
-                res_set = set([tuple(res) for res in list(res_pd.values)])
-                residuals_form.append(res_set)
+        # for _, res in self.cycles.loc[:, "residuals"].items():
+        #     if len(res) == 0:
+        #         residuals_form.append(res)
+        #     else:
+        #         res_pd = pd.DataFrame(
+        #             np.array(list(res)), columns=['time', 'event'])
+        #         res_pd['time'] = res_pd['time']*10 ** self.n_zeros_
+        #         if self.is_datetime_:
+        #             res_pd['time'] = res_pd['time'].astype("datetime64[ns]")
+        #             res_pd['time'] = res_pd['time'].astype("str")
+        #         res_set = set([tuple(res) for res in list(res_pd.values)])
+        #         residuals_form.append(res_set)
 
-        return pd.Series(residuals_form)
+        return self.miners_.getUncoveredOccs(self.data_details)
