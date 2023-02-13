@@ -6,7 +6,7 @@ parallel = True
 omit =
     **/tests/*
     */setup.py
-
+    */__init__.py
 
 [report]
 # see `https://stackoverflow.com/questions/9202723/excluding-abstractproperties-from-coverage-reports`

@@ -148,9 +148,9 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
     """
 
     def __init__(self, min_growth_rate=2, min_supp=0.1, n_jobs=1):
-        self.min_supp = _check_min_supp(min_supp, accept_absolute=False)
+        _check_min_supp(min_supp, accept_absolute=False)
+        self.min_supp = min_supp
         self.min_growth_rate = _check_growth_rate(min_growth_rate)
-        self.borders_ = None
         self.n_jobs = n_jobs
 
     def fit(self, D, y):
@@ -172,6 +172,7 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
             Targets on which to split D
             Must contain only two disctinct values, i.e len(np.unique(y)) == 2
         """
+
         labels = np.unique(y)
         assert len(labels) == 2
         assert isinstance(D, pd.Series)  # TODO : accept tabular data
@@ -179,10 +180,8 @@ class MBDLLBorder(BaseMiner, DiscovererMixin):
         D1, D2 = D[y == labels[0]], D[y == labels[1]]
 
         # TODO : replace LCMMax by some more efficient method
-        right_border_d1 = LCMMax(min_supp=self.min_supp).fit_discover(D1)
-        right_border_d2 = LCMMax(
-            min_supp=self.min_growth_rate * self.min_supp
-        ).fit_discover(D2)
+        right_border_d1 = LCMMax(min_supp=self.min_supp).fit_transform(D1)
+        right_border_d2 = LCMMax(min_supp=self.min_growth_rate * self.min_supp).fit_transform(D2)
 
         right_border_d1 = right_border_d1.itemset.map(set).tolist()
         right_border_d2 = right_border_d2.itemset.map(set).tolist()

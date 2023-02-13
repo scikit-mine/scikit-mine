@@ -343,9 +343,7 @@ def test_prune_usage_null(D):
     # B : 5, 7
     # C : x
 
-    new_codetable, new_data_size, new_model_size = slim._prune(
-        slim.codetable_, slim.model_size_, slim.data_size_
-    )
+    new_codetable, new_data_size, new_model_size = slim._prune(slim.codetable_, slim.model_size_, slim.data_size_)
 
     # C is present because we do not prune itemsets of length 1 and AC is still removed because his usage is 0 and
     # because its length is 2
@@ -385,18 +383,31 @@ def test_prune(D):
     assert list(new_codetable) == list(map(frozenset, ["ABC", "A", "B", "C"]))
 
 
+def test_get_code_length(D):
+    slim = SLIM(pruning=True).fit(D)
+
+    new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
+    new_D = new_D.str.join("|").str.get_dummies(sep="|")
+
+    code_l = slim.get_code_length(new_D)
+    print(code_l.values)
+    assert code_l.dtype == np.float32
+    assert len(code_l) == len(new_D)
+    np.testing.assert_array_almost_equal(code_l.values, np.array([4.23, 4.23, 4.23, 5.81, 2.11]), decimal=2)
+
+
 def test_decision_function(D):
     slim = SLIM(pruning=True).fit(D)
 
     new_D = pd.Series(["AB"] * 2 + ["ABD", "AC", "B"])
     new_D = new_D.str.join("|").str.get_dummies(sep="|")
 
-    dists = slim.decision_function(new_D)
-    assert dists.dtype == np.float32
-    assert len(dists) == len(new_D)
-    np.testing.assert_array_almost_equal(
-        dists.values, np.array([-4.23, -4.23, -4.23, -5.81, -2.11]), decimal=2
-    )
+    prob = slim.decision_function(new_D)
+    print(prob.values)
+    assert prob.dtype == np.float32
+    assert len(prob) == len(new_D)
+    np.testing.assert_array_almost_equal(prob.values, np.exp(-0.2 * np.array([4.23, 4.23, 4.23, 5.81, 2.11])),
+                                         decimal=2)
 
 
 def test_reconstruct(D):

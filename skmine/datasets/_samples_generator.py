@@ -32,7 +32,7 @@ def make_transactions(
 
     References
     ----------
-    .. [1] F. Flouvat, F. De Marchi, JM. Petit
+    .. F. Flouvat, F. De Marchi, JM. Petit
            "A new classification of datasets for frequent itemsets", 2009
 
     Example

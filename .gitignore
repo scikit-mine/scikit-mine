@@ -85,4 +85,4 @@ results/
 html/
 .dvcignore
 **/*.DS_Store
-/skmine/datasets/_instacart.py
+/dev_HC/project-template/

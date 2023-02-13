@@ -1,9 +1,8 @@
+import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_is_fitted
-from .slim import SLIM
 
-import numpy as np
-from functools import reduce
+from ..itemsets.slim import SLIM
 
 
 class SlimClassifier(BaseEstimator, ClassifierMixin):
@@ -40,6 +39,10 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self.items = items
         self.pruning = pruning
 
+    def _more_tags(self):
+        return {
+            "no_validation": True}
+
     def fit(self, X, y):
         """Fit the model according to the given training data.
 
@@ -56,6 +59,8 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self : object
             An instance of the estimator
         """
+        self._validate_data(X, y, reset=True, validate_separately=False, force_all_finite=False,
+                            accept_sparse=False, ensure_2d=False, ensure_min_samples=0, dtype=list)
         self.classes_ = np.unique(y)
         self.classes_X_ = []
         self.models_ = []
@@ -83,19 +88,10 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
             Class labels for samples in X
         """
         check_is_fitted(self, "classes_")
+        self.models_scores = np.vstack([model.decision_function(X).values for model in self.models_]).T
 
-        if self.classes_ is None:
-            raise ValueError("fit must be called first.")
-
-        models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
-        predictions = []
-
-        for i in range(len(X)):
-            scores = [model[i] for model in models_scores.values()]
-            best_index = scores.index(reduce(lambda x, y: x if abs(y) > abs(x) else y, scores))
-            predictions.append(self.classes_[0] if best_index is None else self.classes_[best_index])
-
-        return np.array(predictions)
+        return self.classes_[self.models_scores.argmax(axis=1)]
 
     def __copy__(self):
         return SlimClassifier(items=self.items, pruning=self.pruning)
+
