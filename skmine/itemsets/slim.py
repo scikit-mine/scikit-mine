@@ -185,7 +185,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
         self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X[-1])
-        # TODO : significant for one-hot D ,not for list of itemset
+        # TODO : significant for one-hot D, not for list of itemset
         start = time.time()
         self.prefit(X, y=y)
         while True:
