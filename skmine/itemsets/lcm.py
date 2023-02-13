@@ -78,10 +78,6 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         self.n_jobs = n_jobs  # number of jobs launched by joblib
         self.verbose = verbose
 
-    # def get_feature_names_out(self, input_features=None):  # for  set_output(transform='pandas') ?
-    #     columns = ["itemset", "support"] if not self.return_tids_ else ["itemset", "support", "tids"]
-    #     return columns
-
     def _more_tags(self):
         return {
             # "non_deterministic": False,  # default
@@ -245,7 +241,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=f"{temp_dir}/root{k}.dat")
                 for k, (item, tids) in enumerate(list(self.item_to_tids_.items())))
-            print("OOOOO outfile ", self.out_)
+
             with open(self.out_,
                       'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
                 for fname in [f"{temp_dir}/root{k}.dat" for k in
@@ -277,7 +273,6 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             return df
 
     def _inner(self, p_tids, limit):
-
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (

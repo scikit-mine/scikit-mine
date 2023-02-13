@@ -88,18 +88,7 @@ def cover(sct: dict, itemsets: list) -> dict:
     return covers
 
 
-class OneHotDataframe(MultiLabelBinarizer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def fit_transform(self, y):
-        return pd.DataFrame(super().fit_transform(y), columns=self.classes_)
-
-    def transform(self, Z):
-        return pd.DataFrame(super().transform(Z), columns=self.classes_)
-
-
-class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
+class SLIM(BaseEstimator, TransformerMixin):
     """SLIM: Directly Mining Descriptive Patterns
 
     SLIM looks for a compressed representation of transactional data.
@@ -190,10 +179,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         y: Ignored
             Not used, present here for API consistency by convention.
         """
-        # X = one_hot_dataframe(X)
         if y is not None:
-            self.classes_ = np.unique(y)  # for OvO to test
-        # self._validate_params()
+            self.classes_ = np.unique(y)
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
@@ -301,7 +288,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
          prob : pandas.Series
             probability for D to belong to the same class
         """
-
         _fonc = lambda x: np.exp(-0.2 * x)
         x = self.get_code_length(D)
         prob = _fonc(x)
@@ -493,7 +479,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         pd.DataFrame
         """
         if hasattr(D, "shape") and len(D.shape) == 2:  # tabular
-            # print("POP", type(D))
             D = _check_D(D)
             D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
         else:  # transactional
@@ -511,7 +496,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
     def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True,
                   drop_null_usage=True, return_dl=False, out=None):
-
         """Get a user-friendly copy of the codetable
 
         Parameters
@@ -561,8 +545,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         self.return_tids_ = return_tids
         self.out_ = out
         self.return_dl_ = return_dl
-        # self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False, ensure_min_samples=1,
-        #                     dtype=list)
+
         itemsets = []
         itids = []
         iusages = []

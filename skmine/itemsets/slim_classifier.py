@@ -88,7 +88,6 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
             Class labels for samples in X
         """
         check_is_fitted(self, "classes_")
-        # self.models_scores = {i: model.decision_function(X).values for i, model in enumerate(self.models_)}
         self.models_scores = np.vstack([model.decision_function(X).values for model in self.models_]).T
 
         return self.classes_[self.models_scores.argmax(axis=1)]
