@@ -1,12 +1,11 @@
 name: linting
 on:
-  push:
-    paths:
-      - skmine/**
+  workflow_run:
+    workflows: ["tests"]
+    types: ["completed"]
 jobs:
   run:
     runs-on: ubuntu-latest
-    needs: [tests]
     steps:
       - uses: actions/checkout@master
       - name: Setup Python
