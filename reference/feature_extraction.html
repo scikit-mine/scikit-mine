@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Feature Extraction &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>Feature Extraction &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -116,9 +116,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -224,7 +228,7 @@ in a format supported by machine learning algorithms from datasets containing ra
 <h2>SLIMVectorizer<a class="headerlink" href="#slimvectorizer" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.feature_extraction.SLIMVectorizer">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.feature_extraction.</code><code class="sig-name descname">SLIMVectorizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">strategy</span><span class="o">=</span><span class="default_value">'codes'</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stop_items</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/feature_extraction/slim_vectorizer.html#SLIMVectorizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.feature_extraction.SLIMVectorizer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.feature_extraction.</code><code class="sig-name descname">SLIMVectorizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">strategy</span><span class="o">=</span><span class="default_value">'codes'</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stop_items</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/feature_extraction/slim_vectorizer.html#SLIMVectorizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.feature_extraction.SLIMVectorizer" title="Permalink to this definition">¶</a></dt>
 <dd><p>SLIM mining, turned into a feature extraction step for sklearn</p>
 <p><cite>k</cite> new itemsets (associations of one or more items) are learned at training time</p>
 <p>The model (pattern set) is then used to cover new data, in order of usage.
@@ -249,7 +253,8 @@ A singleton is an itemset containing a single item.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.feature_extraction</span> <span class="kn">import</span> <span class="n">SLIMVectorizer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIMVectorizer</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span>  <span class="o">=</span> <span class="n">SLIMVectorizer</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
 <span class="go">   (bananas, milk)  (cookies,)</span>
 <span class="go">0              0.4         0.0</span>
 <span class="go">1              0.4         0.4</span>
@@ -284,7 +289,7 @@ or encoded as tabular binary data</p></li>
 
 <dl class="py method">
 <dt id="skmine.feature_extraction.SLIMVectorizer.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/feature_extraction/slim_vectorizer.html#SLIMVectorizer.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.feature_extraction.SLIMVectorizer.transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">newD</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">tsf_params</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="../_modules/skmine/feature_extraction/slim_vectorizer.html#SLIMVectorizer.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.feature_extraction.SLIMVectorizer.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform new data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

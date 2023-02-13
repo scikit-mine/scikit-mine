@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.periodic.tree &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>skmine.periodic.tree &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -110,9 +110,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -207,9 +211,7 @@
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">bron_kerbosch</span>
 <span class="kn">from</span> <span class="nn">.cycles</span> <span class="kn">import</span> <span class="n">PeriodicCycleMiner</span><span class="p">,</span> <span class="n">extract_triples</span><span class="p">,</span> <span class="n">merge_triples</span>
 
-<span class="n">L_PARENTHESIS</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span>
-    <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span>
-<span class="p">)</span>  <span class="c1"># length of either `(` or `)` when encoding tree patterns</span>
+<span class="n">L_PARENTHESIS</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># length of either `(` or `)` when encoding tree patterns</span>
 
 <span class="n">shift_array</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">)</span>  <span class="c1"># shifts are signed integers</span>
 
@@ -311,9 +313,7 @@
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children_dists</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;There should be exactly `|children| - 1` inter-child distances&quot;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There should be exactly `|children| - 1` inter-child distances&quot;</span><span class="p">)</span>
 
         <span class="n">d_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children_dists</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">d_sum</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
@@ -329,9 +329,7 @@
         <span class="c1"># assert len(n_t) == 2</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">((</span><span class="n">c</span><span class="o">.</span><span class="n">_size</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_n_occs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">*</span> <span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">((</span><span class="n">c</span><span class="o">.</span><span class="n">_n_occs</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_occs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">((</span><span class="n">c</span><span class="o">.</span><span class="n">_n_occs</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">mdl_cost_R</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">event_frequencies</span><span class="p">):</span>
         <span class="n">occs_min</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">event_frequencies</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaves</span><span class="p">)))</span>
@@ -409,9 +407,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">children_str</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">))</span>  <span class="c1"># recursive call here</span>
         <span class="n">dists_str</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">children_dists</span><span class="p">)</span>
-        <span class="n">event_str</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">children_str</span><span class="p">,</span> <span class="n">dists_str</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
-            <span class="n">children_str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">]</span>
+        <span class="n">event_str</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">children_str</span><span class="p">,</span> <span class="n">dists_str</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">children_str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
         <span class="n">event_str</span> <span class="o">=</span> <span class="s2">&quot; - &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">event_str</span><span class="p">)</span>
         <span class="n">repeat</span> <span class="o">=</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;r=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2">, p=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">repeat</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">event_str</span><span class="si">}</span><span class="s2">)&quot;</span>
@@ -556,13 +552,7 @@
         <span class="n">node_str</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="n">tau_match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span>
         <span class="n">tau</span> <span class="o">=</span> <span class="n">tau_constructor</span><span class="p">(</span><span class="n">tau_match</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
         <span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="n">node_str</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">tau</span><span class="p">,</span>
-            <span class="n">r</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">r</span><span class="p">,</span>
-            <span class="n">p</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
-            <span class="n">children</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span>
-            <span class="n">children_dists</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">children_dists</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span> <span class="n">children_dists</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">children_dists</span><span class="p">,)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Comparing trees, transactions ids are not checked, on purpose.&quot;&quot;&quot;</span>
@@ -607,10 +597,7 @@
                 <span class="n">sub_C</span> <span class="o">=</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">C</span> <span class="k">if</span> <span class="n">_</span><span class="o">.</span><span class="n">tau</span> <span class="ow">in</span> <span class="n">cycle_batch</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
                 <span class="n">tids</span> <span class="o">=</span> <span class="n">Bitmap</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">_</span><span class="o">.</span><span class="n">tids</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sub_C</span><span class="p">))</span>
                 <span class="n">taus_diffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">taus</span><span class="p">)</span> <span class="o">-</span> <span class="n">p</span>
-                <span class="n">E</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">sub_C</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">taus_diffs</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
-                    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">taus_diffs</span><span class="p">))</span>
-                <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">sub_C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+                <span class="n">E</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub_C</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">taus_diffs</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">taus_diffs</span><span class="p">))]</span> <span class="o">+</span> <span class="p">[</span><span class="n">sub_C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
                 <span class="n">E</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">E</span><span class="p">))</span>
                 <span class="n">K</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="p">[</span><span class="n">Tc</span><span class="o">.</span><span class="n">to_node</span><span class="p">()],</span> <span class="n">tids</span><span class="o">=</span><span class="n">tids</span><span class="p">,</span> <span class="n">E</span><span class="o">=</span><span class="n">E</span><span class="p">)</span>
                 <span class="c1"># TODO : check cost (line 8 from algorithm 4)</span>
@@ -691,11 +678,7 @@
     <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
-            <span class="n">candidates</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">mdl_cost</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">dS</span><span class="p">,</span> <span class="o">**</span><span class="n">event_frequencies</span><span class="p">)</span>
-            <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">tids</span> <span class="o">-</span> <span class="n">big_O</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.001</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">mdl_cost</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">dS</span><span class="p">,</span> <span class="o">**</span><span class="n">event_frequencies</span><span class="p">)</span><span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">tids</span> <span class="o">-</span> <span class="n">big_O</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.001</span><span class="p">),)</span>
         <span class="n">big_O</span> <span class="o">|=</span> <span class="n">p</span><span class="o">.</span><span class="n">tids</span>
         <span class="n">big_P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
         <span class="n">candidates</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
@@ -799,9 +782,7 @@
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">trees</span><span class="p">,</span> <span class="n">costs</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="PeriodicPatternMiner.update"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicPatternMiner.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">Tree</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="p">)</span>  <span class="c1"># FIXME cost of 0 here, just for interactive mining, but to be fixed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># FIXME cost of 0 here, just for interactive mining, but to be fixed</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codetable</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;current number of trees exceeds the `k` parameter&quot;</span><span class="p">)</span></div>
 

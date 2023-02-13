@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Datasets &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>Datasets &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -100,7 +100,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Datasets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#standard-datasets-for-itemset-mining">Standard datasets for itemset mining</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#logs-datasets-for-periodic-pattern-mining">Logs datasets for periodic pattern mining</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#instacart-market-basket-analysis">Instacart Market Basket Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#synthetic-data-generation">Synthetic data generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils">utils</a></li>
 </ul>
@@ -120,9 +119,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -711,9 +714,6 @@ Downloading preprocessd dataset from zenodo.org is something we consider.</p>
 </dd></dl>
 
 </section>
-<section id="instacart-market-basket-analysis">
-<h2>Instacart Market Basket Analysis<a class="headerlink" href="#instacart-market-basket-analysis" title="Permalink to this headline">¶</a></h2>
-</section>
 <section id="synthetic-data-generation">
 <h2>Synthetic data generation<a class="headerlink" href="#synthetic-data-generation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -735,12 +735,6 @@ for reproducible output across multiple function calls.</p></li>
 </dd>
 </dl>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets">1</span></dt>
-<dd><p>F. Flouvat, F. De Marchi, JM. Petit
-“A new classification of datasets for frequent itemsets”, 2009</p>
-</dd>
-</dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets</span> <span class="kn">import</span> <span class="n">make_transactions</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">make_transactions</span><span class="p">(</span><span class="n">n_transactions</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_items</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">.25</span><span class="p">)</span>  

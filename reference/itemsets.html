@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Itemsets &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>Itemsets &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -119,9 +119,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -226,7 +230,7 @@
 <h2>SLIM<a class="headerlink" href="#slim" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.itemsets.SLIM">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_time</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">items</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.itemsets.</code><code class="sig-name descname">SLIM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pruning</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_time</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">items</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>SLIM: Directly Mining Descriptive Patterns</p>
 <p>SLIM looks for a compressed representation of transactional data.
 This compressed representation if a set of descriptive patterns,
@@ -252,7 +256,7 @@ compression progress of the database gets weaker and weaker, so it may be useful
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">           itemset    tids</span>
 <span class="go">0  [bananas, milk]  (0, 1)</span>
 <span class="go">1    [butter, tea]     (2)</span>
@@ -271,6 +275,21 @@ compression progress of the database gets weaker and weaker, so it may be useful
 </dd>
 </dl>
 <dl class="py method">
+<dt id="skmine.itemsets.SLIM.fit_transform">
+<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">tsf_params</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override sklearn transformer method to apply optional parameters <cite>tsf_params</cite> on transform  and not to fit
+Returns a transformed version of <cite>X</cite>: i.e. the fitted codetable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>df_new</strong> – Codetable fitted from X data.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="skmine.itemsets.SLIM.fit">
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit SLIM on a transactional dataset</p>
@@ -288,16 +307,26 @@ or encoded as tabular binary data</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.itemsets.SLIM.decision_function">
-<code class="sig-name descname">decision_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.decision_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.decision_function" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.itemsets.SLIM.get_code_length">
+<code class="sig-name descname">get_code_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.get_code_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.get_code_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute covers on new data, and return code length</p>
-<p>This function is named <code class="docutils literal notranslate"><span class="pre">decision_function</span></code> because code lengths
-represent the distance between a point and the current codetable.</p>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">pruning</span></code> to False when creating the model
 is recommended to cover unseen data, and especially when building a classifier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>D</strong> (<em>pd.DataFrame</em><em> or </em><em>np.ndarray</em>) – new data to make predictions on, in tabular format</p>
+<dd class="field-odd"><p><strong>D</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> or </em><em>pd.DataFrame</em>) – new data to make predictions on, in tabular format.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>type of input D should be the same as in one ingest in fit method</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>codes_length</strong> – codes length  for all itemset in D (float32)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.Series</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
@@ -306,15 +335,49 @@ is recommended to cover unseen data, and especially when building a classifier.<
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">to_tabular</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">to_tabular</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
-<span class="go">0   -5.584963</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">get_code_length</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
+<span class="go">0   5.584963</span>
 <span class="go">dtype: float32</span>
 </pre></div>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#skmine.itemsets.SLIM.cover" title="skmine.itemsets.SLIM.cover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cover</span></code></a>, <a class="reference internal" href="#skmine.itemsets.SLIM.discover" title="skmine.itemsets.SLIM.discover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">discover</span></code></a></p>
+<p><a class="reference internal" href="#skmine.itemsets.SLIM.cover" title="skmine.itemsets.SLIM.cover"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cover</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">discover</span></code></p>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skmine.itemsets.SLIM.decision_function">
+<code class="sig-name descname">decision_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.decision_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.decision_function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Function use to predict class of itemset D (can be a list of iterable of itemset).</dt><dd><p>It is used by a classifier predict method, like in sklearn.multiclass.OneVsRestClassifier where
+the highest values of decision_function among all classes.</p>
+</dd>
+</dl>
+<p>The shorter code length ($cl in ]0 + infty[$) of D is,
+the higher is the probability for D to belong to same class.
+Therefore, mapping function _fonc(.)  should be monotonically decreasing on $]0 + infty[$
+We choose by default $_fonc(x)=exp(-0.2*x)$ to get probability in $]0,1]$ but other can be coded like
+$_fonc(x)=-x$</p>
+<p>Unlike to sklearn-convention (<a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-decision_function">https://scikit-learn.org/stable/glossary.html#term-decision_function</a>),
+this decision function doesn’t return a signed distance from a boundary because it’s not easy to compute it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>D</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> or </em><em>pd.DataFrame</em>) – new data to make predictions on, in tabular format</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>type of input D should be the same as in one ingest in fit method</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>prob</strong> – probability for D to belong to the same class</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.Series</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -335,7 +398,7 @@ Note that this function updates the stack, passed as a reference</p>
 
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.evaluate">
-<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.evaluate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate <code class="docutils literal notranslate"><span class="pre">candidate</span></code>, considering the current codetable and a dataset <code class="docutils literal notranslate"><span class="pre">D</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -352,7 +415,7 @@ Note that this function updates the stack, passed as a reference</p>
 
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">usages</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">usages</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the current codetable.</p>
 <p>If <cite>candidate</cite> is passed as None, <cite>model_size</cite>, <cite>data_size</cite> and <cite>usages</cite> will be used
 If <cite>candidate</cite> is not None, <cite>model_size</cite>, <cite>data_size</cite> and <cite>usages</cite>
@@ -363,8 +426,7 @@ will be computed by calling <cite>.evaluate</cite></p>
 <li><p><strong>candidate</strong> (<em>frozenset</em><em>, </em><em>default=None</em>) – candidate to be inserted</p></li>
 <li><p><strong>model_size</strong> (<em>float</em><em>, </em><em>default=None</em>) – new model size (in bits) to be set</p></li>
 <li><p><strong>data_size</strong> (<em>float</em>) – new data size (in bits) to be set</p></li>
-<li><p><strong>usages</strong> (<em>dict</em><em>, </em><em>default=None</em>) – optional for usage outside this class
-eg. if one simply needs to include an itemset in the current codetable
+<li><p><strong>usages</strong> (<em>dict</em><em>, </em><em>default=None</em>) – optional for usage outside this class e.g.if simply needs to include an itemset in the current codetable
 as in interactive data mining</p></li>
 </ul>
 </dd>
@@ -376,7 +438,7 @@ as in interactive data mining</p></li>
 
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.cover">
-<code class="sig-name descname">cover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.cover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.cover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.cover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.cover" title="Permalink to this definition">¶</a></dt>
 <dd><p>cover unseen data</p>
 <p>items never seen are dropped out</p>
 <p class="rubric">Examples</p>
@@ -400,8 +462,8 @@ as in interactive data mining</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.itemsets.SLIM.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">singletons</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">drop_null_usage</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">return_dl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.discover" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.itemsets.SLIM.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">singletons</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">drop_null_usage</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">return_dl</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a user-friendly copy of the codetable</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -410,8 +472,7 @@ as in interactive data mining</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either returns the tids of each itemset associated with the coverage or simply the usage, i.e. the number of
 times the itemset is used, if set to False.</p></li>
 <li><p><strong>lexicographic_order</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either the order of the items in each itemset is not ordered or the items are ordered lexicographically</p></li>
-<li><p><strong>drop_null_usage</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either to include itemset with no usage in the training data
-(i.e itemsets under cover of other itemsets)</p></li>
+<li><p><strong>drop_null_usage</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either to include itemset with no usage in the training data (i.e itemsets under cover of other itemsets)</p></li>
 <li><p><strong>return_dl</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Display the total size of the model L(CT, D) according to MDL (Minimum Description Length) which is equal to
 the sum of the encoded database size L(D | CT) and the encoded table code size L(CT | D).</p></li>
 <li><p><strong>out</strong> (<em>str</em><em>, </em><em>default=None</em>) – File where results are written. Discover return None. The file contains in parentheses the usage of the
@@ -423,14 +484,11 @@ each itemset is a line of transaction ids containing the previous itemset.</p></
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ABC&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">,</span> <span class="s2">&quot;BCD&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">  itemset    tids</span>
-<span class="go">0  [A, B]  (0, 1)</span>
-<span class="go">1  [B, D]     (2)</span>
-<span class="go">2     [B]      ()</span>
-<span class="go">3     [A]      ()</span>
-<span class="go">4     [C]  (0, 2)</span>
-<span class="go">5     [D]      ()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">  itemset  usage</span>
+<span class="go">0  [A, B]      2</span>
+<span class="go">1  [B, D]      1</span>
+<span class="go">2     [C]      2</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -445,15 +503,15 @@ each itemset is a line of transaction ids containing the previous itemset.</p></
 
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.reconstruct">
-<code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.reconstruct" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.series.Series<a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.reconstruct" title="Permalink to this definition">¶</a></dt>
 <dd><p>reconstruct the original data from the current <cite>self.codetable_</cite>. This is possible because SLIM is a
 lossless algorithm .</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ABC&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">,</span> <span class="s2">&quot;BCD&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>  
-<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span> 
 <span class="go">0    [A, B, C]</span>
 <span class="go">1       [A, B]</span>
 <span class="go">2    [B, C, D]</span>
@@ -607,7 +665,7 @@ have the following warning: UserWarning: A worker stopped while some jobs were g
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.datasets.fimi</span> <span class="kn">import</span> <span class="n">fetch_chess</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">chess</span> <span class="o">=</span> <span class="n">fetch_chess</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span> <span class="o">=</span> <span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span> <span class="o">=</span> <span class="n">lcm</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span> <span class="o">=</span> <span class="n">lcm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">chess</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">patterns</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="go">    itemset  support</span>
 <span class="go">0      [58]     3195</span>
@@ -620,7 +678,7 @@ have the following warning: UserWarning: A worker stopped while some jobs were g
 </div>
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit LCM on the transactional database, by keeping records of singular items
 and their transaction ids.</p>
 <dl class="field-list simple">
@@ -639,8 +697,8 @@ If D is a pandas.Series, then <cite>(D.map(type) == list).all()</cite> should re
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.itemsets.LCM.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.discover" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.itemsets.LCM.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minimum support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -704,11 +762,11 @@ concatenated in the final ‘out’ file.</p></li>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">LCM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">     itemset  support</span>
 <span class="go">0     [2, 5]        3</span>
 <span class="go">1  [2, 3, 5]        2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LCM</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">     itemset  support       tids</span>
 <span class="go">0     [2, 5]        3  (0, 1, 2)</span>
 <span class="go">1  [2, 3, 5]        2     (0, 1)</span>
@@ -743,8 +801,8 @@ to discover potential itemsets, considering this item as a root in the search sp
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">LCM</span></code></p>
 </div>
 <dl class="py method">
-<dt id="skmine.itemsets.lcm.LCMMax.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax.discover" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.itemsets.lcm.LCMMax.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minimum support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

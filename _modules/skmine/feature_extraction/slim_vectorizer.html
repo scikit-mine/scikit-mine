@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.feature_extraction.slim_vectorizer &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>skmine.feature_extraction.slim_vectorizer &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -110,9 +110,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -192,9 +196,8 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
-<span class="kn">from</span> <span class="nn">..itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
-<span class="kn">from</span> <span class="nn">..itemsets.slim</span> <span class="kn">import</span> <span class="n">_to_vertical</span><span class="p">,</span> <span class="n">cover</span>
+<span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
+<span class="kn">from</span> <span class="nn">skmine.itemsets.slim</span> <span class="kn">import</span> <span class="n">_to_vertical</span><span class="p">,</span> <span class="n">cover</span>
 
 <span class="n">STRATEGIES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;codes&quot;</span><span class="p">,</span> <span class="s2">&quot;one-hot&quot;</span><span class="p">)</span>
 
@@ -204,7 +207,7 @@
         <span class="k">yield</span> <span class="nb">set</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">stop_items</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="SLIMVectorizer"><a class="viewcode-back" href="../../../reference/feature_extraction.html#skmine.feature_extraction.SLIMVectorizer">[docs]</a><span class="k">class</span> <span class="nc">SLIMVectorizer</span><span class="p">(</span><span class="n">SLIM</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="SLIMVectorizer"><a class="viewcode-back" href="../../../reference/feature_extraction.html#skmine.feature_extraction.SLIMVectorizer">[docs]</a><span class="k">class</span> <span class="nc">SLIMVectorizer</span><span class="p">(</span><span class="n">SLIM</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;SLIM mining, turned into a feature extraction step for sklearn</span>
 
 <span class="sd">    `k` new itemsets (associations of one or more items) are learned at training time</span>
@@ -238,7 +241,8 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.feature_extraction import SLIMVectorizer</span>
 <span class="sd">    &gt;&gt;&gt; D = [[&#39;bananas&#39;, &#39;milk&#39;], [&#39;milk&#39;, &#39;bananas&#39;, &#39;cookies&#39;], [&#39;cookies&#39;, &#39;butter&#39;, &#39;tea&#39;]]</span>
-<span class="sd">    &gt;&gt;&gt; SLIMVectorizer(k=2).fit_transform(D)</span>
+<span class="sd">    &gt;&gt;&gt; res  = SLIMVectorizer(k=2).fit_transform(D)</span>
+<span class="sd">    &gt;&gt;&gt; print(res.to_string())</span>
 <span class="sd">       (bananas, milk)  (cookies,)</span>
 <span class="sd">    0              0.4         0.0</span>
 <span class="sd">    1              0.4         0.4</span>
@@ -257,7 +261,7 @@
 <span class="sd">    patterns should output matrices with very few zeros.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;codes&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stop_items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;codes&quot;</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pruning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stop_items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pruning</span> <span class="o">=</span> <span class="n">pruning</span>
@@ -271,7 +275,7 @@
             <span class="n">D</span> <span class="o">=</span> <span class="n">_filter_stop_items</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">stop_items</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stop_items</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SLIMVectorizer.transform"><a class="viewcode-back" href="../../../reference/feature_extraction.html#skmine.feature_extraction.SLIMVectorizer.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SLIMVectorizer.transform"><a class="viewcode-back" href="../../../reference/feature_extraction.html#skmine.feature_extraction.SLIMVectorizer.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newD</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">tsf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Transform new data</span>
 
 <span class="sd">        Parameters</span>
@@ -289,9 +293,8 @@
 <span class="sd">        skmine.itemsets.SLIM.cover</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">stop_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_items</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">D_sct</span><span class="p">,</span> <span class="n">_len</span> <span class="o">=</span> <span class="n">_to_vertical</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">stop_items</span><span class="o">=</span><span class="n">stop_items</span><span class="p">,</span> <span class="n">return_len</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">code_lengths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">D_sct</span><span class="p">,</span> <span class="n">_len</span> <span class="o">=</span> <span class="n">_to_vertical</span><span class="p">(</span><span class="n">newD</span><span class="p">,</span> <span class="n">stop_items</span><span class="o">=</span><span class="n">stop_items</span><span class="p">,</span> <span class="n">return_len</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">code_lengths</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">newD</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">code_lengths</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">code_lengths</span><span class="p">[</span><span class="s2">&quot;usage&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">code_lengths</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">tuple</span><span class="p">))</span>
         <span class="n">code_lengths</span> <span class="o">=</span> <span class="n">code_lengths</span><span class="p">[</span><span class="n">code_lengths</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">D_sct</span><span class="p">)</span><span class="o">.</span><span class="n">issuperset</span><span class="p">)]</span>
 

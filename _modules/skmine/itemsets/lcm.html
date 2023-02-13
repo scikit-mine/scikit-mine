@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>skmine.itemsets.lcm &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -110,9 +110,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -200,20 +204,20 @@
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">takewhile</span>
+
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">sortedcontainers</span> <span class="kn">import</span> <span class="n">SortedDict</span>
 <span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
-
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_is_fitted</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_check_min_supp</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">filter_maximal</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span>
 
-
-<div class="viewcode-block" id="LCM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM">[docs]</a><span class="k">class</span> <span class="nc">LCM</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="LCM"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM">[docs]</a><span class="k">class</span> <span class="nc">LCM</span><span class="p">(</span><span class="n">TransformerMixin</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>  <span class="c1"># BaseMiner, DiscovererMixin): #TransformerMixin, BaseEstimator) : :</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Linear time Closed item set Miner.</span>
 
@@ -236,8 +240,7 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1]</span>
-<span class="sd">        Takeaki Uno, Masashi Kiyomi, Hiroki Arimura</span>
+<span class="sd">    .. [1] Takeaki Uno, Masashi Kiyomi, Hiroki Arimura</span>
 <span class="sd">        &quot;LCM ver. 2: Efficient mining algorithms for frequent/closed/maximal itemsets&quot;, 2004</span>
 
 <span class="sd">    .. [2] Alexandre Termier</span>
@@ -250,7 +253,7 @@
 <span class="sd">    &gt;&gt;&gt; from skmine.datasets.fimi import fetch_chess</span>
 <span class="sd">    &gt;&gt;&gt; chess = fetch_chess()</span>
 <span class="sd">    &gt;&gt;&gt; lcm = LCM(min_supp=2000)</span>
-<span class="sd">    &gt;&gt;&gt; patterns = lcm.fit_discover(chess)</span>
+<span class="sd">    &gt;&gt;&gt; patterns = lcm.fit_transform(chess)</span>
 <span class="sd">    &gt;&gt;&gt; patterns.head()</span>
 <span class="sd">        itemset  support</span>
 <span class="sd">    0      [58]     3195</span>
@@ -262,19 +265,35 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">min_supp</span>  <span class="c1"># cf docstring: minimum support provided by user</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># maximum length of an itemset</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">()</span>  <span class="c1"># Dict : key item ordered by decreasing frequency , value : tids for this</span>
-        <span class="c1"># item</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of ordered item by decreasing frequency</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>  <span class="c1"># number of jobs launched by joblib</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># if true, the items of each itemset are returned in lexicographical order</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
-<div class="viewcode-block" id="LCM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_more_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="c1"># &quot;non_deterministic&quot;: False,  # default</span>
+            <span class="c1"># &quot;requires_positive_X&quot;: True,</span>
+            <span class="c1"># &quot;requires_positive_y&quot;: False,  # default</span>
+            <span class="c1"># &quot;X_types&quot;: [&#39;2darray&#39;], 2dlabels # [&quot;categorical&quot;],  # default</span>
+            <span class="c1"># # &quot;poor_score&quot;: False,  # default</span>
+            <span class="s2">&quot;non_deterministic&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># default</span>
+            <span class="s2">&quot;preserves_dtype&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;no_validation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="c1"># &quot;multioutput&quot;: False,  # default</span>
+            <span class="c1"># &quot;allow_nan&quot;: False,  # default</span>
+            <span class="c1"># &quot;stateless&quot;: False,  # default</span>
+            <span class="c1"># &quot;multilabel&quot;: False,  # default</span>
+            <span class="c1"># &quot;_skip_test&quot;: False,  # default</span>
+            <span class="c1"># &quot;_xfail_checks&quot;: False, # default</span>
+            <span class="c1"># &quot;multioutput_only&quot;: False,  # default</span>
+            <span class="c1"># &quot;binary_only&quot;: False,  # default</span>
+            <span class="c1"># &quot;requires_fit&quot;: True,  # default</span>
+            <span class="c1"># &quot;preserves_dtype&quot;: [numpy.float64], # default   ## [pd.DataFrame, np.int],</span>
+            <span class="c1"># &quot;requires_y&quot;: False, # default</span>
+            <span class="c1"># &quot;pairwise&quot;: False,  # default</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="LCM.fit"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        fit LCM on the transactional database, by keeping records of singular items</span>
 <span class="sd">        and their transaction ids.</span>
@@ -294,6 +313,9 @@
 <span class="sd">            if any entry in D is not iterable itself OR if any item is not **hashable**</span>
 <span class="sd">            OR if all items are not **comparable** with each other.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ensure_min_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
         <span class="n">n_transactions_</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">item_to_tids_</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Bitmap</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">D</span><span class="p">:</span>
@@ -301,10 +323,13 @@
                 <span class="n">item_to_tids_</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n_transactions_</span><span class="p">)</span>
             <span class="n">n_transactions_</span> <span class="o">+=</span> <span class="mi">1</span>
 
+        <span class="n">_check_min_supp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>  <span class="c1"># make support absolute if needed</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">*</span> <span class="n">n_transactions_</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_supp_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">*</span> <span class="n">n_transactions_</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_supp_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span>
 
-        <span class="n">low_supp_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">]</span>
+        <span class="n">low_supp_items</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp_</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">low_supp_items</span><span class="p">:</span>  <span class="c1"># drop low freq items</span>
             <span class="k">del</span> <span class="n">item_to_tids_</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
 
@@ -316,12 +341,17 @@
             <span class="n">ord_item_freq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
             <span class="n">ord_freq_dic</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">tid</span>  <span class="c1"># rename most frequent item like cat by 0, second  dog by 1</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="n">ord_freq_dic</span><span class="p">)</span>  <span class="c1"># {0:tids0, 1:tids1 ....}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq</span> <span class="o">=</span> <span class="n">ord_item_freq</span>  <span class="c1"># [cat, dog, &#39;0&#39;, ...]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span> <span class="o">=</span> <span class="n">SortedDict</span><span class="p">(</span><span class="n">ord_freq_dic</span><span class="p">)</span>  <span class="c1"># {0:tids0, 1:tids1 ....}key item ordered by decreasing frequency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq_</span> <span class="o">=</span> <span class="n">ord_item_freq</span>  <span class="c1"># [cat, dog, &#39;0&#39;, ...] list of ordered item by decreasing frequency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order_</span> <span class="o">=</span> <span class="n">lexicographic_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span> <span class="o">=</span> <span class="n">return_tids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_length_</span> <span class="o">=</span> <span class="n">max_length</span>  <span class="c1"># maximum length of an itemset,  -1 by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_</span> <span class="o">=</span> <span class="n">out</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># nb items</span>
 
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># for call .fit().discover() in DiscovererMixin()</span></div>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="LCM.discover"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LCM.transform"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCM.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the set of closed itemsets, with respect to the minimum support</span>
 
 <span class="sd">        Parameters</span>
@@ -367,25 +397,27 @@
 <span class="sd">        -------</span>
 <span class="sd">        &gt;&gt;&gt; from skmine.itemsets import LCM</span>
 <span class="sd">        &gt;&gt;&gt; D = [[1, 2, 3, 4, 5, 6], [2, 3, 5], [2, 5]]</span>
-<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_discover(D, lexicographic_order=True)</span>
+<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_transform(D, lexicographic_order=True)</span>
 <span class="sd">             itemset  support</span>
 <span class="sd">        0     [2, 5]        3</span>
 <span class="sd">        1  [2, 3, 5]        2</span>
-<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_discover(D, return_tids=True)</span>
+<span class="sd">        &gt;&gt;&gt; LCM(min_supp=2).fit_transform(D, return_tids=True)</span>
 <span class="sd">             itemset  support       tids</span>
 <span class="sd">        0     [2, 5]        3  (0, 1, 2)</span>
 <span class="sd">        1  [2, 3, 5]        2     (0, 1)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order</span> <span class="o">=</span> <span class="n">lexicographic_order</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span> <span class="o">=</span> <span class="n">return_tids</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="n">max_length</span>
-        <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># store results in memory</span>
+
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;n_features_in_&#39;</span><span class="p">)</span>
+        <span class="n">n_features_in_</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># nb items</span>
+        <span class="k">if</span> <span class="n">n_features_in_</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span><span class="p">:</span>  <span class="c1"># TODO : significant for one-hot D ,not for list of itemset</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Shape of input is different from what was seen in `fit`&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># store results in memory</span>
             <span class="n">dfs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
-                <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_explore_root</span><span class="p">)(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">root_file</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span>
-                <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-            <span class="p">)</span>  <span class="c1"># dfs is a list of dataframe</span>
-            <span class="c1"># make sure we have something to concat</span>
-            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">]</span>
+                <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_explore_root</span><span class="p">)(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">root_file</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+            <span class="c1"># dfs is a list of dataframe    # make sure we have something to concat</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">]</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)]</span> <span class="o">+</span> <span class="n">dfs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">df</span><span class="p">[</span><span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;support&quot;</span><span class="p">])</span>
 
@@ -398,14 +430,13 @@
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span>  <span class="c1"># create dir TEMP_dir</span>
 
             <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">)(</span>
-                <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_explore_root</span><span class="p">)(</span>
-                    <span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">root_file</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">temp_dir</span><span class="si">}</span><span class="s2">/root</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span>
-                    <span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-            <span class="p">)</span>
+                <span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_explore_root</span><span class="p">)(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">root_file</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">temp_dir</span><span class="si">}</span><span class="s2">/root</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>  <span class="c1"># concatenate all itemsroot files located in temp_dir in a single file</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_</span><span class="p">,</span>
+                      <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>  <span class="c1"># concatenate all itemsroot files located in temp_dir in a single file</span>
                 <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">temp_dir</span><span class="si">}</span><span class="s2">/root</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">.dat&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>
-                              <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">())))]:</span>  <span class="c1"># all items root files</span>
+                              <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())))]:</span>  <span class="c1"># all items root files</span>
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">infile</span><span class="p">:</span>
                             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>  <span class="c1"># to skip empty lines</span>
@@ -416,7 +447,7 @@
 
     <span class="k">def</span> <span class="nf">_explore_root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">,</span> <span class="n">root_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">it</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">((</span><span class="nb">frozenset</span><span class="p">(),</span> <span class="n">tids</span><span class="p">),</span> <span class="n">item</span><span class="p">)</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">]</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">,</span> <span class="s2">&quot;support&quot;</span><span class="p">,</span> <span class="s2">&quot;tids&quot;</span><span class="p">]</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">it</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
@@ -433,12 +464,11 @@
             <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_tids</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
-
         <span class="n">p</span><span class="p">,</span> <span class="n">tids</span> <span class="o">=</span> <span class="n">p_tids</span>
         <span class="c1"># project and reduce DB w.r.t P</span>
         <span class="n">cp</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">item</span>
-            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span>
         <span class="p">)</span>
@@ -449,20 +479,20 @@
         <span class="k">if</span> <span class="n">max_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_k</span> <span class="o">==</span> <span class="n">limit</span><span class="p">:</span>
             <span class="n">p_prime</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">})</span>  <span class="c1"># max_k has been consumed when calling next()</span>
             <span class="c1"># sorted items in ouput for better reproducibility</span>
-            <span class="n">itemset</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">p_prime</span><span class="p">)]</span>
-            <span class="n">itemset</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order</span> <span class="k">else</span> <span class="n">itemset</span>
+            <span class="n">itemset</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq_</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">p_prime</span><span class="p">)]</span>
+            <span class="n">itemset</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order_</span> <span class="k">else</span> <span class="n">itemset</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">itemset</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length_</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length_</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">itemset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">itemset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">),</span> <span class="n">tids</span>
 
-            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
             <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
-                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp_</span><span class="p">:</span>
                     <span class="c1"># new pattern and its associated tids</span>
                     <span class="n">new_p_tids</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
                     <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="n">new_p_tids</span><span class="p">,</span> <span class="n">new_limit</span><span class="p">)</span>
@@ -471,11 +501,11 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fw</span><span class="p">:</span>  <span class="c1"># write the items root files</span>
             <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
                 <span class="n">fw</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;support&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;itemset&#39;</span><span class="p">]))</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span><span class="p">:</span>
                     <span class="n">fw</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;tids&#39;</span><span class="p">]))</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="LCMMax"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCMMax">[docs]</a><span class="k">class</span> <span class="nc">LCMMax</span><span class="p">(</span><span class="n">LCM</span><span class="p">):</span>
+<div class="viewcode-block" id="LCMMax"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCMMax">[docs]</a><span class="k">class</span> <span class="nc">LCMMax</span><span class="p">(</span><span class="n">LCM</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Linear time Closed item set Miner adapted to Maximal itemsets (or borders).</span>
 
@@ -503,7 +533,7 @@
         <span class="c1"># project and reduce DB w.r.t P</span>
         <span class="n">cp</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">item</span>
-            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">ids</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span>
         <span class="p">)</span>
@@ -511,52 +541,52 @@
 
         <span class="k">if</span> <span class="n">max_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_k</span> <span class="o">==</span> <span class="n">limit</span><span class="p">:</span>
             <span class="n">p_prime</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">max_k</span><span class="p">})</span>  <span class="c1"># max_k has been consumed when calling next()</span>
-            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_prime</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span><span class="p">[:</span> <span class="n">candidates</span><span class="o">.</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">limit</span><span class="p">)]</span>
             <span class="n">no_cand</span> <span class="o">=</span> <span class="kc">True</span>
 
             <span class="k">for</span> <span class="n">new_limit</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
-                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_supp</span><span class="p">:</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_to_tids_</span><span class="p">[</span><span class="n">new_limit</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection_cardinality</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp_</span><span class="p">:</span>
                     <span class="n">no_cand</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="c1"># get new pattern and its associated tids</span>
                     <span class="n">new_p_tids</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_prime</span><span class="p">,</span> <span class="n">tids</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ids</span><span class="p">))</span>
                     <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inner</span><span class="p">(</span><span class="n">new_p_tids</span><span class="p">,</span> <span class="n">new_limit</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">no_cand</span><span class="p">:</span>  <span class="c1"># only if no child node. This is how we PRE-check for maximality</span>
-                <span class="n">itemset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">p_prime</span><span class="p">])</span>
+                <span class="n">itemset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">ord_item_freq_</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">p_prime</span><span class="p">])</span>
 
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tids_</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">itemset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">yield</span> <span class="n">itemset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">),</span> <span class="n">tids</span>
 
-<div class="viewcode-block" id="LCMMax.discover"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCMMax.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">outfile</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">patterns</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="viewcode-block" id="LCMMax.transform"><a class="viewcode-back" href="../../../reference/itemsets.html#skmine.itemsets.LCMMax.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="c1"># outfile = kwargs.get(&#39;out&#39;)</span>
+        <span class="c1"># kwargs[&#39;out&#39;] = None</span>
+        <span class="n">patterns</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="c1"># keep only maximal itemsets</span>
         <span class="n">maximals</span> <span class="o">=</span> <span class="n">filter_maximal</span><span class="p">(</span><span class="n">patterns</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">])</span>
         <span class="n">patterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">[</span><span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">maximals</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="c1"># keeps only itemsets smaller than max_length</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">length_mask</span> <span class="o">=</span> <span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length_</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">length_mask</span> <span class="o">=</span> <span class="n">patterns</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_length_</span><span class="p">)</span>
             <span class="n">patterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">[</span><span class="n">length_mask</span><span class="p">]</span>
             <span class="n">patterns</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># return a list of itemset sorted or not</span>
         <span class="n">patterns</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;itemset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">[</span><span class="s2">&quot;itemset&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexicographic_order_</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">write_df_tofile</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">patterns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_df_tofile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_</span><span class="p">,</span> <span class="n">patterns</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">patterns</span></div>
 
-    <span class="nb">setattr</span><span class="p">(</span><span class="n">discover</span><span class="p">,</span> <span class="s2">&quot;__doc__&quot;</span><span class="p">,</span> <span class="n">LCM</span><span class="o">.</span><span class="n">discover</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;closed&quot;</span><span class="p">,</span> <span class="s2">&quot;maximal&quot;</span><span class="p">))</span>
-    <span class="nb">setattr</span><span class="p">(</span><span class="n">discover</span><span class="p">,</span> <span class="s2">&quot;__doc__&quot;</span><span class="p">,</span> <span class="n">LCM</span><span class="o">.</span><span class="n">discover</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Example&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="s2">&quot;__doc__&quot;</span><span class="p">,</span> <span class="n">LCM</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;closed&quot;</span><span class="p">,</span> <span class="s2">&quot;maximal&quot;</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="s2">&quot;__doc__&quot;</span><span class="p">,</span> <span class="n">LCM</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Example&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
 </pre></div>
 
            </div>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>skmine.emerging.mbdldorber &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -110,9 +110,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -335,9 +339,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_growth_rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_supp</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="n">accept_absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_check_min_supp</span><span class="p">(</span><span class="n">min_supp</span><span class="p">,</span> <span class="n">accept_absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span> <span class="o">=</span> <span class="n">min_supp</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">=</span> <span class="n">_check_growth_rate</span><span class="p">(</span><span class="n">min_growth_rate</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">borders_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
 
 <div class="viewcode-block" id="MBDLLBorder.fit"><a class="viewcode-back" href="../../../reference/emerging.html#skmine.emerging.MBDLLBorder.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
@@ -359,6 +363,7 @@
 <span class="sd">            Targets on which to split D</span>
 <span class="sd">            Must contain only two disctinct values, i.e len(np.unique(y)) == 2</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>  <span class="c1"># TODO : accept tabular data</span>
@@ -366,10 +371,8 @@
         <span class="n">D1</span><span class="p">,</span> <span class="n">D2</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span> <span class="o">==</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span> <span class="o">==</span> <span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 
         <span class="c1"># TODO : replace LCMMax by some more efficient method</span>
-        <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D1</span><span class="p">)</span>
-        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span>
-            <span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">fit_discover</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
+        <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D1</span><span class="p">)</span>
+        <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">LCMMax</span><span class="p">(</span><span class="n">min_supp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_growth_rate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_supp</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
 
         <span class="n">right_border_d1</span> <span class="o">=</span> <span class="n">right_border_d1</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="n">right_border_d2</span> <span class="o">=</span> <span class="n">right_border_d2</span><span class="o">.</span><span class="n">itemset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>

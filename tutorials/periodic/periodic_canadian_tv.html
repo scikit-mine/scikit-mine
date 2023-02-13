@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Periodic pattern mining on canadian TV logs &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>Periodic pattern mining on canadian TV logs &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -39,6 +39,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="../feature_extraction/index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
     <link href="../../_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -106,14 +108,37 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/graph.html">Graphs</a></li>
 </ul>
 <p><span class="caption-text">Tutorials</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Periodic pattern mining on canadian TV logs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#The-problem,-informally">The problem, informally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Introduction-to-periodic-pattern-mining">Introduction to periodic pattern mining</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#The-cycle-:-a-building-block-for-periodic-pattern-mining">The cycle : a building block for periodic pattern mining</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Handling-noise-in-our-timestamps">Handling noise in our timestamps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#A-tiny-example-with-scikit-mine">A tiny example with scikit-mine</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#An-example-with-Canadian-TV-programs">An example with Canadian TV programs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Fetching-logs-from-canadian-TV">Fetching logs from canadian TV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Searching-for-cycles-in-TV-programs">Searching for cycles in TV programs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Did-I-find-cycles-for-the-TV-show-“Arthurt-Shorts”">Did I find cycles for the TV show “Arthurt Shorts”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-are-the-top-10-longest-cycles-?">What are the top 10 longest cycles ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-are-the-10-most-unpunctual-TV-programs-?">what are the 10 most unpunctual TV programs ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#What-TV-programs-have-been-broadcasted-every-day-for-at-least-5-days-straight?">What TV programs have been broadcasted every day for at least 5 days straight?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#What-TV-programs-are-broadcast-only-on-business-days-?">What TV programs are broadcast only on business days ?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -167,6 +192,8 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">&lt;no title&gt;</a> &raquo;</li>
         
       <li>Periodic pattern mining on canadian TV logs</li>
     
@@ -533,6 +560,15 @@ dtype: object
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/hcourtei/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/scikit_mine-0.0.9-py3.10.egg/skmine/periodic/cycles.py:23: FutureWarning: pandas.Int64Index is deprecated and will be removed from pandas in a future version. Use pandas.Index with the appropriate dtype instead.
+  pd.Int64Index,
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -560,6 +596,7 @@ dtype: object
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
@@ -569,6 +606,7 @@ dtype: object
       <td>2020-04-16 07:30:00</td>
       <td>5</td>
       <td>1 days 00:00:30</td>
+      <td>63.130299</td>
     </tr>
   </tbody>
 </table>
@@ -613,6 +651,7 @@ dtype: object
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
       <th>dE</th>
     </tr>
   </thead>
@@ -623,7 +662,8 @@ dtype: object
       <td>2020-04-16 07:30:00</td>
       <td>5</td>
       <td>1 days 00:00:30</td>
-      <td>[-9, -3, 3, 9]</td>
+      <td>63.130299</td>
+      <td>[-90000000000, -30000000000, 30000000000, 9000...</td>
     </tr>
   </tbody>
 </table>
@@ -717,6 +757,17 @@ dtype: object
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/hcourtei/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/scikit_mine-0.0.9-py3.10.egg/skmine/datasets/periodic.py:113: FutureWarning: The squeeze argument has been deprecated and will be removed in a future version. Append .squeeze(&#34;columns&#34;) to the call to squeeze.
+
+
+  s = pd.read_csv(&#34;https://zenodo.org/record/4671512/files/canadian_tv.txt&#34;, **kwargs)
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -742,23 +793,18 @@ Name: canadian_tv, dtype: string
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/radon/miniconda3/envs/skmine/lib/python3.6/site-packages/scikit_mine-0.0.5-py3.6.egg/skmine/periodic/cycles.py:433: UserWarning: found duplicates in input sequence, removing them
-  warnings.warn(&#34;found duplicates in input sequence, removing them&#34;)
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[8], line 1</span>
+<span class="ansi-green-fg">----&gt; 1</span> pcm = PeriodicCycleMiner(max_length=20, overlap=True)
+<span class="ansi-green-intense-fg ansi-bold">      2</span> get_ipython().run_line_magic(&#39;snakeviz&#39;, &#39;-t pcm.fit(ctv_logs)&#39;)
 
-*** Profile stats marshalled to file &#39;/tmp/tmpw_wm3pe5&#39;.
-Opening SnakeViz in a new tab...
+<span class="ansi-red-fg">TypeError</span>: PeriodicCycleMiner.__init__() got an unexpected keyword argument &#39;overlap&#39;
 </pre></div></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Note</span></code> : no need to worry for the warning, it’s here to notify duplicate event/timestamp pairs have been found</p>
@@ -799,86 +845,20 @@ Opening SnakeViz in a new tab...
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2" valign="top">Addison</th>
+      <th>wake up</th>
       <th>0</th>
-      <td>2020-08-03 07:11:00</td>
-      <td>4</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-02 06:00:00</td>
-      <td>4</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th rowspan="2" valign="top">Arthur Shorts</th>
-      <th>0</th>
-      <td>2020-08-03 09:48:00</td>
-      <td>4</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-01 11:00:00</td>
-      <td>4</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Beat Bugs</th>
-      <th>0</th>
-      <td>2020-08-03 07:30:00</td>
-      <td>4</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th rowspan="2" valign="top">This Hour Has 22 Minutes</th>
-      <th>4</th>
-      <td>2020-08-18 00:30:00</td>
-      <td>4</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2020-08-25 02:00:00</td>
-      <td>4</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>Thrillusionists</th>
-      <th>0</th>
-      <td>2020-08-02 07:36:00</td>
+      <td>2020-04-16 07:30:00</td>
       <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>True and the Rainbow Kingdom</th>
-      <th>0</th>
-      <td>2020-08-11 09:12:00</td>
-      <td>3</td>
-      <td>6 days 23:59:30</td>
-    </tr>
-    <tr>
-      <th>Vet on the Hill</th>
-      <th>0</th>
-      <td>2020-08-03 16:00:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
+      <td>1 days 00:00:30</td>
+      <td>63.130299</td>
     </tr>
   </tbody>
 </table>
-<p>147 rows × 3 columns</p>
 </div></div>
 </div>
 <p>The resulting dataframe has a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.MultiIndex.html">MultIndex</a>.</p>
@@ -897,49 +877,92 @@ Opening SnakeViz in a new tab...
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">KeyError</span>                                  Traceback (most recent call last)
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexes/base.py:3629</span>, in <span class="ansi-cyan-fg">Index.get_loc</span><span class="ansi-blue-fg">(self, key, method, tolerance)</span>
+<span class="ansi-green-intense-fg ansi-bold">   3628</span> try:
+<span class="ansi-green-fg">-&gt; 3629</span>     return self._engine.get_loc(casted_key)
+<span class="ansi-green-intense-fg ansi-bold">   3630</span> except KeyError as err:
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/_libs/index.pyx:136</span>, in <span class="ansi-cyan-fg">pandas._libs.index.IndexEngine.get_loc</span><span class="ansi-blue-fg">()</span>
 
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>start</th>
-      <th>length</th>
-      <th>period</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2020-08-03 09:48:00</td>
-      <td>4</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-01 11:00:00</td>
-      <td>4</td>
-      <td>7 days</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/_libs/index.pyx:163</span>, in <span class="ansi-cyan-fg">pandas._libs.index.IndexEngine.get_loc</span><span class="ansi-blue-fg">()</span>
+
+File <span class="ansi-green-fg">pandas/_libs/hashtable_class_helper.pxi:5198</span>, in <span class="ansi-cyan-fg">pandas._libs.hashtable.PyObjectHashTable.get_item</span><span class="ansi-blue-fg">()</span>
+
+File <span class="ansi-green-fg">pandas/_libs/hashtable_class_helper.pxi:5206</span>, in <span class="ansi-cyan-fg">pandas._libs.hashtable.PyObjectHashTable.get_item</span><span class="ansi-blue-fg">()</span>
+
+<span class="ansi-red-fg">KeyError</span>: &#39;Arthur Shorts&#39;
+
+The above exception was the direct cause of the following exception:
+
+<span class="ansi-red-fg">KeyError</span>                                  Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[10], line 1</span>
+<span class="ansi-green-fg">----&gt; 1</span> cycles.loc[&#34;Arthur Shorts&#34;]
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexing.py:967</span>, in <span class="ansi-cyan-fg">_LocationIndexer.__getitem__</span><span class="ansi-blue-fg">(self, key)</span>
+<span class="ansi-green-intense-fg ansi-bold">    964</span> axis = self.axis or 0
+<span class="ansi-green-intense-fg ansi-bold">    966</span> maybe_callable = com.apply_if_callable(key, self.obj)
+<span class="ansi-green-fg">--&gt; 967</span> return self._getitem_axis(maybe_callable, axis=axis)
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexing.py:1205</span>, in <span class="ansi-cyan-fg">_LocIndexer._getitem_axis</span><span class="ansi-blue-fg">(self, key, axis)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1203</span> # fall thru to straight lookup
+<span class="ansi-green-intense-fg ansi-bold">   1204</span> self._validate_key(key, axis)
+<span class="ansi-green-fg">-&gt; 1205</span> return self._get_label(key, axis=axis)
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexing.py:1153</span>, in <span class="ansi-cyan-fg">_LocIndexer._get_label</span><span class="ansi-blue-fg">(self, label, axis)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1151</span> def _get_label(self, label, axis: int):
+<span class="ansi-green-intense-fg ansi-bold">   1152</span>     # GH#5667 this will fail if the label is not present in the axis.
+<span class="ansi-green-fg">-&gt; 1153</span>     return self.obj.xs(label, axis=axis)
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/generic.py:3857</span>, in <span class="ansi-cyan-fg">NDFrame.xs</span><span class="ansi-blue-fg">(self, key, axis, level, drop_level)</span>
+<span class="ansi-green-intense-fg ansi-bold">   3854</span> self._consolidate_inplace()
+<span class="ansi-green-intense-fg ansi-bold">   3856</span> if isinstance(index, MultiIndex):
+<span class="ansi-green-fg">-&gt; 3857</span>     loc, new_index = index._get_loc_level(key, level=0)
+<span class="ansi-green-intense-fg ansi-bold">   3858</span>     if not drop_level:
+<span class="ansi-green-intense-fg ansi-bold">   3859</span>         if lib.is_integer(loc):
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexes/multi.py:3113</span>, in <span class="ansi-cyan-fg">MultiIndex._get_loc_level</span><span class="ansi-blue-fg">(self, key, level)</span>
+<span class="ansi-green-intense-fg ansi-bold">   3111</span>         return indexer, maybe_mi_droplevels(indexer, ilevels)
+<span class="ansi-green-intense-fg ansi-bold">   3112</span> else:
+<span class="ansi-green-fg">-&gt; 3113</span>     indexer = self._get_level_indexer(key, level=level)
+<span class="ansi-green-intense-fg ansi-bold">   3114</span>     if (
+<span class="ansi-green-intense-fg ansi-bold">   3115</span>         isinstance(key, str)
+<span class="ansi-green-intense-fg ansi-bold">   3116</span>         and self.levels[level]._supports_partial_string_indexing
+<span class="ansi-green-intense-fg ansi-bold">   3117</span>     ):
+<span class="ansi-green-intense-fg ansi-bold">   3118</span>         # check to see if we did an exact lookup vs sliced
+<span class="ansi-green-intense-fg ansi-bold">   3119</span>         check = self.levels[level].get_loc(key)
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexes/multi.py:3222</span>, in <span class="ansi-cyan-fg">MultiIndex._get_level_indexer</span><span class="ansi-blue-fg">(self, key, level, indexer)</span>
+<span class="ansi-green-intense-fg ansi-bold">   3218</span>         return slice(i, j, step)
+<span class="ansi-green-intense-fg ansi-bold">   3220</span> else:
+<span class="ansi-green-fg">-&gt; 3222</span>     idx = self._get_loc_single_level_index(level_index, key)
+<span class="ansi-green-intense-fg ansi-bold">   3224</span>     if level &gt; 0 or self._lexsort_depth == 0:
+<span class="ansi-green-intense-fg ansi-bold">   3225</span>         # Desired level is not sorted
+<span class="ansi-green-intense-fg ansi-bold">   3226</span>         if isinstance(idx, slice):
+<span class="ansi-green-intense-fg ansi-bold">   3227</span>             # test_get_loc_partial_timestamp_multiindex
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexes/multi.py:2802</span>, in <span class="ansi-cyan-fg">MultiIndex._get_loc_single_level_index</span><span class="ansi-blue-fg">(self, level_index, key)</span>
+<span class="ansi-green-intense-fg ansi-bold">   2800</span>     return -1
+<span class="ansi-green-intense-fg ansi-bold">   2801</span> else:
+<span class="ansi-green-fg">-&gt; 2802</span>     return level_index.get_loc(key)
+
+File <span class="ansi-green-fg">~/miniconda3/envs/ml-sklearn/lib/python3.10/site-packages/pandas/core/indexes/base.py:3631</span>, in <span class="ansi-cyan-fg">Index.get_loc</span><span class="ansi-blue-fg">(self, key, method, tolerance)</span>
+<span class="ansi-green-intense-fg ansi-bold">   3629</span>     return self._engine.get_loc(casted_key)
+<span class="ansi-green-intense-fg ansi-bold">   3630</span> except KeyError as err:
+<span class="ansi-green-fg">-&gt; 3631</span>     raise KeyError(key) from err
+<span class="ansi-green-intense-fg ansi-bold">   3632</span> except TypeError:
+<span class="ansi-green-intense-fg ansi-bold">   3633</span>     # If we have a listlike key, _check_indexing_error will raise
+<span class="ansi-green-intense-fg ansi-bold">   3634</span>     #  InvalidIndexError. Otherwise we fall through and re-raise
+<span class="ansi-green-intense-fg ansi-bold">   3635</span>     #  the TypeError.
+<span class="ansi-green-intense-fg ansi-bold">   3636</span>     self._check_indexing_error(key)
+
+<span class="ansi-red-fg">KeyError</span>: &#39;Arthur Shorts&#39;
+</pre></div></div>
 </div>
 </section>
 <section id="What-are-the-top-10-longest-cycles-?">
@@ -980,78 +1003,17 @@ Opening SnakeViz in a new tab...
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>Mr. D</th>
+      <th>wake up</th>
       <th>0</th>
-      <td>2020-08-06 00:30:00</td>
-      <td>7</td>
-      <td>0 days 00:30:00</td>
-    </tr>
-    <tr>
-      <th>Coronation Street Omnibus</th>
-      <th>0</th>
-      <td>2020-08-02 08:57:00</td>
+      <td>2020-04-16 07:30:00</td>
       <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Daisy &amp; The Gumboot Kids</th>
-      <th>0</th>
-      <td>2020-08-01 07:40:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Does It Fart?</th>
-      <th>0</th>
-      <td>2020-08-02 07:30:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Holy Baloney</th>
-      <th>0</th>
-      <td>2020-08-02 07:34:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Ollie: The Boy Who Became What He Ate</th>
-      <th>0</th>
-      <td>2020-08-10 08:59:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>The Strange Chores</th>
-      <th>0</th>
-      <td>2020-08-01 11:48:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>The Sunday Scrum</th>
-      <th>0</th>
-      <td>2020-08-02 11:00:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Thrillusionists</th>
-      <th>0</th>
-      <td>2020-08-02 07:36:00</td>
-      <td>5</td>
-      <td>7 days 00:00:00</td>
-    </tr>
-    <tr>
-      <th>Vet on the Hill</th>
-      <th>0</th>
-      <td>2020-08-03 16:00:00</td>
-      <td>5</td>
-      <td>1 days 00:00:00</td>
+      <td>1 days 00:00:30</td>
+      <td>63.130299</td>
     </tr>
   </tbody>
 </table>
@@ -1098,47 +1060,19 @@ Opening SnakeViz in a new tab...
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
       <th>dE</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2" valign="top">Addison</th>
+      <th>wake up</th>
       <th>0</th>
-      <td>2020-08-03 07:11:00</td>
-      <td>4</td>
-      <td>1 days</td>
-      <td>[0, 0, 0]</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-02 06:00:00</td>
-      <td>4</td>
-      <td>7 days</td>
-      <td>[0, 0, 0]</td>
-    </tr>
-    <tr>
-      <th rowspan="2" valign="top">Arthur Shorts</th>
-      <th>0</th>
-      <td>2020-08-03 09:48:00</td>
-      <td>4</td>
-      <td>1 days</td>
-      <td>[0, -6, 6]</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2020-08-01 11:00:00</td>
-      <td>4</td>
-      <td>7 days</td>
-      <td>[0, 0, 0]</td>
-    </tr>
-    <tr>
-      <th>Beat Bugs</th>
-      <th>0</th>
-      <td>2020-08-03 07:30:00</td>
-      <td>4</td>
-      <td>1 days</td>
-      <td>[0, 0, 0]</td>
+      <td>2020-04-16 07:30:00</td>
+      <td>5</td>
+      <td>1 days 00:00:30</td>
+      <td>63.130299</td>
+      <td>[-90000000000, -30000000000, 30000000000, 9000...</td>
     </tr>
   </tbody>
 </table>
@@ -1164,16 +1098,7 @@ Opening SnakeViz in a new tab...
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-PJ Masks                                 264
-Hockey Night in Canada                    36
-CBC Kids                                  24
-Kiri &amp; Lou                                24
-Rusty Rivets                              24
-Daniel Tiger&#39;s Neighbourhood              18
-Ollie: The Boy Who Became What He Ate     18
-Arthur Shorts                             12
-Daisy &amp; The Gumboot Kids                  12
-Holy Baloney                              12
+wake up    240000000000
 Name: dE, dtype: int64
 </pre></div></div>
 </div>
@@ -1217,71 +1142,17 @@ Name: dE, dtype: int64
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>Coronation Street Omnibus</th>
+      <th>wake up</th>
       <th>0</th>
-      <td>2020-08-02 08:57:00</td>
+      <td>2020-04-16 07:30:00</td>
       <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Daisy &amp; The Gumboot Kids</th>
-      <th>0</th>
-      <td>2020-08-01 07:40:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Does It Fart?</th>
-      <th>0</th>
-      <td>2020-08-02 07:30:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Holy Baloney</th>
-      <th>0</th>
-      <td>2020-08-02 07:34:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Ollie: The Boy Who Became What He Ate</th>
-      <th>0</th>
-      <td>2020-08-10 08:59:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>The Strange Chores</th>
-      <th>0</th>
-      <td>2020-08-01 11:48:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>The Sunday Scrum</th>
-      <th>0</th>
-      <td>2020-08-02 11:00:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Thrillusionists</th>
-      <th>0</th>
-      <td>2020-08-02 07:36:00</td>
-      <td>5</td>
-      <td>7 days</td>
-    </tr>
-    <tr>
-      <th>Vet on the Hill</th>
-      <th>0</th>
-      <td>2020-08-03 16:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
+      <td>1 days 00:00:30</td>
+      <td>63.130299</td>
     </tr>
   </tbody>
 </table>
@@ -1329,23 +1200,10 @@ Name: dE, dtype: int64
       <th>start</th>
       <th>length</th>
       <th>period</th>
+      <th>cost</th>
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <th>Ollie: The Boy Who Became What He Ate</th>
-      <th>0</th>
-      <td>2020-08-10 08:59:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
-    <tr>
-      <th>Vet on the Hill</th>
-      <th>0</th>
-      <td>2020-08-03 16:00:00</td>
-      <td>5</td>
-      <td>1 days</td>
-    </tr>
   </tbody>
 </table>
 </div></div>
@@ -1366,6 +1224,15 @@ Name: dE, dtype: int64
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../feature_extraction/index.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; scikit-mine 0.0.9 documentation</title>
+  <title>Index &mdash; scikit-mine 0.0.10 documentation</title>
   
 
   
@@ -110,9 +110,13 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/symbolic_classifier.html">Building a symbolic classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callbacks.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_canadian_tv.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_canadian_tv.html#References">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/feature_extraction/SLIMVectorizer.html">SLIMVectorizer example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/feature_extraction/SLIMVectorizer.html#TODO">TODO</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -242,12 +246,6 @@
 </li>
         <li><a href="reference/graph.html#skmine.graph.graphmdl.graph_mdl.GraphMDL.discover">(skmine.graph.graphmdl.graph_mdl.GraphMDL method)</a>
 </li>
-        <li><a href="reference/itemsets.html#skmine.itemsets.LCM.discover">(skmine.itemsets.LCM method)</a>
-</li>
-        <li><a href="reference/itemsets.html#skmine.itemsets.lcm.LCMMax.discover">(skmine.itemsets.lcm.LCMMax method)</a>
-</li>
-        <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.discover">(skmine.itemsets.SLIM method)</a>
-</li>
         <li><a href="reference/periodic.html#skmine.periodic.PeriodicCycleMiner.discover">(skmine.periodic.PeriodicCycleMiner method)</a>
 </li>
         <li><a href="reference/periodic.html#skmine.periodic.PeriodicPatternMiner.discover">(skmine.periodic.PeriodicPatternMiner method)</a>
@@ -309,8 +307,6 @@
 </li>
       <li><a href="reference/datasets.html#skmine.datasets.fimi.fetch_retail">fetch_retail() (in module skmine.datasets.fimi)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/base.html#skmine.base.BaseMiner.fit">fit() (skmine.base.BaseMiner method)</a>
 
       <ul>
@@ -335,10 +331,16 @@
         <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/base.html#skmine.base.DiscovererMixin.fit_discover">fit_discover() (skmine.base.DiscovererMixin method)</a>
 </li>
-      <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit_transform">fit_transform() (skmine.preprocessing.MDLPDiscretizer method)</a>
+      <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.fit_transform">fit_transform() (skmine.itemsets.SLIM method)</a>
+
+      <ul>
+        <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.fit_transform">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -355,6 +357,8 @@
         <li><a href="reference/periodic.html#skmine.periodic.PeriodicPatternMiner.generate_candidates">(skmine.periodic.PeriodicPatternMiner method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.get_code_length">get_code_length() (skmine.itemsets.SLIM method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/datasets.html#skmine.datasets.get_data_home">get_data_home() (in module skmine.datasets)</a>
@@ -470,6 +474,12 @@
       <li><a href="reference/feature_extraction.html#skmine.feature_extraction.SLIMVectorizer.transform">transform() (skmine.feature_extraction.SLIMVectorizer method)</a>
 
       <ul>
+        <li><a href="reference/itemsets.html#skmine.itemsets.LCM.transform">(skmine.itemsets.LCM method)</a>
+</li>
+        <li><a href="reference/itemsets.html#skmine.itemsets.lcm.LCMMax.transform">(skmine.itemsets.lcm.LCMMax method)</a>
+</li>
+        <li><a href="reference/itemsets.html#skmine.itemsets.SLIM.transform">(skmine.itemsets.SLIM method)</a>
+</li>
         <li><a href="reference/preprocessing.html#skmine.preprocessing.MDLPDiscretizer.transform">(skmine.preprocessing.MDLPDiscretizer method)</a>
 </li>
       </ul></li>
