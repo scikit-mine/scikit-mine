@@ -574,7 +574,7 @@ class SLIM(BaseEstimator, TransformerMixin):
             return df
 
     def reconstruct(self) -> pd.Series:
-        """reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
+        """Reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
         lossless algorithm .
 
         Example
