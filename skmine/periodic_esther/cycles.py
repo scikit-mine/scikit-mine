@@ -16,7 +16,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from ..periodic.cycles import SingleEventCycleMiner
 from .class_patterns import PatternCollection
 from .run_mine import mine_seqs
-
+import datetime
 
 log = np.log2
 
@@ -125,6 +125,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             True : compute complex pattern with horizontal and vertical combinations.
             False: compute only simple cycles.
         """
+
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
 
@@ -141,6 +142,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         S = S.copy()
 
         S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+
         # TODO : do this in SingleEventCycleMiner?
 
         # n_occs_tot = S.shape[0]
@@ -157,6 +159,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         self.data_details = data_details
         self.miners_ = pc
+
+        out_str, pl_str = self.miners_.strDetailed(self.data_details)
+        print(out_str)
 
         # print("\n\n\n\n *********** Candidates *************\n\n\n\n")
         # print("nbCandidates()", cpool.nbCandidates())
@@ -262,7 +267,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             self.data_details)
 
         out_str, pl_str = self.miners_.strDetailed(self.data_details)
-        print(out_str)
 
         # print(pd.DataFrame([global_stat_dict]))
 
@@ -304,7 +308,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         self.cycles = pd.DataFrame(patterns_list_of_dict)
         # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        # self.cycles.loc[:, ["start", "period"]] *= 10 ** self.n_zeros_
+        self.cycles.loc[:, ["t0", "period_major"]
+                        ] *= 10 ** self.n_zeros_
 
         # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
         #     np.array) * (10 ** self.n_zeros_)
@@ -319,7 +324,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         return self.cycles
 
-    def reconstruct(self):
+    def reconstruct(self, pattern_nb):
         """Reconstruct the original occurrences from the current cycles.
         Residuals will also be included, as the compression scheme is lossless
 
@@ -367,31 +372,34 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         # print("cycle", cycle["tids"])
         # return pd.DataFrame(all_occ)
 
-        series = list()
+        map_ev = self.data_details.getNumToEv()
+        list_miner = []
+        Patterns = self.miners_.getPatterns()
+        (p, t0, E) = self.miners_.getPatterns()[pattern_nb]
+        for occ in p.getOccsStarMatch():
 
-        for pi, (p, t0, E) in enumerate(self.miners_.getPatterns()):
-            dic_miner = {}
-            dic_miner["occs"] = p.getOccsStarMatch()
+            period = occ[0] * 10 ** self.n_zeros_
+            # if self.is_datetime_:
+            #     period = datetime.timedelta(microseconds=period/1000)
+            list_miner.append((period, map_ev[occ[1]]))
 
-            series.append(dic_miner)
+        return list_miner
 
-        return pd.DataFrame(series)
+    # def generate_candidates(self, S):
+    #     """
+    #     Parameters
+    #     ----------
+    #     S: pd.Index or numpy.ndarray
+    #         Series of occurrences for a specific event
 
-    def generate_candidates(self, S):
-        """
-        Parameters
-        ----------
-        S: pd.Index or numpy.ndarray
-            Series of occurrences for a specific event
-
-        Returns
-        -------
-        dict[object, list[np.ndarray]]
-            A dict, where each key is an event and each value a list of batch of candidates.
-            Batches are sorted in inverse order of width,
-            so that we consider larger candidate cycles first.
-        """
-        # TODO only for InteractiveMode
+    #     Returns
+    #     -------
+    #     dict[object, list[np.ndarray]]
+    #         A dict, where each key is an event and each value a list of batch of candidates.
+    #         Batches are sorted in inverse order of width,
+    #         so that we consider larger candidate cycles first.
+    #     """
+    #     # TODO only for InteractiveMode
 
     def get_residuals(self):
         """Get the residual events, i.e events not covered by any cycle
@@ -427,4 +435,21 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #         res_set = set([tuple(res) for res in list(res_pd.values)])
         #         residuals_form.append(res_set)
 
-        return self.miners_.getUncoveredOccs(self.data_details)
+        map_ev = self.data_details.getNumToEv()
+
+        residuals = self.miners_.getUncoveredOccs(self.data_details)
+        residuals_transf_list = []
+        for res in residuals:
+            # dict_res = {}
+            # dict_res["t"] = res[0] * 10**self.n_zeros_
+            # dict_res["event"] = map_ev[res[1]]
+            residuals_transf_list.append(
+                (res[0] * 10**self.n_zeros_,  map_ev[res[1]]))
+
+        # residuals_transf_pd = pd.DataFrame(residuals_transf_list)
+
+        # if self.is_datetime_:
+        #     residuals_transf_pd["t"] = pd.to_datetime(
+        #         residuals_transf_pd['t'], unit='ns')
+
+        return residuals_transf_list
