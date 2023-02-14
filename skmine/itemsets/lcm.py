@@ -80,26 +80,9 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
 
     def _more_tags(self):
         return {
-            # "non_deterministic": False,  # default
-            # "requires_positive_X": True,
-            # "requires_positive_y": False,  # default
-            # "X_types": ['2darray'], 2dlabels # ["categorical"],  # default
-            # # "poor_score": False,  # default
             "non_deterministic": True,  # default
             "preserves_dtype": False,
             "no_validation": True,
-            # "multioutput": False,  # default
-            # "allow_nan": False,  # default
-            # "stateless": False,  # default
-            # "multilabel": False,  # default
-            # "_skip_test": False,  # default
-            # "_xfail_checks": False, # default
-            # "multioutput_only": False,  # default
-            # "binary_only": False,  # default
-            # "requires_fit": True,  # default
-            # "preserves_dtype": [numpy.float64], # default   ## [pd.DataFrame, np.int],
-            # "requires_y": False, # default
-            # "pairwise": False,  # default
         }
 
     def fit(self, D, y=None, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
