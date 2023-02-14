@@ -80,7 +80,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
 
     def _more_tags(self):
         return {
-            "non_deterministic": True,  # default
+            "non_deterministic": True,
             "preserves_dtype": False,
             "no_validation": True,
         }
