@@ -138,7 +138,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         self.max_time = max_time
         self.items = items
 
-    def _more_tags(self):  # tags for sklearn check_estimators)
+    def _more_tags(self):
         return {
             "no_validation": True,
             "preserves_dtype": False,
