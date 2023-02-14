@@ -159,7 +159,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         else:
             return self.fit(X, y).transform(X, tsf_params)
 
-    def fit(self, X, y=None):  # -> self
+    def fit(self, X, y=None):
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
