@@ -140,7 +140,6 @@ class SLIM(BaseEstimator, TransformerMixin):
 
     def _more_tags(self):  # tags for sklearn check_estimators)
         return {
-            "non_deterministic": True,  # default
             "no_validation": True,
             "preserves_dtype": False,
         }
