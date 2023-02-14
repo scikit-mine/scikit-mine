@@ -22,7 +22,6 @@ from pyroaring import BitMap as Bitmap
 
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import MultiLabelBinarizer
 
 from ..utils import _check_D, supervised_to_unsupervised
 
@@ -142,10 +141,8 @@ class SLIM(BaseEstimator, TransformerMixin):
     def _more_tags(self):  # tags for sklearn check_estimators)
         return {
             "non_deterministic": True,  # default
-            # "X_types": ['2darray'],  # ["categorical"],  # default
             "no_validation": True,
             "preserves_dtype": False,
-            # "pairwise": True,
         }
 
     def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
