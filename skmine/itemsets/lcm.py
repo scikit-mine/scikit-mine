@@ -149,9 +149,8 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         Parameters
         ----------
         D : pd.Series or Iterable
-            The input transactional database
-            Where every entry contain singular items
-            Items must be both hashable and comparable
+            The input transactional database where every entry contain singular items
+            must be both hashable and comparable
 
         return_tids: bool, default=False
             Either to return transaction ids along with itemset.
