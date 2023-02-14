@@ -463,7 +463,6 @@ class SLIM(BaseEstimator, TransformerMixin):
 
         items never seen are dropped out
 
-
         Examples
         --------
         >>> from skmine.itemsets import SLIM
