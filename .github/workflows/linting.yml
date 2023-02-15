@@ -1,8 +1,8 @@
 name: linting
 on:
-  workflow_run:
-    workflows: ["tests"]
-    types: ["completed"]
+  push:
+    paths:
+      - skmine/**
 jobs:
   run:
     runs-on: ubuntu-latest
