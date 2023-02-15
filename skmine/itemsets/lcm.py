@@ -158,8 +158,8 @@ class LCM(TransformerMixin, BaseEstimator):
         lexicographic_order: bool, default=True
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
-        max_length: int, default=-1 Maximum length of an itemset. By default, -1 means that LCM returns itemsets of
-        all lengths.
+        max_length: int, default=-1
+            Maximum length of an itemset. By default, -1 means that LCM returns itemsets of all lengths.
 
         out : str, default=None
             File where results are written. Discover return None. The 'out' option is usefull 
