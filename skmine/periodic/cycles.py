@@ -306,13 +306,14 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         return self.cycles
 
     def reconstruct(self, *patterns_id, sort="time"):
-        """Reconstruct the original occurrences from the current patterns.
+        """Reconstruct all the occurrences from patterns (no argument), or the 
+        occurrences of selected patterns (with a patterns'id list as argument). 
 
         Parameters
         -------
-        patterns_id: None or list
+        patterns_id: None or List
             None (when `reconstruct()` is called) : Reconstruct all occurrences of the patterns
-            list : of pattern id : Reconstruct occurrences of the patterns ids
+            List : of pattern id : Reconstruct occurrences of the patterns ids
 
         sort: string
             "time" (by default) : sort by occurences time 
@@ -382,13 +383,14 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     #     # TODO only for InteractiveMode
 
     def get_residuals(self, *patterns_id, sort="time"):
-        """Get the residual events, i.e events not covered by any cycle
+        """Get all residual occurences, i.e events not covered by any pattern (no argument)
+        or get the complementary occurences of the selected patterns         (with a patterns'id list as argument). 
 
         Parameters
         -------
         patterns_id: None or list
             None (when `reconstruct()` is called) : complementary of all patterns occurences
-            list of pattern id : complementary of patterns ids occurences
+            List of pattern id : complementary of patterns ids occurences
 
         sort: string
             "time" (by default) : sort by occurences time 
