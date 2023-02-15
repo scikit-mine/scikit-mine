@@ -305,24 +305,26 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         return self.cycles
 
-    def reconstruct(self, *patterns_id):
+    def reconstruct(self, *patterns_id, sort="time"):
         """Reconstruct the original occurrences from the current cycles.
         Residuals will also be included, as the compression scheme is lossless
 
-        Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle
-        :math:`C`, we have
+        Parameters
+        -------
+        patterns_id: None or list
+            None (when `reconstruct()` is called) : Reconstruct all occurrences of the patterns
+            list : of pattern id : Reconstruct occurrences of the patterns ids
 
-        .. math::
-            \Delta(C)=(r-1) p+\sigma(E)
+        sort: string
+            "time" (by default) : sort by occurences time 
+            "event" : sort by event names
+            anything else : sort by pattern reconstruction
 
         Returns
         -------
-        pd.Series
+        pd.DataFrame
             The reconstructed dataset
 
-        Notes
-        -----
-        The index of the resulting pd.Series will not be sorted
         """
 
         reconstruct_list = []
@@ -357,6 +359,11 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 "datetime64[ns]")
             reconstruct_pd['time'] = reconstruct_pd['time'].astype("str")
 
+        if sort == "time":
+            reconstruct_pd = reconstruct_pd.sort_values(by=['time'])
+        elif sort == "event":
+            reconstruct_pd = reconstruct_pd.sort_values(by=['event'])
+
         return reconstruct_pd
 
     # def generate_candidates(self, S):
@@ -375,14 +382,23 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     #     """
     #     # TODO only for InteractiveMode
 
-    def get_residuals(self, *patterns_id):
+    def get_residuals(self, *patterns_id, sort="time"):
         """Get the residual events, i.e events not covered by any cycle
 
-        It is the complementary function to `discover`
+        Parameters
+        -------
+        patterns_id: None or list
+            None (when `reconstruct()` is called) : complementary of all patterns occurences
+            list of pattern id : complementary of patterns ids occurences
+
+        sort: string
+            "time" (by default) : sort by occurences time 
+            "event" : sort by event names
+            anything else : sort by pattern reconstruction
 
         Returns
         -------
-        pd.Series
+        pd.DataFrame
             residual events
         """
 
@@ -423,5 +439,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 "resudials and complementary of reconstruct have common patterns")
             residuals_transf_pd = pd.concat(
                 [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
+
+        if sort == "time":
+            residuals_transf_pd = residuals_transf_pd.sort_values(by=['time'])
+        elif sort == "event":
+            residuals_transf_pd = residuals_transf_pd.sort_values(by=['event'])
 
         return residuals_transf_pd
