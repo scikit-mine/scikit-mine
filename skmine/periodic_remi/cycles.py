@@ -95,7 +95,7 @@ def compute_cycles_dyn(S, n_tot, max_length=100):
     for length, g in groupby(splits, key=lambda e: e[1] - e[0]):
         g = list(g)
         if length >= 2:  # eq to length + 1 >= 3
-            curr_cycles = np.vstack([S[s : e + 1] for s, e in g])  # COPY
+            curr_cycles = np.vstack([S[s: e + 1] for s, e in g])  # COPY
             cycles.append(curr_cycles)
             for s, e in g:
                 covered.update(range(s, e + 1))
