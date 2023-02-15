@@ -160,10 +160,11 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #  ****************************************************************************************
         #  TODO : Connection with Esther routine here :
 
-        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
-                                            fn_basis="test", complex=complex)
+        print("self.alpha_groups", len(self.alpha_groups))
+        print("S.values", len(S.values))
 
-        print("cpool", cpool)
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
+                                            fn_basis=None, complex=complex)
 
         self.data_details = data_details
         self.miners_ = pc
@@ -302,6 +303,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                     "datetime64[ns]")
                 self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
                     "timedelta64[ns]")
+        if dE_sum:
+            self.cycles["E"] = self.cycles["E"].apply(
+                lambda x: np.sum(np.abs(x)))
 
         return self.cycles
 
@@ -344,7 +348,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             occs = p.getOccs(occsStar, t0, Ed)
 
             for k, occ in enumerate(occs):
-
                 dict_ = {}
                 dict_['time'] = (
                     occ)*10**self.n_zeros_ if self.auto_time_scale else (occ)
@@ -363,6 +366,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             reconstruct_pd = reconstruct_pd.sort_values(by=['time'])
         elif sort == "event":
             reconstruct_pd = reconstruct_pd.sort_values(by=['event'])
+
+        # some event can be in multiple patterns : need to remove duplicates
+        reconstruct_pd = reconstruct_pd.drop_duplicates()
 
         return reconstruct_pd
 

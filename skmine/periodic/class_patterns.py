@@ -461,6 +461,9 @@ class PatternCollection(object):
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
             dict_pattern["cost"] = clp
             dict_pattern["type"] = p.getTypeStr()
+            # occsStar = p.getOccsStar()
+            # Ed = p.getEDict(occsStar, E)
+            dict_pattern["E"] = E
 
             patterns_list_of_dict.append(dict_pattern)
 
