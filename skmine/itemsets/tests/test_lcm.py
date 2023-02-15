@@ -54,9 +54,9 @@ true_patterns.loc[:, "itemset"] = true_patterns.itemset.map(set)
 NULL_RESULT = (None, None, 0)
 
 
-def test_lcm_fit():
+def test_lcm_fit_transform():
     lcm = LCM(min_supp=3)
-    lcm.fit(D)
+    lcm.fit_transform(D)
 
     for item in lcm.item_to_tids_.keys():
         assert set(lcm.item_to_tids_[item]) == truer_reorderfreq_item_to_tids[item]
@@ -64,7 +64,7 @@ def test_lcm_fit():
 
 def test_first_parent_limit_1():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     limit = 1
     tids = lcm.item_to_tids_[limit]
@@ -82,7 +82,7 @@ def test_first_parent_limit_1():
 
 def test_first_parent_limit_2():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     # pattern = [] -> first parent OK
     tids = lcm.item_to_tids_[2]
@@ -100,7 +100,7 @@ def test_first_parent_limit_2():
 
 def test_first_parent_limit_3():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     tids = lcm.item_to_tids_[3]
     itemset, _, tids = next(lcm._inner((frozenset(), tids), 3), NULL_RESULT)
@@ -111,7 +111,7 @@ def test_first_parent_limit_3():
 
 def test_first_parent_limit_4():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     tids = lcm.item_to_tids_[4]
     itemset, _, tids = next(lcm._inner((frozenset(), tids), 4), NULL_RESULT)
@@ -122,7 +122,7 @@ def test_first_parent_limit_4():
 
 def test_first_parent_limit_5():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     tids = lcm.item_to_tids_[5]
     itemset, _, tids = next(lcm._inner((frozenset(), tids), 5), NULL_RESULT)
@@ -133,7 +133,7 @@ def test_first_parent_limit_5():
 
 def test_first_parent_limit_6():
     lcm = LCM(min_supp=3)
-    lcm.fit(D, return_tids=True)
+    lcm.fit_transform(D, return_tids=True)
 
     tids = lcm.item_to_tids_[1]
     itemset, _, tids = next(lcm._inner((frozenset(), tids), 1), NULL_RESULT)
@@ -142,7 +142,7 @@ def test_first_parent_limit_6():
     assert len(tids) == 5
 
 
-def test_lcm_empty_fit():
+def test_lcm_empty_fit_transform():
     # 1. test with a min_supp high above the maximum supp
     lcm = LCM(min_supp=100)
     res = lcm.fit_transform(D)
@@ -169,7 +169,7 @@ def test_lcm_discover():
 
 def test_relative_support():
     lcm = LCM(min_supp=0.4)  # 40% out of 7 transactions ~= 3
-    lcm.fit(D)
+    lcm.fit_transform(D)
     np.testing.assert_almost_equal(lcm.min_supp_, 2.8, 2)
 
     for item in lcm.item_to_tids_.keys():
@@ -212,12 +212,6 @@ def test_lcm_max():
 
 
 def test_lcm_lexicographic_order():
-    db = [
-        [0, 1, 2, 3],
-        [0, 1, 2],
-        [0, 1],
-        [0]
-    ]
     lcm = LCM(min_supp=3)
     patterns = lcm.fit_transform(D, lexicographic_order=False)
     longest_itemset = max(patterns.itemset, key=len)

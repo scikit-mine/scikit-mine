@@ -23,7 +23,8 @@ from pyroaring import BitMap as Bitmap
 from sklearn.utils.validation import check_is_fitted
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
+from skmine.base import TransformerMixin
 
 
 class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #TransformerMixin, BaseEstimator) : :
@@ -85,7 +86,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             "no_validation": True,
         }
 
-    def fit(self, D, y=None, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
+    def fit(self, D, y=None):
         """
         fit LCM on the transactional database, by keeping records of singular items
         and their transaction ids.
@@ -135,22 +136,19 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
 
         self.item_to_tids_ = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}key item ordered by decreasing frequency
         self.ord_item_freq_ = ord_item_freq  # [cat, dog, '0', ...] list of ordered item by decreasing frequency
-        self.lexicographic_order_ = lexicographic_order
-        self.return_tids_ = return_tids
-        self.max_length_ = max_length  # maximum length of an itemset,  -1 by default
-        self.out_ = out
         self.n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
 
         return self
 
-    def transform(self, D):
+    def transform(self, D, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
         ----------
         D : pd.Series or Iterable
             The input transactional database where every entry contain singular items
-            must be both hashable and comparable
+            must be both hashable and comparable. Does not influence the results.
+            Present for compatibility with scikit-learn.
 
         return_tids: bool, default=False
             Either to return transaction ids along with itemset.
@@ -197,6 +195,10 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         0     [2, 5]        3  (0, 1, 2)
         1  [2, 3, 5]        2     (0, 1)
         """
+        self.lexicographic_order_ = lexicographic_order
+        self.return_tids_ = return_tids
+        self.max_length_ = max_length  # maximum length of an itemset,  -1 by default
+        self.out_ = out
 
         check_is_fitted(self, 'n_features_in_')
         n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
@@ -338,7 +340,7 @@ class LCMMax(LCM, TransformerMixin):
 
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
-                if tids.intersection_cardinality(ids) >= self.min_supp_:
+                if tids.intersection_cardinality(ids) >= self.min_supp:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))
@@ -352,10 +354,10 @@ class LCMMax(LCM, TransformerMixin):
                 else:
                     yield itemset, len(tids), tids
 
-    def transform(self, X):
-        # outfile = kwargs.get('out')
-        # kwargs['out'] = None
-        patterns = super().transform(X)
+    def transform(self, X=None, *args, **kwargs):
+        outfile = kwargs.get('out')
+        kwargs['out'] = None
+        patterns = super().transform(X, **kwargs)
         # keep only maximal itemsets
         maximals = filter_maximal(patterns["itemset"])
         patterns = patterns[patterns.itemset.isin(maximals)].copy()
@@ -370,8 +372,8 @@ class LCMMax(LCM, TransformerMixin):
         patterns.loc[:, "itemset"] = patterns["itemset"].map(
             lambda i: sorted(list(i)) if self.lexicographic_order_ else list(i))
 
-        if self.out_:
-            self.write_df_tofile(self.out_, patterns)
+        if outfile:
+            self.write_df_tofile(outfile, patterns)
             return None
         else:
             return patterns

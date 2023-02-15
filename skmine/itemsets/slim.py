@@ -21,7 +21,8 @@ from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
 
 from sklearn.utils.validation import check_is_fitted
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
+from skmine.base import TransformerMixin
 
 from ..utils import _check_D, supervised_to_unsupervised
 
@@ -117,7 +118,7 @@ class SLIM(BaseEstimator, TransformerMixin):
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).transform(singletons=True, return_tids=True)
+    >>> SLIM().fit(D).transform(D, singletons=True, return_tids=True)
                itemset    tids
     0  [bananas, milk]  (0, 1)
     1    [butter, tea]     (2)
@@ -140,24 +141,10 @@ class SLIM(BaseEstimator, TransformerMixin):
 
     def _more_tags(self):
         return {
+            "non_deterministic": True,
             "no_validation": True,
             "preserves_dtype": False,
         }
-
-    def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
-        """   Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
-        Returns a transformed version of `X`: i.e. the fitted codetable
-
-        Returns
-        -------
-        df_new : pandas.Dataframe
-            Codetable fitted from X data.
-        """
-
-        if y is None:
-            return self.fit(X).transform(X, tsf_params)
-        else:
-            return self.fit(X, y).transform(X, tsf_params)
 
     def fit(self, X, y=None):
         """fit SLIM on a transactional dataset
@@ -235,7 +222,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         >>> new_D = to_tabular([['cookies', 'butter']])
         >>> slim = SLIM().fit(to_tabular(D))
         >>> slim.get_code_length(new_D)
-        0   5.584963
+        0    5.584963
         dtype: float32
 
         See Also
@@ -489,12 +476,17 @@ class SLIM(BaseEstimator, TransformerMixin):
 
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
+
     def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True,
                   drop_null_usage=True, return_dl=False, out=None):
         """Get a user-friendly copy of the codetable
 
         Parameters
         ----------
+        D: iterable of iterables or array-like
+            Transactional dataset, either as an iterable of iterables or encoded as tabular binary data.
+            Does not influence the results. Present for compatibility with scikit-learn.
+
         singletons: bool, default=True
             Either to include itemsets of length 1 in the result
 
@@ -521,7 +513,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit_transform(D, singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
+        >>> SLIM().fit_transform(D, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True)
           itemset  usage
         0  [A, B]      2
         1  [B, D]      1
