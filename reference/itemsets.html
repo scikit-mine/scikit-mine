@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Itemsets &mdash; scikit-mine 0.0.10 documentation</title>
+  <title>Itemsets &mdash; scikit-mine 0.0.11 documentation</title>
   
 
   
@@ -252,7 +252,7 @@ compression progress of the database gets weaker and weaker, so it may be useful
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;milk&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;milk&#39;</span><span class="p">,</span> <span class="s1">&#39;bananas&#39;</span><span class="p">,</span> <span class="s1">&#39;cookies&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">,</span> <span class="s1">&#39;tea&#39;</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">           itemset    tids</span>
 <span class="go">0  [bananas, milk]  (0, 1)</span>
 <span class="go">1    [butter, tea]     (2)</span>
@@ -270,21 +270,6 @@ compression progress of the database gets weaker and weaker, so it may be useful
 “Slimmer, outsmarting Slim”, 2014</p>
 </dd>
 </dl>
-<dl class="py method">
-<dt id="skmine.itemsets.SLIM.fit_transform">
-<code class="sig-name descname">fit_transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">tsf_params</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override sklearn transformer method to apply optional parameters <cite>tsf_params</cite> on transform  and not to fit
-Returns a transformed version of <cite>X</cite>: i.e. the fitted codetable</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>df_new</strong> – Codetable fitted from X data.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>pandas.Dataframe</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.fit">
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.fit" title="Permalink to this definition">¶</a></dt>
@@ -332,7 +317,7 @@ is recommended to cover unseen data, and especially when building a classifier.<
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_D</span> <span class="o">=</span> <span class="n">to_tabular</span><span class="p">([[</span><span class="s1">&#39;cookies&#39;</span><span class="p">,</span> <span class="s1">&#39;butter&#39;</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span> <span class="o">=</span> <span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">to_tabular</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">slim</span><span class="o">.</span><span class="n">get_code_length</span><span class="p">(</span><span class="n">new_D</span><span class="p">)</span>
-<span class="go">0   5.584963</span>
+<span class="go">0    5.584963</span>
 <span class="go">dtype: float32</span>
 </pre></div>
 </div>
@@ -464,6 +449,8 @@ as in interactive data mining</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> (<em>iterable of iterables</em><em> or </em><em>array-like</em>) – Transactional dataset, either as an iterable of iterables or encoded as tabular binary data.
+Does not influence the results. Present for compatibility with scikit-learn.</p></li>
 <li><p><strong>singletons</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either to include itemsets of length 1 in the result</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either returns the tids of each itemset associated with the coverage or simply the usage, i.e. the number of
 times the itemset is used, if set to False.</p></li>
@@ -480,7 +467,7 @@ each itemset is a line of transaction ids containing the previous itemset.</p></
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ABC&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">,</span> <span class="s2">&quot;BCD&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SLIM</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">singletons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_tids</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lexicographic_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop_null_usage</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">  itemset  usage</span>
 <span class="go">0  [A, B]      2</span>
 <span class="go">1  [B, D]      1</span>
@@ -500,8 +487,8 @@ each itemset is a line of transaction ids containing the previous itemset.</p></
 <dl class="py method">
 <dt id="skmine.itemsets.SLIM.reconstruct">
 <code class="sig-name descname">reconstruct</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pandas.core.series.Series<a class="reference internal" href="../_modules/skmine/itemsets/slim.html#SLIM.reconstruct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.SLIM.reconstruct" title="Permalink to this definition">¶</a></dt>
-<dd><p>reconstruct the original data from the current <cite>self.codetable_</cite>. This is possible because SLIM is a
-lossless algorithm .</p>
+<dd><p>Reconstruct the original data from the current <cite>self.codetable_</cite>. This is possible because SLIM is a
+lossless algorithm.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.itemsets</span> <span class="kn">import</span> <span class="n">SLIM</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ABC&quot;</span><span class="p">,</span> <span class="s2">&quot;AB&quot;</span><span class="p">,</span> <span class="s2">&quot;BCD&quot;</span><span class="p">]</span>
@@ -674,7 +661,7 @@ have the following warning: UserWarning: A worker stopped while some jobs were g
 </div>
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit LCM on the transactional database, by keeping records of singular items
 and their transaction ids.</p>
 <dl class="field-list simple">
@@ -694,19 +681,18 @@ If D is a pandas.Series, then <cite>(D.map(type) == list).all()</cite> should re
 
 <dl class="py method">
 <dt id="skmine.itemsets.LCM.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em>, <em class="sig-param"><span class="n">return_tids</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">lexicographic_order</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">max_length</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">out</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCM.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.LCM.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minimum support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database
-Where every entry contain singular items
-Items must be both hashable and comparable</p></li>
+<li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database where every entry contain singular items
+must be both hashable and comparable. Does not influence the results.
+Present for compatibility with scikit-learn.</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids along with itemset.
 Default to False, will return supports instead</p></li>
 <li><p><strong>lexicographic_order</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either the order of the items in each itemset is not ordered or the items are ordered lexicographically</p></li>
-<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1 Maximum length of an itemset. By default</em><em>, </em><em>-1 means that LCM returns itemsets of</em>) – </p></li>
-<li><p><strong>lengths.</strong> (<em>all</em>) – </p></li>
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1</em>) – Maximum length of an itemset. By default, -1 means that LCM returns itemsets of all lengths.</p></li>
 <li><p><strong>out</strong> (<em>str</em><em>, </em><em>default=None</em>) – File where results are written. Discover return None. The ‘out’ option is usefull
 to save memory : Instead of store all branch of lcm-tree in memory , each root
 branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
@@ -798,19 +784,18 @@ to discover potential itemsets, considering this item as a root in the search sp
 </div>
 <dl class="py method">
 <dt id="skmine.itemsets.lcm.LCMMax.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax.transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/itemsets/lcm.html#LCMMax.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.itemsets.lcm.LCMMax.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the set of closed itemsets, with respect to the minimum support</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database
-Where every entry contain singular items
-Items must be both hashable and comparable</p></li>
+<li><p><strong>D</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – The input transactional database where every entry contain singular items
+must be both hashable and comparable. Does not influence the results.
+Present for compatibility with scikit-learn.</p></li>
 <li><p><strong>return_tids</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Either to return transaction ids along with itemset.
 Default to False, will return supports instead</p></li>
 <li><p><strong>lexicographic_order</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Either the order of the items in each itemset is not ordered or the items are ordered lexicographically</p></li>
-<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1 Maximum length of an itemset. By default</em><em>, </em><em>-1 means that LCM returns itemsets of</em>) – </p></li>
-<li><p><strong>lengths.</strong> (<em>all</em>) – </p></li>
+<li><p><strong>max_length</strong> (<em>int</em><em>, </em><em>default=-1</em>) – Maximum length of an itemset. By default, -1 means that LCM returns itemsets of all lengths.</p></li>
 <li><p><strong>out</strong> (<em>str</em><em>, </em><em>default=None</em>) – File where results are written. Discover return None. The ‘out’ option is usefull
 to save memory : Instead of store all branch of lcm-tree in memory , each root
 branch of lcm is written in a separated file in dir (TEMP_dir), and all files are
