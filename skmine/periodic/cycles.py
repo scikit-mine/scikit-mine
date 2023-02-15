@@ -306,8 +306,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         return self.cycles
 
     def reconstruct(self, *patterns_id, sort="time"):
-        """Reconstruct the original occurrences from the current cycles.
-        Residuals will also be included, as the compression scheme is lossless
+        """Reconstruct the original occurrences from the current patterns.
 
         Parameters
         -------
