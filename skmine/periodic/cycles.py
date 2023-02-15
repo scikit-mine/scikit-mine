@@ -7,15 +7,9 @@
 import warnings
 import numpy as np
 import pandas as pd
-
-from pyroaring import BitMap as Bitmap
-
-from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from .class_patterns import PatternCollection
 from .run_mine import mine_seqs
-import datetime
 
 log = np.log2
 
@@ -242,7 +236,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
     # evaluate = SingleEventCycleMiner.evaluate
 
-    def discover(self, dE_sum=True):
+    def discover(self, dE_sum=True, chronological_order=True):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
@@ -250,8 +244,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         Parameters
         -------
         dE_sum: boolean
-            True : returm a columns "dE" with the sum of the errors 
-            False: returm a columns "dE" with the full list of errors.  
+            True : returm a columns "dE" with the sum of the errors
+            False: returm a columns "dE" with the full list of errors.
 
 
         Returns
@@ -303,6 +297,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
                     "timedelta64[ns]")
 
+        if chronological_order:
+            self.cycles.sort_values(by='t0', inplace=True)
         return self.cycles
 
     def reconstruct(self, *patterns_id, sort="time"):
@@ -346,8 +342,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             for k, occ in enumerate(occs):
 
                 dict_ = {}
-                dict_['time'] = (
-                    occ)*10**self.n_zeros_ if self.auto_time_scale else (occ)
+                dict_['time'] = (occ)*10**self.n_zeros_ if self.auto_time_scale else (occ)
 
                 dict_["event"] = map_ev[occsStar[k][1]]
                 reconstruct_list.append((dict_))
