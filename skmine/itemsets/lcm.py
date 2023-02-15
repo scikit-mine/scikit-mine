@@ -11,23 +11,24 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 #
 # License: BSD 3 clause
 
+import os
+import shutil
 from collections import defaultdict
 from itertools import takewhile
 
 import pandas as pd
-import os
-import shutil
 from joblib import Parallel, delayed
-from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
+from sortedcontainers import SortedDict
+
+from skmine.base import TransformerMixin
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
-from sklearn.base import BaseEstimator
-from skmine.base import TransformerMixin
 
 
-class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #TransformerMixin, BaseEstimator) : :
+class LCM(TransformerMixin, BaseEstimator):
     """
     Linear time Closed item set Miner.
 
@@ -340,7 +341,7 @@ class LCMMax(LCM, TransformerMixin):
 
             for new_limit in candidates:
                 ids = self.item_to_tids_[new_limit]
-                if tids.intersection_cardinality(ids) >= self.min_supp:
+                if tids.intersection_cardinality(ids) >= self.min_supp_:
                     no_cand = False
                     # get new pattern and its associated tids
                     new_p_tids = (p_prime, tids.intersection(ids))

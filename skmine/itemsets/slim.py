@@ -9,21 +9,19 @@ and https://eda.rg.cispa.io/pres/ida14-slimmer-poster.pdf
 #          Cyril Regan <cyril.regan@loria.fr>
 # License: BSD 3 clause
 
+import time
 from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
 
 import numpy as np
 import pandas as pd
-import time
-
-from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
-
-from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator
-from skmine.base import TransformerMixin
+from sklearn.utils.validation import check_is_fitted
+from sortedcontainers import SortedDict
 
+from skmine.base import TransformerMixin
 from ..utils import _check_D, supervised_to_unsupervised
 
 
@@ -476,9 +474,8 @@ class SLIM(BaseEstimator, TransformerMixin):
 
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-
-    def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True,
-                  drop_null_usage=True, return_dl=False, out=None):
+    def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True,
+                  return_dl=False, out=None):
         """Get a user-friendly copy of the codetable
 
         Parameters
