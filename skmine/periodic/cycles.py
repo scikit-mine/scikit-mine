@@ -4,13 +4,18 @@
 #
 # License: BSD 3 clause
 
-import datetime
-
+import warnings
 import numpy as np
 import pandas as pd
+
+from pyroaring import BitMap as Bitmap
+
+from ..base import BaseMiner, DiscovererMixin, MDLOptimizer
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from .class_patterns import PatternCollection
 from .run_mine import mine_seqs
+import datetime
 
 log = np.log2
 
@@ -100,8 +105,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.alpha_groups = {}
         self.cycles = None
         self.data_details = None
+        self.auto_time_scale = True
 
-    def fit(self, S, complex=True):
+    def fit(self, S, complex=True, auto_time_scale=True):
         """fit PeriodicCycleMiner on data logs
 
         This generate new candidate cycles and evaluate them.
@@ -118,7 +124,12 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         complex: boolean
             True : compute complex pattern with horizontal and vertical combinations.
             False: compute only simple cycles.
+
+        auto_time_scale: boolean
+            True : preprocessing on time data index. Calcul automaticaly the time scale for mining cycles by removing extra zeros on time index.
+            False: no preprocessing on time data index
         """
+        self.auto_time_scale = auto_time_scale
 
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
@@ -135,7 +146,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         S = S.copy()
 
-        S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+        if self.auto_time_scale:
+            S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
         # TODO : do this in SingleEventCycleMiner?
 
@@ -149,7 +161,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #  TODO : Connection with Esther routine here :
 
         cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
-                                            fn_basis=None, complex=complex)
+                                            fn_basis="test", complex=complex)
+
+        print("cpool", cpool)
 
         self.data_details = data_details
         self.miners_ = pc
@@ -228,10 +242,17 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
     # evaluate = SingleEventCycleMiner.evaluate
 
-    def discover(self):
+    def discover(self, dE_sum=True):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
+
+        Parameters
+        -------
+        dE_sum: boolean
+            True : returm a columns "dE" with the sum of the errors 
+            False: returm a columns "dE" with the full list of errors.  
+
 
         Returns
         -------
@@ -266,24 +287,25 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             return pd.DataFrame()  # FIXME
 
         self.cycles = pd.DataFrame(patterns_list_of_dict)
-        # # cycles = pd.concat(series, keys=self.miners_.keys())[all_cols]
-        self.cycles.loc[:, ["t0", "period_major"]
-        ] *= 10 ** self.n_zeros_
 
-        # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
-        #     np.array) * (10 ** self.n_zeros_)
+        if self.auto_time_scale:
+            self.cycles.loc[:, ["t0", "period_major"]
+                            ] *= 10 ** self.n_zeros_
 
-        # self.cycles.loc[:, "dE"] = self.cycles.loc[:, "dE"] * (10 ** self.n_zeros_)
-        # disc_print = self.cycles.copy()
-        if self.is_datetime_:
-            self.cycles.loc[:, "t0"] = self.cycles.t0.astype(
-                "datetime64[ns]")
-            self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
-                "timedelta64[ns]")
+            # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
+            #     np.array) * (10 ** self.n_zeros_)
+
+            # self.cycles.loc[:, "dE"] = self.cycles.loc[:, "dE"] * (10 ** self.n_zeros_)
+            # disc_print = self.cycles.copy()
+            if self.is_datetime_:
+                self.cycles.loc[:, "t0"] = self.cycles.t0.astype(
+                    "datetime64[ns]")
+                self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
+                    "timedelta64[ns]")
 
         return self.cycles
 
-    def reconstruct(self, pattern_nb):
+    def reconstruct(self, *patterns_id):
         """Reconstruct the original occurrences from the current cycles.
         Residuals will also be included, as the compression scheme is lossless
 
@@ -303,43 +325,30 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         The index of the resulting pd.Series will not be sorted
         """
 
-        # series = [
-        #     pd.Series(event, index=miner.reconstruct())
-        #     for event, miner in self.miners_.items()
-        # ]
-        # S = pd.concat(series)
-        # S.index *= 10 ** self.n_zeros_
-        # if self.is_datetime_:
-        #     S.index = S.index.astype("datetime64[ns]")
-
-        # # TODO : this is due to duplicate event in the cycles, handle this in .evaluate()
-        # S = S.groupby(S.index).first()
-
-        # all_occ = []
-        # for _, cycle in self.cycles.iterrows():  # TODO : to OPtimize with a mapping or other thing
-        #     occ = {}
-        #     alpha_occurrences = list()
-        #     start, period, dE, event = cycle["start"], cycle["period"], cycle["dE"], cycle["event"]
-        #     occurrences = _reconstruct(start, period, dE)
-        #     alpha_occurrences.extend(occurrences)
-        #     # alpha_occurrences.extend(self.residuals_)
-        #     alpha_occurrences = np.array(alpha_occurrences)
-        #     all_occ.append(
-        #         {"event": event, "occurence":  alpha_occurrences})
-
-        # print("alpha_occurrences", alpha_occurrences)
-        # print("cycle", cycle["tids"])
-        # return pd.DataFrame(all_occ)
+        reconstruct_list = []
 
         map_ev = self.data_details.getNumToEv()
-        reconstruct_list = []
-        Patterns = self.miners_.getPatterns()
-        (p, t0, E) = self.miners_.getPatterns()[pattern_nb]
-        for occ in p.getOccsStarMatch():
-            dict_ = {}
-            dict_['time'] = (t0 + occ[0]) * 10 ** self.n_zeros_
-            dict_["event"] = map_ev[occ[1]]
-            reconstruct_list.append((dict_))
+
+        if patterns_id == ():
+            patterns_id = range(len(self.miners_.getPatterns()))
+        else:
+            patterns_id = patterns_id[0]
+
+        for pattern_id in patterns_id:
+            (p, t0, E) = self.miners_.getPatterns()[pattern_id]
+
+            occsStar = p.getOccsStar()
+            Ed = p.getEDict(occsStar, E)
+            occs = p.getOccs(occsStar, t0, Ed)
+
+            for k, occ in enumerate(occs):
+
+                dict_ = {}
+                dict_['time'] = (
+                    occ)*10**self.n_zeros_ if self.auto_time_scale else (occ)
+
+                dict_["event"] = map_ev[occsStar[k][1]]
+                reconstruct_list.append((dict_))
 
         reconstruct_pd = pd.DataFrame(reconstruct_list)
 
@@ -366,7 +375,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     #     """
     #     # TODO only for InteractiveMode
 
-    def get_residuals(self):
+    def get_residuals(self, *patterns_id):
         """Get the residual events, i.e events not covered by any cycle
 
         It is the complementary function to `discover`
@@ -377,45 +386,46 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             residual events
         """
 
-        # series = [pd.Series(event, index=miner.residuals_) for event, miner in self.miners_.items()]
-        # residuals = pd.concat(series)
-        # if not residuals.empty:
-        #     residuals.index *= 10 ** self.n_zeros_
-        # if self.is_datetime_:
-        #     residuals.index = residuals.index.astype("datetime64[ns]")
-        # return residuals
-
-        # residuals_form = []
-
-        # for _, res in self.cycles.loc[:, "residuals"].items():
-        #     if len(res) == 0:
-        #         residuals_form.append(res)
-        #     else:
-        #         res_pd = pd.DataFrame(
-        #             np.array(list(res)), columns=['time', 'event'])
-        #         res_pd['time'] = res_pd['time']*10 ** self.n_zeros_
-        #         if self.is_datetime_:
-        #             res_pd['time'] = res_pd['time'].astype("datetime64[ns]")
-        #             res_pd['time'] = res_pd['time'].astype("str")
-        #         res_set = set([tuple(res) for res in list(res_pd.values)])
-        #         residuals_form.append(res_set)
+        if patterns_id == ():
+            patterns_id = range(len(self.miners_.getPatterns()))
+        else:
+            patterns_id = patterns_id[0]
 
         map_ev = self.data_details.getNumToEv()
-
         residuals = self.miners_.getUncoveredOccs(self.data_details)
         residuals_transf_list = []
+
         for res in residuals:
             dict_ = {}
-            dict_["time"] = res[0] * 10 ** self.n_zeros_
+            dict_["time"] = res[0] * \
+                10**self.n_zeros_ if self.auto_time_scale else res[0]
             dict_["event"] = map_ev[res[1]]
             residuals_transf_list.append(dict_)
 
         residuals_transf_pd = pd.DataFrame(residuals_transf_list)
 
-        if self.is_datetime_:
+        if self.auto_time_scale and self.is_datetime_:
             residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
                 "datetime64[ns]")
             residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
                 "str")
+
+        reconstruct_ = self.reconstruct(patterns_id)
+        reconstruct_all = self.reconstruct()
+
+        reconstruct_ = self.reconstruct(patterns_id)
+        reconstruct_all = self.reconstruct()
+
+        complementary_reconstruct = reconstruct_all[~reconstruct_all.isin(
+            reconstruct_)].dropna()
+
+        if pd.merge(reconstruct_all, residuals_transf_pd, how='inner').empty:
+            residuals_transf_pd = pd.concat(
+                [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
+        else:
+            warnings.warn(
+                "resudials and complementary of reconstruct have common patterns")
+            residuals_transf_pd = pd.concat(
+                [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
 
         return residuals_transf_pd
