@@ -412,10 +412,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         reconstruct_ = self.reconstruct(patterns_id)
         reconstruct_all = self.reconstruct()
-
-        reconstruct_ = self.reconstruct(patterns_id)
-        reconstruct_all = self.reconstruct()
-
         complementary_reconstruct = reconstruct_all[~reconstruct_all.isin(
             reconstruct_)].dropna()
 
