@@ -1,6 +1,6 @@
 pytest
 pytest-cov
-pylint
+pylint == 2.15.6
 asv
 jupyter
 pandoc
