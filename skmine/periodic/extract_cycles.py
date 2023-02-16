@@ -369,15 +369,15 @@ def extract_cycles_fold_sub(occs, alpha, data_details, bound_dE, eff_trip, eff_c
                     dp = numpy.min([aft[ia], -bef[ib]])
                     dp_alt = numpy.max([aft[ia], -bef[ib]])
                     ipp = 0
-                    while ipp >= 0 and ipp < len(seen_ps):
+                    while 0 <= ipp < len(seen_ps):
                         # if (dp % seen_ps[ipp] == 0 and dp / seen_ps[ipp] < 5) or (dp_alt % seen_ps[ipp] == 0  and
                         # dp_alt / seen_ps[ipp] < 5):
                         # if (dp % seen_ps[ipp] == 0):
-                        if (dp == 2 * seen_ps[ipp]):
+                        if dp == 2 * seen_ps[ipp]:
                             seen_ps.append(dp)
                             ipp = -seen_ps[ipp]
                         # elif (dp_alt % seen_ps[ipp] == 0):
-                        elif (dp_alt == 2 * seen_ps[ipp]):
+                        elif dp_alt == 2 * seen_ps[ipp]:
                             seen_ps.append(dp_alt)
                             ipp = -seen_ps[ipp]
                         else:
@@ -393,17 +393,14 @@ def extract_cycles_fold_sub(occs, alpha, data_details, bound_dE, eff_trip, eff_c
                         seen_ps.append(dp)
                         if (i - ib - 1, i) not in pairs_chain_fwd:
                             if (i - ib - 1, i) in pairs_chain_test:
-                                pairs_chain_fwd[(i - ib - 1, i)
-                                ] = (deltaE, dp, i + ia + 1)
-                                pairs_chain_bck[(
-                                    i - ib - 1, i)] = pairs_chain_test.pop((i - ib - 1, i))[:-1]
+                                pairs_chain_fwd[(i - ib - 1, i)] = (deltaE, dp, i + ia + 1)
+                                pairs_chain_bck[(i - ib - 1, i)] = pairs_chain_test.pop((i - ib - 1, i))[:-1]
 
                         elif pairs_chain_fwd[(i - ib - 1, i)][0] > deltaE:
                             pairs_chain_fwd[(i - ib - 1, i)] = (deltaE, dp, i + ia + 1)
 
                         if (i, i + ia + 1) not in pairs_chain_test or pairs_chain_test[(i, i + ia + 1)][0] > deltaE:
-                            pairs_chain_test[(i, i + ia + 1)
-                            ] = (deltaE, dp, i - ib - 1, costC)
+                            pairs_chain_test[(i, i + ia + 1)] = (deltaE, dp, i - ib - 1, costC)
 
                 ia += 1
                 ib += 1

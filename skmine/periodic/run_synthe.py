@@ -73,7 +73,7 @@ def prepare_bck(T_first, T_last, P_occs, event, nb_occs, t_last=1, t_first=0):
         tz = int(T_last * t_last)
     else:
         tz = int(t_last)
-    if t_first > 0 and t_first < 1:
+    if 0 < t_first < 1:
         ta = int(T_first * t_first)
     else:
         ta = int(t_first)
@@ -187,9 +187,9 @@ def compare_pcs(ds, Hpc, Fpc):
         else:
             out_v = 3 + 1 * (stats["cl_diff"] == 0) + 1 * (stats["cl_diff"] >= 0)
     else:
-        if (stats[1]["nbP"] == 0):
+        if stats[1]["nbP"] == 0:
             offset = 12
-        elif (stats["sc_cov"] == 1):
+        elif stats["sc_cov"] == 1:
             offset = 6
         else:
             offset = 9
@@ -355,15 +355,14 @@ def run_combine(setts, fn_b, i, counts_cmp, pool):
 
 def run_simple(series_basis, xps_rep, nb_runs):
     # run_id = datetime.datetime.now().strftime("%y%m%d%H%M%S")
-    series_patts = []  # , "add_noise": [("z", .1)
-    series_patts.append({"inner": "a", "max_level": 3, "p_down": 10,
-                         "p_up": 25, "max_noise_lvl": 3, "max_noise_dens": 3, "nb_occs": 250})
-    series_patts.append({"inner": "a", "max_level": 3, "p_down": 5,
-                         "p_up": 10, "max_noise_lvl": 2, "max_noise_dens": 3, "nb_occs": 500})
-    series_patts.append({"inner": "a [d=4] b", "max_level": 3, "p_down": 10,
-                         "p_up": 25, "max_noise_lvl": 1, "max_noise_dens": 1, "nb_occs": 500})
-    series_patts.append({"inner": "a [d=1] c [d=2] d", "max_level": 3, "p_down": 10,
-                         "p_up": 25, "max_noise_lvl": 1, "max_noise_dens": 1, "nb_occs": 500})
+    series_patts = [{"inner": "a", "max_level": 3, "p_down": 10,
+                     "p_up": 25, "max_noise_lvl": 3, "max_noise_dens": 3, "nb_occs": 250},
+                    {"inner": "a", "max_level": 3, "p_down": 5,
+                     "p_up": 10, "max_noise_lvl": 2, "max_noise_dens": 3, "nb_occs": 500},
+                    {"inner": "a [d=4] b", "max_level": 3, "p_down": 10,
+                     "p_up": 25, "max_noise_lvl": 1, "max_noise_dens": 1, "nb_occs": 500},
+                    {"inner": "a [d=1] c [d=2] d", "max_level": 3, "p_down": 10,
+                     "p_up": 25, "max_noise_lvl": 1, "max_noise_dens": 1, "nb_occs": 500}]  # , "add_noise": [("z", .1)
 
     ss = []
     for j, serie_patts in enumerate(series_patts):
