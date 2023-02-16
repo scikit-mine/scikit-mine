@@ -5,6 +5,7 @@
 # License: BSD 3 clause
 
 import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -93,7 +94,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self):
-        self.miners_ = dict()
+        self.miners_ = {}
         self.is_datetime_ = None
         self.n_zeros_ = 0
         self.alpha_groups = {}
@@ -120,7 +121,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             False: compute only simple cycles.
 
         auto_time_scale: boolean
-            True : preprocessing on time data index. Calcul automaticaly the time scale for mining cycles by removing extra zeros on time index.
+            True : preprocessing on time data index. Calcul automaticaly the timescale for mining cycles by removing
+            extra zeros on time index.
             False: no preprocessing on time data index
         """
         self.auto_time_scale = auto_time_scale
@@ -248,6 +250,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             True : returm a columns "dE" with the sum of the errors
             False: returm a columns "dE" with the full list of errors.
 
+        chronological_order: boolean, default=True
+            To sort or not the occurences by ascending date
 
         Returns
         -------
@@ -273,8 +277,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
         """
 
-        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details)
+        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(self.data_details)
 
         # print(pd.DataFrame([global_stat_dict]))
 
@@ -285,7 +288,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         if self.auto_time_scale:
             self.cycles.loc[:, ["t0", "period_major"]
-                            ] *= 10 ** self.n_zeros_
+            ] *= 10 ** self.n_zeros_
 
             # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
             #     np.array) * (10 ** self.n_zeros_)
@@ -306,8 +309,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         return self.cycles
 
     def reconstruct(self, *patterns_id, sort="time", drop_duplicates=True):
-        """Reconstruct all the occurrences from patterns (no argument), or the 
-        occurrences of selected patterns (with a patterns'id list as argument). 
+        """Reconstruct all the occurrences from patterns (no argument), or the
+        occurrences of selected patterns (with a patterns'id list as argument).
 
         Parameters
         -------
@@ -316,7 +319,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             List : of pattern id : Reconstruct occurrences of the patterns ids
 
         sort: string
-            "time" (by default) : sort by occurences time 
+            "time" (by default) : sort by occurences time
             "event" : sort by event names
             anything else : sort by pattern reconstruction
 
@@ -337,7 +340,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         map_ev = self.data_details.getNumToEv()
 
-        if patterns_id == ():
+        if not patterns_id:
             patterns_id = range(len(self.miners_.getPatterns()))
         else:
             patterns_id = patterns_id[0]
@@ -390,7 +393,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
     def get_residuals(self, *patterns_id, sort="time"):
         """Get all residual occurences, i.e events not covered by any pattern (no argument)
-        or get the complementary occurences of the selected patterns         (with a patterns'id list as argument). 
+        or get the complementary occurences of the selected patterns         (with a patterns'id list as argument).
 
         Parameters
         -------
@@ -399,7 +402,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             List of pattern id : complementary of patterns ids occurences
 
         sort: string
-            "time" (by default) : sort by occurences time 
+            "time" (by default) : sort by occurences time
             "event" : sort by event names
             anything else : sort by pattern reconstruction
 
@@ -409,7 +412,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             residual events
         """
 
-        if patterns_id == ():
+        if not patterns_id:
             patterns_id = range(len(self.miners_.getPatterns()))
         else:
             patterns_id = patterns_id[0]
@@ -421,7 +424,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         for res in residuals:
             dict_ = {}
             dict_["time"] = res[0] * \
-                10**self.n_zeros_ if self.auto_time_scale else res[0]
+                            10 ** self.n_zeros_ if self.auto_time_scale else res[0]
             dict_["event"] = map_ev[res[1]]
             residuals_transf_list.append(dict_)
 

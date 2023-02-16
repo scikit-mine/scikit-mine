@@ -1,7 +1,6 @@
-import re
 import datetime
 import glob
-import pdb
+import re
 
 FILENAME_DATA = "../data/SachaTrackSTMP/org/data_18-03-22_lagg200NL-XX.txt"
 FILENAME_MAPIDS = "../data/SachaTrackSTMP/org/event_codes_out.txt"
@@ -25,14 +24,13 @@ with open(FILENAME_MAPIDS) as fp:
 codes_abs = {}
 codes_rel = {}
 for code, cs in codes_tmp.items():
-    codes_abs["%s_S" % code] = cs+"_START"
-    codes_abs["%s_E" % code] = cs+"_END"
-    codes_abs["%s_I" % code] = cs+"_INS"
+    codes_abs["%s_S" % code] = cs + "_START"
+    codes_abs["%s_E" % code] = cs + "_END"
+    codes_abs["%s_I" % code] = cs + "_INS"
     codes_rel["%s_S" % code] = cs
     codes_rel["%s" % code] = cs
 
-
-for fn in glob.glob(XPS_REP+MATCH_PATTS):
+for fn in glob.glob(XPS_REP + MATCH_PATTS):
     fo = open(re.sub("_patts", "_text-patts", fn), "w")
     if re.search("_absI?_", fn):
         is_abs = True
@@ -52,7 +50,7 @@ for fn in glob.glob(XPS_REP+MATCH_PATTS):
                 if is_abs:
                     pp = parts[0].split("=")
                     parts[0] = "t0=%s" % (
-                        abs_init_T+datetime.timedelta(minutes=grain*int(pp[1])))
+                            abs_init_T + datetime.timedelta(minutes=grain * int(pp[1])))
 
                 Ptree = parts[1]
                 for p in [pp for pp in re.finditer("([^() ]+)", parts[1])][::-1]:
@@ -63,26 +61,30 @@ for fn in glob.glob(XPS_REP+MATCH_PATTS):
                         tmp = re.match(
                             "(?P<bef>\[?[dp]\=)(?P<time>[0-9]+)\]", Ptree[p.start():p.end()])
                         if tmp is not None and int(tmp.group("time")) != 0:
-                            if grain*int(tmp.group("time")) > 29*24*60:
+                            if grain * int(tmp.group("time")) > 29 * 24 * 60:
                                 suff = "M"
-                            elif grain*int(tmp.group("time")) > 6.5*24*60 and suff in ["D", "X"]:
+                            elif grain * int(tmp.group("time")) > 6.5 * 24 * 60 and suff in ["D", "X"]:
                                 suff = "W"
-                            elif grain*int(tmp.group("time")) > 22*60 and suff == "X":
+                            elif grain * int(tmp.group("time")) > 22 * 60 and suff == "X":
                                 suff = "D"
 
                             td = "%s" % datetime.timedelta(
-                                minutes=grain*int(tmp.group("time")))
+                                minutes=grain * int(tmp.group("time")))
                             tt = re.sub(":00$", "", re.sub(
                                 " days?, ", "D,", td))
                             Ptree = "%s%s%s]%s" % (
                                 Ptree[:p.start()], tmp.group("bef"), tt, Ptree[p.end():])
                 parts[1] = Ptree
-                fo.write("\t".join(parts)+("\t%s\n" % suff))
+                fo.write("\t".join(parts) + ("\t%s\n" % suff))
             else:
                 fo.write(line)
     fo.close()
 
+# sed 's/\([ (]\)\([^ (]*\)_START/\1\\activityStart{\2}/g;s/\([ (]\)\([^ (]*\)_END/\1\\activityEnd{\2}/g;s/\([ (]\)\(
+# [^ (]*\)_INS/\1\\activityIns{\2}/g;s/Code length:\([0-9]*\)\.[0-9]*/\1/g;s/sum[^=]*=//g;s:Occs (\([0-9]*\)/[
+# 0-9]*).*$:\1:g;s/t0=/\& $/;s/\t/$ \& $/g;s/$/$ \\\\/' select_patts.txt
 
-# sed 's/\([ (]\)\([^ (]*\)_START/\1\\activityStart{\2}/g;s/\([ (]\)\([^ (]*\)_END/\1\\activityEnd{\2}/g;s/\([ (]\)\([^ (]*\)_INS/\1\\activityIns{\2}/g;s/Code length:\([0-9]*\)\.[0-9]*/\1/g;s/sum[^=]*=//g;s:Occs (\([0-9]*\)/[0-9]*).*$:\1:g;s/t0=/\& $/;s/\t/$ \& $/g;s/$/$ \\\\/' select_patts.txt
-
-# sed 's/\([ (]\)\([^ (]*\)_START/\1\\activityStart{\2}/g;s/\([ (]\)\([^ (]*\)_END/\1\\activityEnd{\2}/g;s/\([ (]\)\([^ (]*\)_INS/\1\\activityIns{\2}/g;s/Code length:\([0-9]*\)\.[0-9]*/\1/g;s/sum[^=]*=//g;s:Occs (\([0-9]*\)/[0-9]*).*$:\1:g;s/t0=/\& $/;s/\t/$ \& $/g;s/$/$ \\\\/' select_patts_v01.txt | sed 's/\[r=\([0-9]*\) p=\([0-9:D,]*\)\]/\\BinfoRPT{\1}{\2}/g;s/\[d=\([0-9:D,]*\)\]/\\BinfoDT{\1}/g' > select_patts_v01.tex
+# sed 's/\([ (]\)\([^ (]*\)_START/\1\\activityStart{\2}/g;s/\([ (]\)\([^ (]*\)_END/\1\\activityEnd{\2}/g;s/\([ (]\)\(
+# [^ (]*\)_INS/\1\\activityIns{\2}/g;s/Code length:\([0-9]*\)\.[0-9]*/\1/g;s/sum[^=]*=//g;s:Occs (\([0-9]*\)/[
+# 0-9]*).*$:\1:g;s/t0=/\& $/;s/\t/$ \& $/g;s/$/$ \\\\/' select_patts_v01.txt | sed 's/\[r=\([0-9]*\) p=\([0-9:D,
+# ]*\)\]/\\BinfoRPT{\1}{\2}/g;s/\[d=\([0-9:D,]*\)\]/\\BinfoDT{\1}/g' > select_patts_v01.tex

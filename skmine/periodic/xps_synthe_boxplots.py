@@ -1,11 +1,9 @@
-import numpy
-import re
-import sys
-import datetime
-import os
 import glob
+import os
+import re
+
 import matplotlib.pyplot as plt
-import pdb
+import numpy
 
 PERFECT_VAL = 0
 SCORE_LBL = "$\%\mathit{L}_F - \%\mathit{L}_H$"
@@ -29,8 +27,8 @@ LBLS_CATS = [chr(x) for x in range(ord("A"), ord("Z"))]
 COLORS_CATS_BLUE = ["#3D52A1", "#3A89C9", "#77B7E5", "#B4DDF7", "#E6F5FE"]
 COLORS_CATS_RED = ["#FFFAD2", "#FFE3AA",
                    "#F9BD7E", "#ED875E", "#D24D3E", "#AE1C3E"]
-COLORS_CATS_GREY = ["#"+6*("%s" % s) for s in range(1, 10)] + \
-    ["#"+6*chr(s) for s in range(ord("A"), ord("F"))]
+COLORS_CATS_GREY = ["#" + 6 * ("%s" % s) for s in range(1, 10)] + \
+                   ["#" + 6 * chr(s) for s in range(ord("A"), ord("F"))]
 COLORS_CATS_OTHER = ["#7FB972", "#4EB265", "#117755"]
 
 COLORS_CATS = {}
@@ -56,7 +54,6 @@ all_box_props = {
     "whiskerprops": {"linestyle": '-', "color": "black"},
     "medianprops": {"linestyle": '-', "linewidth": 1.5, "color": 'black'}}
 
-
 FIELDS = ["level", "noise_lvl", "noise_dens"]
 # , 't0_up', 'k_low', 'k_up', "seriesL", "seriesX"]
 FIELDS_COMB = ['t0_low', "seriesL"]
@@ -74,7 +71,7 @@ def get_params_k(params):
         inner_p = 2
     else:
         inner_p = 3
-    return tuple([inner_p]+[params.get(kk, -1) for kk in FIELDS])
+    return tuple([inner_p] + [params.get(kk, -1) for kk in FIELDS])
 
 
 def rep_collect_results(series_basis, xps_rep):
@@ -179,10 +176,10 @@ def draw_synthe_boxes(series_basis):
               ('a [d=1] c [d=2] d', 10)]
     # vs_all = [(cs["cl_pairs"][:,0]-cs["cl_pairs"][:,1])/cs["cl_pairs"][:,0] for cs in collected_results]
     # vs_all = [numpy.log(cs["cl_pairs"][:,1]/cs["cl_pairs"][:,0]) for cs in collected_results]
-    vs_all = [cs["cl_pairs"][:, 1]/cs["cl_pairs"][:, 2] - cs["cl_pairs"]
-              [:, 0]/cs["cl_pairs"][:, 2] for cs in collected_results]
-    x_min = numpy.floor(10*numpy.min(numpy.hstack(vs_all)))/10.
-    x_max = numpy.ceil(10*numpy.max(numpy.hstack(vs_all)))/10.
+    vs_all = [cs["cl_pairs"][:, 1] / cs["cl_pairs"][:, 2] - cs["cl_pairs"]
+    [:, 0] / cs["cl_pairs"][:, 2] for cs in collected_results]
+    x_min = numpy.floor(10 * numpy.min(numpy.hstack(vs_all))) / 10.
+    x_max = numpy.ceil(10 * numpy.max(numpy.hstack(vs_all))) / 10.
 
     nb_c, nb_r = (3, 1)
 
@@ -195,12 +192,14 @@ def draw_synthe_boxes(series_basis):
         sublbls = []
         for bi, (inner, p_down) in enumerate(blocks):
 
-            rids = [(ci, (p["params"]["noise_lvl"], p["params"]["noise_dens"]), "%s" % (p["params"]["noise_dens"])) for ci, p in enumerate(
-                collected_results) if (p["params"]["inner"] == inner and p["params"]["p_down"] == p_down) and (p["params"]["level"] == level)]
+            rids = [(ci, (p["params"]["noise_lvl"], p["params"]["noise_dens"]), "%s" % (p["params"]["noise_dens"])) for
+                    ci, p in enumerate(
+                    collected_results) if (p["params"]["inner"] == inner and p["params"]["p_down"] == p_down) and (
+                            p["params"]["level"] == level)]
             rids.sort(key=lambda x: x[1])
 
             sdata = [collected_results[r[0]] for r in rids]
-            pos = numpy.arange(len(sdata))+offset
+            pos = numpy.arange(len(sdata)) + offset
 
             for ni, noise_lvl in enumerate(NLVLS):
                 srids = [(ssi, sri[0]) for ssi, sri in enumerate(
@@ -218,21 +217,21 @@ def draw_synthe_boxes(series_basis):
                     for b in box["fliers"]:
                         b.set_markeredgecolor(COLOR_NLVL[ni])
 
-            yticks_all.extend(numpy.arange(len(sdata))+offset)
+            yticks_all.extend(numpy.arange(len(sdata)) + offset)
             if li == 0:
                 ytick_lbls_all.extend(["%s % 4d/%d" % (r[-1], collected_results[r[0]]["counts"]
-                                      [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
+                [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
             else:
                 ytick_lbls_all.extend(["%d/%d" % (collected_results[r[0]]["counts"]
-                                      [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
+                                                  [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
 
-            suboffs.append(offset-1)
+            suboffs.append(offset - 1)
             sublbls.append("{p>%s} (%s)" % (p_down, Blbls[inner]))
 
-            offset += len(sdata)+2
+            offset += len(sdata) + 2
 
         grid[li].set_xlim(x_min, x_max)
-        ymin, ymax = (numpy.max(yticks_all)+1, numpy.min(yticks_all)-2)
+        ymin, ymax = (numpy.max(yticks_all) + 1, numpy.min(yticks_all) - 2)
         grid[li].set_ylim(ymin, ymax)
         grid[li].set_title("height=%d" % level, fontsize=18)
         grid[li].plot([PERFECT_VAL, PERFECT_VAL], [ymin, ymax],
@@ -244,19 +243,19 @@ def draw_synthe_boxes(series_basis):
         grid[li].set_yticklabels(ytick_lbls_all, fontsize=14)
 
         for si in range(len(suboffs)):
-            grid[li].text(x_min+(x_max-x_min)/2., suboffs[si],
+            grid[li].text(x_min + (x_max - x_min) / 2., suboffs[si],
                           sublbls[si], horizontalalignment='center', fontsize=14)
-            grid[li].plot([x_min+.1, x_max-.1], [suboffs[si]+.35,
-                          suboffs[si]+.35], "k", linewidth=0.1)
+            grid[li].plot([x_min + .1, x_max - .1], [suboffs[si] + .35,
+                                                     suboffs[si] + .35], "k", linewidth=0.1)
 
     plt.subplots_adjust(bottom=0.2)
     lls = [plt.plot(-10, -10, COLOR_NLVL[ni], linewidth=10)[0]
            for ni, noise_lvl in enumerate(NLVLS)]
     labels = ["%d" % noise_lvl for ni, noise_lvl in enumerate(NLVLS)]
-    labels[0] = "shift noise level:     "+labels[0]
+    labels[0] = "shift noise level:     " + labels[0]
 
-    bb = (fig.subplotpars.left, fig.subplotpars.bottom-0.12,
-          fig.subplotpars.right-fig.subplotpars.left, .1)
+    bb = (fig.subplotpars.left, fig.subplotpars.bottom - 0.12,
+          fig.subplotpars.right - fig.subplotpars.left, .1)
 
     grid[0].legend(lls, labels, bbox_to_anchor=bb, mode="expand", loc="lower left", frameon=False, markerfirst=False,
                    borderaxespad=0., ncol=4, bbox_transform=fig.transFigure, fontsize=14)
@@ -266,7 +265,6 @@ def draw_synthe_boxes(series_basis):
 
 
 def draw_synthe_boxes_combs(series_basis):
-
     lbls_series = {"S": "No additive noise", "U": "Interleaving",
                    "V": "Additive noise (a, .1)", "W": "Additive noise (a, .5)"}
 
@@ -275,10 +273,10 @@ def draw_synthe_boxes_combs(series_basis):
     blocks = ["S", "V", "W", "U"]
     # vs_all = [(cs["cl_pairs"][:,0]-cs["cl_pairs"][:,1])/cs["cl_pairs"][:,0] for cs in collected_results]
     # vs_all = [numpy.log(cs["cl_pairs"][:,1]/cs["cl_pairs"][:,0]) for cs in collected_results]
-    vs_all = [cs["cl_pairs"][:, 1]/cs["cl_pairs"][:, 2] - cs["cl_pairs"]
-              [:, 0]/cs["cl_pairs"][:, 2] for cs in collected_results]
-    x_min = numpy.floor(10*numpy.min(numpy.hstack(vs_all)))/10.
-    x_max = numpy.ceil(10*numpy.max(numpy.hstack(vs_all)))/10.
+    vs_all = [cs["cl_pairs"][:, 1] / cs["cl_pairs"][:, 2] - cs["cl_pairs"]
+    [:, 0] / cs["cl_pairs"][:, 2] for cs in collected_results]
+    x_min = numpy.floor(10 * numpy.min(numpy.hstack(vs_all))) / 10.
+    x_max = numpy.ceil(10 * numpy.max(numpy.hstack(vs_all))) / 10.
 
     lgd = {.2: "overlap", 1.2: "no ov."}
 
@@ -297,7 +295,7 @@ def draw_synthe_boxes_combs(series_basis):
             rids.sort(key=lambda x: x[1])
 
             sdata = [collected_results[r[0]] for r in rids]
-            pos = numpy.arange(len(sdata))+offset
+            pos = numpy.arange(len(sdata)) + offset
 
             for ni, noise_lvl in enumerate([(1.2, 1.5), (.2, .9)]):
                 srids = [(ssi, sri[0])
@@ -315,21 +313,21 @@ def draw_synthe_boxes_combs(series_basis):
                     for b in box["fliers"]:
                         b.set_markeredgecolor(COLOR_NLVL[ni])
 
-            yticks_all.extend(numpy.arange(len(sdata))+offset)
+            yticks_all.extend(numpy.arange(len(sdata)) + offset)
             if li == 0:
                 ytick_lbls_all.extend(["%s % 4d/%d" % (r[-1], collected_results[r[0]]["counts"]
-                                      [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
+                [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
             else:
                 ytick_lbls_all.extend(["%d/%d" % (collected_results[r[0]]["counts"]
-                                      [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
+                                                  [0], numpy.sum(collected_results[r[0]]["counts"])) for r in rids])
 
-            suboffs.append(offset-1)
+            suboffs.append(offset - 1)
             sublbls.append("%s" % lbls_series[sss])
 
-            offset += len(sdata)+2
+            offset += len(sdata) + 2
 
         grid[li].set_xlim(x_min, x_max)
-        ymin, ymax = (numpy.max(yticks_all)+1, numpy.min(yticks_all)-2)
+        ymin, ymax = (numpy.max(yticks_all) + 1, numpy.min(yticks_all) - 2)
         grid[li].set_ylim(ymin, ymax)
         grid[li].plot([PERFECT_VAL, PERFECT_VAL], [ymin, ymax],
                       ':', color="#999999", zorder=-1)
@@ -338,10 +336,10 @@ def draw_synthe_boxes_combs(series_basis):
         grid[li].set_yticklabels(ytick_lbls_all)
 
         for si in range(len(suboffs)):
-            grid[li].text(x_min+(x_max-x_min)/2., suboffs[si],
+            grid[li].text(x_min + (x_max - x_min) / 2., suboffs[si],
                           sublbls[si], horizontalalignment='center')
-            grid[li].plot([x_min+.1, x_max-.1], [suboffs[si]+.35,
-                          suboffs[si]+.35], "k", linewidth=0.1)
+            grid[li].plot([x_min + .1, x_max - .1], [suboffs[si] + .35,
+                                                     suboffs[si] + .35], "k", linewidth=0.1)
 
     plt.draw()
     plt.savefig("%s%s_box.pdf" % (PLT_REP, re.sub("\*", "", series_basis)))
@@ -349,8 +347,8 @@ def draw_synthe_boxes_combs(series_basis):
 
 if __name__ == "__main__":
     BASIS_REP = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    XPS_REP = BASIS_REP+"/xps/synthe/"
-    PLT_REP = BASIS_REP+"/xps/"
+    XPS_REP = BASIS_REP + "/xps/synthe/"
+    PLT_REP = BASIS_REP + "/xps/"
 
     for series_basis in ["synthe_S", "synthe_V", "synthe_W", "synthe_U"]:
         draw_synthe_boxes(series_basis)

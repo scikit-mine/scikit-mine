@@ -1,20 +1,21 @@
-from .class_patterns import PatternCollection, Pattern, DataSequence, computePeriodDiffs, computePeriod, cost_triple, cost_one, computeLengthCycle, Candidate, CandidatePool, sortPids
-from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
-from .read_data import readSequence, readSequenceSacha, group_syms
-import pdb
-import numpy
-import re
-import sys
+import argparse
 import datetime
+import glob
 import itertools
 import os
-import glob
+import pdb
 import pickle
-import argparse
-import json
+import re
+import sys
+
+import numpy
+
+from .class_patterns import PatternCollection, Pattern, DataSequence, computePeriodDiffs, computePeriod, cost_one, \
+    Candidate, CandidatePool, sortPids
+from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
+from .read_data import readSequence, readSequenceSacha, group_syms
 
 numpy.set_printoptions(suppress=True)
-
 
 OFFSETS_T = [0, 1, -1]
 # MINE_CPLX = True
@@ -24,10 +25,9 @@ CHECK_HORDER = True
 
 PICKLE = 0  # 1 -> load pickled init cands; -1 -> store pickled init cands; 0 -> nothing
 
-
 BASIS_REP = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DATA_REP = BASIS_REP+"/data/"
-XPS_REP = BASIS_REP+"/xps/runs/"
+DATA_REP = BASIS_REP + "/data/"
+XPS_REP = BASIS_REP + "/xps/runs/"
 
 series_params = {}
 series_params["bugzilla_0_rel_all"] = {
@@ -54,8 +54,8 @@ series_params["sacha_18_rel"] = {
 # series_params["sacha_18_abs_2000W"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
 #                                  "timestamp": True, "max_len": 2000, "max_p": 7*24*60
 # print("UUUUU UbiqLog_")
-All = glob.glob(DATA_REP+"UbiqLog/prepared/*_data.dat")
-for f in glob.glob(DATA_REP+"UbiqLog/prepared/*_data.dat"):
+All = glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat")
+for f in glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat"):
     # print(f)
     bb = f.split("/")[-1].strip("_data.dat")
     if not re.search("ISE", bb):
@@ -99,7 +99,7 @@ def prepare_pattern_simple(occs, alpha, p0=None, r0=None):
         p0 = computePeriod(occs)
     tree = {0: {"p": p0, "r": r0, "children": [(1, 0)], "parent": None},
             1: {"event": alpha, "parent": 0}}
-    E = [(occs[i]-occs[i-1])-p0 for i in range(1, len(occs))]
+    E = [(occs[i] - occs[i - 1]) - p0 for i in range(1, len(occs))]
     p = Pattern(tree)
     return p, occs[0], E
 
@@ -132,9 +132,9 @@ def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
         for j in range(r1):
             if j == 0:
                 if i > 0:
-                    E.append((Pblks_occs[i][j][0]-Pblks_occs[i-1][j][0])-p0)
+                    E.append((Pblks_occs[i][j][0] - Pblks_occs[i - 1][j][0]) - p0)
             else:
-                E.append((Pblks_occs[i][j][0]-Pblks_occs[i][j-1][0])-p1)
+                E.append((Pblks_occs[i][j][0] - Pblks_occs[i][j - 1][0]) - p1)
             E.extend(Pblks_errs[i][j])
             O.extend(Pblks_occs[i][j])
     p = Pattern(tree)
@@ -149,13 +149,13 @@ def prepare_tree_nested(cand, prds, lens):
         depth = len(P.getCyclePs())
 
     tree = {}
-    for i in range(len(prds)-depth+1):
+    for i in range(len(prds) - depth + 1):
         tree[i] = {"p": prds[i], "r": lens[i],
-                   "children": [(i+1, 0)], "parent": i-1}
+                   "children": [(i + 1, 0)], "parent": i - 1}
     tree[0]["parent"] = None
 
     if P is None:
-        tree[i+1] = {"event": cand.getEvent(), "parent": i}
+        tree[i + 1] = {"event": cand.getEvent(), "parent": i}
     else:
         nodes, offset, nmap = cand.getTranslatedPNodes(i)
         ch = nodes.pop(nmap[0])["children"]
@@ -167,7 +167,6 @@ def prepare_tree_nested(cand, prds, lens):
 
 
 def prepare_candidate_nested(cp_det, P_minor, cmplx_candidates):
-
     idxs = cp_det[-1]
     pr_key = cp_det[1]
     tmp = pr_key.split("_")
@@ -193,7 +192,7 @@ def prepare_candidate_nested(cp_det, P_minor, cmplx_candidates):
             t00 = t0i
         else:
             copy_pp = list(pp)
-            i = len(pp)-1
+            i = len(pp) - 1
             while pp[i] == 0:
                 i -= 1
             copy_pp[i] -= 1
@@ -222,7 +221,7 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
         offset -= 1
         ch = nodes.pop(nmap[0])["children"]
         if ci > 0:
-            ch[0] = (ch[0][0], Pblks_occs[ci][0][0]-Pblks_occs[ci-1][0][0])
+            ch[0] = (ch[0][0], Pblks_occs[ci][0][0] - Pblks_occs[ci - 1][0][0])
         tree[0]["children"].extend(ch)
         for c in ch:
             nodes[c[0]]["parent"] = 0
@@ -240,13 +239,14 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
                     t00 = Pblks_occs[ei][ri][0]
                 else:
                     E.append((Pblks_occs[ei][ri][0] -
-                             Pblks_occs[ei][ri-1][0])-p0)
+                              Pblks_occs[ei][ri - 1][0]) - p0)
             else:
                 E.append((Pblks_occs[ei][ri][0] -
-                         Pblks_occs[ei-1][ri][0])-ds[ei])
+                          Pblks_occs[ei - 1][ri][0]) - ds[ei])
             E.extend(Pblks_errs[ei][ri])
     p = Pattern(tree)
     return Candidate(-1, p, O, E)
+
 
 # MINE INITIAL CANDIDATES
 ########################################################
@@ -257,8 +257,9 @@ def mine_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=Non
 
 
 def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=None):
-    # XX = [3-2*k+numpy.log2(k-1)-k*numpy.log2(data_details["nbOccs"][alpha])+(k-1)*numpy.log2(data_details["nbOccs"][-1])+(k-2)*numpy.log2(data_details["deltaT"]+1) for k in range(3, 10)]
-    bound_dE = numpy.log2(data_details["deltaT"]+1) - 2
+    # XX = [3-2*k+numpy.log2(k-1)-k*numpy.log2(data_details["nbOccs"][alpha])+(k-1)*numpy.log2(data_details[
+    # "nbOccs"][-1])+(k-2)*numpy.log2(data_details["deltaT"]+1) for k in range(3, 10)]
+    bound_dE = numpy.log2(data_details["deltaT"] + 1) - 2
     log_write(fo_log, "Cycle extraction cost_one=%s bound_dE=%s\n" %
               (costOne, bound_dE))
     dyn_cycles = compute_cycles_dyn(occs, alpha, data_details, residuals=False)
@@ -287,24 +288,12 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
 
     cycles = [Candidate(-1, c)
               for c in merge_cycle_lists([dyn_cycles, chains, triples])]
-    # print("Cost 3 res:", 3*costOne)
-    # cycles.sort(key=lambda c:c["cost"]/len(c["occs"]))
-    # for c in cycles:
-    #     src = c["source"]
-    #     old_cst = c["cost"]
-    #     costs_triples = [computeLengthCycle(data_details, {"p": None, "alpha": alpha, "occs": c["occs"][i:i+3]}) for i in range(len(c["occs"])-2)]
-    #     nc = Candidate(-1, c)
-    #     cst = nc.computeCost(data_details, force=True)
-    #     pref = ""
-    #     if nc.getCostRatio() > costOne:
-    #         pref += "---"
-    #     else:
-    #         pref += "+++"
-    #     if numpy.max(costs_triples) > 3*costOne:
-    #         pref += "---"
-    #     else:
-    #         pref += "+++"
-    #     print("%s\t%s vs. %s [%s]" % (pref, old_cst, nc, src[0])) #, costs_triples)
+    # print("Cost 3 res:", 3*costOne) cycles.sort(key=lambda c:c["cost"]/len(c["occs"])) for c in cycles: src = c[
+    # "source"] old_cst = c["cost"] costs_triples = [computeLengthCycle(data_details, {"p": None, "alpha": alpha,
+    # "occs": c["occs"][i:i+3]}) for i in range(len(c["occs"])-2)] nc = Candidate(-1, c) cst = nc.computeCost(
+    # data_details, force=True) pref = "" if nc.getCostRatio() > costOne: pref += "---" else: pref += "+++" if
+    # numpy.max(costs_triples) > 3*costOne: pref += "---" else: pref += "+++" print("%s\t%s vs. %s [%s]" % (pref,
+    # old_cst, nc, src[0])) #, costs_triples)
     selected_ids = filter_candidates_topKeach(cycles, k=TOP_KEACH)
     log_write(fo_log, "%d/%d merged cycles (%d dyn, %d chains, %d triples)\n" %
               (len(selected_ids), len(cycles), len(dyn_cycles), len(chains), len(triples)))
@@ -316,7 +305,7 @@ def merge_cycle_lists(cyclesL):
     for ci, cycles in enumerate(cyclesL):
         # keys.extend([(":".join(map(str, kk["occs"])), ki, ci) for ki,kk in enumerate(cycles)])
         keys.extend([((kk["occs"][0], len(kk["occs"]), kk["p"]), ki, ci)
-                    for ki, kk in enumerate(cycles)])
+                     for ki, kk in enumerate(cycles)])
     keys.sort()
     cycles = []
     if len(keys) > 0:
@@ -324,7 +313,7 @@ def merge_cycle_lists(cyclesL):
         cycles[-1]["source"] = (keys[0][2], keys[0][1])
 
     for i in range(1, len(keys)):
-        if keys[i][0] != keys[i-1][0]:
+        if keys[i][0] != keys[i - 1][0]:
             cycles.append(cyclesL[keys[i][2]][keys[i][1]])
             cycles[-1]["source"] = (keys[i][2], keys[i][1])
         else:
@@ -393,9 +382,9 @@ def run_combine_vertical_event(cpool, mk, data_details, fo_log=None):
 
 def get_top_p(occ_ordc):
     top1, top2, topN = (0, 1, -1)
-    if top2+1 < len(occ_ordc) and occ_ordc[top2][0] == occ_ordc[top2+1][0]:
-        topN = top2+1
-        while topN+1 < len(occ_ordc) and occ_ordc[topN][0] == occ_ordc[topN+1][0]:
+    if top2 + 1 < len(occ_ordc) and occ_ordc[top2][0] == occ_ordc[top2 + 1][0]:
+        topN = top2 + 1
+        while topN + 1 < len(occ_ordc) and occ_ordc[topN][0] == occ_ordc[topN + 1][0]:
             topN += 1
         if numpy.abs(occ_ordc[top1][1] - occ_ordc[topN][1]) > numpy.abs(occ_ordc[top1][1] - occ_ordc[top2][1]):
             (top2, topN) = (topN, top2)
@@ -411,7 +400,7 @@ def find_complexes(cpool, mk, data_details):
     for cid in cids:
         for pid in cpool.getPidsForCid(cid):
             (t0i, p0, r0, offset, cumEi, _) = cpool.getProp(pid)
-            remain = r0-offset
+            remain = r0 - offset
             if t0i not in occs_to_cycles:
                 occs_to_cycles[t0i] = {}
             if p0 not in occs_to_cycles[t0i] or occs_to_cycles[t0i][p0][0] < remain:
@@ -423,7 +412,7 @@ def find_complexes(cpool, mk, data_details):
         if len(dt) > 1:
             # triples (nb_occ_after, period, cycle_id)
             occs_to_ordc[occ] = sorted([(v[0], k, v[1])
-                                       for k, v in dt.items()], reverse=True)
+                                        for k, v in dt.items()], reverse=True)
             top_two[occ] = get_top_p(occs_to_ordc[occ])
 
     if len(occs_to_ordc) == 0:
@@ -433,7 +422,7 @@ def find_complexes(cpool, mk, data_details):
     soccs = sorted(occs_to_ordc.keys())
     map_soccs = dict([(v, k) for (k, v) in enumerate(soccs)])
     scores = numpy.array([occs_to_ordc[x][top_two[x][0]][0]
-                         * occs_to_ordc[x][top_two[x][1]][0] for x in soccs])
+                          * occs_to_ordc[x][top_two[x][1]][0] for x in soccs])
     store_candidates = []
     same_score_candidates = []
     cids_drop = set()
@@ -456,10 +445,10 @@ def find_complexes(cpool, mk, data_details):
         else:  # tolerate period +- offset
             Wcids, Wlefts, i = ([], [], 0)
             while i >= 0 and i < nbOleftA:
-                nocc = cpool.getCandidate(ciA).getMajorO()[-nbOleftA+i]
+                nocc = cpool.getCandidate(ciA).getMajorO()[-nbOleftA + i]
                 if nocc in occs_to_cycles:
                     ps = occs_to_cycles[nocc].keys()
-                    ppi = numpy.argmin([numpy.abs(k-pB) for k in ps])
+                    ppi = numpy.argmin([numpy.abs(k - pB) for k in ps])
                     nleft, ncid = occs_to_cycles[nocc][ps[ppi]]
                     if ncid not in Wcids:
                         Wcids.append(ncid)
@@ -472,10 +461,10 @@ def find_complexes(cpool, mk, data_details):
 
             Hcids, Hlefts, i = ([], [], 0)
             while i >= 0 and i < nbOleftB:
-                nocc = cpool.getCandidate(ciB).getMajorO()[-nbOleftB+i]
+                nocc = cpool.getCandidate(ciB).getMajorO()[-nbOleftB + i]
                 if nocc in occs_to_cycles:
                     ps = occs_to_cycles[nocc].keys()
-                    ppi = numpy.argmin([numpy.abs(k-pA) for k in ps])
+                    ppi = numpy.argmin([numpy.abs(k - pA) for k in ps])
                     nleft, ncid = occs_to_cycles[nocc][ps[ppi]]
                     if ncid not in Hcids:
                         Hcids.append(ncid)
@@ -489,18 +478,18 @@ def find_complexes(cpool, mk, data_details):
         h, w = (1, 1)
         if len(Hcids) > 2 and len(Wcids) > 2:
             # compute the actual size of tiles for different end corners
-            Wsmin = numpy.array([numpy.min(Wlefts[:i+1])
-                                for i in range(len(Wlefts))])
-            Hsmin = numpy.array([numpy.min(Hlefts[:i+1])
-                                for i in range(len(Hlefts))])
+            Wsmin = numpy.array([numpy.min(Wlefts[:i + 1])
+                                 for i in range(len(Wlefts))])
+            Hsmin = numpy.array([numpy.min(Hlefts[:i + 1])
+                                 for i in range(len(Hlefts))])
             I, J = numpy.mgrid[0:len(Hcids), 0:len(Wcids)]
-            sizes = numpy.minimum(Wsmin[J], I+1) * numpy.minimum(Hsmin[I], J+1)
+            sizes = numpy.minimum(Wsmin[J], I + 1) * numpy.minimum(Hsmin[I], J + 1)
             # pick the end corner of the largest tile
             hi, wi = numpy.unravel_index(numpy.argmax(
-                sizes + (I/(2.*I.shape[0])+J/(2.*J.shape[1]))), sizes.shape)
+                sizes + (I / (2. * I.shape[0]) + J / (2. * J.shape[1]))), sizes.shape)
             # hh,ww = (hi+1, wi+1)
-            h, w = (numpy.minimum(Wsmin[J], I+1)[hi, wi],
-                    numpy.minimum(Hsmin[I], J+1)[hi, wi])
+            h, w = (numpy.minimum(Wsmin[J], I + 1)[hi, wi],
+                    numpy.minimum(Hsmin[I], J + 1)[hi, wi])
 
         if h > 2 and w > 2:
             same_score_candidates.append({"cids": (Hcids[:h], Wcids[:w]),
@@ -513,11 +502,11 @@ def find_complexes(cpool, mk, data_details):
             direct = +1
             if top_two[occ][-1] < top_two[occ][1]:
                 direct = -1
-            if top_two[occ][-1] == top_two[occ][1]+direct:
-                top_two[occ] = (top_two[occ][0], top_two[occ][1]+direct, -1)
+            if top_two[occ][-1] == top_two[occ][1] + direct:
+                top_two[occ] = (top_two[occ][0], top_two[occ][1] + direct, -1)
             else:
                 top_two[occ] = (top_two[occ][0], top_two[occ]
-                                [1]+direct, top_two[occ][-1])
+                [1] + direct, top_two[occ][-1])
 
         else:
 
@@ -525,13 +514,13 @@ def find_complexes(cpool, mk, data_details):
 
             if len(same_score_candidates) > 0:
                 same_score_candidates.sort(key=lambda x: (
-                    x["dims"][0]*x["dims"][1], x["ps"][1]), reverse=True)
+                    x["dims"][0] * x["dims"][1], x["ps"][1]), reverse=True)
                 tscore = same_score_candidates[0]["dims"][0] * \
-                    same_score_candidates[0]["dims"][1]
+                         same_score_candidates[0]["dims"][1]
 
                 for cand in same_score_candidates[:1]:
-                    if cand["dims"][0]*cand["dims"][1] == tscore:
-                        cids_drop.update(cand["cids"][0]+cand["cids"][1])
+                    if cand["dims"][0] * cand["dims"][1] == tscore:
+                        cids_drop.update(cand["cids"][0] + cand["cids"][1])
                         store_candidates.append(cand)
 
                 same_score_candidates = []
@@ -552,7 +541,7 @@ def find_complexes(cpool, mk, data_details):
                 if len(occs_to_ordc[oid]) > 1:
                     top_two[oid] = get_top_p(occs_to_ordc[oid])
                     scores[map_soccs[oid]] = occs_to_ordc[oid][top_two[oid]
-                                                               [0]][0]*occs_to_ordc[oid][top_two[oid][1]][0]
+                    [0]][0] * occs_to_ordc[oid][top_two[oid][1]][0]
                     for (nb_left, prd, cid) in excl:
                         del occs_to_cycles[oid][prd]
                 else:
@@ -564,7 +553,7 @@ def find_complexes(cpool, mk, data_details):
 def compute_costs_verticals(store_candidates, cpool, mk, data_details):
     selection = []
     store_candidates.sort(
-        key=lambda x: x["dims"][0]*x["dims"][1], reverse=True)
+        key=lambda x: x["dims"][0] * x["dims"][1], reverse=True)
     for ci, cand in enumerate(store_candidates):
         new_cands = {}
         sum_cost = {}
@@ -577,8 +566,8 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
             # occurrence list and periods
             P_minor = [cpool.getCandidate(cid) for cid in cand["cids"][hw]]
             for cci, P in enumerate(P_minor):
-                first_rs.append(P.getMajorR()-cand["lefts"][hw][cci])
-                tmp = P.getMajorO()[first_rs[-1]:first_rs[-1]+cand["dims"][1-hw]]
+                first_rs.append(P.getMajorR() - cand["lefts"][hw][cci])
+                tmp = P.getMajorO()[first_rs[-1]:first_rs[-1] + cand["dims"][1 - hw]]
                 Poccs_major.append(tmp[0])
                 Pdiffs_minor.extend(numpy.diff(tmp))
 
@@ -591,7 +580,7 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
 
             p1 = computePeriodDiffs(Pdiffs_minor)
             p0 = computePeriod(Poccs_major)
-            r0, r1 = (cand["dims"][hw], cand["dims"][1-hw])
+            r0, r1 = (cand["dims"][hw], cand["dims"][1 - hw])
             new_cands[hw] = prepare_candidate_two_nested(
                 P_minor, p0, r0, p1, r1, first_rs)
             new_cands[hw].computeCost(data_details)
@@ -600,7 +589,7 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
         # choose inside/outside
         if new_cands[1].getCostRatio() < new_cands[0].getCostRatio():
             choose_id = 1
-        if new_cands[choose_id].getCostRatio() < (sum_cost[choose_id]/sum_nboccs[choose_id]):
+        if new_cands[choose_id].getCostRatio() < (sum_cost[choose_id] / sum_nboccs[choose_id]):
             selection.append(new_cands[choose_id])
     return selection
 
@@ -610,10 +599,10 @@ def nest_cmplx(cmplx_candidates, P_minor, data_details):
     for cki, c in enumerate(cmplx_candidates):
         if c.getPattern() is not None:
             p_str = "+".join(["%d" %
-                             ppp for ppp in c.getPattern().getCyclePs()])
+                              ppp for ppp in c.getPattern().getCyclePs()])
             r_str = "*".join(["%d" %
-                             ppp for ppp in c.getPattern().getCycleRs()[::-1]])
-            pr_key = p_str+"_"+r_str
+                              ppp for ppp in c.getPattern().getCycleRs()[::-1]])
+            pr_key = p_str + "_" + r_str
         else:
             pr_key = "%d_%d" % (c.getMajorP(), c.getMajorR())
         if pr_key not in map_cmplx_pos:
@@ -630,13 +619,13 @@ def nest_cmplx(cmplx_candidates, P_minor, data_details):
                 elems = sorted(u_elems)
                 i = 1
                 while i < len(elems):
-                    if elems[i][0] == elems[i-1][0]:
+                    if elems[i][0] == elems[i - 1][0]:
                         sum_costsA = numpy.sum(
                             [cmplx_candidates[cci].getCost() for cci in elems[i][1]])
                         sum_costsB = numpy.sum(
-                            [cmplx_candidates[cci].getCost() for cci in elems[i-1][1]])
+                            [cmplx_candidates[cci].getCost() for cci in elems[i - 1][1]])
                         if sum_costsA < sum_costsB:
-                            elems.pop(i-1)
+                            elems.pop(i - 1)
                         else:
                             elems.pop(i)
                     else:
@@ -647,7 +636,7 @@ def nest_cmplx(cmplx_candidates, P_minor, data_details):
 
                 costSpare = cmplx_candidates[cpkids[0][0]].getCostNoE(
                     data_details)
-                bound_dE = numpy.log2(data_details["deltaT"]+1) - 2
+                bound_dE = numpy.log2(data_details["deltaT"] + 1) - 2
                 chains_x, triples_x = extract_cycles_fold(t0s, cmplx_candidates[cpkids[0][0]].getEventTuple(
                 ), data_details, bound_dE, -costSpare, -costSpare)
                 for triple in triples_x:
@@ -703,9 +692,12 @@ def getPidsSlice(patterns_props, pids, slice_size, col, max_v):
     elif patterns_props[pids[0], col] > max_v:
         return []
     ii = numpy.where(
-        patterns_props[pids[::slice_size]+[pids[-1]], col] > max_v)[0]
-    last_id = ((ii[0]-1)*slice_size)+numpy.where(patterns_props[pids[(ii[0]-1)
-                                                                     * slice_size:ii[0]*slice_size+1], col] > max_v)[0][0]
+        patterns_props[pids[::slice_size] + [pids[-1]], col] > max_v)[0]
+    last_id = ((ii[0] - 1) * slice_size) + numpy.where(patterns_props[pids[(ii[0] - 1)
+                                                                           * slice_size:ii[
+                                                                                            0] * slice_size + 1],
+    col] > max_v)[
+        0][0]
     return pids[:last_id]
 
 
@@ -720,7 +712,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
 
     pids_new = None
     Inew = patterns_props[pids, Candidate.prop_map["new"]
-                          ] == cpool.getNewKNum(nkey)
+           ] == cpool.getNewKNum(nkey)
     if numpy.sum(Inew) == 0:
         return []
     if numpy.sum(Inew) < 500:
@@ -741,7 +733,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         if pids_new is not None:
             if len(pids_new) > 0:
                 j = 0
-                while pids[j] != pids_new[0] and ((patterns_props[pids[j], Candidate.prop_map["t0i"]] + patterns_props[pids[j], Candidate.prop_map["p0"]]) < patterns_props[pids_new[0], Candidate.prop_map["t0i"]]):
+                while pids[j] != pids_new[0] and ((patterns_props[pids[j], Candidate.prop_map["t0i"]] + patterns_props[
+                    pids[j], Candidate.prop_map["p0"]]) < patterns_props[pids_new[0], Candidate.prop_map["t0i"]]):
                     j += 1
                 if pids[j] == pids_new[0]:
                     pids_new.pop(0)
@@ -768,9 +761,9 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
 
         # (2)
         next_it = patterns_props[i, Candidate.prop_map["t0i"]
-                                 ] + patterns_props[i, Candidate.prop_map["p0"]]
+                  ] + patterns_props[i, Candidate.prop_map["p0"]]
         i_new = patterns_props[i, Candidate.prop_map["new"]
-                               ] == cpool.getNewKNum(nkey)
+                ] == cpool.getNewKNum(nkey)
         cmp_ids = []
         if i_new:  # i is new, compare to both new and old
             cmp_ids = numpy.array(getPidsSlice(
@@ -779,13 +772,13 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
             if pids_new is not None:
                 ppp = numpy.array(pids_new)
                 cmp_ids = ppp[patterns_props[ppp,
-                                             Candidate.prop_map["t0i"]] <= next_it]
+                Candidate.prop_map["t0i"]] <= next_it]
             else:
                 ppp = numpy.array(getPidsSlice(
                     patterns_props, pids, 500, Candidate.prop_map["t0i"], next_it))
                 if len(ppp) > 0:
                     cmp_ids = ppp[patterns_props[ppp,
-                                                 Candidate.prop_map["new"]] == cpool.getNewKNum(nkey)]
+                    Candidate.prop_map["new"]] == cpool.getNewKNum(nkey)]
         ###
 
         sel_ids = []
@@ -796,17 +789,21 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
 
         if len(sel_ids) > 0:
             # (3)
-            rmins = 1.*numpy.minimum(patterns_props[i, Candidate.prop_map["r0"]]-patterns_props[i, Candidate.prop_map["offset"]],
-                                     patterns_props[sel_ids, Candidate.prop_map["r0"]]-patterns_props[sel_ids, Candidate.prop_map["offset"]])
+            rmins = 1. * numpy.minimum(
+                patterns_props[i, Candidate.prop_map["r0"]] - patterns_props[i, Candidate.prop_map["offset"]],
+                patterns_props[sel_ids, Candidate.prop_map["r0"]] - patterns_props[
+                    sel_ids, Candidate.prop_map["offset"]])
             sel_ids = sel_ids[numpy.abs(patterns_props[sel_ids, Candidate.prop_map["p0"]] - patterns_props[i,
-                                        Candidate.prop_map["p0"]]) <= 2.*patterns_props[sel_ids, Candidate.prop_map["cumEi"]]/(rmins*(rmins-1))]
+            Candidate.prop_map["p0"]]) <= 2. * patterns_props[sel_ids, Candidate.prop_map["cumEi"]] / (
+                                      rmins * (rmins - 1))]
 
         for j in sel_ids:
             cand_pids = (i, j)
             cand_cids = tuple(
                 [patterns_props[cci, Candidate.prop_map["cid"]] for cci in cand_pids])
             cands = [cpool.getCandidate(cci) for cci in cand_cids]
-            if (cands[0].getEvent() == cands[1].getEvent()) and (patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[j, Candidate.prop_map["t0i"]]):
+            if (cands[0].getEvent() == cands[1].getEvent()) and (
+                    patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[j, Candidate.prop_map["t0i"]]):
                 continue
             if len(set(cands[0].getEvOccs()).intersection(cands[1].getEvOccs())) > 0:
                 drop_overlap += 1
@@ -818,21 +815,29 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
             new_cand = prepare_candidate_concats(
                 cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
             new_cand.computeCost(data_details)
-            if CHECK_HORDER and patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[j, Candidate.prop_map["t0i"]] and \
-                    (numpy.abs(patterns_props[cand_pids[0], Candidate.prop_map["p0"]] - patterns_props[cand_pids[1], Candidate.prop_map["p0"]]) <= 2.*patterns_props[cand_pids[1], Candidate.prop_map["cumEi"]]/(r0*(r0-1))):  # Equivalent flipped (same starting point)
+            if CHECK_HORDER and patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[
+                j, Candidate.prop_map["t0i"]] and \
+                    (numpy.abs(patterns_props[cand_pids[0], Candidate.prop_map["p0"]] - patterns_props[
+                        cand_pids[1], Candidate.prop_map["p0"]]) <= 2. * patterns_props[
+                         cand_pids[1], Candidate.prop_map["cumEi"]] / (
+                             r0 * (r0 - 1))):  # Equivalent flipped (same starting point)
 
-                new_candX = prepare_candidate_concats([cands[1], cands[0]], patterns_props[cand_pids[1], Candidate.prop_map["p0"]], r0, patterns_props[[
-                                                      cand_pids[1], cand_pids[0]], Candidate.prop_map["offset"]])
+                new_candX = prepare_candidate_concats([cands[1], cands[0]],
+                                                      patterns_props[cand_pids[1], Candidate.prop_map["p0"]], r0,
+                                                      patterns_props[[
+                                                          cand_pids[1], cand_pids[0]], Candidate.prop_map["offset"]])
                 new_candX.computeCost(data_details)
 
-                if (new_candX.getCost() < new_cand.getCost()) or (new_cand.getCost() == new_candX.getCost() and new_candX.getEventTuple() < new_cand.getEventTuple()):
+                if (new_candX.getCost() < new_cand.getCost()) or (
+                        new_cand.getCost() == new_candX.getCost() and new_candX.getEventTuple() <
+                        new_cand.getEventTuple()):
                     new_cand = new_candX
                     cand_pids = (cand_pids[1], cand_pids[0])
 
             sum_cost = numpy.sum([c.getCost() for c in cands])
             sum_nboccs = numpy.sum([c.getNbOccs() for c in cands])
 
-            if new_cand.getCostRatio() < (sum_cost/sum_nboccs):
+            if new_cand.getCostRatio() < (sum_cost / sum_nboccs):
                 cov = set().union(*[c.getEvOccs() for c in cands])
                 residuals = cov.difference(new_cand.getEvOccs())
                 cresiduals = numpy.sum([dcosts[o[1]] for o in residuals])
@@ -840,20 +845,25 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                 #     print("------------------------")
                 #     print("\n".join(["%s\n\t%s" % (c, c.getEvOccs()) for c in cands]))
                 #     print("%s\n\t%s" % (new_cand, new_cand.getEvOccs()))
-                #     print("%d+%d=%d vs. %d vs. %d" % (new_cand.getNbOccs(), len(residuals), new_cand.getNbOccs()+len(residuals), len(cov), sum_nboccs))
+                #     print("%d+%d=%d vs. %d vs. %d" % (new_cand.getNbOccs(), len(residuals), new_cand.getNbOccs(
+                #     )+len(residuals), len(cov), sum_nboccs))
                 #     print("------------------------")
 
-                if (new_cand.getCost()+cresiduals)/(new_cand.getNbOccs()+len(residuals)) < (sum_cost/sum_nboccs):
+                if (new_cand.getCost() + cresiduals) / (new_cand.getNbOccs() + len(residuals)) < (
+                        sum_cost / sum_nboccs):
 
                     keep_cands[cand_pids] = new_cand
 
-                    # for cci in [0,1]:
-                    #     print("\tP[%s,%s]: %f/%d=%f %s t0=%d\t%s" % (cand_cids[cci], cand_pids[cci], cands[cci].getCost(), cands[cci].getNbOccs(), cands[cci].getCostRatio(), cands[cci].getEvent(), cands[cci].getT0(), patterns_props[cand_pids[cci], :]))
+                    # for cci in [0,1]: print("\tP[%s,%s]: %f/%d=%f %s t0=%d\t%s" % (cand_cids[cci], cand_pids[cci],
+                    # cands[cci].getCost(), cands[cci].getNbOccs(), cands[cci].getCostRatio(), cands[cci].getEvent(),
+                    # cands[cci].getT0(), patterns_props[cand_pids[cci], :]))
 
-                    for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[pids, Candidate.prop_map["cid"]])[0][::-1]:
+                    for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[
+                        pids, Candidate.prop_map["cid"]])[0][::-1]:
                         pids.pop(pp)
                     if pids_new is not None:
-                        for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[pids_new, Candidate.prop_map["cid"]])[0][::-1]:
+                        for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[
+                            pids_new, Candidate.prop_map["cid"]])[0][::-1]:
                             pids_new.pop(pp)
                         if len(pids_new) == 0:
                             pids = []
@@ -869,9 +879,9 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
     for cand_pids in selected_ids:
         for cci in [0, 1]:
             if cand_pids[cci] not in graph_candidates:
-                graph_candidates[cand_pids[cci]] = set([cand_pids[1-cci]])
+                graph_candidates[cand_pids[cci]] = set([cand_pids[1 - cci]])
             else:
-                graph_candidates[cand_pids[cci]].add(cand_pids[1-cci])
+                graph_candidates[cand_pids[cci]].add(cand_pids[1 - cci])
 
     # drop_pairs = set()
     collect = []
@@ -879,20 +889,21 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
     log_write(fo_log, "BronKerbosch collected %d (%s)\n" %
               (len(collect), nkey))
     for cand_pids_unsrt in collect:
-        cand_pids = sorted(cand_pids_unsrt, key=lambda x: (patterns_props[x, Candidate.prop_map["t0i"]], cpool.getCandidate(
-            patterns_props[x, Candidate.prop_map["cid"]]).getEventTuple()))
+        cand_pids = sorted(cand_pids_unsrt,
+                           key=lambda x: (patterns_props[x, Candidate.prop_map["t0i"]], cpool.getCandidate(
+                               patterns_props[x, Candidate.prop_map["cid"]]).getEventTuple()))
         new_cand = makeCandOnOrder(
             cand_pids, data_details, patterns_props, cpool)
 
-        # cands = [cpool.getCandidate(patterns_props[cci, Candidate.prop_map["cid"]]) for cci in cand_pids]
-        # r0 = numpy.min(patterns_props[cand_pids, Candidate.prop_map["r0"]]-patterns_props[cand_pids, Candidate.prop_map["offset"]])
-        # p0 = patterns_props[cand_pids[0], Candidate.prop_map["p0"]]
-        # new_cand = prepare_candidate_concats(cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
+        # cands = [cpool.getCandidate(patterns_props[cci, Candidate.prop_map["cid"]]) for cci in cand_pids] r0 =
+        # numpy.min(patterns_props[cand_pids, Candidate.prop_map["r0"]]-patterns_props[cand_pids, Candidate.prop_map[
+        # "offset"]]) p0 = patterns_props[cand_pids[0], Candidate.prop_map["p0"]] new_cand =
+        # prepare_candidate_concats(cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
         # new_cand.computeCost(data_details)
 
         if CHECK_HORDER and len(set(patterns_props[cand_pids, Candidate.prop_map["t0i"]])) < len(cand_pids):
             ppids = [s for s in selected_ids if (
-                s[0] in cand_pids_unsrt) and (s[1] in cand_pids_unsrt)]
+                    s[0] in cand_pids_unsrt) and (s[1] in cand_pids_unsrt)]
             ord_c = dict([(s, 0) for s in cand_pids])
             for ppid in ppids:
                 ord_c[ppid[0]] += 1
@@ -902,8 +913,9 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                     cand_pidsX, data_details, patterns_props, cpool)
                 # print("PREF PIDS\n\t%s\n\t%s" % (new_cand, new_candX))
 
-                # or (new_cand.getCost() == new_candX.getCost() and new_candX.getEventTuple() < new_cand.getEventTuple()):
-                if (new_candX.getCost() < new_cand.getCost()):
+                # or (new_cand.getCost() == new_candX.getCost() and new_candX.getEventTuple() <
+                # new_cand.getEventTuple()):
+                if new_candX.getCost() < new_cand.getCost():
                     # print("Replaced PREF", new_candX.getCost(), new_cand.getCost())
                     new_cand = new_candX
                     cand_pids = cand_pidsX
@@ -922,8 +934,9 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         sum_cost = numpy.sum([c.getCost() for c in cands])
         sum_nboccs = numpy.sum([c.getNbOccs() for c in cands])
 
-        if new_cand.getCostRatio() < (sum_cost/sum_nboccs):
-            # print("Pc: %f/%d=%f %s t0=%d\tvs. %s" % (new_cand.getCost(), new_cand.getNbOccs(), new_cand.getCostRatio(), new_cand.P, new_cand.getT0(), sum_cost/sum_nboccs))
+        if new_cand.getCostRatio() < (sum_cost / sum_nboccs):
+            # print("Pc: %f/%d=%f %s t0=%d\tvs. %s" % (new_cand.getCost(), new_cand.getNbOccs(),
+            # new_cand.getCostRatio(), new_cand.P, new_cand.getT0(), sum_cost/sum_nboccs))
             keep_cands[tuple(cand_pids)] = new_cand
             # drop_pairs.update(itertools.combinations(cand_pids, 2))
 
@@ -1062,7 +1075,7 @@ def filter_cidpairs_topKeach(cands, k=2):
         if numpy.min(ccc) <= k:
             # print("%s:\t%s\t%s\t->keep" % (nxti, cands[nxti], ccc))
             for pp in nxti:
-                counts_cover[pp] = counts_cover.get(pp, 0)+1
+                counts_cover[pp] = counts_cover.get(pp, 0) + 1
             selected.append(nxti)
         # else:
         #     print("%s:\t%s\t%s\t->drop" % (nxti, cands[nxti], ccc))
@@ -1078,8 +1091,8 @@ def substitute_factorized(cands, data_details, fo_log=None):
                               [e.computeCost(data_details) for e in ext])
             if ii > 0:
                 log_write(fo_log, "%s --> FACT\n" % cands[i])
-                log_write(fo_log, "%s <-- FACT\n" % ext[ii-1])
-                cands[i] = ext[ii-1]
+                log_write(fo_log, "%s <-- FACT\n" % ext[ii - 1])
+                cands[i] = ext[ii - 1]
 
 
 def disp_seqs(seqs, ffo_log=None):
@@ -1089,7 +1102,7 @@ def disp_seqs(seqs, ffo_log=None):
         fo_log = ffo_log
 
     ds = DataSequence(seqs)
-    log_write(fo_log, ds.getInfoStr()+"\n")
+    log_write(fo_log, ds.getInfoStr() + "\n")
 
 
 def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None):
@@ -1102,7 +1115,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     elif fn_basis == "-":
         fo_log = sys.stdout
     else:
-        fo_log = open(fn_basis+"_log.txt", "w")
+        fo_log = open(fn_basis + "_log.txt", "w")
 
     if type(seqs) is DataSequence:
         ds = seqs
@@ -1114,7 +1127,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
     data_details = ds.getDetails()
     dcosts = dict([(alpha, cost_one(data_details, alpha))
-                  for alpha in data_details["nbOccs"].keys() if alpha != -1])
+                   for alpha in data_details["nbOccs"].keys() if alpha != -1])
 
     tic = datetime.datetime.now()
     dT_sel = datetime.timedelta()
@@ -1136,7 +1149,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     results["len(seq)"] = []
     results["TIME run"] = []
     for alpha, ev in enumerate(evs):
-
         tic_ev = datetime.datetime.now()
         seq = ds.getSequence(alpha)
 
@@ -1153,7 +1165,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         tac_ev = datetime.datetime.now()
         # log_write(fo_log, "[TIME] Cycle extraction event %s done in %s\n" % (
         # ev, tac_ev-tic_ev))
-        results["TIME run"].append(str(tac_ev-tic_ev))
+        results["TIME run"].append(str(tac_ev - tic_ev))
         tic_ev = tac_ev
 
     if PICKLE == -1 and fn_basis is not None and fn_basis != "-":
@@ -1174,7 +1186,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     tac_init = datetime.datetime.now()
     # log_write(fo_log, "[TIME] simple cycle mining done in %s\n" %
     #          (tac_init-tic))
-    results["[TIME] simple cycle"] = str(tac_init-tic)
+    results["[TIME] simple cycle"] = str(tac_init - tic)
 
     #############
     tic_sel = datetime.datetime.now()
@@ -1257,10 +1269,10 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         # log_write(fo_log, "[TIME] Combination round %d done in %s (V=%s, H=%s, C=%s)\n" % (
         #     roundi, tac_round-tic_round, tac_rV-tic_round, tac_rH-tac_rV, tac_round-tac_rH))
         results["[TIME] Combination round"].append(roundi)
-        results["[DT] Combination round"].append(str(tac_round-tic_round))
-        results["[DT] V"].append(str(tac_rV-tic_round))
-        results["[DT] H"].append(str(tac_rH-tac_rV))
-        results["[DT] C"].append(str(tac_round-tac_rH))
+        results["[DT] Combination round"].append(str(tac_round - tic_round))
+        results["[DT] V"].append(str(tac_rV - tic_round))
+        results["[DT] H"].append(str(tac_rH - tac_rV))
+        results["[DT] C"].append(str(tac_round - tac_rH))
 
         simple_selection = {}
         simple_selection_side = []
@@ -1318,7 +1330,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     tac_comb = datetime.datetime.now()
     # log_write(fo_log, "[TIME] Combinations done in %s\n" % (tac_comb-tac_init))
 
-    results["[TIME] Combinations"] = str(tac_comb-tac_init)
+    results["[TIME] Combinations"] = str(tac_comb - tac_init)
 
     #############
     cdict = cpool.getCandidates()
@@ -1336,16 +1348,16 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     # log_write(fo_log, "[TIME] Final selection done in %s at %s\n" % (
     #     tac-tac_comb, tac))
 
-    results["Final DT selection"] = str(tac-tac_comb)
+    results["Final DT selection"] = str(tac - tac_comb)
     results["Final TIME selection"] = str(tac)
     #############
     # log_write(fo_log, "[TIME] Mining done in %s (-inter=%s)\n" %
     #           (tac-tic, (tac-tic)-dT_sel))
     # log_write(fo_log, "[TIME] End --- %s\n" % tac)
 
-    results["Final Mining DT"] = str(tac-tac_comb)
-    results["Final Mining inter DT"] = str((tac-tic)-dT_sel)
-    results["Final DT"] = str((tac-tic)-dT_sel)
+    results["Final Mining DT"] = str(tac - tac_comb)
+    results["Final Mining inter DT"] = str((tac - tic) - dT_sel)
+    results["Final DT"] = str((tac - tic) - dT_sel)
 
     # print("\n\n\n\n results", json.dumps(results))
 
@@ -1362,9 +1374,9 @@ def writePCout(pc, ds, fn_basis, suff, fo_log=None):
     if fn_basis == "-":
         fo_patts = sys.stdout
     else:
-        fo_patts = open(fn_basis+("_patts%s.txt" % suff), "w")
+        fo_patts = open(fn_basis + ("_patts%s.txt" % suff), "w")
     str_stats, str_pl = pc.strDetailed(ds)
-    fo_patts.write(str_stats+str_pl)
+    fo_patts.write(str_stats + str_pl)
     if fn_basis != "-":
         if fo_log is not None:
             log_write(fo_log, str_stats)
@@ -1377,9 +1389,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Periodic pattern miner")
     series_options_str = " among " + \
-        ", ".join(series_groups) + " and " + ", ".join(series_params.keys())
+                         ", ".join(series_groups) + " and " + ", ".join(series_params.keys())
     parser.add_argument("series", type=str, nargs="*", help="series of experiments to replicate," +
-                        series_options_str, default=argparse.SUPPRESS)
+                                                            series_options_str, default=argparse.SUPPRESS)
 
     # mining
     parser.add_argument("-p", "--max_p", type=int,
@@ -1393,14 +1405,18 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input_file", type=str,
                         help="file containing the input data", default=argparse.SUPPRESS)
     parser.add_argument("-e", "--event", type=str, dest="events", action="append",
-                        help="regex pattern to filter and group events, patterns involving all of '%s' will be used to group events, else to filter them" % group_syms, default=argparse.SUPPRESS)
+                        help="regex pattern to filter and group events, patterns involving all of '%s' will be used "
+                             "to group events, else to filter them" % group_syms,
+                        default=argparse.SUPPRESS)
     parser.add_argument("-s", "--separator", type=str, dest="SEP",
                         help="field separator used in the input file", default=argparse.SUPPRESS)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--absolute", action="store_true", dest="timestamp",
-                       help="event occurrences come with integer timestamps, i.e. use an absolute time reference", default=argparse.SUPPRESS)
+                       help="event occurrences come with integer timestamps, i.e. use an absolute time reference",
+                       default=argparse.SUPPRESS)
     group.add_argument("--relative", action="store_false", dest="timestamp",
-                       help="event occurrences are not timestamped, i.e. no time reference only relative position", default=argparse.SUPPRESS)
+                       help="event occurrences are not timestamped, i.e. no time reference only relative position",
+                       default=argparse.SUPPRESS)
     group.add_argument("--timestamps", action="store_true", dest="timestamp",
                        help=argparse.SUPPRESS, default=argparse.SUPPRESS)
     group.add_argument("--no-timestamps", action="store_false",
@@ -1414,14 +1430,18 @@ if __name__ == "__main__":
     # sacha format
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-I", "--instant", action="store_true", dest="I",
-                       help="Use suffix I for instantaneous events, instead of S--E pair (sacha only)", default=argparse.SUPPRESS)
+                       help="Use suffix I for instantaneous events, instead of S--E pair (sacha only)",
+                       default=argparse.SUPPRESS)
     # group.add_argument("--instant", action="store_true", dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
     group.add_argument("--no-instant", action="store_false",
                        dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
     parser.add_argument("-G", "--granularity", type=int,
-                        help="Time granularity, used as divisor for the original times (sacha only)", default=argparse.SUPPRESS)
+                        help="Time granularity, used as divisor for the original times (sacha only)",
+                        default=argparse.SUPPRESS)
     parser.add_argument("-E", "--drop-event", type=str, dest="drop_event_codes", action="append",
-                        help="Filter events using hierachical codes, events of the corresponding types and sub-types will be dropped", default=argparse.SUPPRESS)
+                        help="Filter events using hierachical codes, events of the corresponding types and sub-types "
+                             "will be dropped",
+                        default=argparse.SUPPRESS)
 
     # output
     parser.add_argument("-x", "--output_folder", type=str,
@@ -1438,13 +1458,14 @@ if __name__ == "__main__":
     # print(pargs.get("series", []))
     if len(pargs.get("series", [])) > 0:
         lseries = pargs["series"]
-        # if lseries[0] not in series_params and lseries[0] not in ["ALL", "OTHER", "UBIQ_ABS", "UBIQ_REL", "TEST", "SACHA"]:
+        # if lseries[0] not in series_params and lseries[0] not in ["ALL", "OTHER", "UBIQ_ABS", "UBIQ_REL", "TEST",
+        # "SACHA"]:
         #     run_id = lseries.pop(0)
         if len(lseries) > 0 and lseries[-1] == "ALL":
             lseries = series_params.keys()
         if len(lseries) > 0 and lseries[-1] == "OTHER":
             lseries = [s for s in series_params.keys() if not (
-                re.match("UbiqLog", s) or re.match("sacha_", s))]
+                    re.match("UbiqLog", s) or re.match("sacha_", s))]
         if len(lseries) > 0 and re.match("UBIQ_ABS", lseries[-1]):
             groupped = lseries[-1]
             lseries = [s for s in series_params.keys(
@@ -1462,6 +1483,7 @@ if __name__ == "__main__":
     elif pargs.get("input_file") is not None:
         lseries = [None]
     import tqdm
+
     run_id = pargs.get("run_id", "")
     if run_id == "_":
         run_id = datetime.datetime.now().strftime("%y%m%d%H%M%S")
@@ -1483,7 +1505,7 @@ if __name__ == "__main__":
                 xps_rep = params.get("output_folder", XPS_REP)
                 if "filename" not in params:
                     params["filename"] = params.get(
-                        "input_folder", DATA_REP)+params.get("input_file")
+                        "input_folder", DATA_REP) + params.get("input_file")
                 if "output_basename" in params:
                     basename = params["output_basename"] + "_" + series
                 else:
@@ -1493,10 +1515,11 @@ if __name__ == "__main__":
                 input_name = params.get("input_file")
                 xps_rep = params.get("output_folder", "")
                 params["filename"] = params.get(
-                    "input_folder", "")+params.get("input_file")
+                    "input_folder", "") + params.get("input_file")
                 basename = params.get("output_basename", "xps")
 
-            if (series is not None and re.match("sacha", series)) or re.search("[^a-zA-Z0-9]sacha[^a-zA-Z0-9]", "_"+params["filename"]+"_"):
+            if (series is not None and re.match("sacha", series)) or re.search("[^a-zA-Z0-9]sacha[^a-zA-Z0-9]",
+                                                                               "_" + params["filename"] + "_"):
                 print("params", params)
                 seqs = readSequenceSacha(params)
             else:

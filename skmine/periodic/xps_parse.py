@@ -1,9 +1,10 @@
-import re
 import datetime
 import glob
-import sys
-import numpy
 import pdb
+import re
+import sys
+
+import numpy
 
 MIN_OCC = 10
 
@@ -110,7 +111,8 @@ def parse_patts_stats(fn):
 
     match_patts = ["Code length patterns \((?P<nb_patts>[0-9]*)\): (?P<patt_cl>[0-9\.]*)",
                    "Code length residuals \((?P<nb_residuals>[0-9]*)\): (?P<residuals_cl>[0-9\.]*)",
-                   "\-\- Total code length = (?P<compressed_cl>[0-9\.]*) \((?P<prc_cl>[0-9\.]*)% of (?P<original_cl>[0-9\.]*)\)"]
+                   "\-\- Total code length = (?P<compressed_cl>[0-9\.]*) \((?P<prc_cl>[0-9\.]*)% of (?P<original_cl>["
+                   "0-9\.]*)\)"]
     dt = {}
     patts_dt = []
     with open(fn) as fp:
@@ -124,14 +126,14 @@ def parse_patts_stats(fn):
                     if r > rmax:
                         rmax = r
                 patts_dt.append((rmax, int(tmp.group("cov_occs")),
-                                int(tmp.group("cov_occs_dup"))))
+                                 int(tmp.group("cov_occs_dup"))))
             else:
                 tmp = re.match(" \-\-\-\- COLLECTION STATS \(Total\=(?P<nb_total>[0-9]*) (?P<nbs>[a-z0-9\_\= ]*)\)",
                                line)
                 if tmp is not None:
                     dt["total"] = tmp.group("nb_total")
                     dt.update(dict([tt.split("=")[:2]
-                              for tt in tmp.group("nbs").split(" ")]))
+                                    for tt in tmp.group("nbs").split(" ")]))
                 else:
                     for match_patt in match_patts:
                         tmp = re.match(match_patt, line)
@@ -140,10 +142,10 @@ def parse_patts_stats(fn):
     dt = dict([(k, float(v)) for (k, v) in dt.items()])
     X = numpy.array(patts_dt)
     dt.update(dict(zip(*[["%s_%s" % (c, ">3")
-              for c in ["r", "nbO", "nbOdup"]], numpy.sum(X > 3, axis=0)])))
+                          for c in ["r", "nbO", "nbOdup"]], numpy.sum(X > 3, axis=0)])))
     for pref, nfun in [("median", numpy.median), ("mean", numpy.mean), ("max", numpy.max)]:
         dt.update(dict(zip(*[["%s_%s" % (c, pref)
-                  for c in ["r", "nbO", "nbOdup"]], nfun(X, axis=0)])))
+                              for c in ["r", "nbO", "nbOdup"]], nfun(X, axis=0)])))
     return dt
 
 
@@ -151,7 +153,7 @@ def format_stats_head(add_stats=[], mks=[]):
     entries = ["basis"]
     for (short, imain, isec) in INTERMS:
         entries.extend(["%s_%s" % (short, main_stat)
-                       for main_stat in MAIN_STATS])
+                        for main_stat in MAIN_STATS])
         entries.extend(["%s_%s" % (short, add_stat) for add_stat in add_stats])
         entries.extend(["%s_%s" % (short, sec_stat) for sec_stat in SEC_STATS])
     entries.extend(mks)
@@ -163,9 +165,9 @@ def format_stats_row(basis, times, selects, more_stats, inter_dt, add_stats=[]):
     entries = []
     for (short, imain, isec) in INTERMS:
         entries.extend([inter_dt[imain].get(main_stat, 0)
-                       for main_stat in MAIN_STATS])
+                        for main_stat in MAIN_STATS])
         entries.extend([inter_dt[imain].get(add_stat, -1)
-                       for add_stat in add_stats])
+                        for add_stat in add_stats])
         entries.extend([selects[isec][sec_stat] for sec_stat in SEC_STATS])
     entries.extend([more_stats[mk] for mk in sorted(more_stats.keys())])
     entries.extend([times[main_time] for (short, main_time) in MAIN_TIMES])
@@ -190,10 +192,10 @@ for fn in sorted(glob.glob(XPS_REP + XPS_SUB + LOG_MATCH)):
 
         if add_stats is None:
             add_stats = sorted(set(list(inter_dt.values())[
-                               0].keys()).difference(MAIN_STATS))
+                                       0].keys()).difference(MAIN_STATS))
             mks = sorted(more_stats.keys())
             fo.write(format_stats_head(add_stats, mks))
 
         fo.write(format_stats_row(basis, times, selects,
-                 more_stats, inter_dt, add_stats))
+                                  more_stats, inter_dt, add_stats))
 fo.close()

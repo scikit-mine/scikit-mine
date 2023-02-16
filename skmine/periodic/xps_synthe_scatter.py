@@ -1,19 +1,18 @@
-import numpy
-import re
-import sys
-import datetime
-import os
 import glob
+import os
+import re
+
 import matplotlib.pyplot as plt
-import pdb
+import numpy
+
 FIELDS = ["level", "noise_lvl", "noise_dens"]
 FIELDS_ORD = ["cl_res", "cl_H", "prc_cl_H", "cl_F", "prc_cl_F"] + \
-    ["inner_p"]+FIELDS+["nb_miss_p", "max_miss_pv"]
+             ["inner_p"] + FIELDS + ["nb_miss_p", "max_miss_pv"]
 FIELDS_MAP = dict([(v, k) for (k, v) in enumerate(FIELDS_ORD)])
 
 FIELDS_COMB = ['t0_low', 't0_up', 'k_low', 'k_up', "seriesL", "seriesX"]
 FIELDS_ORD_COMB = ["cl_res", "cl_H", "prc_cl_H", "cl_F",
-                   "prc_cl_F"]+FIELDS_COMB+["nb_miss_p", "max_miss_pv"]
+                   "prc_cl_F"] + FIELDS_COMB + ["nb_miss_p", "max_miss_pv"]
 FIELDS_MAP_COMB = dict([(v, k) for (k, v) in enumerate(FIELDS_ORD_COMB)])
 
 colors_all = {0.: "#332288", .1: "#88CCEE", .2: "#44AA99",
@@ -33,7 +32,7 @@ def get_params_vs(collected_results, series):
         inner_p = 2
     else:
         inner_p = 3
-    return [inner_p]+[collected_results[series]["params"].get(kk, -1) for kk in FIELDS]
+    return [inner_p] + [collected_results[series]["params"].get(kk, -1) for kk in FIELDS]
 
 
 def collect_results(xps_rep, series_basis, mtch):
@@ -86,7 +85,6 @@ def collect_results(xps_rep, series_basis, mtch):
 
 
 def make_plots(collected_results, series_basis):
-
     Blbls = {"a": "a", "a": "a", 'a [d=4] b': "a $-$4$-$ b",
              'a [d=1] c [d=2] d': "a $-$1$-$ c $-$2$-$ d"}
     blocks = [("a", 5), ("a", 10), ('a [d=4] b', 10),
@@ -94,7 +92,7 @@ def make_plots(collected_results, series_basis):
 
     ks = sorted(collected_results.keys())
     mat_dt = numpy.array([collected_results[series]["cls"] +
-                         get_params_vs(collected_results, series)+[0, 0] for series in ks])
+                          get_params_vs(collected_results, series) + [0, 0] for series in ks])
     for i, k in enumerate(ks):
         ps_F, ps_H = (collected_results[k]["ps_F"],
                       collected_results[k]["ps_H"])
@@ -102,7 +100,7 @@ def make_plots(collected_results, series_basis):
         mat_dt[i, FIELDS_MAP["nb_miss_p"]] = len(ps_diff)
         collected_results[k]["ps_diff"] = ps_diff
         if len(ps_diff) > 0:
-            tt = [numpy.min(numpy.abs([pH-p for pH in ps_H])) for p in ps_diff]
+            tt = [numpy.min(numpy.abs([pH - p for pH in ps_H])) for p in ps_diff]
             mat_dt[i, FIELDS_MAP["max_miss_pv"]] = numpy.max(tt)
 
     levels = [1, 2, 3]
@@ -119,7 +117,8 @@ def make_plots(collected_results, series_basis):
             ni += 1
             rids = ((mat_dt[:, FIELDS_MAP["level"]] == level) &
                     (mat_dt[:, FIELDS_MAP["inner_p"]] == inner))
-            (xmin, xmax) = numpy.min(mat_dt[(mat_dt[:, FIELDS_MAP["inner_p"]] == inner), FIELDS_MAP["prc_cl_H"]]), numpy.max(
+            (xmin, xmax) = numpy.min(
+                mat_dt[(mat_dt[:, FIELDS_MAP["inner_p"]] == inner), FIELDS_MAP["prc_cl_H"]]), numpy.max(
                 mat_dt[(mat_dt[:, FIELDS_MAP["inner_p"]] == inner), FIELDS_MAP["prc_cl_H"]])
 
             grid[li, ii].plot([0, 100], [0, 100], linestyle=(
@@ -136,10 +135,11 @@ def make_plots(collected_results, series_basis):
                 for nl in numpy.unique(mat_dt[rrs, FIELDS_MAP["noise_lvl"]]):
                     iids = rrs & (mat_dt[:, FIELDS_MAP["noise_lvl"]] == nl)
                     grid[li, ii].plot(mat_dt[iids, FIELDS_MAP["prc_cl_H"]], mat_dt[iids, FIELDS_MAP["prc_cl_F"]],
-                                      "o",  mec=colors_all[nd], color=colors_all[nd], markersize=3+1*nl, alpha=0.8, zorder=10)
+                                      "o", mec=colors_all[nd], color=colors_all[nd], markersize=3 + 1 * nl, alpha=0.8,
+                                      zorder=10)
 
-            grid[li, ii].set_xlim([numpy.floor(xmin)-.9, numpy.ceil(xmax)+.9])
-            grid[li, ii].set_ylim([numpy.floor(ymin)-.9, numpy.ceil(ymax)+.9])
+            grid[li, ii].set_xlim([numpy.floor(xmin) - .9, numpy.ceil(xmax) + .9])
+            grid[li, ii].set_ylim([numpy.floor(ymin) - .9, numpy.ceil(ymax) + .9])
             tt = grid[li, ii].get_xticks()
             if len(tt) > 6:
                 grid[li, ii].set_xticks(tt[1:-1:2])
@@ -166,10 +166,10 @@ def make_plots(collected_results, series_basis):
     lls = [plt.plot(-1, -1, color=colors_all[kk], linewidth=10)[0]
            for kk in kks]
     labels = ["%.1f" % kk for kk in kks]
-    labels[0] = "shift noise density:     "+labels[0]
+    labels[0] = "shift noise density:     " + labels[0]
 
-    bb = (fig.subplotpars.left, fig.subplotpars.bottom-0.18,
-          fig.subplotpars.right-fig.subplotpars.left, .1)
+    bb = (fig.subplotpars.left, fig.subplotpars.bottom - 0.18,
+          fig.subplotpars.right - fig.subplotpars.left, .1)
     grid[0, 0].legend(lls, labels, bbox_to_anchor=bb, mode="expand", loc="lower left", frameon=False, markerfirst=False,
                       borderaxespad=0., ncol=4, bbox_transform=fig.transFigure)
 
@@ -182,7 +182,7 @@ def make_combplots(collected_results, series_basis):
 
     ks = sorted(collected_results.keys())
     mat_dt = numpy.array([collected_results[series]["cls"] +
-                         get_params_vs(collected_results, series)+[0, 0] for series in ks])
+                          get_params_vs(collected_results, series) + [0, 0] for series in ks])
     for i, k in enumerate(ks):
         ps_F, ps_H = (collected_results[k]["ps_F"],
                       collected_results[k]["ps_H"])
@@ -190,7 +190,7 @@ def make_combplots(collected_results, series_basis):
         mat_dt[i, FIELDS_MAP_COMB["nb_miss_p"]] = len(ps_diff)
         collected_results[k]["ps_diff"] = ps_diff
         if len(ps_diff) > 0:
-            tt = [numpy.min(numpy.abs([pH-p for pH in ps_H])) for p in ps_diff]
+            tt = [numpy.min(numpy.abs([pH - p for pH in ps_H])) for p in ps_diff]
             mat_dt[i, FIELDS_MAP_COMB["max_miss_pv"]] = numpy.max(tt)
 
     seriesLs = [ord(cc) for cc in ["S", "V", "W", "U"]]
@@ -220,10 +220,10 @@ def make_combplots(collected_results, series_basis):
             for nd in numpy.unique(mat_dt[rids, FIELDS_MAP_COMB["t0_low"]]):
                 iids = rids & (mat_dt[:, FIELDS_MAP_COMB["t0_low"]] == nd)
                 grid[li].plot(mat_dt[iids, FIELDS_MAP_COMB["prc_cl_H"]], mat_dt[iids, FIELDS_MAP_COMB["prc_cl_F"]],
-                              "o",  mec=colors_comb[nd], color=colors_comb[nd], markersize=4, alpha=0.8, zorder=10)
+                              "o", mec=colors_comb[nd], color=colors_comb[nd], markersize=4, alpha=0.8, zorder=10)
 
-            grid[li].set_xlim([numpy.floor(xmin)-.9, numpy.ceil(xmax)+.9])
-            grid[li].set_ylim([numpy.floor(ymin)-.9, numpy.ceil(ymax)+.9])
+            grid[li].set_xlim([numpy.floor(xmin) - .9, numpy.ceil(xmax) + .9])
+            grid[li].set_ylim([numpy.floor(ymin) - .9, numpy.ceil(ymax) + .9])
             tt = grid[li].get_xticks()
             if len(tt) > 6:
                 grid[li].set_xticks(tt[1:-1:2])
@@ -246,8 +246,8 @@ def make_combplots(collected_results, series_basis):
            for kk in kks]
     labels = ["no overlap", "overlap"]
 
-    bb = (fig.subplotpars.left, fig.subplotpars.bottom-0.23,
-          fig.subplotpars.right-fig.subplotpars.left, .1)
+    bb = (fig.subplotpars.left, fig.subplotpars.bottom - 0.23,
+          fig.subplotpars.right - fig.subplotpars.left, .1)
     grid[0].legend(lls, labels, bbox_to_anchor=bb, mode="expand", loc="lower left", frameon=False, markerfirst=False,
                    borderaxespad=0., ncol=2, bbox_transform=fig.transFigure)
     plt.savefig("%s%s_scatter.pdf" % (PLT_REP, series_basis))
@@ -255,8 +255,8 @@ def make_combplots(collected_results, series_basis):
 
 if __name__ == "__main__":
     BASIS_REP = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    XPS_REP = BASIS_REP+"/xps/synthe/"
-    PLT_REP = BASIS_REP+"/xps/"
+    XPS_REP = BASIS_REP + "/xps/synthe/"
+    PLT_REP = BASIS_REP + "/xps/"
 
     for series_basis in ["synthe_S", "synthe_V", "synthe_W", "synthe_U"]:
         xps_rep = XPS_REP  # + "summaries/"

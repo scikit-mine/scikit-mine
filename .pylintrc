@@ -4,7 +4,6 @@ ignore-patterns=test.*?.py,docs/
 [MESSAGES CONTROL]
 disable=invalid-name,
         too-few-public-methods,
-        fixme,
         arguments-differ,
         cell-var-from-loop,
         multiple-statements,
@@ -13,8 +12,10 @@ disable=invalid-name,
         no-member,
         attribute-defined-outside-init,
         too-many-locals,
-        bad-continuation,
         unused-argument,
         unsubscriptable-object,
         dangerous-default-value,
         protected-access,
+
+[FORMAT]
+max-line-length=120

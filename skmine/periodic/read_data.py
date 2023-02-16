@@ -1,5 +1,6 @@
-import numpy
 import re
+
+import numpy
 
 group_patt = "GROUP_%d"
 group_syms = "^*$"
@@ -53,7 +54,7 @@ def readSequenceSacha(parameters):
 
     if "events" in parameters:
         sequences = dict([(pi, [])
-                         for pi, p in enumerate(parameters["events"])])
+                          for pi, p in enumerate(parameters["events"])])
     else:
         sequences = {}
 
@@ -77,14 +78,14 @@ def readSequenceSacha(parameters):
                                 if kk not in sequences:
                                     sequences[kk] = []
                                 sequences[kk].append(
-                                    int(int(t_start)/granularity))
+                                    int(int(t_start) / granularity))
                             else:
                                 for (suff, tt) in [("S", t_start), ("E", t_end)]:
                                     kk = "%s_%s" % (k, suff)
                                     if kk not in sequences:
                                         sequences[kk] = []
                                     sequences[kk].append(
-                                        int(int(tt)/granularity))
+                                        int(int(tt) / granularity))
                         else:
                             if k not in sequences:
                                 sequences[k] = []

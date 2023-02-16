@@ -1,9 +1,9 @@
-import numpy
-import re
-import sys
 import copy
 import itertools
 import pdb
+import re
+
+import numpy
 
 # OPT_TO = False
 OPT_TO = True
@@ -37,16 +37,16 @@ def computePeriod(occs, sort=False):
 def computeE(occs, p0, sort=False):
     if sort:
         occs = sorted(occs)
-    return [(occs[i]-occs[i-1])-p0 for i in range(1, len(occs))]
+    return [(occs[i] - occs[i - 1]) - p0 for i in range(1, len(occs))]
 
 
 def cost_triple(data_details, alpha, dp, deltaE):
-    if (data_details["deltaT"]-deltaE+1)/2.-dp < 0:
+    if (data_details["deltaT"] - deltaE + 1) / 2. - dp < 0:
         print("!!!---- Problem delta", data_details["deltaT"], deltaE, dp)
         pdb.set_trace()
 
     if alpha in data_details["nbOccs"]:
-        cl_alpha_and_r = -numpy.log2(data_details["adjFreqs"][alpha])+data_details.get(
+        cl_alpha_and_r = -numpy.log2(data_details["adjFreqs"][alpha]) + data_details.get(
             "blck_delim", 0) + numpy.log2(data_details["nbOccs"][alpha])
     else:
         # cl_alpha_and_r = -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in alpha])+
@@ -55,10 +55,11 @@ def cost_triple(data_details, alpha, dp, deltaE):
             [data_details["nbOccs"].get(a, data_details["nbOccs"][-1]) for a in alpha]))
 
     if OPT_TO:
-        cl_t0 = numpy.log2(data_details["deltaT"]-deltaE-2.*dp+1)
+        cl_t0 = numpy.log2(data_details["deltaT"] - deltaE - 2. * dp + 1)
     else:
-        cl_t0 = numpy.log2(data_details["deltaT"]+1)
-    return cl_alpha_and_r + cl_t0 + numpy.log2(numpy.floor((data_details["deltaT"]-deltaE)/2.)) + 4 + numpy.abs(deltaE)
+        cl_t0 = numpy.log2(data_details["deltaT"] + 1)
+    return cl_alpha_and_r + cl_t0 + numpy.log2(numpy.floor((data_details["deltaT"] - deltaE) / 2.)) + 4 + numpy.abs(
+        deltaE)
 
 
 def cost_one(data_details, alpha):
@@ -68,12 +69,12 @@ def cost_one(data_details, alpha):
         # -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in alpha])
         cl_alpha = 0
 
-    return cl_alpha+numpy.log2(data_details["deltaT"]+1)
+    return cl_alpha + numpy.log2(data_details["deltaT"] + 1)
 
 
 def computeLengthEOccs(occs, cp):
     # -1
-    return numpy.sum([2+numpy.abs((occs[i] - occs[i-1])-cp) for i in range(1, len(occs))])
+    return numpy.sum([2 + numpy.abs((occs[i] - occs[i - 1]) - cp) for i in range(1, len(occs))])
 
 
 def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
@@ -86,41 +87,43 @@ def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
         dE = 0
     else:
         E = computeLengthEOccs(cycle["occs"], cp)
-        dE = numpy.sum([(cycle["occs"][i] - cycle["occs"][i-1]) -
-                       cp for i in range(1, len(cycle["occs"]))])
+        dE = numpy.sum([(cycle["occs"][i] - cycle["occs"][i - 1]) -
+                        cp for i in range(1, len(cycle["occs"]))])
 
     if cycle["alpha"] in data_details["nbOccs"]:
         alpha = -numpy.log2(data_details["adjFreqs"]
-                            [cycle["alpha"]])+data_details.get("blck_delim", 0)
+                            [cycle["alpha"]]) + data_details.get("blck_delim", 0)
         r = numpy.log2(data_details["nbOccs"][cycle["alpha"]])
     else:
-        # alpha = -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in cycle["alpha"]])+data_details.get("blck_delim", 0)
+        # alpha = -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in cycle[
+        # "alpha"]])+data_details.get("blck_delim", 0)
         alpha = data_details.get("blck_delim", 0)
         r = numpy.log2(numpy.min([data_details["nbOccs"].get(
             a, data_details["nbOccs"][-1]) for a in cycle["alpha"]]))
 
     p = numpy.log2(numpy.floor(
-        (data_details["deltaT"]-dE)/(len(cycle["occs"])-1.)))
+        (data_details["deltaT"] - dE) / (len(cycle["occs"]) - 1.)))
     if OPT_TO:
-        if data_details["deltaT"]-dE-cp*(len(cycle["occs"])-1)+1 <= 0:
+        if data_details["deltaT"] - dE - cp * (len(cycle["occs"]) - 1) + 1 <= 0:
             # to compute noErr cost:
             to = 0
         else:
             to = numpy.log2(data_details["deltaT"] -
-                            dE-cp*(len(cycle["occs"])-1)+1)
+                            dE - cp * (len(cycle["occs"]) - 1) + 1)
     else:
-        to = numpy.log2(data_details["deltaT"]+1)
+        to = numpy.log2(data_details["deltaT"] + 1)
 
     if print_dets:
         print("cp=%d r=%d\talpha=%f\tr=%f\tp=%f\tto=%f\tE=%f" %
               (cp, len(cycle["occs"]), alpha, r, p, to, E))
-    return alpha+r+p+to+E
+    return alpha + r + p + to + E
 
 
 def computeLengthResidual(data_details, residual):
-    # print("\n\t\tresiduals %d %s=%f" % (len(residual["occs"]), residual["alpha"], len(residual["occs"])*(numpy.log2(nbOccs[residual["alpha"]]/nbOccs[-1]) + numpy.log2(deltaT))),)
+    # print("\n\t\tresiduals %d %s=%f" % (len(residual["occs"]), residual["alpha"], len(residual["occs"])*(
+    # numpy.log2(nbOccs[residual["alpha"]]/nbOccs[-1]) + numpy.log2(deltaT))),)
     residual["cp"] = -1
-    return len(residual["occs"])*cost_one(data_details, residual["alpha"])
+    return len(residual["occs"]) * cost_one(data_details, residual["alpha"])
 
 
 def computeLengthRC(data_details, rcs):
@@ -141,45 +144,45 @@ def makeOccsAndFreqs(tmpOccs):
 
 def makeOccsAndFreqsMedian(tmpOccs):
     nbOccs = dict(tmpOccs.items())
-    nbOccs[-1] = numpy.sum(list(nbOccs.values()))*1.
+    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.
 
     symOccs = dict(tmpOccs.items())
     med = numpy.median(list(tmpOccs.values()))
     symOccs["("] = med
     symOccs[")"] = med
-    symSum = numpy.sum(list(symOccs.values()))*1.
+    symSum = numpy.sum(list(symOccs.values())) * 1.
     adjFreqs = {}
     orgFreqs = {}
     for k in symOccs.keys():
         if OPT_EVFR:
-            adjFreqs[k] = symOccs[k]/symSum
-            orgFreqs[k] = nbOccs.get(k, 0.)/nbOccs[-1]
+            adjFreqs[k] = symOccs[k] / symSum
+            orgFreqs[k] = nbOccs.get(k, 0.) / nbOccs[-1]
         else:
-            adjFreqs[k] = 1./len(symOccs)
-            orgFreqs[k] = 1./len(tmpOccs)
+            adjFreqs[k] = 1. / len(symOccs)
+            orgFreqs[k] = 1. / len(tmpOccs)
     # print("ADJ FRQ:",  adjFreqs)
-    return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("])+numpy.log2(adjFreqs[")"]))
+    return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("]) + numpy.log2(adjFreqs[")"]))
 
 
 def makeOccsAndFreqsThird(tmpOccs):
     nbOccs = dict(tmpOccs.items())
-    nbOccs[-1] = numpy.sum(list(nbOccs.values()))*1.
+    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.
 
     if OPT_EVFR:
-        adjFreqs = {"(": 1./3, ")": 1./3}
+        adjFreqs = {"(": 1. / 3, ")": 1. / 3}
     else:
-        adjFreqs = {"(": 1./(len(tmpOccs)+2), ")": 1./(len(tmpOccs)+2)}
+        adjFreqs = {"(": 1. / (len(tmpOccs) + 2), ")": 1. / (len(tmpOccs) + 2)}
     orgFreqs = {}
     for k in nbOccs.keys():
         if k != -1:
             if OPT_EVFR:
-                adjFreqs[k] = nbOccs[k]/(3*nbOccs[-1])
-                orgFreqs[k] = nbOccs[k]/nbOccs[-1]
+                adjFreqs[k] = nbOccs[k] / (3 * nbOccs[-1])
+                orgFreqs[k] = nbOccs[k] / nbOccs[-1]
             else:
-                adjFreqs[k] = 1./(len(tmpOccs)+2)
-                orgFreqs[k] = 1./len(tmpOccs)
+                adjFreqs[k] = 1. / (len(tmpOccs) + 2)
+                orgFreqs[k] = 1. / len(tmpOccs)
     # print("ADJ FRQ:",  adjFreqs)
-    return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("])+numpy.log2(adjFreqs[")"]))
+    return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("]) + numpy.log2(adjFreqs[")"]))
 
 
 # the keys are a SUP_SEP separated list of SUB_SEP separated (child_id, rep_id) pairs
@@ -196,11 +199,12 @@ def key_to_l(key):
 
 
 def l_to_key(l):
-    return SUP_SEP.join([("%d"+SUB_SEP+"%d") % tuple(pf) for pf in l])
+    return SUP_SEP.join([("%d" + SUB_SEP + "%d") % tuple(pf) for pf in l])
 
 
 def l_to_br(l):
-    return "B"+",".join(["%d" % (int(pf[0])+1) for pf in l])+"<"+",".join(["%d" % (int(pf[1])+1) for pf in l])+">"
+    return "B" + ",".join(["%d" % (int(pf[0]) + 1) for pf in l]) + "<" + ",".join(
+        ["%d" % (int(pf[1]) + 1) for pf in l]) + ">"
 
 
 def key_to_br(key):
@@ -255,9 +259,13 @@ class DataSequence(object):
             ss = "-- Empty Data Sequence"
         else:
             ss = "-- Data Sequence |A|=%d |O|=%d dT=%d (%d to %d)" % (len(
-                self.data_details["nbOccs"])-1, self.data_details["nbOccs"][-1], self.data_details["deltaT"], self.data_details["t_start"], self.data_details["t_end"])
-            ss += "\n\t"+"\n\t".join(["%s [%d] (|O|=%d f=%.3f dT=%d)" % (self.list_ev[k], k, self.data_details["nbOccs"][k], self.data_details["orgFreqs"]
-                                     [k], self.evEnds[k]-self.evStarts[k]) for k in sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
+                self.data_details["nbOccs"]) - 1, self.data_details["nbOccs"][-1], self.data_details["deltaT"],
+                                                                      self.data_details["t_start"],
+                                                                      self.data_details["t_end"])
+            ss += "\n\t" + "\n\t".join(["%s [%d] (|O|=%d f=%.3f dT=%d)" % (
+                self.list_ev[k], k, self.data_details["nbOccs"][k], self.data_details["orgFreqs"]
+                [k], self.evEnds[k] - self.evStarts[k]) for k in
+                                        sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
         return ss
 
     def getEvents(self):
@@ -271,7 +279,7 @@ class DataSequence(object):
 
     def getSequenceStr(self, sep_te=" ", sep_o="\n", ev=None):
         if ev is None:
-            return sep_o.join([("%s"+sep_te+"%s") % (t, self.list_ev[e]) for (t, e) in sorted(self.seql)])
+            return sep_o.join([("%s" + sep_te + "%s") % (t, self.list_ev[e]) for (t, e) in sorted(self.seql)])
         else:
             if ev in self.map_ev_num:
                 return sep_o.join(["%s" % p for p in sorted(self.seqd.get(self.map_ev_num[ev], []))])
@@ -293,7 +301,7 @@ class DataSequence(object):
     def codeLengthResiduals(self):
         cl = 0
         for ev, ts in self.seqd.items():
-            cl += len(ts)*cost_one(self.data_details, ev)
+            cl += len(ts) * cost_one(self.data_details, ev)
         return cl
 
 
@@ -310,7 +318,7 @@ class PatternCollection(object):
         nbs = {}
         for (P, t0, E) in self.patterns:
             tstr = P.getTypeStr()
-            nbs[tstr] = nbs.get(tstr, 0)+1
+            nbs[tstr] = nbs.get(tstr, 0) + 1
         return nbs
 
     def setPatterns(self, patterns=[]):
@@ -350,7 +358,7 @@ class PatternCollection(object):
             cl += p.codeLength(t0, E, data_details)
         nbU = self.getNbUncoveredOccsByEv(data_seq)
         for (ev, nb) in nbU.items():
-            cl += nb*cost_one(data_details, ev)
+            cl += nb * cost_one(data_details, ev)
         return cl
 
     def strPatternsTriples(self, data_seq, print_simple=True):
@@ -360,7 +368,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 Estr = " ".join(["%d" % e for e in E])
                 str_out += "%s\t%d\t%s\n" % (p.__str__(map_ev=map_ev,
-                                             leaves_first=True), t0, Estr)
+                                                       leaves_first=True), t0, Estr)
         return str_out
 
     def strPatternListAndCost(self, data_seq, print_simple=True):
@@ -373,8 +381,10 @@ class PatternCollection(object):
             clp = p.codeLength(t0, E, data_details)
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
-                    map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])), p.getTypeStr())
-            # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
+                    map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
+                                                                                           p.getTypeStr())
+            # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(
+            # E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
             # print("sum(|E|)=%d  E=%s" % (numpy.sum(numpy.abs(E)), E))
             # print("Occs:", ocls[pi], len(ocls[pi]), len(set(ocls[pi])))
             cl += clp
@@ -394,7 +404,7 @@ class PatternCollection(object):
         nbR = 0
         for (ev, nb) in nbU.items():
             nbR += nb
-            clR += nb*cost_one(data_details, ev)
+            clR += nb * cost_one(data_details, ev)
 
         out_str += "Code length patterns (%d): %f\n" % (len(self), cl)
         out_str += "Code length residuals (%d): %f\n" % (nbR, clR)
@@ -402,7 +412,7 @@ class PatternCollection(object):
         clRonly = data_seq.codeLengthResiduals()
         if clRonly > 0:
             out_str += "-- Total code length = %f (%f%% of %f)\n" % (
-                cl, 100*cl/clRonly, clRonly)
+                cl, 100 * cl / clRonly, clRonly)
         return out_str, pl_str
 
     def output_pattern_list_and_cost(self, data_seq, print_simple=True):
@@ -418,7 +428,8 @@ class PatternCollection(object):
             clp = p.codeLength(t0, E, data_details)
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
-                    map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])), p.getTypeStr())
+                    map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
+                                                                                           p.getTypeStr())
 
             # print("\n pi, t0, E", pi, t0, E)
             # print("p.pattMinorKey()", p.pattMinorKey())
@@ -467,7 +478,8 @@ class PatternCollection(object):
 
             patterns_list_of_dict.append(dict_pattern)
 
-            # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
+            # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(
+            # E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
             # print("sum(|E|)=%d  E=%s" % (numpy.sum(numpy.abs(E)), E))
             # print("Occs:", ocls[pi], len(ocls[pi]), len(set(ocls[pi])))
             cl += clp
@@ -493,7 +505,7 @@ class PatternCollection(object):
         nbR = 0
         for (ev, nb) in nbU.items():
             nbR += nb
-            clR += nb*cost_one(data_details, ev)
+            clR += nb * cost_one(data_details, ev)
 
         # out_str += "Code length patterns (%d): %f\n" % (len(self), cl)
         # out_str += "Code length residuals (%d): %f\n" % (nbR, clR)
@@ -507,7 +519,7 @@ class PatternCollection(object):
             # out_str += "-- Total code length = %f (%f%% of %f)\n" % (
             #     cl, 100*cl/clRonly, clRonly)
             global_stat_dict["Code length total"] = cl
-            global_stat_dict["Total compression ratio"] = 100*cl/clRonly
+            global_stat_dict["Total compression ratio"] = 100 * cl / clRonly
             global_stat_dict["Code length residuals only"] = clRonly
 
         return global_stat_dict, patterns_list_of_dict
@@ -528,9 +540,9 @@ class Pattern(object):
         children = []
         tmp = None
         if leaves_first:
-            tmp = re.match(MATCH_IN+MATCH_PR+"$", tree_str)
+            tmp = re.match(MATCH_IN + MATCH_PR + "$", tree_str)
         else:
-            tmp = re.match(MATCH_PR+MATCH_IN+"$", tree_str)
+            tmp = re.match(MATCH_PR + MATCH_IN + "$", tree_str)
 
         if tmp is not None:
             patt = cls.parseTreeStr(tmp.group("inner"), leaves_first)
@@ -569,7 +581,7 @@ class Pattern(object):
         self.nodes = {}
         if event is not None:
             if type(event) is dict:  # actually a tree
-                self.next_id = max(list(event.keys()))+1
+                self.next_id = max(list(event.keys())) + 1
                 self.nodes = event
             else:  # a simple event cycle
                 self.nodes[self.next_id] = {"parent": 0, "event": event}
@@ -592,8 +604,8 @@ class Pattern(object):
 
     def getTranslatedNodes(self, offset):
         nodes = {}
-        map_nids = dict([(kk, offset+ki)
-                        for ki, kk in enumerate(self.nodes.keys())])
+        map_nids = dict([(kk, offset + ki)
+                         for ki, kk in enumerate(self.nodes.keys())])
         nks = list(self.nodes.keys())
         while len(nks) > 0:
             fn = nks.pop()
@@ -607,7 +619,7 @@ class Pattern(object):
                 else:
                     tmp[k] = v
             nodes[tn] = tmp
-        return nodes, offset+len(map_nids), map_nids
+        return nodes, offset + len(map_nids), map_nids
 
     def merge(self, patt, d, anchor=0):
         if not self.isInterm(anchor):
@@ -655,9 +667,9 @@ class Pattern(object):
             occs = []
             occs.append((nid, l_to_key(pref[::-1])))
             for i in range(self.nodes[nid]["r"]):
-                occs.append((nid, l_to_key(pref[::-1]+[(-1, i)])))
+                occs.append((nid, l_to_key(pref[::-1] + [(-1, i)])))
                 for ni, nn in enumerate(self.nodes[nid]["children"]):
-                    occs.extend(self.getAllNidKeys(nn[0], [(ni, i)]+pref))
+                    occs.extend(self.getAllNidKeys(nn[0], [(ni, i)] + pref))
             return occs
         else:
             return [(nid, l_to_key(pref[::-1]))]
@@ -683,7 +695,7 @@ class Pattern(object):
             rightmost_nids = []
             for ni, nn in enumerate(self.nodes[nid]["children"]):
                 rightmost_nids.extend(self.getNidsRightmostLeaves(
-                    nn[0], ni == len(self.nodes[nid]["children"])-1))
+                    nn[0], ni == len(self.nodes[nid]["children"]) - 1))
             return rightmost_nids
         else:
             if rightmost:
@@ -696,10 +708,10 @@ class Pattern(object):
         if self.isInterm(nid):
             occs = []
             for i in range(self.nodes[nid]["r"]):
-                tt = time + i*self.nodes[nid]["p"]
+                tt = time + i * self.nodes[nid]["p"]
                 for ni, nn in enumerate(self.nodes[nid]["children"]):
                     tt += nn[1]
-                    occs.extend(self.getOccsStar(nn[0], [(ni, i)]+pref, tt))
+                    occs.extend(self.getOccsStar(nn[0], [(ni, i)] + pref, tt))
             return occs
         else:
             return [(time, self.nodes[nid]["event"], l_to_key(pref[::-1]))]
@@ -710,18 +722,18 @@ class Pattern(object):
         if self.isInterm(nid):
             occs = []
             for i in range(self.nodes[nid]["r"]):
-                tt = time + i*self.nodes[nid]["p"]
+                tt = time + i * self.nodes[nid]["p"]
                 for ni, nn in enumerate(self.nodes[nid]["children"]):
                     tt += nn[1]
                     occs.extend(self.getTimesNidsRefs(
-                        nn[0], [(ni, i)]+pref, tt))
+                        nn[0], [(ni, i)] + pref, tt))
             return occs
         else:
             return [(time, nid, l_to_key(pref[::-1]))]
 
     def getEDict(self, oStar, E=[]):
-        if len(E) >= len(oStar)-1:
-            Ex = [0]+list(E[:len(oStar)-1])
+        if len(E) >= len(oStar) - 1:
+            Ex = [0] + list(E[:len(oStar) - 1])
         else:
             Ex = [0 for o in oStar]
         oids = [o[-1] for o in oStar]
@@ -731,19 +743,19 @@ class Pattern(object):
         return dict([(oi, self.getCCorr(oi, Ed)) for oi in Ed.keys()])
 
     def getCCorr(self, k, Ed):
-        return numpy.sum([Ed[k]]+[Ed[kk] for kk in self.gatherCorrKeys(k)])
+        return numpy.sum([Ed[k]] + [Ed[kk] for kk in self.gatherCorrKeys(k)])
 
     def getOccs(self, oStar, t0, E=[]):
         if type(E) is dict:
             Ed = E
         else:
             Ed = self.getEDict(oStar, E)
-        return [o[0]+t0+self.getCCorr(o[-1], Ed) for o in oStar]
+        return [o[0] + t0 + self.getCCorr(o[-1], Ed) for o in oStar]
 
     def getCovSeq(self, t0, E=[]):
         oStar = self.getOccsStar()
         Ed = self.getEDict(oStar, E)
-        return [(o[0]+t0+self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
+        return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
 
     def getOccsByRefs(self, oStar, t0, E=[]):
         if type(E) is dict:
@@ -764,7 +776,7 @@ class Pattern(object):
         while len(border) > 0:
             n = border.pop(0)
             for nt in refs_inv[n]:
-                times[nt] = times[n]+refs[nt][-1]+Ed[nt]
+                times[nt] = times[n] + refs[nt][-1] + Ed[nt]
                 if nt in refs_inv:
                     border.append(nt)
         return [times[o[-1]] for o in oStar]
@@ -779,7 +791,7 @@ class Pattern(object):
                 t0 = occs[nt]
                 Ed[nt] = 0
             else:
-                Ed[nt] = (occs[nt]-occs[nf])-d
+                Ed[nt] = (occs[nt] - occs[nf]) - d
         return Ed, t0
 
     def computeEFromO(self, occs):
@@ -802,16 +814,16 @@ class Pattern(object):
                     if ni == 0:  # left-most child
                         if i == 0:  # first rep
                             next_ref = self.getOccsRefs(
-                                nn[0], [(ni, i)]+pref, refs, cnref, offset)
+                                nn[0], [(ni, i)] + pref, refs, cnref, offset)
                             first_occ_cycle = next_ref
                             first_occ_rep = next_ref
                         else:  # not first rep
                             next_ref = self.getOccsRefs(
-                                nn[0], [(ni, i)]+pref, refs, first_occ_rep, self.nodes[nid]["p"])
+                                nn[0], [(ni, i)] + pref, refs, first_occ_rep, self.nodes[nid]["p"])
                             first_occ_rep = next_ref
                     else:  # not left-most child
                         next_ref = self.getOccsRefs(
-                            nn[0], [(ni, i)]+pref, refs, next_ref, nn[1])
+                            nn[0], [(ni, i)] + pref, refs, next_ref, nn[1])
             return first_occ_cycle
         else:
             current_key = l_to_key(pref[::-1])
@@ -832,7 +844,7 @@ class Pattern(object):
         while level < len(key_ints) and level > -1:
             if self.isInterm(current_node) and key_ints[level][0] < len(self.nodes[current_node]["children"]):
                 if key_ints[level][0] == -1:
-                    if level+1 == len(key_ints):
+                    if level + 1 == len(key_ints):
                         return current_node
                 current_node = self.nodes[current_node]["children"][key_ints[level][0]][0]
                 level += 1
@@ -846,7 +858,7 @@ class Pattern(object):
         tt = self.getKeyLFromNid(nid, rep)
         if tt is not None and self.isInterm(nid):
             if rep == -1:
-                tt.append((-1, self.nodes[nid]["r"]-1))
+                tt.append((-1, self.nodes[nid]["r"] - 1))
             else:
                 tt.append((-1, rep))
 
@@ -868,9 +880,9 @@ class Pattern(object):
                         return None
                     else:
                         if rep == -1:
-                            return kl+[(cid, self.nodes[parent]["r"]-1)]
+                            return kl + [(cid, self.nodes[parent]["r"] - 1)]
                         else:
-                            return kl+[(cid, rep)]
+                            return kl + [(cid, rep)]
                 else:
                     cid += 1
         return None
@@ -889,19 +901,19 @@ class Pattern(object):
             while self.isInterm(nid):
                 ccid = cid
                 if ccid == -1:
-                    ccid = len(self.nodes[nid]["children"])-1
+                    ccid = len(self.nodes[nid]["children"]) - 1
 
                 rrep = rep
                 if first_rep is not None:
                     rrep = first_rep
                     first_rep = None
                 elif rrep < 0:
-                    rrep = self.nodes[nid]["r"]-1
+                    rrep = self.nodes[nid]["r"] - 1
                 suff.append((ccid, rrep))
                 nid = self.nodes[nid]["children"][ccid][0]
 
         if nid is not None:
-            return l_to_key(key_ints+suff)
+            return l_to_key(key_ints + suff)
         return None
 
     def gatherCorrKeys(self, k):
@@ -921,11 +933,11 @@ class Pattern(object):
             for i in range(last[0]):
                 # ll = self.getLeafKeyFromKey(key_ints+[(i, last[1])])
                 # print("Left sibling %s %s: %s" % (i, key_ints+[(i, last[1])], ll) )
-                cks.append(self.getLeafKeyFromKey(key_ints+[(i, last[1])]))
+                cks.append(self.getLeafKeyFromKey(key_ints + [(i, last[1])]))
             for i in range(last[1]):
                 # ll = self.getLeafKeyFromKey(key_ints+[(-1, i)])
                 # print("Previous reps %s %s: %s" % (i, key_ints+[(-1, i)], ll))
-                cks.append(self.getLeafKeyFromKey(key_ints+[(-1, i)]))
+                cks.append(self.getLeafKeyFromKey(key_ints + [(-1, i)]))
             cks.extend(self.gatherCorrKeys(key_ints))
             # if len(cks) > 0:
             #     pdb.set_trace()
@@ -937,16 +949,16 @@ class Pattern(object):
         if what == "fisrtEvt":
             tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
             tmp[0][1] = "[0-9]+"
-            filt = "^"+SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp])+"$"
+            filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
         elif what == "lastRep":
             tmp = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
             tmp[0] = "[0-9]+"
-            filt = "^"+SUB_SEP.join(tmp)+".*$"
+            filt = "^" + SUB_SEP.join(tmp) + ".*$"
         elif what == "lastRepFirstEvt":
             tlast = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
             tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
             tmp[0][1] = tlast[1]
-            filt = "^"+SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp])+"$"
+            filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
         return filt
 
     def filterOccsMatch(self, occs, match_what="fisrtEvt", match=None):
@@ -962,7 +974,7 @@ class Pattern(object):
 
     def getEventsList(self, nid=0, markB=True, map_ev=None):
         if not self.isNode(nid):
-            return openB_str+closeB_str
+            return openB_str + closeB_str
         if self.isInterm(nid):
             ll = []
             for nn in self.nodes[nid]["children"]:
@@ -982,7 +994,7 @@ class Pattern(object):
             for nn in self.nodes[nid]["children"]:
                 ll.extend(self.getEventsMinor(nn[0], True))
             if rep:
-                return self.nodes[nid]["r"]*ll
+                return self.nodes[nid]["r"] * ll
             else:
                 return ll
         else:
@@ -990,19 +1002,20 @@ class Pattern(object):
 
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         if not self.isNode(nid):
-            return ("\t"*level)+"()\n"
+            return ("\t" * level) + "()\n"
         if self.isInterm(nid):
             ss = "%s|_ [%s] r=%s p=%s\n" % (
-                ("\t"*(level)), nid, self.nodes[nid]["r"], self.nodes[nid]["p"])
+                ("\t" * (level)), nid, self.nodes[nid]["r"], self.nodes[nid]["p"])
             for nn in self.nodes[nid]["children"]:
-                ss += "%s| d=%s\n" % (("\t"*(level+1)), nn[1])
-                ss += self.getTreeStr(nn[0], level+1)
+                ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
+                ss += self.getTreeStr(nn[0], level + 1)
             return ss
         else:
             if map_ev is not None:
-                return "%s|_ [%s] %s\n" % (("\t"*level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
+                return "%s|_ [%s] %s\n" % (
+                    ("\t" * level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
             else:
-                return "%s|_ [%s] %s\n" % (("\t"*level), nid, self.nodes[nid]["event"])
+                return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
     def __str__(self, nid=0, map_ev=None, leaves_first=False):
         if not self.isNode(nid):
@@ -1088,7 +1101,7 @@ class Pattern(object):
     def getMajorOccs(self, occs):
         if self.getDepth() > 1 or self.getWidth() > 1:
             r = self.nodeR(0)
-            len_ext_blck = len(occs)//r
+            len_ext_blck = len(occs) // r
             return occs[::len_ext_blck]
         return occs
 
@@ -1105,21 +1118,21 @@ class Pattern(object):
                 if ni > 0:
                     cum_ds += nn[1]
                 t_spans.append(self.timeSpanned(interleaved, nn[0]))
-                t_ends.append(t_spans[-1]+cum_ds)
+                t_ends.append(t_spans[-1] + cum_ds)
             tspan = numpy.max(t_ends)
             if interleaved is not None:
                 if self.overlap_interleaved:  # count overlaps as interleaving
-                    overlaps = [t_spans[i] >= self.nodes[nid]["children"][i+1][1]
-                                for i in range(len(self.nodes[nid]["children"])-1)]
+                    overlaps = [t_spans[i] >= self.nodes[nid]["children"][i + 1][1]
+                                for i in range(len(self.nodes[nid]["children"]) - 1)]
                     overlaps.append(tspan >= self.nodes[nid]["p"])
                     interleaved[nid] = any(overlaps)
                 else:
-                    overtaking = [t_spans[i] > self.nodes[nid]["children"][i+1][1]
-                                  for i in range(len(self.nodes[nid]["children"])-1)]
+                    overtaking = [t_spans[i] > self.nodes[nid]["children"][i + 1][1]
+                                  for i in range(len(self.nodes[nid]["children"]) - 1)]
                     overtaking.append(tspan > self.nodes[nid]["p"])
                     interleaved[nid] = any(overtaking)
 
-            return self.nodes[nid]["p"]*(self.nodes[nid]["r"]-1.)+tspan
+            return self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1.) + tspan
         else:
             return 0
 
@@ -1136,7 +1149,7 @@ class Pattern(object):
                 if ni > 0:
                     cum_ds += nn[1]
                 t_spans.append(self.timeSpanned(nid=nn[0]))
-                t_ends.append(t_spans[-1]+cum_ds)
+                t_ends.append(t_spans[-1] + cum_ds)
             tspan = numpy.max(t_ends)
             return tspan
         else:
@@ -1169,7 +1182,8 @@ class Pattern(object):
                 # intermediate nodes with single child
                 if all([len(self.nodes[nn[0]].get("children", [])) == 1 for nn in self.nodes[nid]["children"]]):
                     # same length and period
-                    if len(set([(self.nodes[nn[0]]["p"], self.nodes[nn[0]]["r"]) for nn in self.nodes[nid]["children"]])) == 1:
+                    if len(set([(self.nodes[nn[0]]["p"], self.nodes[nn[0]]["r"]) for nn in
+                                self.nodes[nid]["children"]])) == 1:
                         f.append(nid)
             return f
         else:
@@ -1209,7 +1223,7 @@ class Pattern(object):
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
-            return self.nodes[nid]["r"]*numpy.sum([self.getNbOccs(nn[0]) for nn in self.nodes[nid]["children"]])
+            return self.nodes[nid]["r"] * numpy.sum([self.getNbOccs(nn[0]) for nn in self.nodes[nid]["children"]])
         else:
             return 1
 
@@ -1217,7 +1231,7 @@ class Pattern(object):
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
-            return 1+numpy.max([self.getDepth(nn[0]) for nn in self.nodes[nid]["children"]])
+            return 1 + numpy.max([self.getDepth(nn[0]) for nn in self.nodes[nid]["children"]])
         else:
             return 0
 
@@ -1274,7 +1288,7 @@ class Pattern(object):
             return -1
         if self.isInterm(nid):
             min_r = numpy.min([self.getMinOccs(nbOccs, min_occs, nn[0])
-                              for nn in self.nodes[nid]["children"]])
+                               for nn in self.nodes[nid]["children"]])
             min_occs.append(min_r)
             return min_r
         else:
@@ -1314,22 +1328,23 @@ class Pattern(object):
         if not self.isNode(nid):
             return 0
         if self.isInterm(nid):
-            return self.nodes[nid]["r"]*numpy.sum([self.cardO(nn[0]) for nn in self.nodes[nid]["children"]])
+            return self.nodes[nid]["r"] * numpy.sum([self.cardO(nn[0]) for nn in self.nodes[nid]["children"]])
         else:
             return 1
 
     # WARNING! WRONG, this is using absolute errors...
     def getEforOccs(self, map_occs, occs):
         # constructs the list of errors
-        return [(t-map_occs.get(oid, t)) for (t, alpha, oid) in occs]
+        return [(t - map_occs.get(oid, t)) for (t, alpha, oid) in occs]
 
     def getE(self, map_occs, nid=0):
         return self.getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
+
     ####
 
     # L(E) = 2 + ∑_{e∈E} |e| ? ( It should not be     :  2 |E| + ∑_{e∈E} |e|     ? )
     def codeLengthE(self, E, nid=0):
-        clE = numpy.sum([2+numpy.abs(e) for e in E])  # -1
+        clE = numpy.sum([2 + numpy.abs(e) for e in E])  # -1
         if Pattern.LOG_DETAILS == 1:
             print("E\t>> nb=%d cumsum=%d\tCL=%.3f" %
                   (len(E), numpy.sum([numpy.abs(e) for e in E]), clE))
@@ -1342,7 +1357,7 @@ class Pattern(object):
     def codeLengthPTop(self, deltaT, EC_za=None, nid=0):
         if EC_za is None:  # "bare"
             EC_za = 0
-        maxv = numpy.floor((deltaT-EC_za)/(self.nodes[nid]["r"]-1.))
+        maxv = numpy.floor((deltaT - EC_za) / (self.nodes[nid]["r"] - 1.))
         clP = numpy.log2(maxv)
         if Pattern.LOG_DETAILS == 1:
             print("p0\t>> val=%d max=%d\tCL=%.3f" %
@@ -1358,13 +1373,13 @@ class Pattern(object):
             EC_za = 0
 
         if OPT_TO:
-            maxv = deltaT-EC_za-self.nodes[nid]["p"]*(self.nodes[nid]["r"]-1)+1
+            maxv = deltaT - EC_za - self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
-            maxv = deltaT+1
+            maxv = deltaT + 1
         if EC_za is None and maxv <= 0:
             maxv = 1
         clT = numpy.log2(maxv)
-        if EC_za is not None and (t0-tstart) > maxv:
+        if EC_za is not None and (t0 - tstart) > maxv:
             pdb.set_trace()
         if Pattern.LOG_DETAILS == 1:
             print("t0\t>> val=%d max=%d\tCL=%.3f" % (t0, maxv, clT))
@@ -1391,7 +1406,7 @@ class Pattern(object):
             return cl
 
         # if no interleaving, one repetition cannot span more than 1/r of the parent span
-        Tmax_rep = Tmax/self.nodes[nid]["r"]
+        Tmax_rep = Tmax / self.nodes[nid]["r"]
         if self.allow_interleaving:
             # if interleaving, one repetition can span at most the parent span
             Tmax_rep = Tmax - self.nodes[nid]["r"] + 1.
@@ -1401,16 +1416,16 @@ class Pattern(object):
 
         if rep:  # If Tmax_rep provided rather than Tmax, compute Tmax
             Tmax_rep = Tmax
-            Tmax = Tmax_rep*self.nodes[nid]["r"]
+            Tmax = Tmax_rep * self.nodes[nid]["r"]
             if self.allow_interleaving:
                 Tmax = Tmax_rep + self.nodes[nid]["r"] - 1.
 
         if nid > 0 and self.nodes[nid]["r"] > 0:
-            if Tmax/(self.nodes[nid]["r"]-1) < self.nodes[nid]["p"]:
+            if Tmax / (self.nodes[nid]["r"] - 1) < self.nodes[nid]["p"]:
                 pdb.set_trace()
                 print("PROBLEM!! INCORRECT UPPER BOUND")
             # block period (only not for the root one, already specified)
-            pmax = numpy.floor(Tmax/(self.nodes[nid]["r"]-1.))
+            pmax = numpy.floor(Tmax / (self.nodes[nid]["r"] - 1.))
             # if pmax <= 0: HERE
             #     pdb.set_trace()
             #     print("PMAX", pmax)
@@ -1427,20 +1442,21 @@ class Pattern(object):
         # the distance between two blocks cannot be more than the time spanned by a repetition,
         # there are |children|-1 of them to transmit
         if len(self.nodes[nid]["children"]) > 1:
-            cld_i = numpy.log2(Tmax_rep+1)
-            cld = (len(self.nodes[nid]["children"])-1)*cld_i
+            cld_i = numpy.log2(Tmax_rep + 1)
+            cld = (len(self.nodes[nid]["children"]) - 1) * cld_i
             ds = [v[1] for v in self.nodes[nid]["children"][1:]]
             if Pattern.LOG_DETAILS == 1:
                 print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
-                      Tmax_rep, len(self.nodes[nid]["children"])-1, cld_i, cld))
+                                                                  Tmax_rep, len(self.nodes[nid]["children"]) - 1, cld_i,
+                                                                  cld))
             if Pattern.LOG_DETAILS == 2:
-                for kk in range(len(self.nodes[nid]["children"])-1):
+                for kk in range(len(self.nodes[nid]["children"]) - 1):
                     print("$d_{%d}$ & $%d$ & $\\log(%d)=$ & $%.3f$ \\\\" % (
-                        nid, self.nodes[nid]["children"][kk+1][1], Tmax_rep, cld_i))
+                        nid, self.nodes[nid]["children"][kk + 1][1], Tmax_rep, cld_i))
             cl += cld
 
         sum_spans = numpy.sum([nn[1]
-                              for nn in self.nodes[nid]["children"][1:]])
+                               for nn in self.nodes[nid]["children"][1:]])
         cumsum_spans = 0
         for ni, nn in enumerate(self.nodes[nid]["children"]):
             if self.allow_interleaving:
@@ -1448,11 +1464,11 @@ class Pattern(object):
                     cumsum_spans += nn[1]
                 Tmax_i = Tmax_rep - cumsum_spans
             else:
-                if ni+1 == len(self.nodes[nid]["children"]):
+                if ni + 1 == len(self.nodes[nid]["children"]):
                     # last child
-                    Tmax_i = Tmax_rep-sum_spans
+                    Tmax_i = Tmax_rep - sum_spans
                 else:
-                    Tmax_i = self.nodes[nid]["children"][ni+1][1]
+                    Tmax_i = self.nodes[nid]["children"][ni + 1][1]
             cl += self.codeLengthPDs(Tmax_i, nn[0])
         return cl
 
@@ -1468,7 +1484,7 @@ class Pattern(object):
         if self.hasNestedPDs():
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"]*(self.nodes[0]["r"]-1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 if self.nodes[0]["p"] < Tmax:
                     Tmax_rep = self.nodes[0]["p"]
@@ -1480,11 +1496,11 @@ class Pattern(object):
                 clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
 
         # print("CL ev=%.3f rs=%.3f p0=%.3f t0=%.3f pds=%.3f E=%.3f" % (clEv,clRs,clP0,clT0,clPDs,clE))
-        return clEv+clRs+clP0+clT0+clPDs
+        return clEv + clRs + clP0 + clT0 + clPDs
 
     def codeLength(self, t0, E, data_details, match=None, nid=0):
         occsStar = self.getOccsStar(nid=nid, time=t0)
-        o_za = self.getLeafKeyFromKey([(-1, self.nodes[0]["r"]-1)])
+        o_za = self.getLeafKeyFromKey([(-1, self.nodes[0]["r"] - 1)])
         EC_zz = 0
         if E is not None:
             Ed = self.getEDict(occsStar, E)
@@ -1510,11 +1526,11 @@ class Pattern(object):
         if self.hasNestedPDs():
             if E is not None:
                 o_zz = self.getLeafKeyFromKey(
-                    [(-1, self.nodes[0]["r"]-1)], cid=-1, rep=-1)
+                    [(-1, self.nodes[0]["r"] - 1)], cid=-1, rep=-1)
                 EC_zz = self.getCCorr(o_zz, Ed)
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"]*(self.nodes[0]["r"]-1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
@@ -1532,10 +1548,10 @@ class Pattern(object):
                 clPDs = self.codeLengthPDs(Tmax_rep_val, nid=nid, rep=True)
                 if Pattern.LOG_DETAILS == 1:
                     print("Tmax\t>> val=%d max=%d\tCL=%.3f" %
-                          (Tmax_rep_val, Tmax_rep, numpy.log2(Tmax_rep+1)))
+                          (Tmax_rep_val, Tmax_rep, numpy.log2(Tmax_rep + 1)))
                 if Pattern.LOG_DETAILS == 2:
                     print("$\\optspanRep^{*}$ & $%d$ & $\\log(%d+1)=$ & $%.3f$ \\\\" %
-                          (Tmax_rep_val, Tmax_rep, numpy.log2(Tmax_rep+1)))
+                          (Tmax_rep_val, Tmax_rep, numpy.log2(Tmax_rep + 1)))
                 # if Tmax_rep <= 0: # HERE
                 #     pdb.set_trace()
                 #     print("Tmax_rep", Tmax_rep)
@@ -1544,13 +1560,13 @@ class Pattern(object):
                         Tmax_rep = 0
                     else:
                         print("PROBLEM!! INCORRECT TMAX_REP")
-                clPDs += numpy.log2(Tmax_rep+1)
+                clPDs += numpy.log2(Tmax_rep + 1)
             else:
                 clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
 
         # print("CL ev=%.3f rs=%.3f p0=%.3f t0=%.3f pds=%.3f E=%.3f" % (clEv,clRs,clP0,clT0,clPDs,clE))
         # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
-        return clEv+clRs+clP0+clT0+clPDs + clE
+        return clEv + clRs + clP0 + clT0 + clPDs + clE
         # cl = self.codeLengthEvents(data_details["adjFreqs"], nid=nid)
         # cl += self.codeLengthR(data_details["nbOccs"], nid=nid)
         # cl += self.codeLengthPTop(data_details["deltaT"], EC_za, nid=nid)
@@ -1562,7 +1578,6 @@ class Pattern(object):
 
 
 class Candidate(object):
-
     prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
     prop_map = dict([(v, k) for k, v in enumerate(prop_list)])
 
@@ -1582,8 +1597,10 @@ class Candidate(object):
         if self.getCost() is None:
             return "\t%s t0=%d" % (self.P, self.getT0())
         if self.getNbUOccs() != self.getNbOccs():
-            return "%f/%d=%f >>>(%d)\t%s t0=%d" % (self.getCost(), self.getNbUOccs(), self.getCostRatio(), self.getNbOccs(), self.P, self.getT0())
-        return "%f/%d=%f (%d)\t%s t0=%d" % (self.getCost(), self.getNbUOccs(), self.getCostRatio(), self.getNbOccs(), self.P, self.getT0())
+            return "%f/%d=%f >>>(%d)\t%s t0=%d" % (
+                self.getCost(), self.getNbUOccs(), self.getCostRatio(), self.getNbOccs(), self.P, self.getT0())
+        return "%f/%d=%f (%d)\t%s t0=%d" % (
+            self.getCost(), self.getNbUOccs(), self.getCostRatio(), self.getNbOccs(), self.P, self.getT0())
 
     def initFromDict(self, pdict):
         self.O = pdict.pop("occs")
@@ -1722,28 +1739,28 @@ class Candidate(object):
 
     def getMajorE(self):
         if self.isComplex():
-            return self.P.getMajorOccs([0]+self.E)[1:]
+            return self.P.getMajorOccs([0] + self.E)[1:]
         else:
             return self.E
 
     def getBlocksO(self, from_rep=0):
         r = self.getMajorR()
-        len_ext_blck = len(self.O)//r
-        return [self.O[i*len_ext_blck:(i+1)*len_ext_blck] for i in range(from_rep, r)]
+        len_ext_blck = len(self.O) // r
+        return [self.O[i * len_ext_blck:(i + 1) * len_ext_blck] for i in range(from_rep, r)]
 
     def getBlocksE(self, from_rep=0):
         r = self.getMajorR()
-        len_ext_blck = len(self.O)//r
-        tmpE = [0]+self.E
-        return [tmpE[i*len_ext_blck+1:(i+1)*len_ext_blck] for i in range(from_rep, r)]
+        len_ext_blck = len(self.O) // r
+        tmpE = [0] + self.E
+        return [tmpE[i * len_ext_blck + 1:(i + 1) * len_ext_blck] for i in range(from_rep, r)]
 
     def getTranslatedPNodes(self, offset):
         if self.isPattern():
             nodes, offset, nmap = self.P.getTranslatedNodes(offset)
         else:
-            nmap = {0: offset, 1: offset+1}
-            nodes = {offset: {"children": [(offset+1, 0)]},
-                     offset+1: {"parent": offset, "event": self.P["alpha"]}}
+            nmap = {0: offset, 1: offset + 1}
+            nodes = {offset: {"children": [(offset + 1, 0)]},
+                     offset + 1: {"parent": offset, "event": self.P["alpha"]}}
             offset += 2
         return nodes, offset, nmap
 
@@ -1751,7 +1768,8 @@ class Candidate(object):
         if self.isPattern():
             return self.P.codeLength(t0=self.getT0(), E=None, data_details=data_details)
         else:
-            return computeLengthCycle(data_details, {"alpha": self.getEvent(), "occs": self.O, "p": self.P["p"]}, no_err=True)
+            return computeLengthCycle(data_details, {"alpha": self.getEvent(), "occs": self.O, "p": self.P["p"]},
+                                      no_err=True)
 
     def getCost(self):
         return self.cost
@@ -1760,7 +1778,7 @@ class Candidate(object):
         c = self.getCost()
         if c is None:
             return 0
-        return c/self.getNbUOccs()
+        return c / self.getNbUOccs()
 
     def satisfiesMaxCountCover(self, counts_cover, max_o=2):
         for x in self.getEvOccs():
@@ -1793,30 +1811,33 @@ class Candidate(object):
     def getCostUncoveredRatio(self):
         if self.getNbUncovered() == 0:
             return float("Inf")
-        return self.getCost()/self.getNbUncovered()
+        return self.getCost() / self.getNbUncovered()
 
     def isEfficient(self, dcosts):
-        return (self.getCost()/self.getNbUncovered()) < numpy.mean([dcosts[unc[1]] for unc in self.uncov])
+        return (self.getCost() / self.getNbUncovered()) < numpy.mean([dcosts[unc[1]] for unc in self.uncov])
 
     def adjustOccs(self):
         if not self.isPattern() and (self.uncov is not None) and (self.getNbUncovered() < self.getNbOccs()):
             okk = self.getEvOccs()
-            mni, mxi = (0, len(self.O)-1)
+            mni, mxi = (0, len(self.O) - 1)
             while okk[mni] not in self.uncov:
                 mni += 1
             while okk[mxi] not in self.uncov:
                 mxi -= 1
-            self.P["occs_up"] = [self.O[kk] for kk in range(mni, mxi+1)]
+            self.P["occs_up"] = [self.O[kk] for kk in range(mni, mxi + 1)]
 
     def getPropsFirst(self, nkey=0):
         # ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
-        return (self.getT0(), self.getMajorP(), self.getMajorR(), 0, numpy.sum(numpy.abs(self.getMajorE())), nkey, self.getId())
+        return (
+            self.getT0(), self.getMajorP(), self.getMajorR(), 0, numpy.sum(numpy.abs(self.getMajorE())), nkey,
+            self.getId())
 
     def getPropsAll(self, nkey=0):
         Pp, Pr = (self.getMajorP(), self.getMajorR())
         majO = self.getMajorO()
         majE = self.getMajorE()
-        return [(ooe, Pp, Pr, ooi, numpy.sum(numpy.abs(majE[ooi:])), nkey, self.getId()) for ooi, ooe in enumerate(majO[:-2])]
+        return [(ooe, Pp, Pr, ooi, numpy.sum(numpy.abs(majE[ooi:])), nkey, self.getId()) for ooi, ooe in
+                enumerate(majO[:-2])]
 
     def getProps(self, nkey=0, max_offset=None):
         if max_offset is None:
@@ -1825,7 +1846,8 @@ class Candidate(object):
         majO = self.getMajorO()
         majE = self.getMajorE()
         if (PROPS_MIN_R <= 0) or (Pr > PROPS_MIN_R):
-            return [(ooe, Pp, Pr, ooi, numpy.sum(numpy.abs(majE[ooi:])), nkey, self.getId()) for ooi, ooe in enumerate(majO[:max_offset])]
+            return [(ooe, Pp, Pr, ooi, numpy.sum(numpy.abs(majE[ooi:])), nkey, self.getId()) for ooi, ooe in
+                    enumerate(majO[:max_offset])]
         else:
             return []
 
@@ -2007,7 +2029,7 @@ class CandidatePool(object):
                 self.sorted_pids = range(len(props))
             else:
                 npids = range(
-                    self.cand_props.shape[0], self.cand_props.shape[0]+len(props))
+                    self.cand_props.shape[0], self.cand_props.shape[0] + len(props))
                 self.cand_props = numpy.vstack([self.cand_props, props])
                 self.sorted_pids = mergeSortedPids(
                     self.cand_props, self.sorted_pids, npids)
@@ -2026,7 +2048,7 @@ class CandidatePool(object):
             max_offset = None
             if costOne is not None and c.getCost() is not None:
                 max_offset = numpy.minimum(
-                    int(numpy.floor(c.getCost()/costOne)), c.getNbOccs()-2)
+                    int(numpy.floor(c.getCost() / costOne)), c.getNbOccs() - 2)
                 # if c.getNbOccs() > 3:
                 #     print("NbOccs=%s, maxOff=%s" % (c.getNbOccs(), max_offset))
             if c is not None:
@@ -2042,7 +2064,7 @@ class CandidatePool(object):
             self.sorted_pids = sortPids(self.cand_props, npids)
         else:
             npids = range(
-                self.cand_props.shape[0], self.cand_props.shape[0]+len(props))
+                self.cand_props.shape[0], self.cand_props.shape[0] + len(props))
             self.cand_props = numpy.vstack([self.cand_props, props])
             self.sorted_pids = mergeSortedPids(
                 self.cand_props, self.sorted_pids, sortPids(self.cand_props, npids))
@@ -2116,21 +2138,21 @@ if __name__ == "__main__":
     po = numpy.array([0, 3, 4, 13, 16, 17, 26, 29, 30])  # +2
     # ### WITH ERRORS
     # o = numpy.array([0, 3, 5, 11, 13, 17, 24, 28, 29])+2
-    o = numpy.array([0, 3, 5, 11, 16, 19, 24, 28, 29])+2
+    o = numpy.array([0, 3, 5, 11, 16, 19, 24, 28, 29]) + 2
     ds = [v[1] for v in trees["P5"][0]["children"]]
 
     collections = []
     cpp = ["P2b", "P2", "P2c"]
     collections.append([(p, o[i], numpy.diff(o[i::len(cpp)]) -
-                       trees["P2"][0]["p"]) for (i, p) in enumerate(cpp)])
+                         trees["P2"][0]["p"]) for (i, p) in enumerate(cpp)])
 
     E = []
     for i in range(len(o)):
         if i > 0:
             if i % len(cpp) == 0:
-                E.append((o[i]-o[i-len(cpp)])-trees["P2"][0]["p"])
+                E.append((o[i] - o[i - len(cpp)]) - trees["P2"][0]["p"])
             else:
-                E.append((o[i]-o[i-1])-ds[i % len(cpp)])
+                E.append((o[i] - o[i - 1]) - ds[i % len(cpp)])
     collections.append([("P5", o[0], E)])
     #####################################################
 
@@ -2152,7 +2174,7 @@ if __name__ == "__main__":
         for pi, pat in enumerate(col):
             p = Pattern(trees[pat[0]])
             print("------------------")
-            print("Pattern: Q_%d-%d\n" % (ci+1, pi+1), p)
+            print("Pattern: Q_%d-%d\n" % (ci + 1, pi + 1), p)
 
             t0 = pat[1]
             occsStar = p.getOccsStar()

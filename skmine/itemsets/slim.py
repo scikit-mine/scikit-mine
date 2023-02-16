@@ -9,20 +9,18 @@ and https://eda.rg.cispa.io/pres/ida14-slimmer-poster.pdf
 #          Cyril Regan <cyril.regan@loria.fr>
 # License: BSD 3 clause
 
+import time
 from collections import Counter, defaultdict
 from functools import lru_cache, reduce
 from itertools import chain
 
 import numpy as np
 import pandas as pd
-import time
-
-from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
-
-from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.utils.validation import check_is_fitted
+from sortedcontainers import SortedDict
 
 from ..utils import _check_D, supervised_to_unsupervised
 
@@ -633,8 +631,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         tids = self.standard_codetable_[a]
         if len(items) > 1:
             return tids & self.get_support(*items[:-1])
-        else:
-            return tids
+        return tids
 
     def _standard_cover_order(self, itemset) -> tuple:
         """

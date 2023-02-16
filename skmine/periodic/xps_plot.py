@@ -1,9 +1,9 @@
-import numpy
 import re
 import sys
+
 import matplotlib
 import matplotlib.pyplot as plt
-import pdb
+import numpy
 
 SERIES = "vX"
 if len(sys.argv) > 1:
@@ -93,11 +93,17 @@ if True:
     for sc in ["m", "h"]:
         plt.figure(figsize=(8, 5))
 
-        # plt.scatter(X[Urids,map_field_num["size_O"]], X[Urids,map_field_num["runtime_mining"]], c=X[Urids,map_field_num["F_prc_cl"]], s=msize, marker='o', vmin=0, vmax=100, cmap=CMAP_CMP, zorder=20)
-        # plt.scatter(X[rids,map_field_num["size_O"]], X[rids,map_field_num["runtime_mining"]], c=X[rids,map_field_num["F_prc_cl"]], s=msize, marker="s", vmin=0, vmax=100, cmap=CMAP_CMP, zorder=20)
+        # plt.scatter(X[Urids,map_field_num["size_O"]], X[Urids,map_field_num["runtime_mining"]], c=X[Urids,
+        # map_field_num["F_prc_cl"]], s=msize, marker='o', vmin=0, vmax=100, cmap=CMAP_CMP, zorder=20)
+        # plt.scatter(X[rids,map_field_num["size_O"]], X[rids,map_field_num["runtime_mining"]], c=X[rids,
+        # map_field_num["F_prc_cl"]], s=msize, marker="s", vmin=0, vmax=100, cmap=CMAP_CMP, zorder=20)
 
-        # plt.scatter(X[Urids,map_field_num["size_O"]], X[Urids,map_field_num["runtime_mining"]], c=numpy.log10(X[Urids,map_field_num[CC]]), s=mmsize+80*X[Urids,map_field_num[CX]]/max_CX, marker='o', cmap=CMAP_NBC, zorder=20, vmin=min_CC, vmax=max_CC)
-        # plt.scatter(X[rids,map_field_num["size_O"]], X[rids,map_field_num["runtime_mining"]], c=numpy.log10(X[rids,map_field_num[CC]]), s=mmsize+80*X[rids,map_field_num[CX]]/max_CX, marker='s', cmap=CMAP_NBC, zorder=20, vmin=min_CC, vmax=max_CC)
+        # plt.scatter(X[Urids,map_field_num["size_O"]], X[Urids,map_field_num["runtime_mining"]], c=numpy.log10(X[
+        # Urids,map_field_num[CC]]), s=mmsize+80*X[Urids,map_field_num[CX]]/max_CX, marker='o', cmap=CMAP_NBC,
+        # zorder=20, vmin=min_CC, vmax=max_CC)
+        # plt.scatter(X[rids,map_field_num["size_O"]], X[rids,map_field_num["runtime_mining"]], c=numpy.log10(X[rids,
+        # map_field_num[CC]]), s=mmsize+80*X[rids,map_field_num[CX]]/max_CX, marker='s', cmap=CMAP_NBC, zorder=20,
+        # vmin=min_CC, vmax=max_CC)
 
         plt.plot(X[Urids, map_field_num["size_O"]],
                  X[Urids, map_field_num["runtime_mining"]], "ko")
@@ -111,13 +117,13 @@ if True:
             plt.ylim([-100, 10.5 * 3600])
             ycmin, ycmax = plt.ylim()
             plt.yticks(numpy.arange(0, ycmax, 3600), [
-                       "% 4d" % v for v in numpy.arange(0, ycmax / 3600)])
+                "% 4d" % v for v in numpy.arange(0, ycmax / 3600)])
         else:
             plt.xlim([-1000, 45000])
             plt.ylim([-100, 3700])
             ycmin, ycmax = plt.ylim()
             plt.yticks(numpy.arange(0, ycmax, 600), [
-                       "% 4d" % v for v in numpy.arange(0, ycmax / 60, 10)])
+                "% 4d" % v for v in numpy.arange(0, ycmax / 60, 10)])
 
         plt.ylabel("RT (%s)" % {"m": "min"}.get(sc, sc))
         plt.xlabel("|S|")
@@ -157,7 +163,7 @@ if True:
         for rid in range(len(rlabels)):
             plt.plot([X[rid, map_field_num["size_O"]], X[rid, map_field_num["size_O"]]],
                      [X[rid, map_field_num["runtime_combine"]],
-                         X[rid, map_field_num["runtime_mining"]]], ":k",
+                      X[rid, map_field_num["runtime_mining"]]], ":k",
                      zorder=5)
 
         plt.scatter(X[Urids, map_field_num["size_O"]], X[Urids, map_field_num["runtime_mining"]],
@@ -187,24 +193,24 @@ if True:
 
         if sc == "h":
             plt.plot([-1000, -1000, 22000, 22000], [-100, 1300,
-                     1300, -100], "--", color="darkgray", zorder=30)
+                                                    1300, -100], "--", color="darkgray", zorder=30)
             plt.plot([-1000, -1000, 45000, 45000], [-100, 3700,
-                     3700, -100], "--", color="darkgray", zorder=30)
+                                                    3700, -100], "--", color="darkgray", zorder=30)
 
             plt.xlim([-1000, 195000])
             plt.ylim([-100, 10.5 * 3600])
             ycmin, ycmax = plt.ylim()
             plt.yticks(numpy.arange(0, ycmax, 3600), [
-                       "% 4d" % v for v in numpy.arange(0, ycmax / 3600)])
+                "% 4d" % v for v in numpy.arange(0, ycmax / 3600)])
 
         elif sc == "m":
             plt.plot([-1000, -1000, 22000, 22000], [-100, 1300,
-                     1300, -100], "--", color="darkgray", zorder=30)
+                                                    1300, -100], "--", color="darkgray", zorder=30)
             plt.xlim([-1000, 45000])
             plt.ylim([-100, 3700])
             ycmin, ycmax = plt.ylim()
             plt.yticks(numpy.arange(0, ycmax, 600), [
-                       "% 4d" % v for v in numpy.arange(0, ycmax / 60, 10)])
+                "% 4d" % v for v in numpy.arange(0, ycmax / 60, 10)])
 
         else:
             plt.xlim([-1000, 22000])
@@ -218,7 +224,6 @@ if True:
         det = "details"
         plt.savefig("%s_times(%s)_%s.pdf" % (BASIS_OUT, sc, det))
         plt.clf()
-
 
 # =================================================================================
 
@@ -317,8 +322,8 @@ groups = []
 rids = [r for r in range(len(rlabels)) if re.match("sacha", rlabels[r])]
 skeys = dict([(rid, (
     int((rlabels[rid] + "G9999").split("G")[1].split("_")[0]), "2000" not in rlabels[rid], "absI" not in rlabels[rid]))
-    for
-    rid in rids])
+              for
+              rid in rids])
 rids.sort(key=lambda x: skeys[x], reverse=True)
 groups.append({"title": "Sacha", "inter": ["S", "F"], "rids": rids,
                "rlabels": [re.sub("2000", "S", re.sub("_v[0-9]*", "", re.sub("sacha_18_", "", rlabels[r]))) for r in
