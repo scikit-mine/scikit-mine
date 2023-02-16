@@ -305,7 +305,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             self.cycles.sort_values(by='t0', inplace=True)
         return self.cycles
 
-    def reconstruct(self, *patterns_id, sort="time"):
+    def reconstruct(self, *patterns_id, sort="time", drop_duplicates=True):
         """Reconstruct all the occurrences from patterns (no argument), or the 
         occurrences of selected patterns (with a patterns'id list as argument). 
 
@@ -319,6 +319,12 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             "time" (by default) : sort by occurences time 
             "event" : sort by event names
             anything else : sort by pattern reconstruction
+
+        drop_duplicates: bool, default=True
+            An occurrence can appear in several patterns and thus appear several times in the reconstruction.
+            To remove duplicates, set drop_duplicates to True otherwise to False to keep them.
+            In the natural order of pattern construction, it is best to set the `drop_duplicates` variable to False
+            for better understanding.
 
         Returns
         -------
@@ -344,17 +350,15 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             occs = p.getOccs(occsStar, t0, Ed)
 
             for k, occ in enumerate(occs):
-                dict_ = {}
-                dict_['time'] = (occ)*10**self.n_zeros_ if self.auto_time_scale else (occ)
+                dict_ = {'time': occ * 10 ** self.n_zeros_ if self.auto_time_scale else occ,
+                         "event": map_ev[occsStar[k][1]]}
 
-                dict_["event"] = map_ev[occsStar[k][1]]
-                reconstruct_list.append((dict_))
+                reconstruct_list.append(dict_)
 
         reconstruct_pd = pd.DataFrame(reconstruct_list)
 
         if self.is_datetime_:
-            reconstruct_pd['time'] = reconstruct_pd['time'].astype(
-                "datetime64[ns]")
+            reconstruct_pd['time'] = reconstruct_pd['time'].astype("datetime64[ns]")
             reconstruct_pd['time'] = reconstruct_pd['time'].astype("str")
 
         if sort == "time":
@@ -362,8 +366,9 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         elif sort == "event":
             reconstruct_pd = reconstruct_pd.sort_values(by=['event'])
 
-        # some event can be in multiple patterns : need to remove duplicates
-        reconstruct_pd = reconstruct_pd.drop_duplicates()
+        # some events can be in multiple patterns : need to remove duplicates
+        if drop_duplicates:
+            reconstruct_pd = reconstruct_pd.drop_duplicates()
 
         return reconstruct_pd
 
