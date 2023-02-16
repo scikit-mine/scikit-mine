@@ -1504,8 +1504,7 @@ if __name__ == "__main__":
                 input_name = series
                 xps_rep = params.get("output_folder", XPS_REP)
                 if "filename" not in params:
-                    params["filename"] = params.get(
-                        "input_folder", DATA_REP) + params.get("input_file")
+                    params["filename"] = params.get("input_folder", DATA_REP) + params.get("input_file")
                 if "output_basename" in params:
                     basename = params["output_basename"] + "_" + series
                 else:
