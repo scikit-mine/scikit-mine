@@ -29,31 +29,6 @@ def _remove_zeros(numbers: pd.Series):
     return numbers, n
 
 
-def _reconstruct(start, period, dE):
-    """
-    Reconstruct occurrences,
-    starting from `start`, and
-    correcting `period` with a delta for all deltas in `dE`,
-    `len(dE)` occurrences are reconstructed
-
-    Parameters
-    ----------
-    start: int or datetime
-        starting point for the event
-    period: int or timedelta
-        period between two occurrences
-    d_E: np.array of [int|timedelta]
-        inters occurrences deltas
-    """
-    occurrences = [start]
-    current = start
-    for d_e in dE:
-        e = current + period + d_e
-        occurrences.append(e)
-        current = e
-    return occurrences
-
-
 class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     # (BaseMiner, MDLOptimizer, DiscovererMixin):
     """
@@ -64,7 +39,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     candidate cycles. The goal here is to extract a set of cycles that characterizes
     the periodic structure present in the data
 
-    A cycle is defined a 5-tuple of of the form
+    A cycle is defined a 5-tuple of the form
         .. math:: \\alpha, r, p, \\tau, E
 
     Where
@@ -105,7 +80,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
     def fit(self, S, complex=True, auto_time_scale=True):
         """fit PeriodicCycleMiner on data logs
 
-        This generate new candidate cycles and evaluate them.
+        This generates new candidate cycles and evaluate them.
         Residual occurrences are stored as an internal attribute,
         for later reconstruction (MDL is lossless)
 
@@ -136,9 +111,13 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
 
-        if S.index.duplicated().any():
-            # warnings.warn("found duplicates in input sequence, removing them")
-            S = S.groupby(S.index).first()
+        if S.index.duplicated().any():  # there are potentially duplicates, i.e. occurrences that happened at the
+            # same time AND with the same event. At this line, the second condition is not yet verified.
+            len_S = len(S)
+            S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
+            S = S.reset_index(level=0, drop=True)
+            if len(S) < len_S:
+                warnings.warn("Duplicates found in the input sequence, they have been removed.")
 
         S = S.copy()
 
