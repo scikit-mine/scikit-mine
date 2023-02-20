@@ -1687,9 +1687,9 @@ class Candidate(object):
     P : dict or Pattern
         Dictionary containing the properties of the pattern, or an instance of `Pattern`.
     O : list, optional
-        List of occurrences of the pattern.
+        List of occurrences/timestamps of the pattern.
     E : list, optional
-        List of event types of the occurrences.
+        List of deltaE of the occurrences.
     cost : float, optional
         Computed cost of the pattern.
 
