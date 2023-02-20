@@ -2,7 +2,7 @@ import copy
 import itertools
 import pdb
 import re
-
+import json
 import numpy
 
 # OPT_TO = False
@@ -359,12 +359,12 @@ class DataSequence(object):
         else:
             ss = "-- Data Sequence |A|=%d |O|=%d dT=%d (%d to %d)" % (len(
                 self.data_details["nbOccs"]) - 1, self.data_details["nbOccs"][-1], self.data_details["deltaT"],
-                                                                      self.data_details["t_start"],
-                                                                      self.data_details["t_end"])
+                self.data_details["t_start"],
+                self.data_details["t_end"])
             ss += "\n\t" + "\n\t".join(["%s [%d] (|O|=%d f=%.3f dT=%d)" % (
                 self.list_ev[k], k, self.data_details["nbOccs"][k], self.data_details["orgFreqs"]
                 [k], self.evEnds[k] - self.evStarts[k]) for k in
-                                        sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
+                sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
         return ss
 
     def getEvents(self):
@@ -481,7 +481,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                                                                                           p.getTypeStr())
+                    p.getTypeStr())
             # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(
             # E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
             # print("sum(|E|)=%d  E=%s" % (numpy.sum(numpy.abs(E)), E))
@@ -528,7 +528,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                                                                                           p.getTypeStr())
+                    p.getTypeStr())
 
             # print("\n pi, t0, E", pi, t0, E)
             # print("p.pattMinorKey()", p.pattMinorKey())
@@ -551,7 +551,11 @@ class PatternCollection(object):
             # print("p.getOccsStarMatch", p.getOccsStarMatch())
             # print("p.getEventsList", p.getEventsList())
             # print("p.getEventsMinor", p.getEventsMinor())
-            # print("p.getTreeStr \n", p.getTreeStr())
+            pattern_tree = p.getTreeDict(map_ev=map_ev)
+            pattern_tree["Depth"] = int(p.getDepth())
+            pattern_tree["Width"] = int(p.getWidth())
+            pattern_tree = json.dumps(pattern_tree)
+
             # print("p.getCyclePs", p.getCyclePs())
             # print("p.getCycleRs", p.getCycleRs())
             # print("p.getNbLeaves", p.getNbLeaves())
@@ -565,7 +569,8 @@ class PatternCollection(object):
             #     map_ev=map_ev, leaves_first=True))
 
             dict_pattern["t0"] = t0
-            dict_pattern["event"] = p.__str__(
+            dict_pattern["pattern_json_tree"] = pattern_tree
+            dict_pattern["pattern_resume"] = p.__str__(
                 map_ev=map_ev, leaves_first=True)
             dict_pattern["length_major"] = p.pattMajorKey_list()[0]
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
@@ -1102,6 +1107,7 @@ class Pattern(object):
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         if not self.isNode(nid):
             return ("\t" * level) + "()\n"
+
         if self.isInterm(nid):
             ss = "%s|_ [%s] r=%s p=%s\n" % (
                 ("\t" * (level)), nid, self.nodes[nid]["r"], self.nodes[nid]["p"])
@@ -1115,6 +1121,55 @@ class Pattern(object):
                     ("\t" * level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
             else:
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
+
+    def getTreeDict(self, nid=0, level=0, map_ev=None):
+
+        if not self.isNode(nid):
+            return {}
+        if self.isInterm(nid):
+            parent = self.nodes[nid]["parent"]
+            children = self.nodes[nid]["children"]
+            ss = {
+                "nid": int(nid),
+                "r": int(self.nodes[nid]["r"]),
+                "p": int(self.nodes[nid]["p"]),
+                "parent": str(parent) if parent == None else parent,
+                "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children]
+
+            }
+
+            ss["children"] = []
+            for nn in children:
+                # ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
+                parent = self.nodes[nn[0]]["parent"]
+                child = {
+                    "nid": int(nn[0]),
+                    "d":   int(nn[1]),
+                    "p": int(self.nodes[nid]["p"]),
+                    "parent": str(parent) if parent == None else parent,
+                }
+
+                if self.isInterm(nn[0]):
+                    for key, value in self.getTreeDict(nn[0], map_ev=map_ev).items():
+                        child[key] = value
+                else:
+                    child["event"] = self.getTreeDict(nn[0], map_ev=map_ev)
+                ss["children"].append(child)
+
+            return ss
+        else:
+            if map_ev is not None:
+                return map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"])
+                # return "%s|_ [%s] %s\n" % (
+                #     ("\t" * level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
+            else:
+                return str(self.nodes[nid]["event"])
+                # return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
+
+    # trees["P5"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0), (2, 3), (3, 1)], 'parent': None},
+    #                1: {'event': 'b', 'parent': 0},
+    #                2: {'event': 'a', 'parent': 0},
+    #                3: {'event': 'c', 'parent': 0}}
 
     def __str__(self, nid=0, map_ev=None, leaves_first=False):
         if not self.isNode(nid):
@@ -1472,7 +1527,8 @@ class Pattern(object):
             EC_za = 0
 
         if OPT_TO:
-            maxv = deltaT - EC_za - self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
+            maxv = deltaT - EC_za - \
+                self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
             maxv = deltaT + 1
         if EC_za is None and maxv <= 0:
@@ -1546,7 +1602,8 @@ class Pattern(object):
             ds = [v[1] for v in self.nodes[nid]["children"][1:]]
             if Pattern.LOG_DETAILS == 1:
                 print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
-                                                                  Tmax_rep, len(self.nodes[nid]["children"]) - 1, cld_i,
+                                                                  Tmax_rep, len(
+                                                                      self.nodes[nid]["children"]) - 1, cld_i,
                                                                   cld))
             if Pattern.LOG_DETAILS == 2:
                 for kk in range(len(self.nodes[nid]["children"]) - 1):
@@ -1583,7 +1640,7 @@ class Pattern(object):
         if self.hasNestedPDs():
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 if self.nodes[0]["p"] < Tmax:
                     Tmax_rep = self.nodes[0]["p"]
@@ -1629,7 +1686,7 @@ class Pattern(object):
                 EC_zz = self.getCCorr(o_zz, Ed)
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
@@ -1955,7 +2012,8 @@ class Candidate(object):
     def getPropsFirst(self, nkey=0):
         # ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
         return (
-            self.getT0(), self.getMajorP(), self.getMajorR(), 0, numpy.sum(numpy.abs(self.getMajorE())), nkey,
+            self.getT0(), self.getMajorP(), self.getMajorR(
+            ), 0, numpy.sum(numpy.abs(self.getMajorE())), nkey,
             self.getId())
 
     def getPropsAll(self, nkey=0):
