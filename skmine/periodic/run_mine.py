@@ -890,8 +890,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
               (len(collect), nkey))
     for cand_pids_unsrt in collect:
         cand_pids = sorted(cand_pids_unsrt,
-                           key=lambda x: (patterns_props[x, Candidate.prop_map["t0i"]], cpool.getCandidate(
-                               patterns_props[x, Candidate.prop_map["cid"]]).getEventTuple()))
+                           key=lambda x: (patterns_props[x, Candidate.prop_map["t0i"]],
+                                          tuple(int(x) for x in cpool.getCandidate(patterns_props[x, Candidate.prop_map["cid"]]).getEventTuple())))
         new_cand = makeCandOnOrder(
             cand_pids, data_details, patterns_props, cpool)
 
