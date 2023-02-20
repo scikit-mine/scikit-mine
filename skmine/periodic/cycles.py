@@ -72,7 +72,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.miners_ = {}
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.alpha_groups = {}
+        self.alpha_groups = {}  # associates to each event (key) its associated datetimes (list of values)
         self.cycles = None
         self.data_details = None
         self.auto_time_scale = True

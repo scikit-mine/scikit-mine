@@ -64,12 +64,12 @@ def cost_triple(data_details, alpha, dp, deltaE):
 
 def cost_one(data_details, alpha):
     if alpha in data_details["nbOccs"]:
-        cl_alpha = -numpy.log2(data_details["orgFreqs"][alpha])
+        cl_alpha = -numpy.log2(data_details["orgFreqs"][alpha])  # -log2(|alpha|)
     else:
-        # -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in alpha])
+        # -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in alpha])  # FIXME: to be commented or not?
         cl_alpha = 0
 
-    return cl_alpha + numpy.log2(data_details["deltaT"] + 1)
+    return cl_alpha + numpy.log2(data_details["deltaT"] + 1)  # cl_alpha + log2(deltaT + 1)
 
 
 def computeLengthEOccs(occs, cp):
@@ -137,12 +137,54 @@ def computeLengthRC(data_details, rcs):
 
 
 def makeOccsAndFreqs(tmpOccs):
+    """
+    Return the number of occurrences of each event and the original and adjusted
+    frequencies of each event in a sequence.
+
+    Parameters
+    ----------
+    tmpOccs : dict
+        A dictionary containing the number of occurrences of each event in the sequence.
+
+    Returns
+    -------
+    nbOccs : dict
+        A dictionary containing the number of occurrences of each event in the sequence,
+        including a special key -1 for the total number of events.
+    orgFreqs : dict
+        A dictionary containing the original frequency of each event in the sequence.
+    adjFreqs : dict
+        A dictionary containing the adjusted frequency of each event in the sequence.
+    blck_delim : float
+        A float representing the block delimiter of the sequence.
+    """
     if ADJFR_MED:
         return makeOccsAndFreqsMedian(tmpOccs)
     return makeOccsAndFreqsThird(tmpOccs)
 
 
 def makeOccsAndFreqsMedian(tmpOccs):
+    """
+    Return the number of occurrences of each event and the original and adjusted frequencies
+    of each event in a sequence using the median frequency of all events as a threshold.
+
+    Parameters
+    ----------
+    tmpOccs : dict
+        A dictionary containing the number of occurrences of each event in the sequence.
+
+    Returns
+    -------
+    nbOccs : dict
+        A dictionary containing the number of occurrences of each event in the sequence,
+        including a special key -1 for the total number of events.
+    orgFreqs : dict
+        A dictionary containing the original frequency of each event in the sequence.
+    adjFreqs : dict
+        A dictionary containing the adjusted frequency of each event in the sequence.
+    blck_delim : float
+        A float representing the block delimiter of the sequence.
+    """
     nbOccs = dict(tmpOccs.items())
     nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.
 
@@ -165,8 +207,29 @@ def makeOccsAndFreqsMedian(tmpOccs):
 
 
 def makeOccsAndFreqsThird(tmpOccs):
+    """
+    Calculates the occurrence and frequency of each event in the input sequence, using the third method.
+
+    Parameters
+    ----------
+    tmpOccs : dict
+        A dictionary containing the number of occurrences for each event in the sequence.
+
+    Returns
+    -------
+    nbOccs : dict
+        A dictionary containing the number of occurrences of each event in the sequence,
+        including a special key -1 for the total number of events.
+    orgFreqs : dict
+        A dictionary containing the original frequency of each event in the sequence.
+    adjFreqs : dict
+        A dictionary containing the adjusted frequency of each event in the input sequence.
+    blck_delim : float
+        The block delimiter calculated as the negated sum of the logarithm base 2 of the adjusted frequency of the
+        "(" and ")" events.
+    """
     nbOccs = dict(tmpOccs.items())
-    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.
+    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.  # -1 is the key for the total number of events in the sequence
 
     if OPT_EVFR:
         adjFreqs = {"(": 1. / 3, ")": 1. / 3}
@@ -181,7 +244,7 @@ def makeOccsAndFreqsThird(tmpOccs):
             else:
                 adjFreqs[k] = 1. / (len(tmpOccs) + 2)
                 orgFreqs[k] = 1. / len(tmpOccs)
-    # print("ADJ FRQ:",  adjFreqs)
+
     return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("]) + numpy.log2(adjFreqs[")"]))
 
 
@@ -213,6 +276,42 @@ def key_to_br(key):
 
 
 class DataSequence(object):
+    """
+    A class that constructs a data sequence from a list or a dictionary of events and their respective timestamps.
+
+    Parameters
+    ----------
+    seq : list or dict
+        The input sequence of events and timestamps.
+        If `seq` is a list, it should contain tuples of (t, ev) where `t` is the timestamp and `ev` is the event name.
+        If `seq` is a dictionary, it should have the event names as keys and the corresponding values should be a list
+        of timestamps.
+
+    Attributes
+    ----------
+    evStarts : dict
+        A dictionary with the starting timestamps for each event.
+    evEnds : dict
+        A dictionary with the ending timestamps for each event.
+    data_details : dict
+        A dictionary containing information about the data, including the starting timestamp, ending timestamp,
+        delta time, number of occurrences, original frequencies, adjusted frequencies and block delimiter.
+    seqd : dict
+        A dictionary where the keys are event numbers (integers) and the values are lists of timestamps.
+    seql: list
+        A list of tuples where the first element is the timestamp and the second element is the event number.
+    list_ev : list
+        A sorted list of unique event names.
+    map_ev_num : dict
+        A dictionary where the keys are event names and the values are event numbers.
+
+    Examples
+    --------
+    Creating a `DataSequence` object with a list:
+
+    >>> data = [(1, 'A'), (2, 'B'), (3, 'A'), (4, 'C')]
+    >>> ds = DataSequence(data)
+    """
 
     def __init__(self, seq):
         evNbOccs, evStarts, evEnds = ({}, {}, {})
@@ -1578,6 +1677,33 @@ class Pattern(object):
 
 
 class Candidate(object):
+    """
+    Represents a candidate pattern with its properties and methods for working with it.
+
+    Parameters
+    ----------
+    cid : str
+        ID of the candidate.
+    P : dict or Pattern
+        Dictionary containing the properties of the pattern, or an instance of `Pattern`.
+    O : list, optional
+        List of occurrences of the pattern.
+    E : list, optional
+        List of event types of the occurrences.
+    cost : float, optional
+        Computed cost of the pattern.
+
+    Attributes
+    ----------
+    prop_list : list
+        List of the names of the properties of the pattern.
+    prop_map : dict
+        Dictionary mapping property names to their index in `prop_list`.
+    uncov : None or float
+        Fraction of the dataset that is not covered by the pattern.
+    ev_occ : None or list of tuple
+        List of tuples of event occurrences and their time stamps.
+    """
     prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
     prop_map = dict([(v, k) for k, v in enumerate(prop_list)])
 
@@ -1620,7 +1746,7 @@ class Candidate(object):
             P = self.getPattern()
         else:
             P = self.preparePatternSimple()
-        return (P, self.getT0(), self.E)
+        return P, self.getT0(), self.E
 
     def preparePatternSimple(self):
         r0 = len(self.O)
@@ -1905,6 +2031,33 @@ def mergeSortedPids(props, pidsA, pidsB):
 
 
 class CandidatePool(object):
+    """
+    CandidatePool is a class for storing and managing Candidate objects.
+
+    Attributes
+    ----------
+    candidates : dict
+        A dictionary of Candidate objects stored using candidate IDs as keys.
+    next_cid : int
+        The ID to be used for the next created Candidate.
+    cand_props : numpy.ndarray
+        A numpy array containing the properties of all candidates. Each row represents a candidate and each column a
+        different property. The first property is the "new" property, followed by the properties of the Candidate
+        object.
+    sorted_pids : list or range object
+        A list or range object representing the IDs of all candidates, sorted in order of the "new" property and then
+        in descending order of the "score" property.
+    map_minorKs : dict
+        A dictionary containing a mapping from minor keys to a dictionary that maps major keys to candidate IDs.
+    map_nkeys : dict
+        A dictionary that maps new keys to indices in the list_nkeys attribute.
+    list_nkeys : list
+        A list containing all new keys used by candidates.
+    new_cids : dict
+        A dictionary that maps new keys to a list of candidate IDs that are new according to that key.
+    new_minorKs : dict
+        A dictionary that maps new keys to a set of minor keys for candidates that are new according to that key.
+    """
 
     def __init__(self, patts=[]):
         self.candidates = {}
@@ -1919,6 +2072,9 @@ class CandidatePool(object):
             self.addCands(patts)
 
     def resetNew(self):
+        """
+        Resets the new_cids and new_minorKs attributes to empty dictionaries.
+        """
         self.new_cids = {}
         self.new_minorKs = {}
 
@@ -1981,6 +2137,9 @@ class CandidatePool(object):
         return self.cand_props
 
     def getProp(self, pid, att=None):
+        """
+        Returns the property values for the specified candidate ID and property name or index.
+        """
         if type(att) is int and att < len(Candidate.prop_list):
             return self.cand_props[pid, att]
         elif att in Candidate.prop_map:
@@ -1988,6 +2147,23 @@ class CandidatePool(object):
         return self.cand_props[pid, :]
 
     def addCand(self, p, nkey=None, with_props=True):
+        """
+        Adds a new candidate to the candidate pool.
+
+        Parameters
+        ----------
+        p : Candidate or tuple
+            The candidate to add or a tuple to create a new candidate.
+        nkey : any type
+            The new key of the candidate.
+        with_props : bool
+            Whether to generate properties for the candidate.
+
+        Returns
+        -------
+        Candidate or None
+            The newly added candidate or None if candidate is a duplicate.
+        """
         if type(p) is Candidate:
             c = p
         else:  # create candidate
@@ -2038,6 +2214,14 @@ class CandidatePool(object):
         return c
 
     def addCands(self, ps, nkey=None, costOne=None):
+        """
+        Adds multiple candidates to the candidate pool.
+
+        Parameters:
+        ps (list): A list of candidate patterns.
+        nkey (optional): The new key for the candidates, if any.
+        costOne (optional): The cost of a substitution operation.
+        """
         if nkey not in self.map_nkeys:
             self.map_nkeys[nkey] = len(self.list_nkeys)
             self.list_nkeys.append(nkey)

@@ -998,6 +998,25 @@ def filter_candidates_cover_slow(cands, dcosts, min_cov=1, adjust_occs=False, ci
 
 
 def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=None):
+    """
+    Filters a list of candidates based on their coverage and cost efficiency.
+
+    Parameters:
+    cands (dict or list): A dictionary or list of Candidate objects.
+    dcosts (dict): A dictionary of costs for each data point.
+    min_cov (int): The minimum number of data points a candidate must cover to be selected. Default is 1.
+    adjust_occs (bool): Whether to adjust occurrences of patterns. Default is False.
+    cis (list): A list of candidate indices to consider. If not provided, all candidates will be considered.
+
+    Returns:
+    list: A list of selected candidate indices.
+
+    Example
+    ------
+    >>> cands = [Candidate(...), Candidate(...), ...]
+    >>> dcosts = {'data1': 0.5, 'data2': 0.8, ...}
+    >>> selected = filter_candidates_cover(cands, dcosts, min_cov=2, adjust_occs=True, cis=[0, 2, 5])
+    """
     if cis is None:
         if type(cands) is dict:
             cis = list(cands.keys())
@@ -1106,6 +1125,27 @@ def disp_seqs(seqs, ffo_log=None):
 
 
 def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None):
+    """
+    Mines cycles and patterns from a set of sequences.
+
+    Parameters
+    ----------
+    seqs : DataSequence or list of str
+        A DataSequence object or a list of sequences to mine patterns from.
+    complex : bool, optional
+        Specifies if the sequences are complex (True) or simple (False). Default is True.
+    fn_basis : str or None, optional
+        Specifies the filename to use as a basis for output files. Default is "-" which use the standard output.
+    max_p : int or None, optional
+        The maximum size of the patterns to mine. Default is None.
+    writePCout_fun : function or None, optional
+        The function to use to write the output. Default is None.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the mined patterns and statistics.
+    """
     MINE_CPLX = True if complex else False
 
     if writePCout_fun is None:
@@ -1123,7 +1163,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         ds = DataSequence(seqs)
 
     results = {}
-    # log_write(fo_log, ds.getInfoStr()+"\n")
 
     data_details = ds.getDetails()
     dcosts = dict([(alpha, cost_one(data_details, alpha))
@@ -1132,7 +1171,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     tic = datetime.datetime.now()
     dT_sel = datetime.timedelta()
 
-    tic_ev = tic
     # log_write(fo_log, "[TIME] Start --- %s\n" % tic)
     results["TIME Start"] = str(tic)
 
@@ -1140,17 +1178,15 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     if PICKLE == 1 and fn_basis is not None:
         evs = []
     else:
-        evs = ds.getEvents()
-
-    # print("\n\n\n\n data_details", data_details)
+        evs = ds.getEvents()  # list containing all events names
 
     results["ev"] = []
     results["alpha"] = []
     results["len(seq)"] = []
     results["TIME run"] = []
-    for alpha, ev in enumerate(evs):
+    for alpha, ev in enumerate(evs):  # alpha is the mapping number associated to the event `ev`
         tic_ev = datetime.datetime.now()
-        seq = ds.getSequence(alpha)
+        seq = ds.getSequence(alpha)  # return the associated timestamps associated to the event number alpha
 
         # log_write(fo_log, "------------\n")
         # log_write(fo_log, "SEQUENCE %s[%s]: (%d)\n" % (ev, alpha, len(seq)))
