@@ -72,7 +72,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.miners_ = {}
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.alpha_groups = {}  # associates to each event (key) its associated datetimes (list of values)
+        # associates to each event (key) its associated datetimes (list of values)
+        self.alpha_groups = {}
         self.cycles = None
         self.data_details = None
         self.auto_time_scale = True
@@ -117,7 +118,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
             S = S.reset_index(level=0, drop=True)
             if len(S) < len_S:
-                warnings.warn("Duplicates found in the input sequence, they have been removed.")
+                warnings.warn(
+                    "Duplicates found in the input sequence, they have been removed.")
 
         S = S.copy()  # FIXME : why ?
 
@@ -254,7 +256,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
         """
 
-        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(self.data_details)
+        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
+            self.data_details, auto_time_scale_factor=10 ** self.n_zeros_ if self.auto_time_scale else 1)
 
         # print(pd.DataFrame([global_stat_dict]))
 
@@ -266,15 +269,21 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         if self.auto_time_scale:
             self.cycles.loc[:, ["t0", "period_major"]] *= 10 ** self.n_zeros_
 
-            self.cycles.loc[:, "E"] = self.cycles.E.map(np.array) * (10 ** self.n_zeros_)
-            to_timedelta = lambda x: pd.to_timedelta(x, unit='ns')
-            self.cycles["E"] = self.cycles["E"].apply(lambda x: list(map(to_timedelta, x)))
+            self.cycles.loc[:, "E"] = self.cycles.E.map(
+                np.array) * (10 ** self.n_zeros_)
+
+            def to_timedelta(x): return pd.to_timedelta(x, unit='ns')
+            self.cycles["E"] = self.cycles["E"].apply(
+                lambda x: list(map(to_timedelta, x)))
 
             if self.is_datetime_:
-                self.cycles.loc[:, "t0"] = self.cycles.t0.astype("datetime64[ns]")
-                self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype("timedelta64[ns]")
+                self.cycles.loc[:, "t0"] = self.cycles.t0.astype(
+                    "datetime64[ns]")
+                self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
+                    "timedelta64[ns]")
         if dE_sum:
-            self.cycles["E"] = self.cycles["E"].apply(lambda x: np.sum(np.abs(x)))
+            self.cycles["E"] = self.cycles["E"].apply(
+                lambda x: np.sum(np.abs(x)))
 
         if chronological_order:
             self.cycles.sort_values(by='t0', inplace=True)
@@ -333,7 +342,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         reconstruct_pd = pd.DataFrame(reconstruct_list)
 
         if self.is_datetime_:
-            reconstruct_pd['time'] = reconstruct_pd['time'].astype("datetime64[ns]")
+            reconstruct_pd['time'] = reconstruct_pd['time'].astype(
+                "datetime64[ns]")
             reconstruct_pd['time'] = reconstruct_pd['time'].astype("str")
 
         if sort == "time":
@@ -394,14 +404,17 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         residuals_transf_list = []
 
         for res in residuals:
-            dict_ = {"time": res[0] * 10 ** self.n_zeros_ if self.auto_time_scale else res[0], "event": map_ev[res[1]]}
+            dict_ = {
+                "time": res[0] * 10 ** self.n_zeros_ if self.auto_time_scale else res[0], "event": map_ev[res[1]]}
             residuals_transf_list.append(dict_)
 
         residuals_transf_pd = pd.DataFrame(residuals_transf_list)
 
         if self.auto_time_scale and self.is_datetime_:
-            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype("datetime64[ns]")
-            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype("str")
+            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
+                "datetime64[ns]")
+            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
+                "str")
 
         reconstruct_ = self.reconstruct(patterns_id)
         reconstruct_all = self.reconstruct()
@@ -409,10 +422,13 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
             reconstruct_)].dropna()
 
         if pd.merge(reconstruct_all, residuals_transf_pd, how='inner').empty:
-            residuals_transf_pd = pd.concat([residuals_transf_pd, complementary_reconstruct], ignore_index=True)
+            residuals_transf_pd = pd.concat(
+                [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
         else:
-            warnings.warn("resudials and complementary of reconstruct have common patterns")
-            residuals_transf_pd = pd.concat([residuals_transf_pd, complementary_reconstruct], ignore_index=True)
+            warnings.warn(
+                "resudials and complementary of reconstruct have common patterns")
+            residuals_transf_pd = pd.concat(
+                [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
 
         if sort == "time":
             residuals_transf_pd = residuals_transf_pd.sort_values(by=['time'])

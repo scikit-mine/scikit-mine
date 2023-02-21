@@ -492,7 +492,7 @@ class PatternCollection(object):
             cl += clp
         return str_out, cl
 
-    def strDetailed(self, data_seq, print_simple=True):
+    def strDetailed(self, data_seq,  print_simple=True):
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 
@@ -517,7 +517,7 @@ class PatternCollection(object):
                 cl, 100 * cl / clRonly, clRonly)
         return out_str, pl_str
 
-    def output_pattern_list_and_cost(self, data_seq, print_simple=True):
+    def output_pattern_list_and_cost(self, data_seq, print_simple=True, auto_time_scale_factor=1):
         cl = 0
         data_details = data_seq.getDetails()
         ocls = self.getOccLists()
@@ -557,6 +557,8 @@ class PatternCollection(object):
             pattern_tree = p.getTreeDict(map_ev=map_ev)
             pattern_tree["Depth"] = int(p.getDepth())
             pattern_tree["Width"] = int(p.getWidth())
+            pattern_tree["auto_time_scale_factor"] = int(
+                auto_time_scale_factor)
             pattern_tree = json.dumps(pattern_tree)
             # print("pattern_tree", pattern_tree)
             # print("Ttree", p.getTreeStr())
@@ -595,12 +597,12 @@ class PatternCollection(object):
 
         return patterns_list_of_dict, cl
 
-    def output_detailed(self, data_seq, print_simple=True):
+    def output_detailed(self, data_seq, print_simple=True, auto_time_scale_factor=1):
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 
         patterns_list_of_dict, cl = self.output_pattern_list_and_cost(
-            data_seq, print_simple)
+            data_seq, print_simple, auto_time_scale_factor=auto_time_scale_factor)
 
         # nbs_str = ("Total=%d " % len(self)) + " ".join(
         #     ["nb_%s=%d" % (k, v) for (k, v) in sorted(nbs.items(), key=lambda x: -x[1])])
