@@ -558,8 +558,8 @@ class PatternCollection(object):
             pattern_tree["Depth"] = int(p.getDepth())
             pattern_tree["Width"] = int(p.getWidth())
             pattern_tree = json.dumps(pattern_tree)
-            print("pattern_tree", pattern_tree)
-            print("Ttree", p.getTreeStr())
+            # print("pattern_tree", pattern_tree)
+            # print("Ttree", p.getTreeStr())
 
             # print("p.getCyclePs", p.getCyclePs())
             # print("p.getCycleRs", p.getCycleRs())
