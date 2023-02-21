@@ -266,11 +266,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         if self.auto_time_scale:
             self.cycles.loc[:, ["t0", "period_major"]] *= 10 ** self.n_zeros_
 
-            # self.cycles.loc[:, "dE"] = self.cycles.dE.map(
-            #     np.array) * (10 ** self.n_zeros_)
+            self.cycles.loc[:, "E"] = self.cycles.E.map(np.array) * (10 ** self.n_zeros_)
+            to_timedelta = lambda x: pd.to_timedelta(x, unit='ns')
+            self.cycles["E"] = self.cycles["E"].apply(lambda x: list(map(to_timedelta, x)))
 
-            # self.cycles.loc[:, "dE"] = self.cycles.loc[:, "dE"] * (10 ** self.n_zeros_)
-            # disc_print = self.cycles.copy()
             if self.is_datetime_:
                 self.cycles.loc[:, "t0"] = self.cycles.t0.astype("datetime64[ns]")
                 self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype("timedelta64[ns]")

@@ -1100,6 +1100,9 @@ class Pattern(object):
             return [self.nodes[nid]["event"]]
 
     def getTreeStr(self, nid=0, level=0, map_ev=None):
+        """
+        Generate the visualization of the cycle
+        """
         if not self.isNode(nid):
             return ("\t" * level) + "()\n"
         if self.isInterm(nid):
