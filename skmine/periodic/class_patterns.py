@@ -63,6 +63,26 @@ def cost_triple(data_details, alpha, dp, deltaE):
 
 
 def cost_one(data_details, alpha):
+    """
+    Compute the cost of an individual occurence o = (t, alpha) based on the data_details.
+    L(o) = L(t) + L(alpha) = log(deltaS + 1) - log2(freq(alpha))
+
+    Parameters
+    ----------
+    data_details : dict
+        A dictionary containing the following keys:
+        * nbOccs (dict) - a dictionary of itemsets and their frequencies
+        * orgFreqs (dict) - a dictionary of itemsets and their original frequencies
+        * adjFreqs (dict) - a dictionary of itemsets and their adjusted frequencies
+        * deltaT (int) - the total number of transactions in the dataset
+    alpha : int
+        The event for which to compute the cost.
+
+    Returns
+    -------
+    float
+        The cost of the occurence.
+    """
     if alpha in data_details["nbOccs"]:
         # -log2(|alpha|)
         cl_alpha = -numpy.log2(data_details["orgFreqs"][alpha])

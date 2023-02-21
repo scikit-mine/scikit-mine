@@ -72,8 +72,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.miners_ = {}
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        # associates to each event (key) its associated datetimes (list of values)
-        self.alpha_groups = {}
+        self.alpha_groups = {}  # associates to each event (key) its associated datetimes (list of values)
         self.cycles = None
         self.data_details = None
         self.auto_time_scale = True
@@ -258,8 +257,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
             self.data_details, auto_time_scale_factor=10 ** self.n_zeros_ if self.auto_time_scale else 1)
-
-        # print(pd.DataFrame([global_stat_dict]))
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME
