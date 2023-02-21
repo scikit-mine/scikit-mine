@@ -64,12 +64,14 @@ def cost_triple(data_details, alpha, dp, deltaE):
 
 def cost_one(data_details, alpha):
     if alpha in data_details["nbOccs"]:
-        cl_alpha = -numpy.log2(data_details["orgFreqs"][alpha])  # -log2(|alpha|)
+        # -log2(|alpha|)
+        cl_alpha = -numpy.log2(data_details["orgFreqs"][alpha])
     else:
         # -numpy.sum([numpy.log2(data_details["adjFreqs"].get(a, 1)) for a in alpha])  # FIXME: to be commented or not?
         cl_alpha = 0
 
-    return cl_alpha + numpy.log2(data_details["deltaT"] + 1)  # cl_alpha + log2(deltaT + 1)
+    # cl_alpha + log2(deltaT + 1)
+    return cl_alpha + numpy.log2(data_details["deltaT"] + 1)
 
 
 def computeLengthEOccs(occs, cp):
@@ -229,7 +231,8 @@ def makeOccsAndFreqsThird(tmpOccs):
         "(" and ")" events.
     """
     nbOccs = dict(tmpOccs.items())
-    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.  # -1 is the key for the total number of events in the sequence
+    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * \
+        1.  # -1 is the key for the total number of events in the sequence
 
     if OPT_EVFR:
         adjFreqs = {"(": 1. / 3, ")": 1. / 3}
@@ -555,6 +558,8 @@ class PatternCollection(object):
             pattern_tree["Depth"] = int(p.getDepth())
             pattern_tree["Width"] = int(p.getWidth())
             pattern_tree = json.dumps(pattern_tree)
+            print("pattern_tree", pattern_tree)
+            print("Ttree", p.getTreeStr())
 
             # print("p.getCyclePs", p.getCyclePs())
             # print("p.getCycleRs", p.getCycleRs())
@@ -1122,7 +1127,25 @@ class Pattern(object):
             else:
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
-    def getTreeDict(self, nid=0, level=0, map_ev=None):
+    def getTreeDict(self, nid=0, map_ev=None):
+        """
+        A function that constructs recursively the json Tree from the pattern. 
+
+        Parameters
+        ----------
+        self : class Pattern(object)
+
+        nid : integer
+            number of the node of the pattern tree
+
+        map_ev : dict
+            A dictionary where the keys are event names and the values are event numbers.
+
+        Returns
+        -------
+        json string
+            representing the pattern tree. 
+        """
 
         if not self.isNode(nid):
             return {}
@@ -1135,7 +1158,6 @@ class Pattern(object):
                 "p": int(self.nodes[nid]["p"]),
                 "parent": str(parent) if parent == None else parent,
                 "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children]
-
             }
 
             ss["children"] = []
@@ -1145,17 +1167,14 @@ class Pattern(object):
                 child = {
                     "nid": int(nn[0]),
                     "d":   int(nn[1]),
-                    "p": int(self.nodes[nid]["p"]),
                     "parent": str(parent) if parent == None else parent,
                 }
-
                 if self.isInterm(nn[0]):
                     for key, value in self.getTreeDict(nn[0], map_ev=map_ev).items():
                         child[key] = value
                 else:
                     child["event"] = self.getTreeDict(nn[0], map_ev=map_ev)
                 ss["children"].append(child)
-
             return ss
         else:
             if map_ev is not None:
