@@ -15,6 +15,47 @@ PROPS_MAX_OFFSET = -2
 PROPS_MIN_R = 0
 
 
+def _replace_tuple_in_list(l, i):
+    """
+    replace int64 into int in a tuple
+    """
+    if i < len(l):
+        l[i] = tuple(int(v) if isinstance(v, numpy.int64) else v for v in l[i])
+    return l
+
+
+def _replace_list_in_list(l, i):
+    """
+    replace int64 into int in a list
+    """
+    if i < len(l):
+        l[i] = [int(v) if isinstance(v, numpy.int64) else v for v in l[i]]
+    return l
+
+
+def _change_int64_toint(obj):
+    """
+    convert a int64 into int in a nested dict with tuple 
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                _change_int64_toint(value)
+            elif isinstance(value, list):
+                for it, val_ in enumerate(value):
+                    if isinstance(val_, tuple):
+                        value = _replace_tuple_in_list(value, it)
+                    if isinstance(val_, list):
+                        value = _replace_list_in_list(value, it)
+                _change_int64_toint(value)
+            elif isinstance(value, tuple):
+                _change_int64_toint(value)
+            elif isinstance(value, numpy.int64):
+                value = int(value)
+                obj[key] = value
+    return obj
+
+
 def _getChained(listsd, keys=None):
     if keys is None:
         keys = list(listsd.keys())
@@ -356,6 +397,7 @@ class DataSequence(object):
         self.map_ev_num = dict([(v, k) for (k, v) in enumerate(self.list_ev)])
         for q, dt in seq_tmp.items():
             self.seqd[self.map_ev_num[q]] = dt
+
         for (ev, ts) in self.seqd.items():
             self.seql.extend([(t, ev) for t in ts])
         self.seql.sort()
@@ -574,14 +616,22 @@ class PatternCollection(object):
             # print("p.getOccsStarMatch", p.getOccsStarMatch())
             # print("p.getEventsList", p.getEventsList())
             # print("p.getEventsMinor", p.getEventsMinor())
-            pattern_tree = p.getTreeDict(map_ev=map_ev)
-            pattern_tree["Depth"] = int(p.getDepth())
-            pattern_tree["Width"] = int(p.getWidth())
-            pattern_tree["auto_time_scale_factor"] = int(
-                auto_time_scale_factor)
-            pattern_tree = json.dumps(pattern_tree)
+            pattern_tree = p.nodes
+            pattern_tree["next_id"] = p.next_id
+            pattern_tree["t0"] = int(t0)
+            pattern_tree["E"] = [int(e) for e in E]
+            # pattern_tree["Depth"] = int(p.getDepth())
+            # pattern_tree["Width"] = int(p.getWidth())
+            # pattern_tree["auto_time_scale_factor"] = int(
+            #     auto_time_scale_factor)
+            # print("pattern_tree int", iterdict_in64toint(pattern_tree))
+            # pattern_tree = iterdict_in64toint(pattern_tree)
+            # print("pattern_tree int key", iterdict_str_to_int_keys(pattern_tree))
+            # pattern_tree = iterdict_str_to_int_keys(pattern_tree)
+
+            pattern_tree = json.dumps(_change_int64_toint(pattern_tree))
             # print("pattern_tree", pattern_tree)
-            # print("Ttree", p.getTreeStr())
+            # print("Tree", p.getTreeStr())
 
             # print("p.getCyclePs", p.getCyclePs())
             # print("p.getCycleRs", p.getCycleRs())
@@ -664,7 +714,7 @@ class Pattern(object):
     # does overlapping count as interleaved?
     overlap_interleaved = False
 
-    @classmethod
+    @ classmethod
     def parseTreeStr(cls, tree_str, leaves_first=False, from_inner=False):
         MATCH_IN = "\((?P<inner>.*)\)"
         MATCH_PR = "\[r=(?P<r>[0-9]+) p=(?P<p>[0-9]+)\]"
@@ -683,7 +733,7 @@ class Pattern(object):
             return cls.parseInnerStr(tree_str, leaves_first)
         return None
 
-    @classmethod
+    @ classmethod
     def parseInnerStr(cls, inner_str, leaves_first=False):
         MATCH_D = "\[d=(?P<d>[0-9]+)\]"
         pos_L = 0
@@ -721,6 +771,8 @@ class Pattern(object):
                 self.next_id += 1
         else:
             self.nodes[0] = {"parent": None, "children": []}
+
+    # def read_json_pattern() :
 
     def copy(self):
         pc = Pattern()
@@ -1154,7 +1206,7 @@ class Pattern(object):
 
     def getTreeDict(self, nid=0, map_ev=None):
         """
-        A function that constructs recursively the json Tree from the pattern. 
+        A function that constructs recursively the json Tree from the pattern.
 
         Parameters
         ----------
@@ -1169,7 +1221,7 @@ class Pattern(object):
         Returns
         -------
         json string
-            representing the pattern tree. 
+            representing the pattern tree.
         """
 
         if not self.isNode(nid):
@@ -1178,39 +1230,39 @@ class Pattern(object):
             parent = self.nodes[nid]["parent"]
             children = self.nodes[nid]["children"]
             ss = {
-                "nid": int(nid),
-                "r": int(self.nodes[nid]["r"]),
-                "p": int(self.nodes[nid]["p"]),
-                "parent": str(parent) if parent == None else parent,
-                "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children]
+                'nid': int(nid),
+                'r': int(self.nodes[nid]['r']),
+                'p': int(self.nodes[nid]['p']),
+                'parent': str(parent) if parent == None else parent,
+                'children_tuple': ['(nid=' + str(int(nn[0])) + ', d=' + str(int(nn[1])) + ')' for nn in children]
             }
 
-            ss["children"] = []
+            ss['children'] = []
             for nn in children:
-                # ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
-                parent = self.nodes[nn[0]]["parent"]
+                # ss += '%s| d=%s\n' % (('\t' * (level + 1)), nn[1])
+                parent = self.nodes[nn[0]]['parent']
                 child = {
-                    "nid": int(nn[0]),
-                    "d":   int(nn[1]),
-                    "parent": str(parent) if parent == None else parent,
+                    'nid': int(nn[0]),
+                    'd':   int(nn[1]),
+                    'parent': str(parent) if parent == None else parent,
                 }
                 if self.isInterm(nn[0]):
                     for key, value in self.getTreeDict(nn[0], map_ev=map_ev).items():
                         child[key] = value
                 else:
-                    child["event"] = self.getTreeDict(nn[0], map_ev=map_ev)
-                ss["children"].append(child)
+                    child['event'] = self.getTreeDict(nn[0], map_ev=map_ev)
+                ss['children'].append(child)
             return ss
         else:
             if map_ev is not None:
-                return map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"])
-                # return "%s|_ [%s] %s\n" % (
-                #     ("\t" * level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
+                return map_ev.get(self.nodes[nid]['event'], self.nodes[nid]['event'])
+                # return '%s|_ [%s] %s\n' % (
+                #     ('\t' * level), nid, map_ev.get(self.nodes[nid]['event'], self.nodes[nid]['event']))
             else:
-                return str(self.nodes[nid]["event"])
-                # return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
+                return str(self.nodes[nid]['event'])
+                # return '%s|_ [%s] %s\n' % (('\t' * level), nid, self.nodes[nid]['event'])
 
-    # trees["P5"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0), (2, 3), (3, 1)], 'parent': None},
+    # trees['P5'] = {0: {'p': 13, 'r': 3, 'children': [(1, 0), (2, 3), (3, 1)], 'parent': None},
     #                1: {'event': 'b', 'parent': 0},
     #                2: {'event': 'a', 'parent': 0},
     #                3: {'event': 'c', 'parent': 0}}

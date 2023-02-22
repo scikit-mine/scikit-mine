@@ -5,12 +5,13 @@
 # License: BSD 3 clause
 
 import warnings
-
+import json
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .run_mine import mine_seqs
+from .class_patterns import Pattern, PatternCollection, DataSequence
 
 log = np.log2
 
@@ -22,11 +23,54 @@ INDEX_TYPES = (
 
 
 def _remove_zeros(numbers: pd.Series):
+
     n = 0
     while (numbers % 10 == 0).all():
         numbers //= 10
         n += 1
     return numbers, n
+
+
+def _iterdict_str_to_int_keys(dict_):
+    """This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type will remain unchanged.
+    """
+    correctedDict = {}
+    for key, value in dict_.items():
+        if isinstance(value, list):
+            value = [_iterdict_str_to_int_keys(item) if isinstance(
+                item, dict) else item for item in value]
+        elif isinstance(value, dict):
+            value = _iterdict_str_to_int_keys(value)
+        try:
+            key = int(key)
+        except Exception as ex:
+            pass
+        correctedDict[key] = value
+
+    return correctedDict
+
+
+# def iterdict_scale_factor(d, scale_factor):
+#     """Recursively iterate over dict scaling values with scale_factor , with the key == "d" or "p"
+
+#     """
+
+#     for k, v in d.items():
+#         if isinstance(v, dict):
+#             iterdict_scale_factor(v)
+#         elif isinstance(v, list):
+#             for x, i in enumerate(v):
+#                 if isinstance(i, (dict, list)):
+#                     iterdict_scale_factor(i)
+#                 else:
+#                     if x == "d" or x == "p":
+#                         i = i * scale_factor
+#                     v[x] = i
+#         else:
+#             if k == "d" or k == "p":
+#                 v = v * scale_factor
+#             d.update({k: v})
+#     return d
 
 
 class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
@@ -72,7 +116,8 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.miners_ = {}
         self.is_datetime_ = None
         self.n_zeros_ = 0
-        self.alpha_groups = {}  # associates to each event (key) its associated datetimes (list of values)
+        # associates to each event (key) its associated datetimes (list of values)
+        self.alpha_groups = {}
         self.cycles = None
         self.data_details = None
         self.auto_time_scale = True
@@ -135,9 +180,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         #  ========================================================================================
         #  ****************************************************************************************
         #  TODO : Connection with Esther routine here :
-
-        print("self.alpha_groups", len(self.alpha_groups))
-        print("S.values", len(S.values))
 
         cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
                                             fn_basis=None, complex=complex)
@@ -285,6 +327,63 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         if chronological_order:
             self.cycles.sort_values(by='t0', inplace=True)
         return self.cycles
+
+    def export_patterns(self, file="patterns.json"):
+        """Export pattern into a json file
+
+        Parameters
+        -------
+        file: string
+            name of the json file
+        """
+
+        big_dict_list = [json.loads(i)
+                         for i in self.cycles["pattern_json_tree"].values]
+
+        data_dict = self.alpha_groups.copy()
+        for k, v in data_dict.items():
+            data_dict[k] = v.to_list()
+
+        big_dict = {
+            "is_datetime_": self.is_datetime_,
+            "n_zeros_": self.n_zeros_,
+            "data_details": data_dict,
+            "patterns": big_dict_list
+        }
+
+        big_json_str = json.dumps(big_dict)
+        with open(file, "w") as f:
+            f.write(big_json_str)
+
+    def import_patterns(self, file="patterns.json"):
+        """Import pattern into a json file
+
+        Parameters
+        -------
+        file: string
+            name of the json file
+        """
+
+        with open(file, "r") as f:
+            big_dict = json.load(f)
+
+        self.n_zeros_ = big_dict["n_zeros_"]
+        self.is_datetime_ = big_dict["is_datetime_"]
+
+        self.data_details = DataSequence(dict(big_dict["data_details"]))
+        big_dict_list = big_dict["patterns"]
+
+        patterns_list = []
+        for pseudo_pat in big_dict_list:
+            pattern = Pattern()
+            pattern.next_id = pseudo_pat.pop("next_id")
+            t0 = pseudo_pat.pop("t0")
+            E = pseudo_pat.pop("E")
+            pattern.nodes = _iterdict_str_to_int_keys(pseudo_pat)
+            patterns_list.append((pattern, t0, E))
+
+        patterns_collection = PatternCollection(patterns=patterns_list)
+        self.miners_ = patterns_collection
 
     def reconstruct(self, *patterns_id, sort="time", drop_duplicates=True):
         """Reconstruct all the occurrences from patterns (no argument), or the
