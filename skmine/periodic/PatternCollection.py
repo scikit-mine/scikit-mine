@@ -10,7 +10,7 @@ def _replace_tuple_in_list(l, i):
     replace int64 into int in a tuple
     """
     if i < len(l):
-        l[i] = tuple(int(v) if isinstance(v, numpy.int64) else v for v in l[i])
+        l[i] = tuple(int(v) if isinstance(v, np.int64) else v for v in l[i])
     return l
 
 
@@ -19,7 +19,7 @@ def _replace_list_in_list(l, i):
     replace int64 into int in a list
     """
     if i < len(l):
-        l[i] = [int(v) if isinstance(v, numpy.int64) else v for v in l[i]]
+        l[i] = [int(v) if isinstance(v, np.int64) else v for v in l[i]]
     return l
 
 
@@ -40,7 +40,7 @@ def _change_int64_toint(obj):
                 _change_int64_toint(value)
             elif isinstance(value, tuple):
                 _change_int64_toint(value)
-            elif isinstance(value, numpy.int64):
+            elif isinstance(value, np.int64):
                 value = int(value)
                 obj[key] = value
     return obj
