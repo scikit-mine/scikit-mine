@@ -236,7 +236,8 @@ class Pattern(object):
 
     def getCovSeq(self, t0, E=[]):
         oStar = self.getOccsStar()
-        Ed = self.getEDict(oStar, E)  # all last elements in the previous tuple associated to his shift correction
+        # all last elements in the previous tuple associated to his shift correction
+        Ed = self.getEDict(oStar, E)
         return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
 
     def getOccsByRefs(self, oStar, t0, E=[]):
@@ -503,65 +504,6 @@ class Pattern(object):
             else:
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
-    def getTreeDict(self, nid=0, map_ev=None):
-        """
-        A function that constructs recursively the json Tree from the pattern.
-
-        Parameters
-        ----------
-        self : class Pattern(object)
-
-        nid : integer
-            number of the node of the pattern tree
-
-        map_ev : dict
-            A dictionary where the keys are event names and the values are event numbers.
-
-        Returns
-        -------
-        json string
-            representing the pattern tree.
-        """
-
-        if not self.isNode(nid):
-            return {}
-        if self.isInterm(nid):
-            parent = self.nodes[nid]["parent"]
-            children = self.nodes[nid]["children"]
-            ss = {"nid": int(nid), "r": int(self.nodes[nid]["r"]), "p": int(self.nodes[nid]["p"]),
-                  "parent": str(parent) if parent is None else parent,
-                  "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children],
-                  "children": []}
-
-            for nn in children:
-                # ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
-                parent = self.nodes[nn[0]]["parent"]
-                child = {
-                    "nid": int(nn[0]),
-                    "d": int(nn[1]),
-                    "parent": str(parent) if parent is None else parent,
-                }
-                if self.isInterm(nn[0]):
-                    for key, value in self.getTreeDict(nn[0], map_ev=map_ev).items():
-                        child[key] = value
-                else:
-                    child["event"] = self.getTreeDict(nn[0], map_ev=map_ev)
-                ss["children"].append(child)
-            return ss
-        else:
-            if map_ev is not None:
-                return map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"])
-                # return "%s|_ [%s] %s\n" % (
-                #     ("\t" * level), nid, map_ev.get(self.nodes[nid]["event"], self.nodes[nid]["event"]))
-            else:
-                return str(self.nodes[nid]["event"])
-                # return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
-
-    # trees["P5"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0), (2, 3), (3, 1)], 'parent': None},
-    #                1: {'event': 'b', 'parent': 0},
-    #                2: {'event': 'a', 'parent': 0},
-    #                3: {'event': 'c', 'parent': 0}}
-
     def __str__(self, nid=0, map_ev=None, leaves_first=False):
         if not self.isNode(nid):
             return ""
@@ -822,7 +764,7 @@ class Pattern(object):
             return 0
         if self.isInterm(nid):
             return np.sum([-np.log2(adjFreqs["("]), -np.log2(adjFreqs[")"])] +
-                             [self.codeLengthEvents(adjFreqs, nn[0]) for nn in self.nodes[nid]["children"]])
+                          [self.codeLengthEvents(adjFreqs, nn[0]) for nn in self.nodes[nid]["children"]])
         else:
             return -np.log2(adjFreqs[self.nodes[nid]["event"]])
 
@@ -833,7 +775,7 @@ class Pattern(object):
             return -1
         if self.isInterm(nid):
             min_r = np.min([self.getMinOccs(nbOccs, min_occs, nn[0])
-                               for nn in self.nodes[nid]["children"]])
+                            for nn in self.nodes[nid]["children"]])
             min_occs.append(min_r)
             return min_r
         else:
@@ -919,7 +861,7 @@ class Pattern(object):
 
         if OPT_TO:
             maxv = deltaT - EC_za - \
-                   self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
+                self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
             maxv = deltaT + 1
         if EC_za is None and maxv <= 0:
@@ -994,7 +936,7 @@ class Pattern(object):
             if Pattern.LOG_DETAILS == 1:
                 print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
                                                                   Tmax_rep, len(
-                    self.nodes[nid]["children"]) - 1, cld_i,
+                                                                      self.nodes[nid]["children"]) - 1, cld_i,
                                                                   cld))
             if Pattern.LOG_DETAILS == 2:
                 for kk in range(len(self.nodes[nid]["children"]) - 1):
@@ -1003,7 +945,7 @@ class Pattern(object):
             cl += cld
 
         sum_spans = np.sum([nn[1]
-                               for nn in self.nodes[nid]["children"][1:]])
+                            for nn in self.nodes[nid]["children"][1:]])
         cumsum_spans = 0
         for ni, nn in enumerate(self.nodes[nid]["children"]):
             if self.allow_interleaving:
@@ -1031,7 +973,7 @@ class Pattern(object):
         if self.hasNestedPDs():
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 if self.nodes[0]["p"] < Tmax:
                     Tmax_rep = self.nodes[0]["p"]
@@ -1077,7 +1019,7 @@ class Pattern(object):
                 EC_zz = self.getCCorr(o_zz, Ed)
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
