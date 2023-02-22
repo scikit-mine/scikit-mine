@@ -144,8 +144,7 @@ class Pattern(object):
         if not self.isNode(nid):
             return []
         if self.isInterm(nid):
-            occs = []
-            occs.append((nid, l_to_key(pref[::-1])))
+            occs = [(nid, l_to_key(pref[::-1]))]
             for i in range(self.nodes[nid]["r"]):
                 occs.append((nid, l_to_key(pref[::-1] + [(-1, i)])))
                 for ni, nn in enumerate(self.nodes[nid]["children"]):
