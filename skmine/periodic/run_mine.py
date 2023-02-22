@@ -10,8 +10,12 @@ import sys
 
 import numpy
 
-from .class_patterns import PatternCollection, Pattern, DataSequence, computePeriodDiffs, computePeriod, cost_one, \
-    Candidate, CandidatePool, sortPids
+from .Candidate import Candidate
+from .CandidatePool import CandidatePool
+from .DataSequence import DataSequence
+from .Pattern import Pattern
+from .PatternCollection import PatternCollection
+from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
 from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
 from .read_data import readSequence, readSequenceSacha, group_syms
 
@@ -29,19 +33,14 @@ BASIS_REP = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DATA_REP = BASIS_REP + "/data/"
 XPS_REP = BASIS_REP + "/xps/runs/"
 
-series_params = {}
-series_params["bugzilla_0_rel_all"] = {
-    "input_file": "traces/trace_bugzilla_0_data.dat", "timestamp": False}
-series_params["bugzilla_1_rel_all"] = {
-    "input_file": "traces/trace_bugzilla_1_data.dat", "timestamp": False}
-series_params["3zap_0_rel"] = {
-    "input_file": "traces/trace_kptrace_3zap_0_data.dat", "timestamp": False}
-series_params["3zap_1_rel"] = {
-    "input_file": "traces/trace_kptrace_3zap_1_data.dat", "timestamp": False}
+series_params = {"bugzilla_0_rel_all": {"input_file": "traces/trace_bugzilla_0_data.dat", "timestamp": False},
+                 "bugzilla_1_rel_all": {"input_file": "traces/trace_bugzilla_1_data.dat", "timestamp": False},
+                 "3zap_0_rel": {"input_file": "traces/trace_kptrace_3zap_0_data.dat", "timestamp": False},
+                 "3zap_1_rel": {"input_file": "traces/trace_kptrace_3zap_1_data.dat", "timestamp": False},
+                 "samba_auth_abs": {"input_file": "samba_commits/commit_auth_data_smll.dat", "timestamp": True}
+                 }
 
 # series_params["samba_auth_abs"] = {"input_file": "samba_commits/commit_auth_data.dat", "timestamp": True}
-series_params["samba_auth_abs"] = {
-    "input_file": "samba_commits/commit_auth_data_smll.dat", "timestamp": True}
 
 for grain in [1, 15, 30, 60, 720, 1440]:
     series_params["sacha_18_absI_G%d" % grain] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt", "timestamp": True,

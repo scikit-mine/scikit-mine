@@ -120,8 +120,6 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
                 warnings.warn(
                     "Duplicates found in the input sequence, they have been removed.")
 
-        S = S.copy()  # FIXME : why ?
-
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
 
