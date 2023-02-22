@@ -6,8 +6,10 @@ import sys
 import numpy
 
 from read_data import readSequence
-from .class_patterns import Pattern, PatternCollection, DataSequence
-from .run_mine import mine_seqs
+from skmine.periodic.DataSequence import DataSequence
+from skmine.periodic.Pattern import Pattern
+from skmine.periodic.PatternCollection import PatternCollection
+from skmine.periodic.run_mine import mine_seqs
 
 CMP_OUT_CODES = ["Perfect match",
                  "Patts cover match, same code length",

@@ -12,8 +12,6 @@ STEP_SIZE = 80
 
 
 # make a "original" solution from synthetic data generation details
-
-
 def make_solution(dets, alpha):
     solution = []
     uncovered = set()
@@ -49,8 +47,6 @@ def recover_splits_rec_ov(spoints, ia, iz, depth=0):
 
 
 # fill in dynamic programming table
-
-
 def compute_table_dyn_ov(occs, alpha, data_details):
     ilast = len(occs)
     score_res = computeLengthResidual(
@@ -121,8 +117,6 @@ def recover_splits_rec(spoints, ia, iz, depth=0, singletons=True):
 
 
 # fill in dynamic programming table
-
-
 def compute_table_dyn(occs, alpha, data_details):
     ilast = len(occs)
     score_res = computeLengthResidual(

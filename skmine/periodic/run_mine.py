@@ -15,6 +15,7 @@ from .CandidatePool import CandidatePool
 from .DataSequence import DataSequence
 from .Pattern import Pattern
 from .PatternCollection import PatternCollection
+from .class_patterns import prop_map
 from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
 from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
 from .read_data import readSequence, readSequenceSacha, group_syms
@@ -459,7 +460,7 @@ def find_complexes(cpool, mk, data_details):
                     i = -1
 
             Hcids, Hlefts, i = ([], [], 0)
-            while i >= 0 and i < nbOleftB:
+            while 0 <= i < nbOleftB:
                 nocc = cpool.getCandidate(ciB).getMajorO()[-nbOleftB + i]
                 if nocc in occs_to_cycles:
                     ps = occs_to_cycles[nocc].keys()
@@ -692,11 +693,8 @@ def getPidsSlice(patterns_props, pids, slice_size, col, max_v):
         return []
     ii = numpy.where(
         patterns_props[pids[::slice_size] + [pids[-1]], col] > max_v)[0]
-    last_id = ((ii[0] - 1) * slice_size) + numpy.where(patterns_props[pids[(ii[0] - 1)
-                                                                           * slice_size:ii[
-                                                                                            0] * slice_size + 1],
-    col] > max_v)[
-        0][0]
+    last_id = ((ii[0] - 1) * slice_size) + numpy.where(
+        patterns_props[pids[(ii[0] - 1) * slice_size:ii[0] * slice_size + 1], col] > max_v)[0][0]
     return pids[:last_id]
 
 
@@ -710,7 +708,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
     patterns_props = cpool.getPropMat()
 
     pids_new = None
-    Inew = patterns_props[pids, Candidate.prop_map["new"]
+    Inew = patterns_props[pids, prop_map["new"]
            ] == cpool.getNewKNum(nkey)
     if numpy.sum(Inew) == 0:
         return []
@@ -718,7 +716,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         pids_new = [pids[p] for p in numpy.where(Inew)[0]]
 
     log_write(fo_log, "Horizontal org %d pids (%s)\n" % (len(pids), nkey))
-    # pids = [pid for pid in pids if (patterns_props[pid, Candidate.prop_map["offset"]] < 2)]
+    # pids = [pid for pid in pids if (patterns_props[pid, prop_map["offset"]] < 2)]
 
     keep_cands = {}
     drop_overlap = 0
@@ -732,8 +730,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         if pids_new is not None:
             if len(pids_new) > 0:
                 j = 0
-                while pids[j] != pids_new[0] and ((patterns_props[pids[j], Candidate.prop_map["t0i"]] + patterns_props[
-                    pids[j], Candidate.prop_map["p0"]]) < patterns_props[pids_new[0], Candidate.prop_map["t0i"]]):
+                while pids[j] != pids_new[0] and ((patterns_props[pids[j], prop_map["t0i"]] + patterns_props[
+                    pids[j], prop_map["p0"]]) < patterns_props[pids_new[0], prop_map["t0i"]]):
                     j += 1
                 if pids[j] == pids_new[0]:
                     pids_new.pop(0)
@@ -759,72 +757,72 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         # (3) pb-pa <= 2 (cum_E of Pb) / r(r-1) with r = min(ra, rb)
 
         # (2)
-        next_it = patterns_props[i, Candidate.prop_map["t0i"]
-                  ] + patterns_props[i, Candidate.prop_map["p0"]]
-        i_new = patterns_props[i, Candidate.prop_map["new"]
+        next_it = patterns_props[i, prop_map["t0i"]
+                  ] + patterns_props[i, prop_map["p0"]]
+        i_new = patterns_props[i, prop_map["new"]
                 ] == cpool.getNewKNum(nkey)
         cmp_ids = []
         if i_new:  # i is new, compare to both new and old
             cmp_ids = numpy.array(getPidsSlice(
-                patterns_props, pids, 500, Candidate.prop_map["t0i"], next_it))
+                patterns_props, pids, 500, prop_map["t0i"], next_it))
         else:  # i is old, only compare to new
             if pids_new is not None:
                 ppp = numpy.array(pids_new)
                 cmp_ids = ppp[patterns_props[ppp,
-                Candidate.prop_map["t0i"]] <= next_it]
+                prop_map["t0i"]] <= next_it]
             else:
                 ppp = numpy.array(getPidsSlice(
-                    patterns_props, pids, 500, Candidate.prop_map["t0i"], next_it))
+                    patterns_props, pids, 500, prop_map["t0i"], next_it))
                 if len(ppp) > 0:
                     cmp_ids = ppp[patterns_props[ppp,
-                    Candidate.prop_map["new"]] == cpool.getNewKNum(nkey)]
+                    prop_map["new"]] == cpool.getNewKNum(nkey)]
         ###
 
         sel_ids = []
         if len(cmp_ids) > 0:
             # (1)
-            sel_ids = cmp_ids[patterns_props[cmp_ids, Candidate.prop_map["cid"]]
-                              != patterns_props[i, Candidate.prop_map["cid"]]]
+            sel_ids = cmp_ids[patterns_props[cmp_ids, prop_map["cid"]]
+                              != patterns_props[i, prop_map["cid"]]]
 
         if len(sel_ids) > 0:
             # (3)
             rmins = 1. * numpy.minimum(
-                patterns_props[i, Candidate.prop_map["r0"]] - patterns_props[i, Candidate.prop_map["offset"]],
-                patterns_props[sel_ids, Candidate.prop_map["r0"]] - patterns_props[
-                    sel_ids, Candidate.prop_map["offset"]])
-            sel_ids = sel_ids[numpy.abs(patterns_props[sel_ids, Candidate.prop_map["p0"]] - patterns_props[i,
-            Candidate.prop_map["p0"]]) <= 2. * patterns_props[sel_ids, Candidate.prop_map["cumEi"]] / (
+                patterns_props[i, prop_map["r0"]] - patterns_props[i, prop_map["offset"]],
+                patterns_props[sel_ids, prop_map["r0"]] - patterns_props[
+                    sel_ids, prop_map["offset"]])
+            sel_ids = sel_ids[numpy.abs(patterns_props[sel_ids, prop_map["p0"]] - patterns_props[i,
+            prop_map["p0"]]) <= 2. * patterns_props[sel_ids, prop_map["cumEi"]] / (
                                       rmins * (rmins - 1))]
 
         for j in sel_ids:
             cand_pids = (i, j)
             cand_cids = tuple(
-                [patterns_props[cci, Candidate.prop_map["cid"]] for cci in cand_pids])
+                [patterns_props[cci, prop_map["cid"]] for cci in cand_pids])
             cands = [cpool.getCandidate(cci) for cci in cand_cids]
             if (cands[0].getEvent() == cands[1].getEvent()) and (
-                    patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[j, Candidate.prop_map["t0i"]]):
+                    patterns_props[i, prop_map["t0i"]] == patterns_props[j, prop_map["t0i"]]):
                 continue
             if len(set(cands[0].getEvOccs()).intersection(cands[1].getEvOccs())) > 0:
                 drop_overlap += 1
                 continue
 
-            r0 = numpy.min(patterns_props[cand_pids, Candidate.prop_map["r0"]] -
-                           patterns_props[cand_pids, Candidate.prop_map["offset"]])
-            p0 = patterns_props[cand_pids[0], Candidate.prop_map["p0"]]
+            r0 = numpy.min(patterns_props[cand_pids, prop_map["r0"]] -
+                           patterns_props[cand_pids, prop_map["offset"]])
+            p0 = patterns_props[cand_pids[0], prop_map["p0"]]
             new_cand = prepare_candidate_concats(
-                cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
+                cands, p0, r0, patterns_props[cand_pids, prop_map["offset"]])
             new_cand.computeCost(data_details)
-            if CHECK_HORDER and patterns_props[i, Candidate.prop_map["t0i"]] == patterns_props[
-                j, Candidate.prop_map["t0i"]] and \
-                    (numpy.abs(patterns_props[cand_pids[0], Candidate.prop_map["p0"]] - patterns_props[
-                        cand_pids[1], Candidate.prop_map["p0"]]) <= 2. * patterns_props[
-                         cand_pids[1], Candidate.prop_map["cumEi"]] / (
+            if CHECK_HORDER and patterns_props[i, prop_map["t0i"]] == patterns_props[
+                j, prop_map["t0i"]] and \
+                    (numpy.abs(patterns_props[cand_pids[0], prop_map["p0"]] - patterns_props[
+                        cand_pids[1], prop_map["p0"]]) <= 2. * patterns_props[
+                         cand_pids[1], prop_map["cumEi"]] / (
                              r0 * (r0 - 1))):  # Equivalent flipped (same starting point)
 
                 new_candX = prepare_candidate_concats([cands[1], cands[0]],
-                                                      patterns_props[cand_pids[1], Candidate.prop_map["p0"]], r0,
+                                                      patterns_props[cand_pids[1], prop_map["p0"]], r0,
                                                       patterns_props[[
-                                                          cand_pids[1], cand_pids[0]], Candidate.prop_map["offset"]])
+                                                          cand_pids[1], cand_pids[0]], prop_map["offset"]])
                 new_candX.computeCost(data_details)
 
                 if (new_candX.getCost() < new_cand.getCost()) or (
@@ -857,12 +855,12 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                     # cands[cci].getCost(), cands[cci].getNbOccs(), cands[cci].getCostRatio(), cands[cci].getEvent(),
                     # cands[cci].getT0(), patterns_props[cand_pids[cci], :]))
 
-                    for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[
-                        pids, Candidate.prop_map["cid"]])[0][::-1]:
+                    for pp in numpy.where(patterns_props[i, prop_map["cid"]] == patterns_props[
+                        pids, prop_map["cid"]])[0][::-1]:
                         pids.pop(pp)
                     if pids_new is not None:
-                        for pp in numpy.where(patterns_props[i, Candidate.prop_map["cid"]] == patterns_props[
-                            pids_new, Candidate.prop_map["cid"]])[0][::-1]:
+                        for pp in numpy.where(patterns_props[i, prop_map["cid"]] == patterns_props[
+                            pids_new, prop_map["cid"]])[0][::-1]:
                             pids_new.pop(pp)
                         if len(pids_new) == 0:
                             pids = []
@@ -889,18 +887,18 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
               (len(collect), nkey))
     for cand_pids_unsrt in collect:
         cand_pids = sorted(cand_pids_unsrt,
-                           key=lambda x: (patterns_props[x, Candidate.prop_map["t0i"]],
-                                          tuple(int(x) for x in cpool.getCandidate(patterns_props[x, Candidate.prop_map["cid"]]).getEventTuple())))
+                           key=lambda x: (patterns_props[x, prop_map["t0i"]],
+                                          tuple(int(x) for x in cpool.getCandidate(patterns_props[x, prop_map["cid"]]).getEventTuple())))
         new_cand = makeCandOnOrder(
             cand_pids, data_details, patterns_props, cpool)
 
-        # cands = [cpool.getCandidate(patterns_props[cci, Candidate.prop_map["cid"]]) for cci in cand_pids] r0 =
-        # numpy.min(patterns_props[cand_pids, Candidate.prop_map["r0"]]-patterns_props[cand_pids, Candidate.prop_map[
-        # "offset"]]) p0 = patterns_props[cand_pids[0], Candidate.prop_map["p0"]] new_cand =
-        # prepare_candidate_concats(cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
+        # cands = [cpool.getCandidate(patterns_props[cci, prop_map["cid"]]) for cci in cand_pids] r0 =
+        # numpy.min(patterns_props[cand_pids, prop_map["r0"]]-patterns_props[cand_pids, prop_map[
+        # "offset"]]) p0 = patterns_props[cand_pids[0], prop_map["p0"]] new_cand =
+        # prepare_candidate_concats(cands, p0, r0, patterns_props[cand_pids, prop_map["offset"]])
         # new_cand.computeCost(data_details)
 
-        if CHECK_HORDER and len(set(patterns_props[cand_pids, Candidate.prop_map["t0i"]])) < len(cand_pids):
+        if CHECK_HORDER and len(set(patterns_props[cand_pids, prop_map["t0i"]])) < len(cand_pids):
             ppids = [s for s in selected_ids if (
                     s[0] in cand_pids_unsrt) and (s[1] in cand_pids_unsrt)]
             ord_c = dict([(s, 0) for s in cand_pids])
@@ -950,12 +948,12 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
 
 def makeCandOnOrder(cand_pids, data_details, patterns_props, cpool):
     cands = [cpool.getCandidate(
-        patterns_props[cci, Candidate.prop_map["cid"]]) for cci in cand_pids]
-    r0 = numpy.min(patterns_props[cand_pids, Candidate.prop_map["r0"]] -
-                   patterns_props[cand_pids, Candidate.prop_map["offset"]])
-    p0 = patterns_props[cand_pids[0], Candidate.prop_map["p0"]]
+        patterns_props[cci, prop_map["cid"]]) for cci in cand_pids]
+    r0 = numpy.min(patterns_props[cand_pids, prop_map["r0"]] -
+                   patterns_props[cand_pids, prop_map["offset"]])
+    p0 = patterns_props[cand_pids[0], prop_map["p0"]]
     new_cand = prepare_candidate_concats(
-        cands, p0, r0, patterns_props[cand_pids, Candidate.prop_map["offset"]])
+        cands, p0, r0, patterns_props[cand_pids, prop_map["offset"]])
     new_cand.computeCost(data_details)
     return new_cand
 
