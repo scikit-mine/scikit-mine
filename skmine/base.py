@@ -3,6 +3,7 @@
 
 import inspect
 from abc import ABC, abstractmethod
+from sklearn.base import TransformerMixin
 
 import numpy as np
 import pandas as pd
@@ -132,14 +133,24 @@ class DiscovererMixin:
             return self.fit(D, y=y).discover(**kwargs)
 
 
-class TransformerMixin:
+class TransformerMixin(TransformerMixin):
     """Base Mixin for transformers in scikit-mine"""
 
-    def fit_transform(self, X, y=None):
-        """fit on X and y, then transform X"""
-        return self.fit(X, y).transform(X)
+    def fit_transform(self, X, y=None, **tsf_params):
+        """
+        Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
+        Returns a transformed version of `X`: i.e. the fitted codetable
 
-    decision_function = None
+        Returns
+        -------
+        df_new : pandas.Dataframe
+            Codetable fitted from X data.
+        """
+
+        if y is None:
+            return self.fit(X).transform(X, **tsf_params)
+        else:
+            return self.fit(X, y).transform(X, **tsf_params)
 
 
 class MDLOptimizer(ABC):

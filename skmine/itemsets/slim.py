@@ -17,11 +17,11 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 from pyroaring import BitMap as Bitmap
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 from sortedcontainers import SortedDict
 
+from skmine.base import TransformerMixin
 from ..utils import _check_D, supervised_to_unsupervised
 
 
@@ -86,18 +86,7 @@ def cover(sct: dict, itemsets: list) -> dict:
     return covers
 
 
-class OneHotDataframe(MultiLabelBinarizer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def fit_transform(self, y):
-        return pd.DataFrame(super().fit_transform(y), columns=self.classes_)
-
-    def transform(self, Z):
-        return pd.DataFrame(super().transform(Z), columns=self.classes_)
-
-
-class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLOptimizer, InteractiveMiner):
+class SLIM(BaseEstimator, TransformerMixin):
     """SLIM: Directly Mining Descriptive Patterns
 
     SLIM looks for a compressed representation of transactional data.
@@ -127,7 +116,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
     --------
     >>> from skmine.itemsets import SLIM
     >>> D = [['bananas', 'milk'], ['milk', 'bananas', 'cookies'], ['cookies', 'butter', 'tea']]
-    >>> SLIM().fit(D).transform(singletons=True, return_tids=True)
+    >>> SLIM().fit(D).transform(D, singletons=True, return_tids=True)
                itemset    tids
     0  [bananas, milk]  (0, 1)
     1    [butter, tea]     (2)
@@ -148,31 +137,14 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         self.max_time = max_time
         self.items = items
 
-    def _more_tags(self):  # tags for sklearn check_estimators)
+    def _more_tags(self):
         return {
-            "non_deterministic": True,  # default
-            # "X_types": ['2darray'],  # ["categorical"],  # default
+            "non_deterministic": True,
             "no_validation": True,
             "preserves_dtype": False,
-            # "pairwise": True,
         }
 
-    def fit_transform(self, X, y=None, **tsf_params):  # TODO refactor to TransformerMixin Custom ? for LCM, SLIM
-        """   Override sklearn transformer method to apply optional parameters `tsf_params` on transform  and not to fit
-        Returns a transformed version of `X`: i.e. the fitted codetable
-
-        Returns
-        -------
-        df_new : pandas.Dataframe
-            Codetable fitted from X data.
-        """
-
-        if y is None:
-            return self.fit(X).transform(X, tsf_params)
-        else:
-            return self.fit(X, y).transform(X, tsf_params)
-
-    def fit(self, X, y=None):  # -> self
+    def fit(self, X, y=None):
         """fit SLIM on a transactional dataset
 
         This generates new candidate patterns and add those which improve compression,
@@ -188,15 +160,13 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         y: Ignored
             Not used, present here for API consistency by convention.
         """
-        # X = one_hot_dataframe(X)
         if y is not None:
-            self.classes_ = np.unique(y)  # for OvO to test
-        # self._validate_params()
+            self.classes_ = np.unique(y)
 
         self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=1, dtype=list)
         self.n_features_in_ = X.shape[-1] if not isinstance(X, list) else len(X[-1])
-        # TODO : significant for one-hot D ,not for list of itemset
+        # TODO : significant for one-hot D, not for list of itemset
         start = time.time()
         self.prefit(X, y=y)
         while True:
@@ -250,7 +220,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         >>> new_D = to_tabular([['cookies', 'butter']])
         >>> slim = SLIM().fit(to_tabular(D))
         >>> slim.get_code_length(new_D)
-        0   5.584963
+        0    5.584963
         dtype: float32
 
         See Also
@@ -299,7 +269,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
          prob : pandas.Series
             probability for D to belong to the same class
         """
-
         _fonc = lambda x: np.exp(-0.2 * x)
         x = self.get_code_length(D)
         prob = _fonc(x)
@@ -475,7 +444,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         items never seen are dropped out
 
-
         Examples
         --------
         >>> from skmine.itemsets import SLIM
@@ -491,7 +459,6 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         pd.DataFrame
         """
         if hasattr(D, "shape") and len(D.shape) == 2:  # tabular
-            # print("POP", type(D))
             D = _check_D(D)
             D_sct = {k: Bitmap(np.where(D[k])[0]) for k in D.columns if k in self.standard_codetable_}
         else:  # transactional
@@ -507,13 +474,16 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
 
         return pd.DataFrame(mat, columns=list(covers.keys()))
 
-    def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True,
-                  drop_null_usage=True, return_dl=False, out=None):
-
+    def transform(self, D, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True,
+                  return_dl=False, out=None):
         """Get a user-friendly copy of the codetable
 
         Parameters
         ----------
+        D: iterable of iterables or array-like
+            Transactional dataset, either as an iterable of iterables or encoded as tabular binary data.
+            Does not influence the results. Present for compatibility with scikit-learn.
+
         singletons: bool, default=True
             Either to include itemsets of length 1 in the result
 
@@ -540,7 +510,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         -------
         >>> from skmine.itemsets import SLIM
         >>> D = ["ABC", "AB", "BCD"]
-        >>> SLIM().fit_transform(D, singletons=True, return_tids=True, lexicographic_order=True, drop_null_usage=False)
+        >>> SLIM().fit_transform(D, singletons=True, return_tids=False, lexicographic_order=True, drop_null_usage=True)
           itemset  usage
         0  [A, B]      2
         1  [B, D]      1
@@ -559,8 +529,7 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         self.return_tids_ = return_tids
         self.out_ = out
         self.return_dl_ = return_dl
-        # self._validate_data(X, force_all_finite=False, accept_sparse=False, ensure_2d=False, ensure_min_samples=1,
-        #                     dtype=list)
+
         itemsets = []
         itids = []
         iusages = []
@@ -589,8 +558,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
             return df
 
     def reconstruct(self) -> pd.Series:
-        """reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
-        lossless algorithm .
+        """Reconstruct the original data from the current `self.codetable_`. This is possible because SLIM is a
+        lossless algorithm.
 
         Example
         -------
@@ -631,7 +600,8 @@ class SLIM(BaseEstimator, TransformerMixin):  # BaseMiner, DiscovererMixin, MDLO
         tids = self.standard_codetable_[a]
         if len(items) > 1:
             return tids & self.get_support(*items[:-1])
-        return tids
+        else:
+            return tids
 
     def _standard_cover_order(self, itemset) -> tuple:
         """
