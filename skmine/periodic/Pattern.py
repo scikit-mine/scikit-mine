@@ -19,8 +19,6 @@ class Pattern(object):
     def parseTreeStr(cls, tree_str, leaves_first=False, from_inner=False):
         MATCH_IN = "\((?P<inner>.*)\)"
         MATCH_PR = "\[r=(?P<r>[0-9]+) p=(?P<p>[0-9]+)\]"
-        children = []
-        tmp = None
         if leaves_first:
             tmp = re.match(MATCH_IN + MATCH_PR + "$", tree_str)
         else:
