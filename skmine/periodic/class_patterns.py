@@ -4,8 +4,9 @@ import pdb
 import numpy
 
 # prop_list from Candidate
-prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
-prop_map = dict([(v, k) for k, v in enumerate(prop_list)])
+prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]  # list of the names of the properties of the pattern
+prop_map = dict([(v, k) for k, v in enumerate(prop_list)])  # Dictionary mapping property names to their index
+# in `prop_list`.
 
 # OPT_TO = False
 OPT_TO = True

@@ -23,10 +23,6 @@ class Candidate(object):
 
     Attributes
     ----------
-    prop_list : list
-        List of the names of the properties of the pattern.
-    prop_map : dict
-        Dictionary mapping property names to their index in `prop_list`.
     uncov : None or float
         Fraction of the dataset that is not covered by the pattern.
     ev_occ : None or list of tuple
