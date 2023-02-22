@@ -5,6 +5,47 @@ import numpy as np
 from .class_patterns import cost_one
 
 
+def _replace_tuple_in_list(l, i):
+    """
+    replace int64 into int in a tuple
+    """
+    if i < len(l):
+        l[i] = tuple(int(v) if isinstance(v, np.int64) else v for v in l[i])
+    return l
+
+
+def _replace_list_in_list(l, i):
+    """
+    replace int64 into int in a list
+    """
+    if i < len(l):
+        l[i] = [int(v) if isinstance(v, np.int64) else v for v in l[i]]
+    return l
+
+
+def _change_int64_toint(obj):
+    """
+    convert a int64 into int in a nested dict with tuple 
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                _change_int64_toint(value)
+            elif isinstance(value, list):
+                for it, val_ in enumerate(value):
+                    if isinstance(val_, tuple):
+                        value = _replace_tuple_in_list(value, it)
+                    if isinstance(val_, list):
+                        value = _replace_list_in_list(value, it)
+                _change_int64_toint(value)
+            elif isinstance(value, tuple):
+                _change_int64_toint(value)
+            elif isinstance(value, np.int64):
+                value = int(value)
+                obj[key] = value
+    return obj
+
+
 class PatternCollection(object):
     """
     A class representing a collection of patterns.
@@ -145,7 +186,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, np.sum(np.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                                                                                           p.getTypeStr())
+                    p.getTypeStr())
             # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, np.sum(np.abs(
             # E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
             # print("sum(|E|)=%d  E=%s" % (np.sum(np.abs(E)), E))
@@ -192,7 +233,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, np.sum(np.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                                                                                           p.getTypeStr())
+                    p.getTypeStr())
 
             # print("\n pi, t0, E", pi, t0, E)
             # print("p.pattMinorKey()", p.pattMinorKey())
@@ -215,12 +256,12 @@ class PatternCollection(object):
             # print("p.getOccsStarMatch", p.getOccsStarMatch())
             # print("p.getEventsList", p.getEventsList())
             # print("p.getEventsMinor", p.getEventsMinor())
-            pattern_tree = p.getTreeDict(map_ev=map_ev)
-            pattern_tree["Depth"] = int(p.getDepth())
-            pattern_tree["Width"] = int(p.getWidth())
-            pattern_tree["auto_time_scale_factor"] = int(
-                auto_time_scale_factor)
-            pattern_tree = json.dumps(pattern_tree)
+            pattern_tree = p.nodes
+            pattern_tree["next_id"] = p.next_id
+            pattern_tree["t0"] = int(t0)
+            pattern_tree["E"] = [int(e) for e in E]
+            pattern_tree = json.dumps(_change_int64_toint(pattern_tree))
+            # print("pattern_tree", pattern_tree)
             # print("pattern_tree", pattern_tree)
             # print("Ttree:\n", p.getTreeStr())
 

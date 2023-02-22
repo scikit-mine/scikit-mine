@@ -4,8 +4,10 @@ import pdb
 import numpy
 
 # prop_list from Candidate
-prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]  # list of the names of the properties of the pattern
-prop_map = dict([(v, k) for k, v in enumerate(prop_list)])  # Dictionary mapping property names to their index
+# list of the names of the properties of the pattern
+prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
+# Dictionary mapping property names to their index
+prop_map = dict([(v, k) for k, v in enumerate(prop_list)])
 # in `prop_list`.
 
 # OPT_TO = False
@@ -16,6 +18,47 @@ ADJFR_MED = False
 # PROPS_MIN_R = 3
 PROPS_MAX_OFFSET = -2
 PROPS_MIN_R: int = 0
+
+
+def _replace_tuple_in_list(l, i):
+    """
+    replace int64 into int in a tuple
+    """
+    if i < len(l):
+        l[i] = tuple(int(v) if isinstance(v, numpy.int64) else v for v in l[i])
+    return l
+
+
+def _replace_list_in_list(l, i):
+    """
+    replace int64 into int in a list
+    """
+    if i < len(l):
+        l[i] = [int(v) if isinstance(v, numpy.int64) else v for v in l[i]]
+    return l
+
+
+def _change_int64_toint(obj):
+    """
+    convert a int64 into int in a nested dict with tuple 
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                _change_int64_toint(value)
+            elif isinstance(value, list):
+                for it, val_ in enumerate(value):
+                    if isinstance(val_, tuple):
+                        value = _replace_tuple_in_list(value, it)
+                    if isinstance(val_, list):
+                        value = _replace_list_in_list(value, it)
+                _change_int64_toint(value)
+            elif isinstance(value, tuple):
+                _change_int64_toint(value)
+            elif isinstance(value, numpy.int64):
+                value = int(value)
+                obj[key] = value
+    return obj
 
 
 def _getChained(listsd, keys=None):
@@ -255,7 +298,7 @@ def makeOccsAndFreqsThird(tmpOccs):
     """
     nbOccs = dict(tmpOccs.items())
     nbOccs[-1] = numpy.sum(list(nbOccs.values())) * \
-                 1.  # -1 is the key for the total number of events in the sequence
+        1.  # -1 is the key for the total number of events in the sequence
 
     if OPT_EVFR:
         adjFreqs = {"(": 1. / 3, ")": 1. / 3}
