@@ -1420,151 +1420,151 @@ def writePCout(pc, ds, fn_basis, suff, fo_log=None):
 
 ########################################################
 ########################################################
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Periodic pattern miner")
-    series_options_str = " among " + \
-                         ", ".join(series_groups) + " and " + ", ".join(series_params.keys())
-    parser.add_argument("series", type=str, nargs="*", help="series of experiments to replicate," +
-                                                            series_options_str, default=argparse.SUPPRESS)
-
-    # mining
-    parser.add_argument("-p", "--max_p", type=int,
-                        help="maximum period to consider", default=argparse.SUPPRESS)
-    parser.add_argument("--display", action="store_true",
-                        help="just load and display the data, do not mine", default=argparse.SUPPRESS)
-
-    # input
-    parser.add_argument("--input_folder", type=str,
-                        help="folder containing the input data", default=argparse.SUPPRESS)
-    parser.add_argument("-i", "--input_file", type=str,
-                        help="file containing the input data", default=argparse.SUPPRESS)
-    parser.add_argument("-e", "--event", type=str, dest="events", action="append",
-                        help="regex pattern to filter and group events, patterns involving all of '%s' will be used "
-                             "to group events, else to filter them" % group_syms,
-                        default=argparse.SUPPRESS)
-    parser.add_argument("-s", "--separator", type=str, dest="SEP",
-                        help="field separator used in the input file", default=argparse.SUPPRESS)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--absolute", action="store_true", dest="timestamp",
-                       help="event occurrences come with integer timestamps, i.e. use an absolute time reference",
-                       default=argparse.SUPPRESS)
-    group.add_argument("--relative", action="store_false", dest="timestamp",
-                       help="event occurrences are not timestamped, i.e. no time reference only relative position",
-                       default=argparse.SUPPRESS)
-    group.add_argument("--timestamps", action="store_true", dest="timestamp",
-                       help=argparse.SUPPRESS, default=argparse.SUPPRESS)
-    group.add_argument("--no-timestamps", action="store_false",
-                       dest="timestamp", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
-
-    parser.add_argument("--min_len", type=int,
-                        help="events with fewer occurrences will be discarded", default=argparse.SUPPRESS)
-    parser.add_argument("--max_len", type=int,
-                        help="events with more occurrences will be discarded", default=argparse.SUPPRESS)
-
-    # sacha format
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-I", "--instant", action="store_true", dest="I",
-                       help="Use suffix I for instantaneous events, instead of S--E pair (sacha only)",
-                       default=argparse.SUPPRESS)
-    # group.add_argument("--instant", action="store_true", dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
-    group.add_argument("--no-instant", action="store_false",
-                       dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
-    parser.add_argument("-G", "--granularity", type=int,
-                        help="Time granularity, used as divisor for the original times (sacha only)",
-                        default=argparse.SUPPRESS)
-    parser.add_argument("-E", "--drop-event", type=str, dest="drop_event_codes", action="append",
-                        help="Filter events using hierachical codes, events of the corresponding types and sub-types "
-                             "will be dropped",
-                        default=argparse.SUPPRESS)
-
-    # output
-    parser.add_argument("-x", "--output_folder", type=str,
-                        help="Folder in which to save the results and logs", default=argparse.SUPPRESS)
-    parser.add_argument("-o", "--output_basename", type=str,
-                        help="Basenames for the files in which to save the results and logs", default=argparse.SUPPRESS)
-    parser.add_argument("--run_id", type=str,
-                        help="run identifier", default=argparse.SUPPRESS)
-
-    pargs = vars(parser.parse_args())
-    # print("MES ARGS", pargs)
-    lseries = []
-    groupped = ""
-    # print(pargs.get("series", []))
-    if len(pargs.get("series", [])) > 0:
-        lseries = pargs["series"]
-        # if lseries[0] not in series_params and lseries[0] not in ["ALL", "OTHER", "UBIQ_ABS", "UBIQ_REL", "TEST",
-        # "SACHA"]:
-        #     run_id = lseries.pop(0)
-        if len(lseries) > 0 and lseries[-1] == "ALL":
-            lseries = series_params.keys()
-        if len(lseries) > 0 and lseries[-1] == "OTHER":
-            lseries = [s for s in series_params.keys() if not (
-                    re.match("UbiqLog", s) or re.match("sacha_", s))]
-        if len(lseries) > 0 and re.match("UBIQ_ABS", lseries[-1]):
-            groupped = lseries[-1]
-            lseries = [s for s in series_params.keys(
-            ) if re.match("UbiqLog_.*_abs", s)]
-        if len(lseries) > 0 and re.match("UBIQ_REL", lseries[-1]):
-            groupped = lseries[-1]
-            lseries = [s for s in series_params.keys(
-            ) if re.match("UbiqLog_.*_rel", s)]
-        if len(lseries) > 0 and re.match("SACHA", lseries[-1]):
-            groupped = lseries[-1]
-            lseries = [s for s in series_params.keys()
-                       if re.match("sacha_", s)]
-        # print(*list(series_params.keys()),sep='\n')
-        # print("LSSSERRIES",lseries)
-    elif pargs.get("input_file") is not None:
-        lseries = [None]
-    import tqdm
-
-    run_id = pargs.get("run_id", "")
-    if run_id == "_":
-        run_id = datetime.datetime.now().strftime("%y%m%d%H%M%S")
-    if len(run_id) > 0:
-        print("RUN_ID: %s" % run_id)
-        if not re.match("_", run_id):
-            run_id = "_" + run_id
-    N = len(lseries)
-
-    for series in (pbar := tqdm.tqdm(lseries)):
-        # print(f"{idx}/{N} : ")
-        if series is None or series in series_params:
-            params = dict(pargs)
-            # print("\n\nparams", params, "\n\n series",
-            #   series, "\n\n lseries", lseries, "\n\n series_params", series_params, "\n\n ")
-            if series is not None:
-                params.update(series_params[series])
-                input_name = series
-                xps_rep = params.get("output_folder", XPS_REP)
-                if "filename" not in params:
-                    params["filename"] = params.get("input_folder", DATA_REP) + params.get("input_file")
-                if "output_basename" in params:
-                    basename = params["output_basename"] + "_" + series
-                else:
-                    basename = series
-
-            else:
-                input_name = params.get("input_file")
-                xps_rep = params.get("output_folder", "")
-                params["filename"] = params.get(
-                    "input_folder", "") + params.get("input_file")
-                basename = params.get("output_basename", "xps")
-
-            if (series is not None and re.match("sacha", series)) or re.search("[^a-zA-Z0-9]sacha[^a-zA-Z0-9]",
-                                                                               "_" + params["filename"] + "_"):
-                print("params", params)
-                seqs = readSequenceSacha(params)
-            else:
-                seqs = readSequence(params)
-
-            if params.get("display", False):
-                print("DISPLAY %s" % input_name)
-                disp_seqs(seqs)
-            else:
-                fn_basis = "%s%s%s" % (xps_rep, basename, run_id)
-                pbar.set_description("RUNNING %s" % input_name)
-                mine_seqs(seqs, fn_basis, max_p=params.get("max_p"))
-        else:
-            print("Series %s does not exist!" % series)
+# if __name__ == "__main__":
+#
+#     parser = argparse.ArgumentParser(description="Periodic pattern miner")
+#     series_options_str = " among " + \
+#                          ", ".join(series_groups) + " and " + ", ".join(series_params.keys())
+#     parser.add_argument("series", type=str, nargs="*", help="series of experiments to replicate," +
+#                                                             series_options_str, default=argparse.SUPPRESS)
+#
+#     # mining
+#     parser.add_argument("-p", "--max_p", type=int,
+#                         help="maximum period to consider", default=argparse.SUPPRESS)
+#     parser.add_argument("--display", action="store_true",
+#                         help="just load and display the data, do not mine", default=argparse.SUPPRESS)
+#
+#     # input
+#     parser.add_argument("--input_folder", type=str,
+#                         help="folder containing the input data", default=argparse.SUPPRESS)
+#     parser.add_argument("-i", "--input_file", type=str,
+#                         help="file containing the input data", default=argparse.SUPPRESS)
+#     parser.add_argument("-e", "--event", type=str, dest="events", action="append",
+#                         help="regex pattern to filter and group events, patterns involving all of '%s' will be used "
+#                              "to group events, else to filter them" % group_syms,
+#                         default=argparse.SUPPRESS)
+#     parser.add_argument("-s", "--separator", type=str, dest="SEP",
+#                         help="field separator used in the input file", default=argparse.SUPPRESS)
+#     group = parser.add_mutually_exclusive_group()
+#     group.add_argument("--absolute", action="store_true", dest="timestamp",
+#                        help="event occurrences come with integer timestamps, i.e. use an absolute time reference",
+#                        default=argparse.SUPPRESS)
+#     group.add_argument("--relative", action="store_false", dest="timestamp",
+#                        help="event occurrences are not timestamped, i.e. no time reference only relative position",
+#                        default=argparse.SUPPRESS)
+#     group.add_argument("--timestamps", action="store_true", dest="timestamp",
+#                        help=argparse.SUPPRESS, default=argparse.SUPPRESS)
+#     group.add_argument("--no-timestamps", action="store_false",
+#                        dest="timestamp", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
+#
+#     parser.add_argument("--min_len", type=int,
+#                         help="events with fewer occurrences will be discarded", default=argparse.SUPPRESS)
+#     parser.add_argument("--max_len", type=int,
+#                         help="events with more occurrences will be discarded", default=argparse.SUPPRESS)
+#
+#     # sacha format
+#     group = parser.add_mutually_exclusive_group()
+#     group.add_argument("-I", "--instant", action="store_true", dest="I",
+#                        help="Use suffix I for instantaneous events, instead of S--E pair (sacha only)",
+#                        default=argparse.SUPPRESS)
+#     # group.add_argument("--instant", action="store_true", dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
+#     group.add_argument("--no-instant", action="store_false",
+#                        dest="I", help=argparse.SUPPRESS, default=argparse.SUPPRESS)
+#     parser.add_argument("-G", "--granularity", type=int,
+#                         help="Time granularity, used as divisor for the original times (sacha only)",
+#                         default=argparse.SUPPRESS)
+#     parser.add_argument("-E", "--drop-event", type=str, dest="drop_event_codes", action="append",
+#                         help="Filter events using hierachical codes, events of the corresponding types and sub-types "
+#                              "will be dropped",
+#                         default=argparse.SUPPRESS)
+#
+#     # output
+#     parser.add_argument("-x", "--output_folder", type=str,
+#                         help="Folder in which to save the results and logs", default=argparse.SUPPRESS)
+#     parser.add_argument("-o", "--output_basename", type=str,
+#                         help="Basenames for the files in which to save the results and logs", default=argparse.SUPPRESS)
+#     parser.add_argument("--run_id", type=str,
+#                         help="run identifier", default=argparse.SUPPRESS)
+#
+#     pargs = vars(parser.parse_args())
+#     # print("MES ARGS", pargs)
+#     lseries = []
+#     groupped = ""
+#     # print(pargs.get("series", []))
+#     if len(pargs.get("series", [])) > 0:
+#         lseries = pargs["series"]
+#         # if lseries[0] not in series_params and lseries[0] not in ["ALL", "OTHER", "UBIQ_ABS", "UBIQ_REL", "TEST",
+#         # "SACHA"]:
+#         #     run_id = lseries.pop(0)
+#         if len(lseries) > 0 and lseries[-1] == "ALL":
+#             lseries = series_params.keys()
+#         if len(lseries) > 0 and lseries[-1] == "OTHER":
+#             lseries = [s for s in series_params.keys() if not (
+#                     re.match("UbiqLog", s) or re.match("sacha_", s))]
+#         if len(lseries) > 0 and re.match("UBIQ_ABS", lseries[-1]):
+#             groupped = lseries[-1]
+#             lseries = [s for s in series_params.keys(
+#             ) if re.match("UbiqLog_.*_abs", s)]
+#         if len(lseries) > 0 and re.match("UBIQ_REL", lseries[-1]):
+#             groupped = lseries[-1]
+#             lseries = [s for s in series_params.keys(
+#             ) if re.match("UbiqLog_.*_rel", s)]
+#         if len(lseries) > 0 and re.match("SACHA", lseries[-1]):
+#             groupped = lseries[-1]
+#             lseries = [s for s in series_params.keys()
+#                        if re.match("sacha_", s)]
+#         # print(*list(series_params.keys()),sep='\n')
+#         # print("LSSSERRIES",lseries)
+#     elif pargs.get("input_file") is not None:
+#         lseries = [None]
+#     import tqdm
+#
+#     run_id = pargs.get("run_id", "")
+#     if run_id == "_":
+#         run_id = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+#     if len(run_id) > 0:
+#         print("RUN_ID: %s" % run_id)
+#         if not re.match("_", run_id):
+#             run_id = "_" + run_id
+#     N = len(lseries)
+#
+#     for series in (pbar := tqdm.tqdm(lseries)):
+#         # print(f"{idx}/{N} : ")
+#         if series is None or series in series_params:
+#             params = dict(pargs)
+#             # print("\n\nparams", params, "\n\n series",
+#             #   series, "\n\n lseries", lseries, "\n\n series_params", series_params, "\n\n ")
+#             if series is not None:
+#                 params.update(series_params[series])
+#                 input_name = series
+#                 xps_rep = params.get("output_folder", XPS_REP)
+#                 if "filename" not in params:
+#                     params["filename"] = params.get("input_folder", DATA_REP) + params.get("input_file")
+#                 if "output_basename" in params:
+#                     basename = params["output_basename"] + "_" + series
+#                 else:
+#                     basename = series
+#
+#             else:
+#                 input_name = params.get("input_file")
+#                 xps_rep = params.get("output_folder", "")
+#                 params["filename"] = params.get(
+#                     "input_folder", "") + params.get("input_file")
+#                 basename = params.get("output_basename", "xps")
+#
+#             if (series is not None and re.match("sacha", series)) or re.search("[^a-zA-Z0-9]sacha[^a-zA-Z0-9]",
+#                                                                                "_" + params["filename"] + "_"):
+#                 print("params", params)
+#                 seqs = readSequenceSacha(params)
+#             else:
+#                 seqs = readSequence(params)
+#
+#             if params.get("display", False):
+#                 print("DISPLAY %s" % input_name)
+#                 disp_seqs(seqs)
+#             else:
+#                 fn_basis = "%s%s%s" % (xps_rep, basename, run_id)
+#                 pbar.set_description("RUNNING %s" % input_name)
+#                 mine_seqs(seqs, fn_basis, max_p=params.get("max_p"))
+#         else:
+#             print("Series %s does not exist!" % series)
