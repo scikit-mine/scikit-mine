@@ -11,22 +11,24 @@ as described in `http://lig-membres.imag.fr/termier/HLCM/hlcm.pdf`
 #
 # License: BSD 3 clause
 
+import os
+import shutil
 from collections import defaultdict
 from itertools import takewhile
 
 import pandas as pd
-import os
-import shutil
 from joblib import Parallel, delayed
-from sortedcontainers import SortedDict
 from pyroaring import BitMap as Bitmap
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
+from sortedcontainers import SortedDict
+
+from skmine.base import TransformerMixin
 from ..utils import _check_min_supp
 from ..utils import filter_maximal
-from sklearn.base import BaseEstimator, TransformerMixin
 
 
-class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #TransformerMixin, BaseEstimator) : :
+class LCM(TransformerMixin, BaseEstimator):
     """
     Linear time Closed item set Miner.
 
@@ -78,35 +80,14 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         self.n_jobs = n_jobs  # number of jobs launched by joblib
         self.verbose = verbose
 
-    # def get_feature_names_out(self, input_features=None):  # for  set_output(transform='pandas') ?
-    #     columns = ["itemset", "support"] if not self.return_tids_ else ["itemset", "support", "tids"]
-    #     return columns
-
     def _more_tags(self):
         return {
-            # "non_deterministic": False,  # default
-            # "requires_positive_X": True,
-            # "requires_positive_y": False,  # default
-            # "X_types": ['2darray'], 2dlabels # ["categorical"],  # default
-            # # "poor_score": False,  # default
-            "non_deterministic": True,  # default
+            "non_deterministic": True,
             "preserves_dtype": False,
             "no_validation": True,
-            # "multioutput": False,  # default
-            # "allow_nan": False,  # default
-            # "stateless": False,  # default
-            # "multilabel": False,  # default
-            # "_skip_test": False,  # default
-            # "_xfail_checks": False, # default
-            # "multioutput_only": False,  # default
-            # "binary_only": False,  # default
-            # "requires_fit": True,  # default
-            # "preserves_dtype": [numpy.float64], # default   ## [pd.DataFrame, np.int],
-            # "requires_y": False, # default
-            # "pairwise": False,  # default
         }
 
-    def fit(self, D, y=None, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
+    def fit(self, D, y=None):
         """
         fit LCM on the transactional database, by keeping records of singular items
         and their transaction ids.
@@ -156,23 +137,19 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
 
         self.item_to_tids_ = SortedDict(ord_freq_dic)  # {0:tids0, 1:tids1 ....}key item ordered by decreasing frequency
         self.ord_item_freq_ = ord_item_freq  # [cat, dog, '0', ...] list of ordered item by decreasing frequency
-        self.lexicographic_order_ = lexicographic_order
-        self.return_tids_ = return_tids
-        self.max_length_ = max_length  # maximum length of an itemset,  -1 by default
-        self.out_ = out
         self.n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
 
         return self
 
-    def transform(self, D):
+    def transform(self, D, return_tids=False, lexicographic_order=True, max_length=-1, out=None):
         """Return the set of closed itemsets, with respect to the minimum support
 
         Parameters
         ----------
         D : pd.Series or Iterable
-            The input transactional database
-            Where every entry contain singular items
-            Items must be both hashable and comparable
+            The input transactional database where every entry contain singular items
+            must be both hashable and comparable. Does not influence the results.
+            Present for compatibility with scikit-learn.
 
         return_tids: bool, default=False
             Either to return transaction ids along with itemset.
@@ -181,8 +158,8 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         lexicographic_order: bool, default=True
             Either the order of the items in each itemset is not ordered or the items are ordered lexicographically
 
-        max_length: int, default=-1 Maximum length of an itemset. By default, -1 means that LCM returns itemsets of
-        all lengths.
+        max_length: int, default=-1
+            Maximum length of an itemset. By default, -1 means that LCM returns itemsets of all lengths.
 
         out : str, default=None
             File where results are written. Discover return None. The 'out' option is usefull 
@@ -219,6 +196,10 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
         0     [2, 5]        3  (0, 1, 2)
         1  [2, 3, 5]        2     (0, 1)
         """
+        self.lexicographic_order_ = lexicographic_order
+        self.return_tids_ = return_tids
+        self.max_length_ = max_length  # maximum length of an itemset,  -1 by default
+        self.out_ = out
 
         check_is_fitted(self, 'n_features_in_')
         n_features_in_ = D.shape[-1] if not isinstance(D, list) else len(D[-1])  # nb items
@@ -245,7 +226,7 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             Parallel(n_jobs=self.n_jobs, prefer="processes")(
                 delayed(self._explore_root)(item, tids, root_file=f"{temp_dir}/root{k}.dat")
                 for k, (item, tids) in enumerate(list(self.item_to_tids_.items())))
-            print("OOOOO outfile ", self.out_)
+
             with open(self.out_,
                       'w') as outfile:  # concatenate all itemsroot files located in temp_dir in a single file
                 for fname in [f"{temp_dir}/root{k}.dat" for k in
@@ -277,7 +258,6 @@ class LCM(TransformerMixin, BaseEstimator):  # BaseMiner, DiscovererMixin): #Tra
             return df
 
     def _inner(self, p_tids, limit):
-
         p, tids = p_tids
         # project and reduce DB w.r.t P
         cp = (
@@ -375,10 +355,10 @@ class LCMMax(LCM, TransformerMixin):
                 else:
                     yield itemset, len(tids), tids
 
-    def transform(self, X):
-        # outfile = kwargs.get('out')
-        # kwargs['out'] = None
-        patterns = super().transform(X)
+    def transform(self, X=None, *args, **kwargs):
+        outfile = kwargs.get('out')
+        kwargs['out'] = None
+        patterns = super().transform(X, **kwargs)
         # keep only maximal itemsets
         maximals = filter_maximal(patterns["itemset"])
         patterns = patterns[patterns.itemset.isin(maximals)].copy()
@@ -393,8 +373,8 @@ class LCMMax(LCM, TransformerMixin):
         patterns.loc[:, "itemset"] = patterns["itemset"].map(
             lambda i: sorted(list(i)) if self.lexicographic_order_ else list(i))
 
-        if self.out_:
-            self.write_df_tofile(self.out_, patterns)
+        if outfile:
+            self.write_df_tofile(outfile, patterns)
             return None
         else:
             return patterns
