@@ -5,7 +5,7 @@ import numpy
 
 from .class_patterns import computeLengthRC, computeLengthCycle, computeLengthResidual, computePeriod, \
     cost_triple, cost_one
-from .DataSequence import DataSequence
+from .data_sequence import DataSequence
 
 DYN_BLOCK_SIZE = 100
 STEP_SIZE = 80

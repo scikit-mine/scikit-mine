@@ -10,11 +10,11 @@ import sys
 
 import numpy
 
-from .Candidate import Candidate
-from .CandidatePool import CandidatePool
-from .DataSequence import DataSequence
-from .Pattern import Pattern
-from .PatternCollection import PatternCollection
+from .candidate import Candidate
+from .candidate_pool import CandidatePool
+from .data_sequence import DataSequence
+from .pattern import Pattern
+from .pattern_collection import PatternCollection
 from .class_patterns import prop_map
 from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
 from .extract_cycles import compute_cycles_dyn, extract_cycles_fold

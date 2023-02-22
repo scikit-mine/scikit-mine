@@ -6,9 +6,9 @@ import sys
 import numpy
 
 from read_data import readSequence
-from skmine.periodic.DataSequence import DataSequence
-from skmine.periodic.Pattern import Pattern
-from skmine.periodic.PatternCollection import PatternCollection
+from skmine.periodic.data_sequence import DataSequence
+from skmine.periodic.pattern import Pattern
+from skmine.periodic.pattern_collection import PatternCollection
 from skmine.periodic.run_mine import mine_seqs
 
 CMP_OUT_CODES = ["Perfect match",

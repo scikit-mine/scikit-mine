@@ -1,6 +1,6 @@
 import numpy as np
 
-from .Candidate import Candidate
+from .candidate import Candidate
 from .class_patterns import mergeSortedPids, sortPids
 
 

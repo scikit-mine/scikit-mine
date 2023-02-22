@@ -11,9 +11,9 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .run_mine import mine_seqs
-from .Pattern import Pattern
-from .PatternCollection import PatternCollection
-from .DataSequence import DataSequence
+from .pattern import Pattern
+from .pattern_collection import PatternCollection
+from .data_sequence import DataSequence
 
 log = np.log2
 

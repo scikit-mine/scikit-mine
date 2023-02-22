@@ -1,6 +1,6 @@
 import numpy as np
 
-from .Pattern import Pattern
+from .pattern import Pattern
 from .class_patterns import computePeriod, computeE, computeLengthCycle, PROPS_MIN_R, PROPS_MAX_OFFSET
 
 
