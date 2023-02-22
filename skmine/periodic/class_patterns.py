@@ -252,7 +252,7 @@ def makeOccsAndFreqsThird(tmpOccs):
     """
     nbOccs = dict(tmpOccs.items())
     nbOccs[-1] = numpy.sum(list(nbOccs.values())) * \
-        1.  # -1 is the key for the total number of events in the sequence
+                 1.  # -1 is the key for the total number of events in the sequence
 
     if OPT_EVFR:
         adjFreqs = {"(": 1. / 3, ")": 1. / 3}
@@ -382,12 +382,12 @@ class DataSequence(object):
         else:
             ss = "-- Data Sequence |A|=%d |O|=%d dT=%d (%d to %d)" % (len(
                 self.data_details["nbOccs"]) - 1, self.data_details["nbOccs"][-1], self.data_details["deltaT"],
-                self.data_details["t_start"],
-                self.data_details["t_end"])
+                                                                      self.data_details["t_start"],
+                                                                      self.data_details["t_end"])
             ss += "\n\t" + "\n\t".join(["%s [%d] (|O|=%d f=%.3f dT=%d)" % (
                 self.list_ev[k], k, self.data_details["nbOccs"][k], self.data_details["orgFreqs"]
                 [k], self.evEnds[k] - self.evStarts[k]) for k in
-                sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
+                                        sorted(range(len(self.list_ev)), key=lambda x: self.data_details["nbOccs"][x])])
         return ss
 
     def getEvents(self):
@@ -428,6 +428,26 @@ class DataSequence(object):
 
 
 class PatternCollection(object):
+    """
+    A class representing a collection of patterns.
+
+    Parameters
+    ----------
+    patterns : list of tuple, optional (default=[])
+        List of patterns, where each pattern is represented as a tuple of three elements:
+        1) the pattern object;
+        2) an integer representing the starting time of the pattern occurrences;
+        3) a list of integers representing the event types in the pattern occurrences.
+
+    Attributes
+    ----------
+    patterns : list
+        A list of pattern tuples.
+
+    occ_lists : list of list, optional (default=None)
+        List of lists of integers representing the positions of the pattern occurrences in the
+        input data sequence.
+    """
 
     def __init__(self, patterns=[]):
         self.patterns = patterns
@@ -437,6 +457,14 @@ class PatternCollection(object):
         return len(self.patterns)
 
     def nbPatternsByType(self):
+        """
+        Return a dictionary that counts the number of patterns by type (simple, nested, complex, other).
+
+        Returns
+        -------
+        dict
+            A dictionary where the keys are the pattern types and the values are the number of patterns of that type.
+        """
         nbs = {}
         for (P, t0, E) in self.patterns:
             tstr = P.getTypeStr()
@@ -457,15 +485,50 @@ class PatternCollection(object):
         return set().union(*self.getOccLists())
 
     def getUncoveredOccs(self, data_seq):
+        """
+        Get the occurrences that are not covered by the current cycle
+
+        Parameters
+        ----------
+        data_seq : DataSequence
+            The sequence with all occurrences
+
+        Returns
+        -------
+        set
+            A set of tuples each containing a timestamp and the associated event (integer)
+        """
         return set(data_seq.getSequence()).difference(*self.getOccLists())
 
     def getNbUncoveredOccsByEv(self, data_seq):
+        """
+        Get a dictionary with the number of uncovered occurences for each event
+
+        Parameters
+        ----------
+        data_seq : DataSequence
+            The sequence with all occurences
+
+        Returns
+        -------
+        dict
+            A dictionary with the number of uncovered occurrences for each event
+
+        """
         nbs = {}
         for (t, ev) in self.getUncoveredOccs(data_seq):
             nbs[ev] = nbs.get(ev, 0) + 1
         return nbs
 
     def getOccLists(self):
+        """
+        Returns a list of lists, where each sublist contains the occurrences of a given pattern
+
+        Returns
+        -------
+        List[List[Tuple[int, int]]]
+            A list of lists, where each sublist contains the occurrences of a given pattern.
+        """
         if self.occ_lists is None:
             self.occ_lists = []
         if len(self.occ_lists) < len(self.patterns):
@@ -504,7 +567,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                    p.getTypeStr())
+                                                                                           p.getTypeStr())
             # print("P:\tt0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d):%s" % (t0, p, clp, numpy.sum(numpy.abs(
             # E)), len(ocls[pi]), [oo[1] for oo in ocls[pi]]))
             # print("sum(|E|)=%d  E=%s" % (numpy.sum(numpy.abs(E)), E))
@@ -512,7 +575,7 @@ class PatternCollection(object):
             cl += clp
         return str_out, cl
 
-    def strDetailed(self, data_seq,  print_simple=True):
+    def strDetailed(self, data_seq, print_simple=True):
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 
@@ -551,7 +614,7 @@ class PatternCollection(object):
             if print_simple or not p.isSimpleCycle():
                 str_out += "t0=%d\t%s\tCode length:%f\tsum(|E|)=%d\tOccs (%d/%d)\t%s\n" % (t0, p.__str__(
                     map_ev=map_ev, leaves_first=True), clp, numpy.sum(numpy.abs(E)), len(ocls[pi]), len(set(ocls[pi])),
-                    p.getTypeStr())
+                                                                                           p.getTypeStr())
 
             # print("\n pi, t0, E", pi, t0, E)
             # print("p.pattMinorKey()", p.pattMinorKey())
@@ -972,7 +1035,7 @@ class Pattern(object):
         if len(key_ints) == 0:
             return None  # something went wrong
         current_node, level = (0, 0)
-        while level < len(key_ints) and level > -1:
+        while len(key_ints) > level > -1:
             if self.isInterm(current_node) and key_ints[level][0] < len(self.nodes[current_node]["children"]):
                 if key_ints[level][0] == -1:
                     if level + 1 == len(key_ints):
@@ -1177,21 +1240,17 @@ class Pattern(object):
         if self.isInterm(nid):
             parent = self.nodes[nid]["parent"]
             children = self.nodes[nid]["children"]
-            ss = {
-                "nid": int(nid),
-                "r": int(self.nodes[nid]["r"]),
-                "p": int(self.nodes[nid]["p"]),
-                "parent": str(parent) if parent == None else parent,
-                "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children]
-            }
+            ss = {"nid": int(nid), "r": int(self.nodes[nid]["r"]), "p": int(self.nodes[nid]["p"]),
+                  "parent": str(parent) if parent is None else parent,
+                  "children_tuple": ["(nid=" + str(int(nn[0])) + ", d=" + str(int(nn[1])) + ")" for nn in children],
+                  "children": []}
 
-            ss["children"] = []
             for nn in children:
                 # ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
                 parent = self.nodes[nn[0]]["parent"]
                 child = {
                     "nid": int(nn[0]),
-                    "d":   int(nn[1]),
+                    "d": int(nn[1]),
                     "parent": str(parent) if parent == None else parent,
                 }
                 if self.isInterm(nn[0]):
@@ -1572,7 +1631,7 @@ class Pattern(object):
 
         if OPT_TO:
             maxv = deltaT - EC_za - \
-                self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
+                   self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
             maxv = deltaT + 1
         if EC_za is None and maxv <= 0:
@@ -1647,7 +1706,7 @@ class Pattern(object):
             if Pattern.LOG_DETAILS == 1:
                 print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
                                                                   Tmax_rep, len(
-                                                                      self.nodes[nid]["children"]) - 1, cld_i,
+                    self.nodes[nid]["children"]) - 1, cld_i,
                                                                   cld))
             if Pattern.LOG_DETAILS == 2:
                 for kk in range(len(self.nodes[nid]["children"]) - 1):
@@ -1684,7 +1743,7 @@ class Pattern(object):
         if self.hasNestedPDs():
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 if self.nodes[0]["p"] < Tmax:
                     Tmax_rep = self.nodes[0]["p"]
@@ -1730,7 +1789,7 @@ class Pattern(object):
                 EC_zz = self.getCCorr(o_zz, Ed)
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
