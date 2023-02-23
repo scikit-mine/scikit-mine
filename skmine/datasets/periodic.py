@@ -43,9 +43,9 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
-    kwargs = dict(header=None, index_col=0, squeeze=True, dtype="string")
+    kwargs = dict(header=None, index_col=0, dtype="string")
     if filename in os.listdir(data_home):
-        s = pd.read_csv(p, **kwargs)
+        s = pd.read_csv(p, **kwargs).squeeze(axis="columns")
     else:
         s = pd.read_csv(
             "https://raw.githubusercontent.com/logpai/loghub/master/HealthApp/HealthApp_2k.log",
@@ -53,7 +53,7 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
             error_bad_lines=False,
             usecols=[0, 1],
             **kwargs,
-        )
+        ).squeeze(axis="columns")
         s.to_csv(p, header=False)
     s.index.name = "timestamp"
     s.index = pd.to_datetime(s.index, format="%Y%m%d-%H:%M:%S:%f")
@@ -105,14 +105,14 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
-    kwargs = dict(header=None, squeeze=True, dtype="string", index_col=0, )
+    kwargs = dict(header=None, dtype="string", index_col=0, )
 
     if filename not in os.listdir(data_home):
         s = pd.read_csv(
-            "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs)
+            "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs).squeeze(axis="columns")
         s.to_csv(p, index=True, header=False)
     else:
-        s = pd.read_csv(p, **kwargs)
+        s = pd.read_csv(p, **kwargs).squeeze("columns")
 
     s.index = pd.to_datetime(s.index)
     s.index.name = "timestamp"
