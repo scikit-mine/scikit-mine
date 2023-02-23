@@ -75,12 +75,12 @@ def _iterdict_str_to_int_keys(dict_):
 #     return d
 
 
-class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
+class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     # (BaseMiner, MDLOptimizer, DiscovererMixin):
     """
     Mining periodic cycles with a MDL Criterion
 
-    PeriodicCycleMiner is an approach to mine periodic cycles from event logs
+    PeriodicPatternMiner is an approach to mine periodic cycles from event logs
     while relying on a Minimum Description Length (MDL) criterion to evaluate
     candidate cycles. The goal here is to extract a set of cycles that characterizes
     the periodic structure present in the data
@@ -98,10 +98,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> from skmine.periodic import PeriodicCycleMiner
+    >>> from skmine.periodic import PeriodicPatternMiner
     >>> import pandas as pd
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
-    >>> pcm = PeriodicCycleMiner().fit(S)
+    >>> pcm = PeriodicPatternMiner().fit(S)
     >>> pcm.discover()
        start  length  period       cost                             residuals 	event
     0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]
@@ -125,7 +125,7 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
         self.auto_time_scale = True
 
     def fit(self, S, complex=True, auto_time_scale=True):
-        """fit PeriodicCycleMiner on data logs
+        """fit PeriodicPatternMiner on data logs
 
         This generates new candidate cycles and evaluate them.
         Residual occurrences are stored as an internal attribute,
@@ -287,10 +287,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
             Examples
             --------
-            >>> from skmine.periodic import PeriodicCycleMiner
+            >>> from skmine.periodic import PeriodicPatternMiner
             >>> import pandas as pd
             >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
-            >>> pcm = PeriodicCycleMiner().fit(S)
+            >>> pcm = PeriodicPatternMiner().fit(S)
             >>> pcm.discover()
             start  length  period       cost                                residuals 	        event              dE
             0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]
@@ -326,7 +326,10 @@ class PeriodicCycleMiner(TransformerMixin, BaseEstimator):
 
         if chronological_order:
             self.cycles.sort_values(by='t0', inplace=True)
-        return self.cycles
+
+        dropped_col_for_output = ["pattern_json_tree"]
+
+        return self.cycles.drop(columns=dropped_col_for_output, axis=1)
 
     def export_patterns(self, file="patterns.json"):
         """Export pattern into a json file

@@ -279,7 +279,7 @@ class PatternCollection(object):
 
             dict_pattern["t0"] = t0
             dict_pattern["pattern_json_tree"] = pattern_tree
-            dict_pattern["pattern_resume"] = p.__str__(
+            dict_pattern["info"] = p.__str__(
                 map_ev=map_ev, leaves_first=True)
             dict_pattern["length_major"] = p.pattMajorKey_list()[0]
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
