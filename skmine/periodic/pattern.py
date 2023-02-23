@@ -7,6 +7,43 @@ import numpy as np
 from .class_patterns import l_to_key, key_to_l, SUB_SEP, SUP_SEP, OPT_TO
 
 
+def replace_tuple(nodes):
+    for key_node, node in nodes.items():
+        if "parent" in node:
+            node.pop("parent")
+        if "children" in node:
+            for k, (child, d) in enumerate(node["children"]):
+                new_child_dict = {
+                    "d": d,
+                    "id": child,
+                }
+                for key, value in nodes[child].items():
+                    if key != "parent":
+                        new_child_dict[key] = value
+
+                nodes[key_node]["children"][k] = new_child_dict
+    key_nodes = list(nodes.keys())
+    while len(nodes) > 1:
+        nodes.pop(key_nodes[len(nodes)-1])
+
+    return nodes
+
+
+# def recover_tuple(nodes):
+
+#     for key_node, node in nodes.items():
+#         if "children" in node:
+#             for k, (child, d) in enumerate(node["children"]):
+#                 new_child_dict = {
+#                     "d": d,
+#                     "id": child,
+#                     "children": nodes[child],
+#                 }
+
+#                 nodes[key_node]["children"][k] = new_child_dict
+# return nodes
+
+
 class Pattern(object):
     LOG_DETAILS = 0  # 1: basic text, 2: LaTeX table
 
@@ -482,6 +519,14 @@ class Pattern(object):
                 return ll
         else:
             return [self.nodes[nid]["event"]]
+
+    def conv_node(self, map_ev=None):
+        self.nodes
+        print("\n\nself.nodes", self.nodes)
+        new_nodes = self.copy().nodes
+
+        replace_tuple(new_nodes)
+        print("\nnew_nodes", new_nodes)
 
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         """

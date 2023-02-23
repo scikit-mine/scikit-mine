@@ -257,6 +257,7 @@ class PatternCollection(object):
             # print("p.getEventsList", p.getEventsList())
             # print("p.getEventsMinor", p.getEventsMinor())
             pattern_tree = p.nodes
+            # p.conv_node()
             pattern_tree["next_id"] = p.next_id
             pattern_tree["t0"] = int(t0)
             pattern_tree["E"] = [int(e) for e in E]
@@ -264,7 +265,6 @@ class PatternCollection(object):
             # print("pattern_tree", pattern_tree)
             # print("pattern_tree", pattern_tree)
             # print("Ttree:\n", p.getTreeStr())
-
             # print("p.getCyclePs", p.getCyclePs())
             # print("p.getCycleRs", p.getCycleRs())
             # print("p.getNbLeaves", p.getNbLeaves())
