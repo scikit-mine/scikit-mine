@@ -8,16 +8,6 @@ import pandas as pd
 from ._base import get_data_home
 
 
-def deduplicate(S):
-    """deduplicate pd.Series by removing rows with same index and values"""
-    dedup = S.groupby(S.index).first()
-    diff = len(S) - len(dedup)
-    if diff:
-        warnings.warn(f"found {diff} duplicates in S, removing them")
-        return dedup
-    return S
-
-
 def fetch_health_app(data_home=None, filename="health_app.csv"):
     """Fetch and return the health app log dataset
 
@@ -107,7 +97,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
-    kwargs = dict(header=None, squeeze=True, dtype="string", index_col=0,)
+    kwargs = dict(header=None, squeeze=True, dtype="string", index_col=0, )
 
     if filename not in os.listdir(data_home):
         s = pd.read_csv(

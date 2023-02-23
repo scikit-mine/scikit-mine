@@ -163,9 +163,10 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             len_S = len(S)
             S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
             S = S.reset_index(level=0, drop=True)
-            if len(S) < len_S:
+            diff = len_S - len(S)
+            if diff:
                 warnings.warn(
-                    "Duplicates found in the input sequence, they have been removed.")
+                    f"found {diff} duplicates in the input sequence, they have been removed.")
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -388,7 +389,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         patterns_collection = PatternCollection(patterns=patterns_list)
         self.miners_ = patterns_collection
 
-    def reconstruct(self, *patterns_id, sort="time", drop_duplicates=True):
+    def reconstruct(self, *patterns_id, sort="time", drop_duplicates=None):
         """Reconstruct all the occurrences from patterns (no argument), or the
         occurrences of selected patterns (with a patterns'id list as argument).
 
@@ -401,7 +402,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         sort: string
             "time" (by default) : sort by occurences time
             "event" : sort by event names
-            anything else : sort by pattern reconstruction
+            "construction_order" : sort by pattern reconstruction
 
         drop_duplicates: bool, default=True
             An occurrence can appear in several patterns and thus appear several times in the reconstruction.
@@ -415,6 +416,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             The reconstructed dataset
 
         """
+        if drop_duplicates is None:
+            drop_duplicates = sort != "construction_order"
 
         reconstruct_list = []
 
