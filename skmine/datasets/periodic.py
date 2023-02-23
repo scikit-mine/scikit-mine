@@ -27,6 +27,9 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
 
     Parameters
     ----------
+    filename : str, default: health_app.csv
+        Name of the file (without the data_home directory) where the dataset will be or is already downloaded.
+
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
         all scikit-mine data is stored in `scikit-mine_data`.
@@ -76,6 +79,9 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
 
     Parameters
     ----------
+    filename : str, default: canadian_tv.txt
+        Name of the file (without the data_home directory) where the dataset will be or is already downloaded.
+
     data_home : optional, default: None
         Specify another download and cache folder for the datasets. By default
         all scikit-mine data is stored in `scikit-mine_data`.
