@@ -20,6 +20,7 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
     in only 20 different events.
 
     ==============================      ===================================
+    Number of occurrences               2000
     Number of events                    20
     Average delta per event             Timedelta('0 days 00:53:24.984000')
     Average nb of points per event      100.0
@@ -31,8 +32,8 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
         Name of the file (without the data_home directory) where the dataset will be or is already downloaded.
 
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -72,6 +73,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     Adverts are ignored when loading the dataset.
 
     ==============================      =======================================
+    Number of occurrences               2093
     Number of events                    98
     Average delta per event             Timedelta('19 days 02:13:36.122448979')
     Average nb of points per event      21.35714285714285
@@ -83,8 +85,8 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
         Name of the file (without the data_home directory) where the dataset will be or is already downloaded.
 
     data_home : optional, default: None
-        Specify another download and cache folder for the datasets. By default
-        all scikit-mine data is stored in `scikit-mine_data`.
+        Specify another download and cache folder for the datasets.
+        By default, all scikit-mine data is stored in `scikit-mine_data`.
 
     Returns
     -------
@@ -95,7 +97,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     Notes
     -----
     For now the entire .zip file is downloaded, being ~90mb on disk
-    Downloading preprocessd dataset from zenodo.org is something we consider.
+    Downloading preprocessed dataset from zenodo.org is something we consider.
 
     See Also
     -------
