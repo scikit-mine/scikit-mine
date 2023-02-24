@@ -7,13 +7,13 @@ from ..periodic import fetch_canadian_tv, fetch_health_app
 
 
 def mock_read_csv(*args, **kwargs):
-    return pd.Series([2, 3], index=["20171223-22:15:29:606", "20171223-22:15:29:615"])
+    return pd.DataFrame([2, 3], index=["20171223-22:15:29:606", "20171223-22:15:29:615"])
 
 
 def mock_read_csv_canadian_tv(*args, **kwargs):
     programs = ["The Moblees", "Big Block Sing Song", "Big Block Sing Song", "CBC Kids"]
     index = pd.date_range(start="08/01/2020", periods=len(programs), freq="1H")
-    return pd.Series(programs, index=index)
+    return pd.DataFrame(programs, index=index)
 
 
 @pytest.mark.parametrize("already_downloaded", [True, False])

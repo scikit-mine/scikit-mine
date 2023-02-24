@@ -50,7 +50,7 @@ def fetch_health_app(data_home=None, filename="health_app.csv"):
         s = pd.read_csv(
             "https://raw.githubusercontent.com/logpai/loghub/master/HealthApp/HealthApp_2k.log",
             sep="|",
-            error_bad_lines=False,
+            on_bad_lines='skip',
             usecols=[0, 1],
             **kwargs,
         ).squeeze(axis="columns")
@@ -105,14 +105,14 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     """
     data_home = data_home or get_data_home()
     p = os.path.join(data_home, filename)
-    kwargs = dict(header=None, dtype="string", index_col=0, )
+    kwargs = dict(header=None, dtype="string", index_col=0)
 
     if filename not in os.listdir(data_home):
         s = pd.read_csv(
             "https://zenodo.org/record/4671512/files/canadian_tv.txt", **kwargs).squeeze(axis="columns")
         s.to_csv(p, index=True, header=False)
     else:
-        s = pd.read_csv(p, **kwargs).squeeze("columns")
+        s = pd.read_csv(p, **kwargs).squeeze(axis="columns")
 
     s.index = pd.to_datetime(s.index)
     s.index.name = "timestamp"

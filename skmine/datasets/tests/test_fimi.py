@@ -8,6 +8,7 @@ from urllib.request import urlopen
 
 from skmine.datasets import fimi
 
+
 def test_url_fimi():
     url_fimi = "http://fimi.uantwerpen.be/data/"
     assert urlopen(url_fimi).getcode() == 200
@@ -59,7 +60,9 @@ def test_fetch_any_already_fetched():
 
 
 def test_fetch_any_not_fetched_gz():
-    transactions = fimi.fetch_any("iris.D19.N150.C3.num.gz", base_url="https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/", data_home="./skmine/datasets/tests/")
+    transactions = fimi.fetch_any("iris.D19.N150.C3.num.gz",
+                                  base_url="https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/",
+                                  data_home="./skmine/datasets/tests/")
     assert os.path.isfile('./skmine/datasets/tests/iris.D19.N150.C3.num.gz')
     os.remove('./skmine/datasets/tests/iris.D19.N150.C3.num.gz')
     assert transactions.name == 'iris.D19.N150.C3.num'

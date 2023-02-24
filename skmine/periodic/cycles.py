@@ -20,12 +20,11 @@ log = np.log2
 INDEX_TYPES = (
     pd.DatetimeIndex,
     pd.RangeIndex,
-    pd.Int64Index,
+    pd.Index,
 )
 
 
 def _remove_zeros(numbers: pd.Series):
-
     n = 0
     while (numbers % 10 == 0).all():
         numbers //= 10
