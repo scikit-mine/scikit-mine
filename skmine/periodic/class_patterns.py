@@ -80,6 +80,23 @@ def computePeriod(occs, sort=False):
 
 
 def computeE(occs, p0, sort=False):
+    """
+    Computes the list of shifts derivations from a candidate from its occurrences and its period
+
+    Parameters
+    ----------
+    occs : list
+        List of occurences/timestamps of a candidate
+    p0 : int
+        Period of the candidate
+    sort : bool, default=False
+        Sort or not the occs list
+
+    Returns
+    -------
+    The list of the cycle shift derivations
+
+    """
     if sort:
         occs = sorted(occs)
     return [(occs[i] - occs[i - 1]) - p0 for i in range(1, len(occs))]

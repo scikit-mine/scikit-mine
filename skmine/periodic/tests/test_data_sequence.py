@@ -75,3 +75,17 @@ def test_getInfoStr():
                       "\n\tcoffee [0] (|O|=2 f=0.250 dT=17274)" \
                       "\n\twake up [1] (|O|=6 f=0.750 dT=60480)"
     assert expected_output == ds.getInfoStr()
+
+
+def test_getEvents():
+    ds = DataSequence(seqs)
+    assert ds.getEvents() == ["coffee", "wake up"]
+
+
+def test_getNumToEv():
+    ds = DataSequence(seqs)
+    expected_output = {
+        0: "coffee",
+        1: "wake up"
+    }
+    assert expected_output == ds.getNumToEv()
