@@ -15,7 +15,7 @@ def test_url_fimi():
 
 
 def test_url_cgi():
-    url_cgi = "https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/"
+    url_cgi = "https://cgi.csc.liv.ac.uk/~frans/KDD/Software/LUCS-KDD-DN/DataSets/dataSets.html"
     assert urlopen(url_cgi).getcode() == 200
 
 
