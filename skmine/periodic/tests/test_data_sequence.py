@@ -67,3 +67,11 @@ def test_data_sequence():
     assert expected_data_details["deltaT"] == ds.data_details["deltaT"]
     assert expected_data_details["nbOccs"] == ds.data_details["nbOccs"]
     assert expected_data_details["orgFreqs"] == ds.data_details["orgFreqs"]
+
+
+def test_getInfoStr():
+    ds = DataSequence(seqs)
+    expected_output = "-- Data Sequence |A|=2 |O|=8 dT=60480 (158702220 to 158762700)" \
+                      "\n\tcoffee [0] (|O|=2 f=0.250 dT=17274)" \
+                      "\n\twake up [1] (|O|=6 f=0.750 dT=60480)"
+    assert expected_output == ds.getInfoStr()

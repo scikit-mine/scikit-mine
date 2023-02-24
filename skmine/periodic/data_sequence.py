@@ -82,6 +82,16 @@ class DataSequence(object):
                              "nbOccs": nbOccs, "orgFreqs": orgFreqs, "adjFreqs": adjFreqs, "blck_delim": blck_delim}
 
     def getInfoStr(self):
+        """
+            Get information about the DataSequence
+            |A|: number of events
+            |O|: number of occurrences
+            dT: delta time
+            ({start_time} to {end_time})
+
+            and then a description for each event
+            {event_name} [{event_id}] (|O|={number_of_occurences} f={frequence} dt={delta_time}) ...
+        """
         if self.data_details["nbOccs"][-1] == 0:
             ss = "-- Empty Data Sequence"
         else:
