@@ -103,6 +103,7 @@ def computeE(occs, p0, sort=False):
 
 
 def cost_triple(data_details, alpha, dp, deltaE):
+    # FIXME
     if (data_details["deltaT"] - deltaE + 1) / 2. - dp < 0:
         print("!!!---- Problem delta", data_details["deltaT"], deltaE, dp)
         pdb.set_trace()
@@ -157,11 +158,43 @@ def cost_one(data_details, alpha):
 
 
 def computeLengthEOccs(occs, cp):
+    """
+    Compute L(E)
+    .. math:: L(E) = 2*|E| + \sum_{e \in E}|e| \text{where} |E|=|occs*(P)|-1
+
+    Parameters
+    ----------
+    occs : list
+        List of all occurrences of a candidate
+
+    cp : int
+        Candidate period
+
+    Returns
+    -------
+    int
+        L(E)
+    """
     # -1
     return numpy.sum([2 + numpy.abs((occs[i] - occs[i - 1]) - cp) for i in range(1, len(occs))])
 
 
 def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
+    """
+        Compute the length of a cycle
+        L(P) = L(A) + L(R) + L(p) + L(D) + L(to) + L(E)
+
+    Parameters
+    ----------
+    data_details
+    cycle
+    print_dets
+    no_err
+
+    Returns
+    -------
+
+    """
     cp = cycle.get("p")
     if cp is None:
         cp = computePeriod(cycle["occs"])
@@ -314,7 +347,7 @@ def makeOccsAndFreqsThird(tmpOccs):
     """
     nbOccs = dict(tmpOccs.items())
     nbOccs[-1] = numpy.sum(list(nbOccs.values())) * \
-        1.  # -1 is the key for the total number of events in the sequence
+                 1.  # -1 is the key for the total number of events in the sequence
 
     if OPT_EVFR:
         adjFreqs = {"(": 1. / 3, ")": 1. / 3}
@@ -386,7 +419,6 @@ def mergeSortedPids(props, pidsA, pidsB):
     if len(pidsB) > 0:
         pidsA.extend(pidsB)
     return pidsA
-
 
 # if __name__ == "__main__":
 #     # p = Pattern("a", 2, 3)

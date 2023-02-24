@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE
+from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
+    computeLengthEOccs
 
 
 def test__getChained_with_keys():
@@ -73,3 +74,37 @@ def test_computeE_with_sort():
 
     result = computeE(occs, p0, sort=True)
     assert result == [1, 0, 2]
+
+
+def test_cost_one():
+    minimalist_data_details = {
+        "t_start": 158702220,
+        "t_end": 158762700,
+        "deltaT": 60480,
+        "nbOccs": {1: 6, 0: 2, -1: 8},
+        "orgFreqs": {1: 0.75, 0: 0.25}
+    }
+
+    result = cost_one(minimalist_data_details, 1)
+    assert -np.log2(0.75) + np.log2(60480 + 1) == result
+
+
+def test_cost_one_missing_alpha():
+    minimalist_data_details = {
+        "t_start": 158702220,
+        "t_end": 158762700,
+        "deltaT": 60480,
+        "nbOccs": {1: 6, 0: 2, -1: 8},
+        "orgFreqs": {1: 0.75, 0: 0.25}
+    }
+
+    result = cost_one(minimalist_data_details, 5)
+    assert 0 + np.log2(60480 + 1) == result
+
+
+def test_computeLengthEOccs():
+    occs = [-6, 0, 5, 12]
+    cp = 5
+
+    result = computeLengthEOccs(occs, cp)
+    assert 9 == result
