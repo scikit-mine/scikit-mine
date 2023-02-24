@@ -108,3 +108,19 @@ def test_computeLengthEOccs():
 
     result = computeLengthEOccs(occs, cp)
     assert 9 == result
+
+
+def test_computeLengthEOccs_empty():
+    occs = []
+    cp = 5
+
+    result = computeLengthEOccs(occs, cp)
+    assert 0 == result
+
+
+def test_computeLengthEOccs_single():
+    occs = [1]
+    cp = 5
+
+    result = computeLengthEOccs(occs, cp)
+    assert 0 == result

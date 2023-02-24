@@ -175,7 +175,6 @@ def computeLengthEOccs(occs, cp):
     int
         L(E)
     """
-    # -1
     return numpy.sum([2 + numpy.abs((occs[i] - occs[i - 1]) - cp) for i in range(1, len(occs))])
 
 
@@ -193,6 +192,8 @@ def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
 
     Returns
     -------
+    int
+        L(P)
 
     """
     cp = cycle.get("p")
