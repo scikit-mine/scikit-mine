@@ -223,7 +223,8 @@ def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
         (data_details["deltaT"] - dE) / (len(cycle["occs"]) - 1.)))
     if OPT_TO:
         if data_details["deltaT"] - dE - cp * (len(cycle["occs"]) - 1) + 1 <= 0:
-            # to compute noErr cost:
+            # to compute noE
+            # rr cost:
             to = 0
         else:
             to = numpy.log2(data_details["deltaT"] -
@@ -238,8 +239,21 @@ def computeLengthCycle(data_details, cycle, print_dets=False, no_err=False):
 
 
 def computeLengthResidual(data_details, residual):
-    # print("\n\t\tresiduals %d %s=%f" % (len(residual["occs"]), residual["alpha"], len(residual["occs"])*(
-    # numpy.log2(nbOccs[residual["alpha"]]/nbOccs[-1]) + numpy.log2(deltaT))),)
+    """
+        Compute the codelength of the residuals
+    Parameters
+    ----------
+    data_details
+    residual : dict
+        Contains the following keys:
+        * alpha: the event
+        * occs: all occurences where alpha is not covered by the cycle
+
+    Returns
+    -------
+    float
+        Codelength of the residuals
+    """
     residual["cp"] = -1
     return len(residual["occs"]) * cost_one(data_details, residual["alpha"])
 

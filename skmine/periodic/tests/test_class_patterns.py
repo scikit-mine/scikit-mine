@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
-    computeLengthEOccs
+    computeLengthEOccs, computeLengthResidual
 
 
 def test__getChained_with_keys():
