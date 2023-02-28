@@ -408,7 +408,7 @@ def key_to_l(key):
 
 def l_to_key(l):
     """
-    Takes as input a tuple list of 2 elements each and returns a string where the elements of each tuple are separated
+    Takes as input a list of pairs and returns a string where the elements of each tuple are separated
     by SUB_SEP and each tuple by SUP_SEP.
 
     Parameters
@@ -424,6 +424,23 @@ def l_to_key(l):
 
 
 def l_to_br(l):
+    """
+     Convert a list of pairs of integers to a string of the form "B<i1,...,in><j1,...,jn>",
+     where n is the length of the input list and each pair of integers (i,j) in the input
+     list is represented as "<i+1,j+1>". The output string starts with the letter "B".
+
+     Parameters
+     ----------
+     l : list of pairs of integers
+         The input list to convert to the string format. Each pair of integers (i,j) in the
+         input list should be represented as a list [i, j].
+
+     Returns
+     -------
+     str
+         A string of the form "B<i1,...,in><j1,...,jn>", where n is the length of the input
+         list and each pair of integers (i,j) in the input list is represented as "<i+1,j+1>".
+    """
     return "B" + ",".join(["%d" % (int(pf[0]) + 1) for pf in l]) + "<" + ",".join(
         ["%d" % (int(pf[1]) + 1) for pf in l]) + ">"
 
@@ -434,6 +451,20 @@ def key_to_br(key):
 
 
 def propCmp(props, pid):
+    """
+    Get the t0i, p0, and r0 properties of a given pattern id.
+
+    Parameters
+    ----------
+    props : list or numpy ndarray
+    pid : int
+        The ID of the pattern whose properties are being requested.
+
+    Returns
+    -------
+    tuple of floats
+        A tuple containing the t0i, p0, and r0 properties of the requested particle.
+    """
     if type(props) is list:
         return (props[pid][prop_map["t0i"]],
                 props[pid][prop_map["p0"]],
@@ -459,257 +490,3 @@ def mergeSortedPids(props, pidsA, pidsB):
     if len(pidsB) > 0:
         pidsA.extend(pidsB)
     return pidsA
-
-# if __name__ == "__main__":
-#     # p = Pattern("a", 2, 3)
-#     # p1 = Pattern("b", 3, 3)
-#     # p.merge(p1, 2)
-#     # p.append("c", 1)
-#
-#     trees = {}
-#     # ### examples overlap/overtake
-#     # ### overtaking
-#     trees["P1"] = {0: {'p': 2, 'r': 4, 'children': [(1, 0)], 'parent': None},
-#                    1: {'event': 'a', 'parent': 0}}
-#     trees["P2"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0)], 'parent': None},
-#                    1: {'event': 'a', 'parent': 0}}
-#     trees["P3"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0)], 'parent': None},
-#                    1: {'p': 2, 'r': 4, 'children': [(2, 0)], 'parent': 0},
-#                    2: {'event': 'a', 'parent': 1}}
-#     trees["P4"] = {0: {'p': 2, 'r': 4, 'children': [(1, 0)], 'parent': None},
-#                    1: {'p': 13, 'r': 3, 'children': [(2, 0)], 'parent': 0},
-#                    2: {'event': 'a', 'parent': 1}}
-#     trees["P2b"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0)], 'parent': None},
-#                     1: {'event': 'b', 'parent': 0}}
-#     trees["P2c"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0)], 'parent': None},
-#                     1: {'event': 'c', 'parent': 0}}
-#     trees["P5"] = {0: {'p': 13, 'r': 3, 'children': [(1, 0), (2, 3), (3, 1)], 'parent': None},
-#                    1: {'event': 'b', 'parent': 0},
-#                    2: {'event': 'a', 'parent': 0},
-#                    3: {'event': 'c', 'parent': 0}}
-#
-#     # #####################################################
-#     # ### NESTING TWO CYCLES OVER THE SAME EVENT
-#     # #####################################################
-#     # #### simple example with one event
-#     # tmpOccs = {"a":12}
-#
-#     # ### WITHOUT ERRORS
-#     # po = numpy.array([0, 2, 4, 6, 13, 15, 17, 19, 26, 28, 30, 32])#+2
-#     # ### WITH ERRORS
-#     # o = numpy.array([0, 3, 5, 6, 11, 13, 18, 19, 24, 27, 30, 31])+2
-#     # #o = numpy.array([2, 5, 7, 8, 13, 15, 20, 21, 26, 29, 32, 33])
-#     # collections = []
-#     # collections.append([("P1", o[i*4], numpy.diff(o[i*4:(i+1)*4])-trees["P1"][0]["p"]) for i in range(3)])
-#     # collections.append([("P2", o[i], numpy.diff(o[i::4])-trees["P2"][0]["p"]) for i in range(4)])
-#
-#     # E = []
-#     # for i in range(len(collections[0])):
-#     #     if i > 0:
-#     #         E.append(collections[1][0][-1][i-1])
-#     #     E.extend(collections[0][i][-1])
-#     # collections.append([("P3", o[0], E)])
-#
-#     # E = []
-#     # for i in range(len(collections[1])):
-#     #     if i > 0:
-#     #         E.append(collections[0][0][-1][i-1])
-#     #     E.extend(collections[1][i][-1])
-#     # collections.append([("P4", o[0], E)])
-#     # #####################################################
-#
-#     #####################################################
-#     # CONCATENATING THREE CYCLES OVER DIFFERENT EVENTS
-#     #####################################################
-#     # simple example with one event
-#     tmpOccs = {"a": 3, "b": 3, "c": 3}
-#
-#     # WITHOUT ERRORS
-#     po = numpy.array([0, 3, 4, 13, 16, 17, 26, 29, 30])  # +2
-#     # ### WITH ERRORS
-#     # o = numpy.array([0, 3, 5, 11, 13, 17, 24, 28, 29])+2
-#     o = numpy.array([0, 3, 5, 11, 16, 19, 24, 28, 29]) + 2
-#     ds = [v[1] for v in trees["P5"][0]["children"]]
-#
-#     collections = []
-#     cpp = ["P2b", "P2", "P2c"]
-#     collections.append([(p, o[i], numpy.diff(o[i::len(cpp)]) -
-#                          trees["P2"][0]["p"]) for (i, p) in enumerate(cpp)])
-#
-#     E = []
-#     for i in range(len(o)):
-#         if i > 0:
-#             if i % len(cpp) == 0:
-#                 E.append((o[i] - o[i - len(cpp)]) - trees["P2"][0]["p"])
-#             else:
-#                 E.append((o[i] - o[i - 1]) - ds[i % len(cpp)])
-#     collections.append([("P5", o[0], E)])
-#     #####################################################
-#
-#     # RUN
-#     nbOccs, orgFreqs, adjFreqs, blck_delim = makeOccsAndFreqs(tmpOccs)
-#     print("ADJ_CL", [(k, numpy.log2(v)) for (k, v) in adjFreqs.items()])
-#     # t_end = numpy.max(o)
-#     # t_start = numpy.min(o)
-#     t_end = 34
-#     t_start = 0
-#     deltaT = t_end - t_start
-#
-#     print("Sequence:", o, "\t", po)
-#     print("t_start=%d t_end=%d deltaT=%d" % (t_start, t_end, deltaT))
-#
-#     for ci, col in enumerate(collections):
-#         print("==================")
-#         ccl = 0
-#         for pi, pat in enumerate(col):
-#             p = Pattern(trees[pat[0]])
-#             print("------------------")
-#             print("Pattern: Q_%d-%d\n" % (ci + 1, pi + 1), p)
-#
-#             t0 = pat[1]
-#             occsStar = p.getOccsStar()
-#             oids = [o[-1] for o in occsStar]
-#
-#             E = pat[2]
-#             Ed = p.getEDict(occsStar, E)
-#             print("Starting point:", t0)
-#             print("Corrections:", E, "\t", Ed)
-#             occs = p.getOccs(occsStar, t0, Ed)
-#             print("Occurrences:", sorted(occs), "\t", occs)
-#             data_details = {"t_start": t_start, "t_end": t_end, "deltaT": deltaT,
-#                             "nbOccs": nbOccs, "adjFreqs": adjFreqs, "blck_delim": blck_delim}
-#
-#             # print("------------------")
-#             # print("Pattern:\n", p)
-#             # print("Events:", p.getEventsList())
-#             # print("occs (%d) e,t:" % len(occs), [bo[:2] for bo in occs])
-#
-#             # interleaved = {}
-#             # print("Time spanned:", p.timeSpanned(interleaved))
-#             # print("Interleaved:", p.isInterleaved())
-#             cl = p.codeLength(t0, E, data_details)
-#             print("Code length: %.3f" % cl)
-#             ccl += cl
-#         print("Collection %d code length: %.3f" % (ci, ccl))
-#     exit()
-#
-#     # #### more examples
-#     # tmpOccs = {"a":50, "b": 100, "c": 50, "d": 40}
-#     # nbOccs, adjFreqs, orgFreqs, blck_delim = makeOccsAndFreqs(tmpOccs)
-#
-#     # trees = []
-#     # # ### examples overlap/overtake
-#     # # ### overtaking
-#     # trees.append({0: {'p': 10, 'r': 2, 'children': [(1, 0)], 'parent': None},
-#     #         1: {'event': 'c', 'parent': 0}})
-#
-#     # # trees.append({0: {'p': 10, 'r': 2, 'children': [(1, 0), (2, 5)], 'parent': None},
-#     # #         1: {'p': 3, 'r': 3, 'children': [(3, 0), (4, 2)], 'parent': 0},
-#     # #         2: {'event': 'a', 'parent': 0},
-#     # #         3: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1}})
-#     # # ### overlaps, not overtaking
-#     # # trees.append({0: {'p': 8, 'r': 2, 'children': [(1, 0), (2, 8)], 'parent': None},
-#     # #         1: {'p': 3, 'r': 3, 'children': [(3, 0), (4, 2)], 'parent': 0},
-#     # #         2: {'event': 'a', 'parent': 0},
-#     # #         3: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1}})
-#     # # ### no overlaps
-#     # # trees.append({0: {'p': 10, 'r': 2, 'children': [(1, 0), (2, 9)], 'parent': None},
-#     # #         1: {'p': 3, 'r': 3, 'children': [(3, 0), (4, 2)], 'parent': 0},
-#     # #         2: {'event': 'a', 'parent': 0},
-#     # #         3: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1}})
-#
-#     # # ### complex pattern
-#     # # trees.append({0: {'p': 10, 'r': 2, 'children': [(1, 0), (2, 5)], 'parent': None},
-#     # #         1: {'p': 3, 'r': 3, 'children': [(3, 0), (4, 2), (5, 1)], 'parent': 0},
-#     # #         3: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1},
-#     # #         5: {'event': 'd', 'parent': 1},
-#     # #         2: {'p': 4, 'r': 3, 'children': [(6, 0)], 'parent': 0},
-#     # #         6: {'p': 1, 'r': 2, 'children': [(7, 0)], 'parent': 2},
-#     # #         7: {'event': 'a', 'parent': 6}})
-#
-#     # # ### complex pattern P8
-#     # # trees.append({0: {'p': 5, 'r': 2, 'children': [(1, 0)], 'parent': None},
-#     # #         1: {'p': 10, 'r': 3, 'children': [(2, 0), (3, 3), (4, 1)], 'parent': 0},
-#     # #         2: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1},
-#     # #         3: {'p': 1, 'r': 4, 'children': [(5, 0)], 'parent': 1},
-#     # #         5: {'event': 'a', 'parent': 3}})
-#
-#     # ### variation on P8, interleaving, no overlaps
-#     # # trees.append({0: {'p': 24, 'r': 2, 'children': [(1, 0)], 'parent': None},
-#     # #         1: {'p': 8, 'r': 3, 'children': [(2, 0), (3, 3), (4, 1)], 'parent': 0},
-#     # #         2: {'event': 'b', 'parent': 1},
-#     # #         4: {'event': 'c', 'parent': 1},
-#     # #         3: {'p': 2, 'r': 4, 'children': [(5, 0)], 'parent': 1},
-#     # #         5: {'event': 'a', 'parent': 3}})
-#
-#     # ### variation on P8, no interleaving, no overlaps
-#     # trees.append({0: {'p': 33, 'r': 2, 'children': [(1, 0)], 'parent': None},
-#     #         1: {'p': 10, 'r': 3, 'children': [(2, 0), (3, 3), (4, 5)], 'parent': 0},
-#     #         2: {'event': 'b', 'parent': 1},
-#     #         4: {'event': 'c', 'parent': 1},
-#     #         3: {'p': 1, 'r': 4, 'children': [(5, 0)], 'parent': 1},
-#     #         5: {'event': 'a', 'parent': 3}})
-#
-#     # # ### examples nested cycles
-#     # # ### longest period first: no interleaving
-#     # # trees.append({0: {'p': 10, 'r': 2, 'children': [(1, 0)], 'parent': None},
-#     # #         1: {'p': 3, 'r': 3, 'children': [(2, 0)], 'parent': 0},
-#     # #         2: {'event': 'a', 'parent': 0}})
-#     # # ### short period first: overtaking itself
-#     # # trees.append({0: {'p': 3, 'r': 3, 'children': [(1, 0)], 'parent': None},
-#     # #         1: {'p': 10, 'r': 2, 'children': [(2, 0)], 'parent': 0},
-#     # #         2: {'event': 'a', 'parent': 0}})
-#
-#     # noise = [ 1,  1, -1, -2,  1,  0,  1,  1,  1,  0, -2, -2,  0,  1,  1,  0,  0,
-#     #          -1, -2,  1, -2,  1, -2,  0,  0, -1, -2, -1,  1, -1,  0, -2,  1, -2,
-#     #          -2,  1,  0, -1, -1,  1,  0, -1,  1,  1,  1,  1, -2,  0,  1,  1,  0]
-#     # print("Noise:", noise)
-#
-#     # for ti, tree in enumerate(trees):
-#     #     p = Pattern(tree)
-#     #     print("------------------")
-#     #     print("Pattern:\n", p)
-#
-#     #     t0 = 10
-#     #     occsStar = p.getOccsStar()
-#     #     oids = [o[-1] for o in occsStar]
-#
-#     #     if len(occsStar) < len(noise):
-#     #         E = noise[:len(occsStar)-1]
-#     #     else:
-#     #         E = numpy.random.randint(-2,2, size=len(occsStar)-1)
-#     #     E = []
-#
-#     #     Ed = p.getEDict(occsStar, E)
-#     #     occs = p.getOccs(occsStar, t0, Ed)
-#     #     # occsRef = p.getOccsByRefs(occsStar, t0, Ed)
-#
-#     #     # print(occs)
-#     #     # print(occsRef)
-#     #     # occsD = dict(zip(*[oids, occs]))
-#     #     # rEd, rt0 = p.computeEDict(occsD)
-#
-#     #     t_end = numpy.max(occs)
-#     #     t_start = numpy.min(occs)
-#     #     deltaT = t_end - t_start
-#     #     data_details = {"t_start": t_start, "t_end": t_end, "deltaT": deltaT,
-#     #                      "nbOccs": nbOccs, "orgFreqs": orgFreqs, "adjFreqs": adjFreqs, "blck_delim": blck_delim}
-#
-#     #     # print("------------------")
-#     #     # print("Pattern:\n", p)
-#     #     print("Events:", p.getEventsList())
-#     #     print("depth=%d width=%d alphabet=%s" % (p.getDepth(), p.getWidth(), p.getAlphabet()))
-#     #     print(len([bo[0] for bo in occsStar]), len(set([bo[0] for bo in occsStar])))
-#     #     print("occs (%d) e,t:" % len(occs), [bo[:2] for bo in occsStar])
-#     #     print("(%s)" % "),$ $(".join(["%d, %s" % tuple(bo[:2]) for bo in occsStar]))
-#     #     print("{%s}" % ",".join(["%d/%s" % tuple(bo[:2]) for bo in occsStar]))
-#
-#     #     # interleaved = {}
-#     #     # print("Time spanned:", p.timeSpanned(interleaved))
-#     #     # print("Interleaved:", p.isInterleaved())
-#     #     print("Code length:", p.codeLength(t0, E, data_details))

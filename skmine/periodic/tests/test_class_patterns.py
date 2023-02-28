@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
-    computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key
+    computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key, l_to_br, key_to_br, propCmp
 
 
 def test__getChained_with_keys():
@@ -183,3 +183,47 @@ def test_l_to_key():
     # Test case 4: invalid with more than 2 elements in tuple
     with pytest.raises(TypeError):
         l_to_key([(1, 2, 3), (4, 5)]) == "1,2,3;4,5"
+
+
+def test_l_to_br():
+    # Test case 1: empty list
+    assert l_to_br([]) == "B<>"
+
+    # Test case 2: list with single element
+    assert l_to_br([[0, 1]]) == "B1<2>"
+
+    # Test case 3: list with multiple elements
+    assert l_to_br([[0, 1], [1, 2], [3, 4]]) == "B1,2,4<2,3,5>"
+
+    # Test case 4: list with leading/trailing spaces
+    assert l_to_br([[0, 1], [1, 2], [3, 4], [5, 6]]) == "B1,2,4,6<2,3,5,7>"
+
+
+def test_key_to_br():
+    key = "1,2;4,5"
+    assert key_to_br(key) == "B2,5<3,6>"
+
+
+def test_propCmp_with_list():
+    # Test with a list of properties
+    props = [
+        [0.0, 1.0, 2.0],
+        [3.0, 4.0, 5.0],
+        [6.0, 7.0, 8.0],
+    ]
+    pid = 1
+    expected_output = (3.0, 4.0, 5.0)
+    assert propCmp(props, pid) == expected_output
+
+
+def test_propCmp_with_ndarray():
+    # Test with a numpy ndarray of properties
+    import numpy as np
+    props = np.array([
+        [0.0, 1.0, 2.0],
+        [3.0, 4.0, 5.0],
+        [6.0, 7.0, 8.0],
+    ])
+    pid = 2
+    expected_output = (6.0, 7.0, 8.0)
+    assert propCmp(props, pid) == expected_output
