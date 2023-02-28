@@ -388,6 +388,18 @@ SUB_SEP = ","
 
 
 def key_to_l(key):
+    """
+    Takes as input a string where each intrinsic element is separated by SUB_SEP and these elements are separated from
+    the others by SUB_SEP. The function returns a list of lists.
+
+    Parameters
+    ----------
+    key : str
+
+    Returns
+    -------
+        list of list
+    """
     try:
         return [list(map(int, b.split(SUB_SEP))) for b in key.split(SUP_SEP)]
     except:
@@ -395,6 +407,19 @@ def key_to_l(key):
 
 
 def l_to_key(l):
+    """
+    Takes as input a tuple list of 2 elements each and returns a string where the elements of each tuple are separated
+    by SUB_SEP and each tuple by SUP_SEP.
+
+    Parameters
+    ----------
+    l : list
+        The list containing tuples of 2 items
+
+    Returns
+    -------
+        str
+    """
     return SUP_SEP.join([("%d" + SUB_SEP + "%d") % tuple(pf) for pf in l])
 
 

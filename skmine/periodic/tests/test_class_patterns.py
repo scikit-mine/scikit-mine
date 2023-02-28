@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
-    computeLengthEOccs, computeLengthResidual
+    computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key
 
 
 def test__getChained_with_keys():
@@ -124,3 +124,62 @@ def test_computeLengthEOccs_single():
 
     result = computeLengthEOccs(occs, cp)
     assert 0 == result
+
+
+def test_computeLengthResidual():
+    data_details = {
+        "t_start": 158702220,
+        "t_end": 158762700,
+        "deltaT": 60480,
+        "nbOccs": {1: 6, 0: 2, -1: 8},
+        "orgFreqs": {1: 0.75, 0: 0.25}
+    }
+    residual = {"alpha": 0, "occs": [0]}
+    assert pytest.approx(17.88, 0.01) == computeLengthResidual(data_details, residual)
+
+
+def test_computeLengthResidual_multiple_occs():
+    data_details = {
+        "t_start": 158702220,
+        "t_end": 158762700,
+        "deltaT": 60480,
+        "nbOccs": {1: 6, 0: 2, -1: 8},
+        "orgFreqs": {1: 0.75, 0: 0.25}
+    }
+    residual = {"alpha": 0, "occs": [0, 1]}
+    assert pytest.approx(35.76, 0.01) == computeLengthResidual(data_details, residual)
+
+
+def test_key_to_l():
+    # Test case 1: empty string
+    assert key_to_l("") == []
+
+    # Test case 2: valid input string
+    assert key_to_l("1,2,3;4,5") == [[1, 2, 3], [4, 5]]
+
+    # Test case 3: invalid input string
+    assert key_to_l("1,2,3;a,b,c") == []
+
+    # Test case 4: input string with leading/trailing spaces
+    assert key_to_l(" 1,2,3 ; 4,5 ") == [[1, 2, 3], [4, 5]]
+
+    # Test case 5: input string with leading/trailing separators
+    assert key_to_l(";1,2,3;4,5;") == ["", [1, 2, 3], [4, 5], ""]
+
+
+def test_l_to_key():
+    l = [[1, 2], [4, 5]]
+    assert "1,2;4,5" == l_to_key(l)
+
+    # Test case 1: empty list
+    assert l_to_key([]) == ""
+
+    # Test case 2: valid input string
+    assert l_to_key([[1, 2], [4, 5]]) == "1,2;4,5"
+
+    # Test case 3: valid tuple
+    assert l_to_key([(1, 2), (4, 5)]) == "1,2;4,5"
+
+    # Test case 4: invalid with more than 2 elements in tuple
+    with pytest.raises(TypeError):
+        l_to_key([(1, 2, 3), (4, 5)]) == "1,2,3;4,5"
