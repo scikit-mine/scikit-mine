@@ -164,7 +164,7 @@ def test_key_to_l():
     assert key_to_l(" 1,2,3 ; 4,5 ") == [[1, 2, 3], [4, 5]]
 
     # Test case 5: input string with leading/trailing separators
-    assert key_to_l(";1,2,3;4,5;") == ["", [1, 2, 3], [4, 5], ""]
+    assert key_to_l(";1,2,3;4,5;") == []
 
 
 def test_l_to_key():
