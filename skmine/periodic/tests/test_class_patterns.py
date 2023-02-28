@@ -2,7 +2,8 @@ import pytest
 import numpy as np
 
 from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
-    computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key, l_to_br, key_to_br, propCmp
+    computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key, l_to_br, key_to_br, propCmp, sortPids, \
+    mergeSortedPids
 
 
 def test__getChained_with_keys():
@@ -205,7 +206,7 @@ def test_key_to_br():
 
 
 def test_propCmp_with_list():
-    # Test with a list of properties
+    # Test with a list
     props = [
         [0.0, 1.0, 2.0],
         [3.0, 4.0, 5.0],
@@ -217,8 +218,7 @@ def test_propCmp_with_list():
 
 
 def test_propCmp_with_ndarray():
-    # Test with a numpy ndarray of properties
-    import numpy as np
+    # Test with a numpy ndarray
     props = np.array([
         [0.0, 1.0, 2.0],
         [3.0, 4.0, 5.0],
@@ -227,3 +227,33 @@ def test_propCmp_with_ndarray():
     pid = 2
     expected_output = (6.0, 7.0, 8.0)
     assert propCmp(props, pid) == expected_output
+
+
+def test_sortPids():
+    props = np.array([
+        [0.0, 1.0, 2.0],
+        [3.0, 1.0, 5.0],
+        [2.0, 7.0, 8.0],
+    ])
+    assert sortPids(props) == [0, 2, 1]
+
+
+def test_mergeSortedPids_one_empty():
+    props = [[1, 2, 3], [2, 3, 4]]
+    pidsA = []
+    pidsB = [0, 1]
+    assert mergeSortedPids(props, pidsA, pidsB) == [0, 1]
+
+
+def test_mergeSortedPids():
+    props = [[1, 2, 3], [2, 3, 4], [1, 2, 5]]
+    pidsA = [0, 1]
+    pidsB = [2]
+    assert mergeSortedPids(props, pidsA, pidsB) == [0, 2, 1]
+
+
+def test_mergeSortedPids():
+    props = [[1, 2, 3], [2, 3, 4], [1, 2, 5]]
+    pidsA = [0, 2]
+    pidsB = [1]
+    assert mergeSortedPids(props, pidsA, pidsB) == [0, 2, 1]

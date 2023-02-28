@@ -476,12 +476,43 @@ def propCmp(props, pid):
 
 
 def sortPids(props, pids=None):
+    """
+    Sorts a list of pattern ids based on their property values. The sorting is done in tuple order (result of propCmp)
+    and based on the values of the tuple elements.
+
+    Parameters
+    ----------
+    props : list or numpy.ndarray
+    pids : list or None, optional
+        A list of pattern IDs to sort.
+        If None, all property IDs will be sorted.
+        Default is None.
+
+    Returns
+    -------
+    list
+        A list of pattern IDs sorted based on their property values.
+    """
     if pids is None:
         pids = range(len(props))
     return sorted(pids, key=lambda x: propCmp(props, x))
 
 
 def mergeSortedPids(props, pidsA, pidsB):
+    """
+        Merges two lists of pids (pidsA and pidsB) and sorts them first by t0 then p0 and r0 (from props).
+    Parameters
+    ----------
+
+    props : ndarray
+    pidsA : list
+    pidsB : list
+
+    Returns
+    -------
+        list
+    Returns a merged and sorted list of pids
+    """
     i = 0
     while i < len(pidsA) and len(pidsB) > 0:
         if propCmp(props, pidsA[i]) > propCmp(props, pidsB[0]):
