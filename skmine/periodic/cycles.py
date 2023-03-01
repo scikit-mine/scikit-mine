@@ -33,7 +33,8 @@ def _remove_zeros(numbers: pd.Series):
 
 
 def _iterdict_str_to_int_keys(dict_):
-    """This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type will remain unchanged.
+    """This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type
+    will remain unchanged.
     """
     correctedDict = {}
     for key, value in dict_.items():
@@ -169,6 +170,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+        else:
+            S.index = S.index.astype("int64")
 
         # TODO : do this in SingleEventCycleMiner?
 
@@ -308,18 +311,18 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         if self.auto_time_scale:
             self.cycles.loc[:, ["t0", "period_major"]] *= 10 ** self.n_zeros_
 
-            self.cycles.loc[:, "E"] = self.cycles.E.map(
-                np.array) * (10 ** self.n_zeros_)
-
-            def to_timedelta(x): return pd.to_timedelta(x, unit='ns')
-            self.cycles["E"] = self.cycles["E"].apply(
-                lambda x: list(map(to_timedelta, x)))
-
             if self.is_datetime_:
                 self.cycles.loc[:, "t0"] = self.cycles.t0.astype(
                     "datetime64[ns]")
                 self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype(
                     "timedelta64[ns]")
+                self.cycles.loc[:, "E"] = self.cycles.E.map(
+                    np.array) * (10 ** self.n_zeros_)
+
+                def to_timedelta(x): return pd.to_timedelta(x, unit='ns')
+
+                self.cycles["E"] = self.cycles["E"].apply(
+                    lambda x: list(map(to_timedelta, x)))
         if dE_sum:
             self.cycles["E"] = self.cycles["E"].apply(
                 lambda x: np.sum(np.abs(x)))

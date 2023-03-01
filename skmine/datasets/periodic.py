@@ -8,8 +8,11 @@ import pandas as pd
 from ._base import get_data_home
 
 
-def fetch_file(filepath, separator=','):
-    """Loader for files in periodic format (timestamp,event\n)
+def fetch_file(filepath, separator=',', is_datetime=True):
+    """Loader for files in periodic format (timestamp,event\n). The first element can be a datetime or an integer and
+    the second is a string.
+    This file reader can also work for files with only one value per line (the event).
+    The indexes then correspond to the line numbers.
 
     Parameters
     ----------
@@ -18,6 +21,12 @@ def fetch_file(filepath, separator=','):
 
     separator : str
         Indicate a custom separator between timestamps and events. By default, it is a comma.
+        If the file contains only one column, this parameter is not useful.
+
+    is_datetime : bool, default=True
+        Indicates whether the first column is a timestamp (datetime) or not.
+        If set to False, then the values are considered integers.
+        Furthermore, this parameter is only useful when there are two columns in the file.
 
     Returns
     -------
@@ -25,8 +34,13 @@ def fetch_file(filepath, separator=','):
         Logs from the custom dataset, as an in-memory pandas Series.
         Events are indexed by timestamps.
     """
-    s = pd.read_csv(filepath, sep=separator, header=None, dtype="string", index_col=0).squeeze(axis="columns")
-    s.index = pd.to_datetime(s.index)
+    s = pd.read_csv(filepath, sep=separator, header=None, dtype="string").squeeze(axis="columns")
+    if type(s) == pd.DataFrame:
+        s = pd.Series(s[1].values, index=s[0])
+        if is_datetime:
+            s.index = pd.to_datetime(s.index)
+        else:
+            s.index = s.index.astype("int64")
     s.index.name = "timestamp"
     s.name = filepath
     return s

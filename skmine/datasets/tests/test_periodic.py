@@ -19,7 +19,7 @@ def mock_read_csv_canadian_tv(*args, **kwargs):
     return pd.DataFrame(programs, index=index)
 
 
-def test_fetch_file():
+def test_fetch_file_two_columns():
     custom_dataset = "2020-08-01 06:00:00,The Moblees\n" \
                      "2020-08-01 06:11:00,Big Block Sing Song\n" \
                      "2020-08-01 06:13:00,Big Block Sing Song"
@@ -29,6 +29,39 @@ def test_fetch_file():
         s = fetch_file(filepath)
 
     expected_index = pd.to_datetime(["2020-08-01 06:00:00", "2020-08-01 06:11:00", "2020-08-01 06:13:00"])
+    expected_series = pd.Series(["The Moblees", "Big Block Sing Song", "Big Block Sing Song"],
+                                index=expected_index, dtype="string", name=filepath)
+    expected_series.index.name = "timestamp"
+
+    assert_series_equal(s, expected_series)
+
+
+def test_fetch_file_one_column():
+    custom_dataset = "The Moblees\n" \
+                     "Big Block Sing Song\n" \
+                     "Big Block Sing Song"
+    filepath = "custom_dataset.csv"
+    m = mock_open(read_data=custom_dataset)
+    with patch("builtins.open", m, create=True):
+        s = fetch_file(filepath)
+
+    expected_series = pd.Series(["The Moblees", "Big Block Sing Song", "Big Block Sing Song"],
+                                dtype="string", name=filepath)
+    expected_series.index.name = "timestamp"
+
+    assert_series_equal(s, expected_series)
+
+
+def test_fetch_file_two_columns_index_int():
+    custom_dataset = "10,The Moblees\n" \
+                     "30,Big Block Sing Song\n" \
+                     "75,Big Block Sing Song"
+    filepath = "custom_dataset.csv"
+    m = mock_open(read_data=custom_dataset)
+    with patch("builtins.open", m, create=True):
+        s = fetch_file(filepath, is_datetime=False)
+
+    expected_index = pd.Index([10, 30, 75], dtype="int64")
     expected_series = pd.Series(["The Moblees", "Big Block Sing Song", "Big Block Sing Song"],
                                 index=expected_index, dtype="string", name=filepath)
     expected_series.index.name = "timestamp"
