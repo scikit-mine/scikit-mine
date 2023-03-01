@@ -59,7 +59,7 @@ def test_fetch_file_two_columns_index_int():
     filepath = "custom_dataset.csv"
     m = mock_open(read_data=custom_dataset)
     with patch("builtins.open", m, create=True):
-        s = fetch_file(filepath, is_datetime=False)
+        s = fetch_file(filepath)
 
     expected_index = pd.Index([10, 30, 75], dtype="int64")
     expected_series = pd.Series(["The Moblees", "Big Block Sing Song", "Big Block Sing Song"],
