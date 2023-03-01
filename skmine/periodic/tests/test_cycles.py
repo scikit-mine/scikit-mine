@@ -2,7 +2,7 @@ import pytest
 
 import pandas as pd
 
-from skmine.periodic.cycles import _remove_zeros
+from skmine.periodic.cycles import _remove_zeros, _iterdict_str_to_int_keys
 
 
 def test_remove_zeros():
@@ -15,3 +15,17 @@ def test_remove_zeros():
     assert expected_output[1] == n_zeros
 
 
+def test_iterdict_str_to_int_keys_with_str_keys():
+    assert _iterdict_str_to_int_keys({"1": {"2": "value1"}, "3": ["4", "5"]}) == {1: {2: "value1"}, 3: ["4", "5"]}
+
+
+def test_iterdict_str_to_int_keys_with_mixed_keys():
+    assert _iterdict_str_to_int_keys({"1": {"key_2": "value1"}, 3: ["4", "5"]}) == {1: {"key_2": "value1"}, 3: ["4", "5"]}
+
+
+def test_iterdict_str_to_int_keys_with_nested_dicts():
+    assert _iterdict_str_to_int_keys({"1": {"2": {"3": "value1"}}}) == {1: {2: {3: "value1"}}}
+
+
+def test_iterdict_str_to_int_keys_with_nested_lists():
+    assert _iterdict_str_to_int_keys({"1": {"2": ["3", {"4": "value1"}]}}) == {1: {2: ["3", {4: "value1"}]}}

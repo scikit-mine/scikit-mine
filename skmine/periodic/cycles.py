@@ -52,29 +52,6 @@ def _iterdict_str_to_int_keys(dict_):
     return correctedDict
 
 
-# def iterdict_scale_factor(d, scale_factor):
-#     """Recursively iterate over dict scaling values with scale_factor , with the key == "d" or "p"
-
-#     """
-
-#     for k, v in d.items():
-#         if isinstance(v, dict):
-#             iterdict_scale_factor(v)
-#         elif isinstance(v, list):
-#             for x, i in enumerate(v):
-#                 if isinstance(i, (dict, list)):
-#                     iterdict_scale_factor(i)
-#                 else:
-#                     if x == "d" or x == "p":
-#                         i = i * scale_factor
-#                     v[x] = i
-#         else:
-#             if k == "d" or k == "p":
-#                 v = v * scale_factor
-#             d.update({k: v})
-#     return d
-
-
 class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     # (BaseMiner, MDLOptimizer, DiscovererMixin):
     """
@@ -173,16 +150,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         else:
             S.index = S.index.astype("int64")
 
-        # TODO : do this in SingleEventCycleMiner?
-
-        # n_occs_tot = S.shape[0]
-        # S.index = S.index.astype(int)
-
         self.alpha_groups = S.groupby(S.values).groups
-
-        #  ========================================================================================
-        #  ****************************************************************************************
-        #  TODO : Connection with Esther routine here :
 
         cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
                                             fn_basis=None, complex=complex)
@@ -192,73 +160,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         out_str, pl_str = self.miners_.strDetailed(self.data_details)
         print(out_str)
-
-        # print("\n\n\n\n *********** Candidates *************\n\n\n\n")
-        # print("nbCandidates()", cpool.nbCandidates())
-
-        # print("\n\n *********** pc *************\n\n")
-        # print("__len__ pc", pc.__len__())
-        # print("\n\n nbPatternsByType", pc.nbPatternsByType())
-        # print("setPatterns", pc.setPatterns( patterns=[]))
-        # print("addPatterns", pc.addPatterns(patterns))
-        # print("\n\n getPatterns", pc.getPatterns()[0:10])
-        # print("\n\ngetCoveredOccs", pc.getCoveredOccs()[0:10])
-        # print("getUncoveredOccs", pc.getUncoveredOccs(data_seq))
-        # print("getNbUncoveredOccsByEv", pc.getNbUncoveredOccsByEv(data_seq))
-        # print("\n\ngetOccLists", pc.getOccLists()[0:10])
-        # print("codeLength", pc.codeLength(data_seq))
-
-        # pid = 0
-        # pids = [0, 1]
-        # cid = 0
-        # cid = 0
-        # # event (α), length (r), period (p), starting point (τ) and shift corrections (E)
-        # print("isNewPid(pid)", cpool.isNewPid(pid))
-        # print("areNewPids(pids)", cpool.areNewPids(pids))
-        # print("getPidsForCid(cid)", cpool.getPidsForCid(cid))
-        # print("getCidsForMinorK(mK)", cpool.getCidsForMinorK(mK))
-        # print("getCandidates()", cpool.getCandidates())
-        # print("getNewKNum(nkey)", cpool.getNewKNum(nkey))
-        # print("getNewPids(nkey)", cpool.getNewPids(nkey))
-        # print("getNewCids(nkey)", cpool.getNewCids(nkey))
-        # print("getNewMinorKeys(nkey)", cpool.getNewMinorKeys(nkey))
-        # print("nbNewCandidates()", cpool.nbNewCandidates())
-        # print("nbMinorKs()", cpool.nbMinorKs())
-        # print("nbCandidates()", cpool.nbCandidates())
-        # print("nbProps()", cpool.nbProps())
-        # print("getPropMat()", cpool.getPropMat())
-        # print("getProp(pid)", cpool.getProp(pid))
-
-        #  ****************************************************************************************
-        #  ========================================================================================
-
-        # miners = {
-        #     k: SingleEventCycleMiner(
-        #         self.max_length, self.keep_residuals, n_occs_tot)
-        #     for k in alpha_groups.keys()
-        # }
-        # self.miners_ = {k: miners[k].fit(v) for k, v in alpha_groups.items()}
-
-        # for (event, miner,) in self.miners_.items():
-        #     # print("event", type(event), event)
-        #     # print("miner", type(miner), miner)
-        #     # print("miner.cycles_ :\n", miner.cycles_)
-        #     # print("miner.residuals_ :\n", miner.residuals_)
-        #     # print("miner.max_length :\n", miner.max_length)
-        #     # print("miner.keep_residuals :\n", miner.keep_residuals)
-        #     # print("miner.n_occs_tot :\n", miner.n_occs_tot)
-        #     # print("miner._dS :\n", miner._dS)
-        #     # print("miner.k :\n", miner.k)
-        #     # print("miner.tid_pad :\n", miner.tid_pad)
-
-        #     if "tids" in miner.cycles_.columns:
-        #         # FIXME: this is highly inefficient
-
-        #         miner.cycles_.tids = miner.cycles_.tids.map(
-        #             lambda tids: Bitmap(
-        #                 np.searchsorted(S.index, alpha_groups[event][tids])
-        #             )
-        #         )
 
         return self
 
