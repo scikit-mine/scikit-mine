@@ -399,7 +399,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             List : of pattern id : Reconstruct occurrences of the patterns ids
 
         sort: string
-            "time" (by default) : sort by occurences time
+            "time" (by default) : sort by occurrences time
             "event" : sort by event names
             "construction_order" : sort by pattern reconstruction
 
@@ -475,7 +475,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     #     # TODO only for InteractiveMode
 
     def get_residuals(self, *patterns_id, sort="time"):
-        """Get all residual occurences, i.e events not covered by any pattern (no argument)
+        """Get all residual occurences, i.e. events not covered by any pattern (no argument)
         or get the complementary occurences of the selected patterns         (with a patterns'id list as argument).
 
         Parameters
@@ -527,7 +527,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
         else:
             warnings.warn(
-                "resudials and complementary of reconstruct have common patterns")
+                "residuals and complementary of reconstruct have common patterns")
             residuals_transf_pd = pd.concat(
                 [residuals_transf_pd, complementary_reconstruct], ignore_index=True)
 

@@ -1,9 +1,12 @@
+import json
 import os
+from unittest.mock import patch, mock_open
+from pandas._testing import assert_series_equal
 
 import pandas as pd
 import pytest
 
-from ..periodic import fetch_canadian_tv, fetch_health_app
+from ..periodic import fetch_canadian_tv, fetch_health_app, fetch_file
 
 
 def mock_read_csv(*args, **kwargs):
@@ -16,8 +19,25 @@ def mock_read_csv_canadian_tv(*args, **kwargs):
     return pd.DataFrame(programs, index=index)
 
 
+def test_fetch_file():
+    custom_dataset = "2020-08-01 06:00:00,The Moblees\n" \
+                     "2020-08-01 06:11:00,Big Block Sing Song\n" \
+                     "2020-08-01 06:13:00,Big Block Sing Song"
+    filepath = "custom_dataset.csv"
+    m = mock_open(read_data=custom_dataset)
+    with patch("builtins.open", m, create=True):
+        s = fetch_file(filepath)
+
+    expected_index = pd.to_datetime(["2020-08-01 06:00:00", "2020-08-01 06:11:00", "2020-08-01 06:13:00"])
+    expected_series = pd.Series(["The Moblees", "Big Block Sing Song", "Big Block Sing Song"],
+                                index=expected_index, dtype="string", name=filepath)
+    expected_series.index.name = "timestamp"
+
+    assert_series_equal(s, expected_series)
+
+
 @pytest.mark.parametrize("already_downloaded", [True, False])
-def test_fetch_healt_app(monkeypatch, already_downloaded):
+def test_fetch_health_app(monkeypatch, already_downloaded):
     name = "filename"
     monkeypatch.setattr(pd.Series, "to_csv", lambda *args, **kwargs: None)
 

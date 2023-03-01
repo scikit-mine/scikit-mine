@@ -8,6 +8,30 @@ import pandas as pd
 from ._base import get_data_home
 
 
+def fetch_file(filepath, separator=','):
+    """Loader for files in periodic format (timestamp,event\n)
+
+    Parameters
+    ----------
+    filepath : str
+        Path of the file to load
+
+    separator : str
+        Indicate a custom separator between timestamps and events. By default, it is a comma.
+
+    Returns
+    -------
+    pd.Series
+        Logs from the custom dataset, as an in-memory pandas Series.
+        Events are indexed by timestamps.
+    """
+    s = pd.read_csv(filepath, sep=separator, header=None, dtype="string", index_col=0).squeeze(axis="columns")
+    s.index = pd.to_datetime(s.index)
+    s.index.name = "timestamp"
+    s.name = filepath
+    return s
+
+
 def fetch_health_app(data_home=None, filename="health_app.csv"):
     """Fetch and return the health app log dataset
 
