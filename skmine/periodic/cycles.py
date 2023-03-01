@@ -53,7 +53,6 @@ def _iterdict_str_to_int_keys(dict_):
 
 
 class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
-    # (BaseMiner, MDLOptimizer, DiscovererMixin):
     """
     Mining periodic cycles with a MDL Criterion
 

@@ -297,8 +297,8 @@ def makeOccsAndFreqs(tmpOccs):
 
 def makeOccsAndFreqsMedian(tmpOccs):
     """
-    Return the number of occurrences of each event and the original and adjusted frequencies
-    of each event in a sequence using the median frequency of all events as a threshold.
+    Return the number of occurrences of each event and the original and adjusted frequencies (taking into account block
+    delimiter "(" and ")") of each event in a sequence using the median frequency of all events as a threshold.
 
     Parameters
     ----------

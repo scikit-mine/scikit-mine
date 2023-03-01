@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -58,15 +59,10 @@ def test_data_sequence():
         "deltaT": 60480,
         "nbOccs": {1: 6, 0: 2, -1: 8},
         "orgFreqs": {1: 0.75, 0: 0.25},
-        "adjFreqs": {},  # FIXME
-        "blck_delim": None  # FIXME
+        "adjFreqs": {1: 6*1/(3*8), 0: 2*1/(3*8), '(': 1/3, ')': 1/3},
+        "blck_delim": -2*np.log2(1/3)
     }
-    assert expected_data_details.keys() == ds.data_details.keys()
-    assert expected_data_details["t_start"] == ds.data_details["t_start"]
-    assert expected_data_details["t_end"] == ds.data_details["t_end"]
-    assert expected_data_details["deltaT"] == ds.data_details["deltaT"]
-    assert expected_data_details["nbOccs"] == ds.data_details["nbOccs"]
-    assert expected_data_details["orgFreqs"] == ds.data_details["orgFreqs"]
+    assert expected_data_details == ds.data_details
 
 
 def test_getInfoStr():
