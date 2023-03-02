@@ -1,12 +1,11 @@
+import datetime as dt
 import json
 from unittest.mock import patch, mock_open
-from pandas.testing import assert_frame_equal
 
 import numpy as np
-import pytest
-
 import pandas as pd
-import datetime as dt
+import pytest
+from pandas.testing import assert_frame_equal
 
 from skmine.datasets import fetch_health_app
 from skmine.periodic.cycles import _remove_zeros, _iterdict_str_to_int_keys, PeriodicPatternMiner
@@ -215,6 +214,27 @@ def test_reconstruct(data, expected_reconstruct):
 
     reconstruct = pcm.reconstruct()
     assert_frame_equal(reconstruct, expected_reconstruct)
+
+
+def test_reconstruct_order():
+    pcm = PeriodicPatternMiner()
+    data = fetch_health_app()
+    pcm.fit(data[:100])
+
+    reconstruct_time = pcm.reconstruct()
+    assert reconstruct_time["time"].is_monotonic_increasing is True
+
+    reconstruct_event = pcm.reconstruct(sort="event")
+    assert reconstruct_event["time"].is_monotonic_increasing is False
+    assert reconstruct_event["event"].is_monotonic_increasing is True
+    assert len(reconstruct_time) == len(reconstruct_event)
+
+    reconstruct_construction = pcm.reconstruct(sort="construction_order")
+    assert reconstruct_construction["time"].is_monotonic_increasing is False
+    assert reconstruct_construction["event"].is_monotonic_increasing is False
+    # by default, construction_order keeps duplicates to better understand the reconstruction
+    assert len(reconstruct_construction) >= len(reconstruct_time)
+    assert len(reconstruct_construction[reconstruct_construction.duplicated()]) == 1
 
 
 def test_get_residuals(data, expected_reconstruct):
