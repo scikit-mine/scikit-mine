@@ -1,3 +1,6 @@
+import json
+from unittest.mock import patch, mock_open
+
 import numpy as np
 import pytest
 
@@ -63,7 +66,7 @@ def test_fit(data):
         "t_end": "",
         "deltaT": "",
         "nbOccs": {1: 6, 0: 1, -1: 7},
-        "orgFreqs": {1: 6/7, 0: 1/7},
+        "orgFreqs": {1: 6 / 7, 0: 1 / 7},
         "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
         "blck_delim": -2 * np.log2(1 / 3)
     }
@@ -92,7 +95,7 @@ def test_discover(data):
     assert res_discover["E"].dtypes.name == "object"
 
 
-def test_discover_chronological_order(data):
+def test_discover_chronological_order():
     pcm = PeriodicPatternMiner()
     data = fetch_health_app()
     pcm.fit(data[:100])
@@ -103,10 +106,66 @@ def test_discover_chronological_order(data):
     assert res_discover_sorted["t0"].is_monotonic_increasing is True
 
 
+@pytest.fixture
+def patterns_json():
+    return {
+        "is_datetime_": True,
+        "n_zeros_": 10,
+        "data_details": {
+            "coffee": [
+                158710854
+            ],
+            "wake up": [
+                158702220,
+                158710854,
+                158719494,
+                158728140,
+                158736792,
+                158762700
+            ]
+        },
+        "patterns": [
+            {
+                "0": {
+                    "p": 8643,
+                    "r": 5,
+                    "children": [
+                        [
+                            1,
+                            0
+                        ]
+                    ],
+                    "parent": None
+                },
+                "1": {
+                    "event": 1,
+                    "parent": 0
+                },
+                "next_id": 2,
+                "t0": 158702220,
+                "E": [
+                    -9,
+                    -3,
+                    3,
+                    9
+                ]
+            }
+        ]
+    }
 
 
+def test_export_patterns(data, patterns_json):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+    pcm.export_patterns()
 
-#
+    with patch("builtins.open", mock_open()) as mock_file:
+        pcm.export_patterns()
+
+        handle = mock_file()
+        handle.write.assert_called_once_with(json.dumps(patterns_json))
+
+
 # def test_reconstruct():
 #
 # def test_get_residuals():

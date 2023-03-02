@@ -242,6 +242,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         file: string
             name of the json file
         """
+        # allows us to call export_patterns without explicitly calling discover method before
+        self.discover()
 
         big_dict_list = [json.loads(i)
                          for i in self.cycles["pattern_json_tree"].values]
