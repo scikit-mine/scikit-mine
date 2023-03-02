@@ -166,11 +166,39 @@ def test_export_patterns(data, patterns_json):
         handle.write.assert_called_once_with(json.dumps(patterns_json))
 
 
+def test_import_patterns(patterns_json):
+    pcm = PeriodicPatternMiner()
+
+    assert pcm.n_zeros_ == 0
+    assert pcm.is_datetime_ is None
+
+    mock_file = mock_open(read_data=json.dumps(patterns_json))
+    with patch("builtins.open", mock_file):
+        pcm.import_patterns()
+
+        mock_file.assert_called_once_with("patterns.json", "r")
+
+    assert pcm.n_zeros_ == patterns_json["n_zeros_"]
+    assert pcm.is_datetime_ == patterns_json["is_datetime_"]
+    assert pcm.data_details.data_details == {
+        "t_start": 158702220,
+        "t_end": 158762700,
+        "deltaT": 60480,
+        "nbOccs": {1: 6, 0: 1, -1: 7},
+        "orgFreqs": {1: 6 / 7, 0: 1 / 7},
+        "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
+        "blck_delim": -2 * np.log2(1 / 3)
+    }
+    assert len(pcm.miners_.patterns) == len(patterns_json["patterns"])
+    assert list(pcm.miners_.patterns[0][0].nodes.keys()) == [0, 1]
+    assert pcm.miners_.patterns[0][0].nodes[0] == patterns_json["patterns"][0]["0"]
+    assert pcm.miners_.patterns[0][0].nodes[1] == patterns_json["patterns"][0]["1"]
+    assert pcm.miners_.patterns[0][1] == patterns_json["patterns"][0]["t0"]
+    assert pcm.miners_.patterns[0][2] == patterns_json["patterns"][0]["E"]
+
+
+
 # def test_reconstruct():
 #
 # def test_get_residuals():
-#
-#
-# def test_import_patterns():
-#
-# def test_export_patterns():
+
