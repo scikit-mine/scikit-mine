@@ -348,9 +348,9 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         reconstruct_pd = pd.DataFrame(reconstruct_list)
 
         if self.is_datetime_:
-            reconstruct_pd['time'] = reconstruct_pd['time'].astype(
-                "datetime64[ns]")
-            reconstruct_pd['time'] = reconstruct_pd['time'].astype("str")
+            reconstruct_pd['time'] = reconstruct_pd['time'].astype("datetime64[ns]")
+        else:
+            reconstruct_pd['time'] = reconstruct_pd['time'].astype("int64")
 
         if sort == "time":
             reconstruct_pd = reconstruct_pd.sort_values(by=['time'])
@@ -362,22 +362,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             reconstruct_pd = reconstruct_pd.drop_duplicates()
 
         return reconstruct_pd
-
-    # def generate_candidates(self, S):
-    #     """
-    #     Parameters
-    #     ----------
-    #     S: pd.Index or numpy.ndarray
-    #         Series of occurrences for a specific event
-
-    #     Returns
-    #     -------
-    #     dict[object, list[np.ndarray]]
-    #         A dict, where each key is an event and each value a list of batch of candidates.
-    #         Batches are sorted in inverse order of width,
-    #         so that we consider larger candidate cycles first.
-    #     """
-    #     # TODO only for InteractiveMode
 
     def get_residuals(self, *patterns_id, sort="time"):
         """Get all residual occurences, i.e. events not covered by any pattern (no argument)
@@ -419,8 +403,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         if self.auto_time_scale and self.is_datetime_:
             residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
                 "datetime64[ns]")
-            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype(
-                "str")
+        else:
+            residuals_transf_pd['time'] = residuals_transf_pd['time'].astype("int64")
 
         reconstruct_ = self.reconstruct(patterns_id)
         reconstruct_all = self.reconstruct()

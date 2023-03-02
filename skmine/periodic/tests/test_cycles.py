@@ -1,5 +1,6 @@
 import json
 from unittest.mock import patch, mock_open
+from pandas.testing import assert_frame_equal
 
 import numpy as np
 import pytest
@@ -197,8 +198,34 @@ def test_import_patterns(patterns_json):
     assert pcm.miners_.patterns[0][2] == patterns_json["patterns"][0]["E"]
 
 
+@pytest.fixture
+def expected_reconstruct():
+    expected_reconstruct = pd.DataFrame({
+        'time': ['2020-04-16 07:30:00', '2020-04-17 07:29:00', '2020-04-18 07:29:00', '2020-04-19 07:30:00',
+                 '2020-04-20 07:32:00'],
+        'event': ['wake up', 'wake up', 'wake up', 'wake up', 'wake up']
+    })
+    expected_reconstruct['time'] = pd.to_datetime(expected_reconstruct['time'])
+    return expected_reconstruct
 
-# def test_reconstruct():
-#
-# def test_get_residuals():
 
+def test_reconstruct(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+
+    reconstruct = pcm.reconstruct()
+    assert_frame_equal(reconstruct, expected_reconstruct)
+
+
+def test_get_residuals(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+
+    # Getting the complementary data with expected_reconstruct will give us the expected residuals
+    data = pd.DataFrame({"time": data.index, "event": data.values})
+    expected_residuals = pd.merge(data, expected_reconstruct, how='outer', indicator=True)
+    expected_residuals = expected_residuals.loc[expected_residuals['_merge'] == 'left_only']
+    expected_residuals = expected_residuals.drop('_merge', axis=1)
+
+    residuals = pcm.get_residuals()
+    assert_frame_equal(residuals, expected_residuals.reset_index(drop=True))
