@@ -29,21 +29,6 @@ def replace_tuple(nodes):
     return nodes
 
 
-# def recover_tuple(nodes):
-
-#     for key_node, node in nodes.items():
-#         if "children" in node:
-#             for k, (child, d) in enumerate(node["children"]):
-#                 new_child_dict = {
-#                     "d": d,
-#                     "id": child,
-#                     "children": nodes[child],
-#                 }
-
-#                 nodes[key_node]["children"][k] = new_child_dict
-# return nodes
-
-
 class Pattern(object):
     LOG_DETAILS = 0  # 1: basic text, 2: LaTeX table
 
