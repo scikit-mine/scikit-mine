@@ -7,26 +7,30 @@ import numpy as np
 from .class_patterns import l_to_key, key_to_l, SUB_SEP, SUP_SEP, OPT_TO
 
 
-def replace_tuple(nodes):
-    for key_node, node in nodes.items():
-        if "parent" in node:
-            node.pop("parent")
-        if "children" in node:
-            for k, (child, d) in enumerate(node["children"]):
-                new_child_dict = {
-                    "d": d,
-                    "id": child,
-                }
-                for key, value in nodes[child].items():
-                    if key != "parent":
-                        new_child_dict[key] = value
+def getEDict(oStar, E=[]):
+    """
+    Construct a dictionary that maps each unique identifier in the input list of tuples `oStar` to a corresponding value
+    in the list `E`.
 
-                nodes[key_node]["children"][k] = new_child_dict
-    key_nodes = list(nodes.keys())
-    while len(nodes) > 1:
-        nodes.pop(key_nodes[len(nodes) - 1])
+    Parameters
+    ----------
+    oStar : list
+        A list of tuples representing objects, where each tuple has at least one element.
+    E : list, default=[]
+        A list of values that correspond to the unique identifiers in `oStar`.
+        If `len(E)` is less than `len(oStar) - 1`, the remaining values are set to zero.
 
-    return nodes
+    Returns
+    -------
+    dict
+        A dictionary that maps each unique identifier in `oStar` to a corresponding value in `E`.
+    """
+    if len(E) >= len(oStar) - 1:
+        Ex = [0] + list(E[:len(oStar) - 1])
+    else:
+        Ex = [0 for o in oStar]
+    oids = [o[-1] for o in oStar]
+    return dict(zip(*[oids, Ex]))
 
 
 class Pattern(object):
@@ -194,6 +198,10 @@ class Pattern(object):
             return [(time, self.nodes[nid]["event"], l_to_key(pref[::-1]))]
 
     def getTimesNidsRefs(self, nid=0, pref=[], time=0):
+        """
+        The only difference with the `getOccsStar` method is that the second element of the tuple is the node id and
+        not the event.
+        """
         if not self.isNode(nid):
             return []
         if self.isInterm(nid):
@@ -202,22 +210,10 @@ class Pattern(object):
                 tt = time + i * self.nodes[nid]["p"]
                 for ni, nn in enumerate(self.nodes[nid]["children"]):
                     tt += nn[1]
-                    occs.extend(self.getTimesNidsRefs(
-                        nn[0], [(ni, i)] + pref, tt))
+                    occs.extend(self.getTimesNidsRefs(nn[0], [(ni, i)] + pref, tt))
             return occs
         else:
             return [(time, nid, l_to_key(pref[::-1]))]
-
-    def getEDict(self, oStar, E=[]):
-        if len(E) >= len(oStar) - 1:
-            Ex = [0] + list(E[:len(oStar) - 1])
-        else:
-            Ex = [0 for o in oStar]
-        oids = [o[-1] for o in oStar]
-        return dict(zip(*[oids, Ex]))
-
-    def getECDict(self, Ed):
-        return dict([(oi, self.getCCorr(oi, Ed)) for oi in Ed.keys()])
 
     def getCCorr(self, k, Ed):
         return np.sum([Ed[k]] + [Ed[kk] for kk in self.gatherCorrKeys(k)])
@@ -226,38 +222,14 @@ class Pattern(object):
         if type(E) is dict:
             Ed = E
         else:
-            Ed = self.getEDict(oStar, E)
+            Ed = getEDict(oStar, E)
         return [o[0] + t0 + self.getCCorr(o[-1], Ed) for o in oStar]
 
     def getCovSeq(self, t0, E=[]):
         oStar = self.getOccsStar()
         # all last elements in the previous tuple associated to his shift correction
-        Ed = self.getEDict(oStar, E)
+        Ed = getEDict(oStar, E)
         return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
-
-    def getOccsByRefs(self, oStar, t0, E=[]):
-        if type(E) is dict:
-            Ed = E
-        else:
-            Ed = self.getEDict(oStar, E)
-
-        refs = {}
-        self.getOccsRefs(refs=refs)
-        refs_inv = {}
-        for k, v in refs.items():
-            if v[0] not in refs_inv:
-                refs_inv[v[0]] = []
-            refs_inv[v[0]].append(k)
-
-        times = {"root": t0}
-        border = ["root"]
-        while len(border) > 0:
-            n = border.pop(0)
-            for nt in refs_inv[n]:
-                times[nt] = times[n] + refs[nt][-1] + Ed[nt]
-                if nt in refs_inv:
-                    border.append(nt)
-        return [times[o[-1]] for o in oStar]
 
     def computeEDict(self, occs):
         refs = {}
@@ -271,13 +243,6 @@ class Pattern(object):
             else:
                 Ed[nt] = (occs[nt] - occs[nf]) - d
         return Ed, t0
-
-    def computeEFromO(self, occs):
-        occsStar = self.getOccsStar()
-        oids = [o[-1] for o in occsStar]
-        occsD = dict(zip(*[oids, occs]))
-        rEd, rt0 = self.computeEDict(occsD)
-        return [rEd[oo] for oo in oids[1:]]
 
     def getOccsRefs(self, nid=0, pref=[], refs={}, cnref='root', offset=0):
         # for each node indicate which other node is used as time reference, together with perfect offsets
@@ -446,10 +411,6 @@ class Pattern(object):
         # print("filter occs %s: %s\n\t>>%s" % (match_what, match, res))
         return res
 
-    def getOccsStarMatch(self, match=None, nid=0, pref=[], time=0):
-        occs = self.getOccsStar(nid, pref, time)
-        return self.filterOccsMatch(occs, match)
-
     def getEventsList(self, nid=0, markB=True, map_ev=None):
         if not self.isNode(nid):
             return openB_str + closeB_str
@@ -477,14 +438,6 @@ class Pattern(object):
                 return ll
         else:
             return [self.nodes[nid]["event"]]
-
-    def conv_node(self, map_ev=None):
-        self.nodes
-        print("\n\nself.nodes", self.nodes)
-        new_nodes = self.copy().nodes
-
-        replace_tuple(new_nodes)
-        print("\nnew_nodes", new_nodes)
 
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         """
@@ -581,12 +534,6 @@ class Pattern(object):
             return 0
         else:
             return self.nodes[nid]["r"]
-
-    def nodeEv(self, nid=0):
-        if not self.isNode(nid) or self.isInterm(nid):
-            return None
-        else:
-            return self.nodes[nid]["event"]
 
     def getMajorOccs(self, occs):
         if self.getDepth() > 1 or self.getWidth() > 1:
@@ -964,38 +911,12 @@ class Pattern(object):
             cl += self.codeLengthPDs(Tmax_i, nn[0])
         return cl
 
-    def codeLengthBare(self, data_details, match=None, nid=0):
-        t0 = 0
-        clEv = self.codeLengthEvents(data_details["adjFreqs"], nid=nid)
-        clRs = self.codeLengthR(data_details["nbOccs"], nid=nid)
-        clP0 = self.codeLengthPTop(data_details["deltaT"], None, nid=nid)
-        clT0 = self.codeLengthT0(
-            data_details["deltaT"], None, nid=nid, t0=t0, tstart=data_details["t_start"])
-
-        clPDs = 0.
-        if self.hasNestedPDs():
-
-            Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
-            if not self.allow_interleaving:
-                if self.nodes[0]["p"] < Tmax:
-                    Tmax_rep = self.nodes[0]["p"]
-
-            if self.transmit_Tmax:
-                clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
-                clPDs += np.log2(Tmax_rep)
-            else:
-                clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
-
-        # print("CL ev=%.3f rs=%.3f p0=%.3f t0=%.3f pds=%.3f E=%.3f" % (clEv,clRs,clP0,clT0,clPDs,clE))
-        return clEv + clRs + clP0 + clT0 + clPDs
-
     def codeLength(self, t0, E, data_details, match=None, nid=0):
         occsStar = self.getOccsStar(nid=nid, time=t0)
         o_za = self.getLeafKeyFromKey([(-1, self.nodes[0]["r"] - 1)])
         EC_zz = 0
         if E is not None:
-            Ed = self.getEDict(occsStar, E)
+            Ed = getEDict(occsStar, E)
             EC_za = self.getCCorr(o_za, Ed)
             clE = self.codeLengthE(E, nid=nid)
         else:
@@ -1066,4 +987,4 @@ class Pattern(object):
         # cl += self.codeLengthPDs(Tmax, nid=nid)
         # cl += self.codeLengthE(E, nid=nid)
 
-        return cl
+        # return cl

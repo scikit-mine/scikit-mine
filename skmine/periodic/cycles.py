@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .run_mine import mine_seqs
-from .pattern import Pattern
+from .pattern import Pattern, getEDict
 from .pattern_collection import PatternCollection
 from .data_sequence import DataSequence
 
@@ -336,7 +336,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             (p, t0, E) = self.miners_.getPatterns()[pattern_id]
 
             occsStar = p.getOccsStar()
-            Ed = p.getEDict(occsStar, E)
+            Ed = getEDict(occsStar, E)
             occs = p.getOccs(occsStar, t0, Ed)
 
             for k, occ in enumerate(occs):
