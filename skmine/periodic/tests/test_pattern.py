@@ -22,6 +22,41 @@ def tree_data():
     }
 
 
+@pytest.fixture
+def tree_data_complex():
+    return {
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    }
+
+
 def test_pattern(tree_data):
     pattern = Pattern(tree_data)
 
@@ -264,38 +299,8 @@ def test_getOccsStar_simple(tree_data):
     ]
 
 
-def test_getOccsStar_complex(tree_data):
-    pattern = Pattern({
-        0:
-            {
-                'p': 8643,
-                'r': 5,
-                'children': [(1, 0), (2, 0), (3, 50)],
-                'parent': None
-            },
-        1:
-            {
-                'event': 4,
-                'parent': 0
-            },
-        2:
-            {
-                'event': 7,
-                'parent': 0
-            },
-        3:
-            {
-                'p': 50000,
-                'r': 3,
-                'children': [(4, 0)],
-                'parent': 0
-            },
-        4:
-            {
-                'event': 8,
-                'parent': 3
-            }
-    })
+def test_getOccsStar_complex(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
     timestamp_event_pairs = pattern.getOccsStar()
     expected_output = [
         (0, 4, '0,0'), (8643, 4, '0,1'), (17286, 4, '0,2'), (25929, 4, '0,3'), (34572, 4, '0,4'),
@@ -381,38 +386,8 @@ def test_getCovSeq(tree_data):
         assert expected_output == res
 
 
-def test_getNbLeaves():
-    pattern = Pattern({
-        0:
-            {
-                'p': 8643,
-                'r': 5,
-                'children': [(1, 0), (2, 0), (3, 50)],
-                'parent': None
-            },
-        1:
-            {
-                'event': 4,
-                'parent': 0
-            },
-        2:
-            {
-                'event': 7,
-                'parent': 0
-            },
-        3:
-            {
-                'p': 50000,
-                'r': 3,
-                'children': [(4, 0)],
-                'parent': 0
-            },
-        4:
-            {
-                'event': 8,
-                'parent': 3
-            }
-    })
+def test_getNbLeaves(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
 
     assert pattern.getNbLeaves() == 3
     assert pattern.getNbLeaves(3) == 1
@@ -424,109 +399,19 @@ def test_getNbOccs():
     assert pattern.getNbOccs() == 14
 
 
-def test_getDepth():
-    pattern = Pattern({
-        0:
-            {
-                'p': 8643,
-                'r': 5,
-                'children': [(1, 0), (2, 0), (3, 50)],
-                'parent': None
-            },
-        1:
-            {
-                'event': 4,
-                'parent': 0
-            },
-        2:
-            {
-                'event': 7,
-                'parent': 0
-            },
-        3:
-            {
-                'p': 50000,
-                'r': 3,
-                'children': [(4, 0)],
-                'parent': 0
-            },
-        4:
-            {
-                'event': 8,
-                'parent': 3
-            }
-    })
+def test_getDepth(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
     assert pattern.getDepth() == 2
     assert pattern.getDepth(3) == 1
 
 
-def test_getWidth():
-    pattern = Pattern({
-        0:
-            {
-                'p': 8643,
-                'r': 5,
-                'children': [(1, 0), (2, 0), (3, 50)],
-                'parent': None
-            },
-        1:
-            {
-                'event': 4,
-                'parent': 0
-            },
-        2:
-            {
-                'event': 7,
-                'parent': 0
-            },
-        3:
-            {
-                'p': 50000,
-                'r': 3,
-                'children': [(4, 0)],
-                'parent': 0
-            },
-        4:
-            {
-                'event': 8,
-                'parent': 3
-            }
-    })
+def test_getWidth(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
     assert pattern.getWidth() == 3
     assert pattern.getWidth(3) == 1
 
 
-def test_getAlphabet():
-    pattern = Pattern({
-        0:
-            {
-                'p': 8643,
-                'r': 5,
-                'children': [(1, 0), (2, 0), (3, 50)],
-                'parent': None
-            },
-        1:
-            {
-                'event': 4,
-                'parent': 0
-            },
-        2:
-            {
-                'event': 7,
-                'parent': 0
-            },
-        3:
-            {
-                'p': 50000,
-                'r': 3,
-                'children': [(4, 0)],
-                'parent': 0
-            },
-        4:
-            {
-                'event': 8,
-                'parent': 3
-            }
-    })
+def test_getAlphabet(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
     assert pattern.getAlphabet() == {4, 7, 8}
     assert pattern.getAlphabet(3) == {8}
