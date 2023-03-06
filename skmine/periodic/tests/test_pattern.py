@@ -415,3 +415,55 @@ def test_getAlphabet(tree_data_complex):
     pattern = Pattern(tree_data_complex)
     assert pattern.getAlphabet() == {4, 7, 8}
     assert pattern.getAlphabet(3) == {8}
+
+
+def test_isSimpleCycle(tree_data):
+    pattern = Pattern(tree_data)
+    assert pattern.isSimpleCycle()
+
+
+def test_isSimpleCycle_complex(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert not pattern.isSimpleCycle()
+    assert pattern.isSimpleCycle(3)
+
+
+def test_isNested(tree_data):
+    pattern = Pattern(tree_data)
+    assert not pattern.isNested()
+
+
+def test_isNested_complex(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert not pattern.isNested()  # False because the width must be equal to 1
+
+
+def test_isNested_true():
+    pattern = Pattern(event=1, r=5, p=20)
+    pattern.repeat(10, 500)
+    assert pattern.isNested()
+
+
+def test_isConcat(tree_data):
+    pattern = Pattern(tree_data)
+    assert not pattern.isConcat()
+    pattern.append(2, 0)
+    assert pattern.isConcat()
+
+
+def test_getTypeStr(tree_data):
+    pattern = Pattern(tree_data)
+    assert pattern.getTypeStr() == "simple"
+    pattern.append(2, 0)
+    assert pattern.getTypeStr() == "concat"
+
+
+def test_getTypeStr_nested():
+    pattern = Pattern(event=1, r=5, p=20)
+    pattern.repeat(10, 500)
+    assert pattern.getTypeStr() == "nested"
+
+
+def test_getTypeStr_other(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getTypeStr() == "other"

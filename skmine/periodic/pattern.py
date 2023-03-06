@@ -693,15 +693,30 @@ class Pattern(object):
             return {self.nodes[nid]["event"]}
 
     def isSimpleCycle(self, nid=0):
+        """
+        Checks whether a tree is a simple cycle or not. It also works from a certain node id of the tree.
+        """
         return self.getDepth(nid) == 1 and self.getWidth(nid) == 1
 
     def isNested(self, nid=0):
+        """
+        Checks whether a tree is nested (depth > 1 and width == 1) or not.
+        It also works from a certain node id of the tree.
+        """
         return self.getDepth(nid) > 1 and self.getWidth(nid) == 1
 
     def isConcat(self, nid=0):
+        """
+        Checks whether a tree is concat (depth == 1 and width > 1) or not.
+        It also works from a certain node id of the tree.
+        """
         return self.getDepth(nid) == 1 and self.getWidth(nid) > 1
 
     def getTypeStr(self):
+        """
+        Get the type of pattern (simple, nested, concat or other)
+
+        """
         if self.isSimpleCycle():
             return "simple"
         elif self.isNested():
