@@ -15,9 +15,9 @@ def getEDict(oStar, E=[]):
     Parameters
     ----------
     oStar : list
-        A list of tuples representing objects, where each tuple has at least one element.
+        A list of tuples representing objects composed of three items.
     E : list, default=[]
-        A list of values that correspond to the unique identifiers in `oStar`.
+        A list of values of shift corrections that correspond to the unique identifiers in `oStar`.
         If `len(E)` is less than `len(oStar) - 1`, the remaining values are set to zero.
 
     Returns
@@ -219,6 +219,9 @@ class Pattern(object):
         return np.sum([Ed[k]] + [Ed[kk] for kk in self.gatherCorrKeys(k)])
 
     def getOccs(self, oStar, t0, E=[]):
+        """
+        Get the list of timestamp from the pattern reconstructed from his tree after correction.
+        """
         if type(E) is dict:
             Ed = E
         else:

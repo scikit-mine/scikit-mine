@@ -1,5 +1,7 @@
 import pytest
 
+from unittest import mock
+
 from skmine.periodic.pattern import Pattern, getEDict
 
 
@@ -342,3 +344,21 @@ def test_getEDict_with_empty_oStar():
     expected_output = {}
     assert getEDict(oStar, E) == expected_output
 
+
+def test_getCCorr(tree_data):
+    pattern = Pattern()
+    # we mock the result of gatherCorrKeys which is called in getCCorr
+    with mock.patch.object(pattern, 'gatherCorrKeys', return_value=['0,0', '0,1']):
+        result = pattern.getCCorr("0,2", {'0,0': 0, '0,1': -9, '0,2': -3, '0,3': 3, '0,4': 9})
+
+        assert result == -12
+
+
+def test_getOccs(tree_data):
+    pattern = Pattern(tree_data)
+    oStar = [(0, 0, '0,0'), (8643, 0, '0,1'), (17286, 0, '0,2'), (25929, 0, '0,3'), (34572, 0, '0,4')]
+    t0 = 158702220
+    E = {'0,0': 0, '0,1': -9, '0,2': -3, '0,3': 3, '0,4': 9}
+    res = pattern.getOccs(oStar=oStar, t0=158702220, E=E)
+    expected_output = [158702220, 158702220+8643-9, 158702220+17286-9-3, 158702220+25929-9-3+3, 158702220+34572-9-3+3+9]
+    assert res == expected_output
