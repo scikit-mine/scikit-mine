@@ -300,7 +300,10 @@ def test_getOccsStar_complex(tree_data):
     expected_output = [
         (0, 4, '0,0'), (8643, 4, '0,1'), (17286, 4, '0,2'), (25929, 4, '0,3'), (34572, 4, '0,4'),
         (0, 7, '1,0'), (8643, 7, '1,1'), (17286, 7, '1,2'), (25929, 7, '1,3'), (34572, 7, '1,4'),
-        (50, 8, '2,0;0,0'), (50050, 8, "2,0;0,1"), (100050, 8, "2,0;0,2"), (8693, 8, "2,1;0,0"), (58693, 8, "2,1;0,1"), (108693, 8, "2,1;0,2"), (17336, 8, "2,2;0,0"), (67336, 8, "2,2;0,1"), (117336, 8, "2,2;0,2"), (25979, 8, "2,3;0,0"), (75979, 8, '2,3;0,1'), (125979, 8, '2,3;0,2'), (34622, 8, '2,4;0,0'), (84622, 8, '2,4;0,1'), (134622, 8, '2,4;0,2')
+        (50, 8, '2,0;0,0'), (50050, 8, "2,0;0,1"), (100050, 8, "2,0;0,2"), (8693, 8, "2,1;0,0"), (58693, 8, "2,1;0,1"),
+        (108693, 8, "2,1;0,2"), (17336, 8, "2,2;0,0"), (67336, 8, "2,2;0,1"), (117336, 8, "2,2;0,2"),
+        (25979, 8, "2,3;0,0"), (75979, 8, '2,3;0,1'), (125979, 8, '2,3;0,2'), (34622, 8, '2,4;0,0'),
+        (84622, 8, '2,4;0,1'), (134622, 8, '2,4;0,2')
     ]
     assert len(timestamp_event_pairs) == len(expected_output)
     assert set(timestamp_event_pairs) == set(expected_output)
@@ -317,9 +320,9 @@ def test_getTimesNidsRefs(tree_data):
 
 def test_getEDict_with_non_empty_E():
     # Test case 1 : len(E) >= len(oStar) - 1
-    oStar = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
-    E = [10, 11]
-    expected_output = {3: 0, 6: 10, 9: 11}
+    oStar = [(0, 0, '0,0'), (8643, 0, '0,1'), (17286, 0, '0,2'), (25929, 0, '0,3'), (34572, 0, '0,4')]
+    E = [-9, -3, 3, 9]
+    expected_output = {'0,0': 0, '0,1': -9, '0,2': -3, '0,3': 3, '0,4': 9}
     assert getEDict(oStar, E) == expected_output
 
     # Test case 2 : len(E) < len(oStar) - 1
@@ -360,5 +363,170 @@ def test_getOccs(tree_data):
     t0 = 158702220
     E = {'0,0': 0, '0,1': -9, '0,2': -3, '0,3': 3, '0,4': 9}
     res = pattern.getOccs(oStar=oStar, t0=158702220, E=E)
-    expected_output = [158702220, 158702220+8643-9, 158702220+17286-9-3, 158702220+25929-9-3+3, 158702220+34572-9-3+3+9]
+    expected_output = [158702220, 158702220 + 8643 - 9, 158702220 + 17286 - 9 - 3, 158702220 + 25929 - 9 - 3 + 3,
+                       158702220 + 34572 - 9 - 3 + 3 + 9]
     assert res == expected_output
+
+
+def test_getCovSeq(tree_data):
+    pattern = Pattern(tree_data)
+    with mock.patch.object(pattern, 'getOccsStar',
+                           return_value=[(0, 0, '0,0'), (8643, 0, '0,1'), (17286, 0, '0,2'), (25929, 0, '0,3'),
+                                         (34572, 0, '0,4')]):
+        t0 = 158702220
+        E = [-9, -3, 3, 9]
+        res = pattern.getCovSeq(t0, E)
+        expected_output = [(0 + 158702220, 0), (8643 + 158702220 - 9, 0), (17286 + 158702220 - 9 - 3, 0),
+                           (25929 + 158702220 - 9 - 3 + 3, 0), (34572 + 158702220, 0)]
+        assert expected_output == res
+
+
+def test_getNbLeaves():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    })
+
+    assert pattern.getNbLeaves() == 3
+    assert pattern.getNbLeaves(3) == 1
+
+
+def test_getNbOccs():
+    pattern = Pattern({0: {'p': 8640, 'r': 7, 'children': [(1, 0), (2, 978)], 'parent': None},
+                       1: {'parent': 0, 'event': 27}, 2: {'parent': 0, 'event': 10}})
+    assert pattern.getNbOccs() == 14
+
+
+def test_getDepth():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    })
+    assert pattern.getDepth() == 2
+    assert pattern.getDepth(3) == 1
+
+
+def test_getWidth():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    })
+    assert pattern.getWidth() == 3
+    assert pattern.getWidth(3) == 1
+
+
+def test_getAlphabet():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    })
+    assert pattern.getAlphabet() == {4, 7, 8}
+    assert pattern.getAlphabet(3) == {8}
