@@ -24,7 +24,7 @@ def replace_tuple(nodes):
                 nodes[key_node]["children"][k] = new_child_dict
     key_nodes = list(nodes.keys())
     while len(nodes) > 1:
-        nodes.pop(key_nodes[len(nodes)-1])
+        nodes.pop(key_nodes[len(nodes) - 1])
 
     return nodes
 
@@ -161,33 +161,6 @@ class Pattern(object):
 
     def isLeaf(self, nid):
         return self.isNode(nid) and "children" not in self.nodes[nid]
-
-    def getAllNidKeys(self, nid=0, pref=[]):
-        if not self.isNode(nid):
-            return []
-        if self.isInterm(nid):
-            occs = [(nid, l_to_key(pref[::-1]))]
-            for i in range(self.nodes[nid]["r"]):
-                occs.append((nid, l_to_key(pref[::-1] + [(-1, i)])))
-                for ni, nn in enumerate(self.nodes[nid]["children"]):
-                    occs.extend(self.getAllNidKeys(nn[0], [(ni, i)] + pref))
-            return occs
-        else:
-            return [(nid, l_to_key(pref[::-1]))]
-
-    def getNidsLeftmostLeaves(self, nid=0, leftmost=True):
-        if not self.isNode(nid):
-            return []
-        if self.isInterm(nid):
-            leftmost_nids = []
-            for ni, nn in enumerate(self.nodes[nid]["children"]):
-                leftmost_nids.extend(
-                    self.getNidsLeftmostLeaves(nn[0], ni == 0))
-            return leftmost_nids
-        else:
-            if leftmost:
-                return [nid]
-            return []
 
     def getNidsRightmostLeaves(self, nid=0, rightmost=True):
         if not self.isNode(nid):
@@ -891,7 +864,7 @@ class Pattern(object):
 
         if OPT_TO:
             maxv = deltaT - EC_za - \
-                self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
+                   self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
             maxv = deltaT + 1
         if EC_za is None and maxv <= 0:
@@ -966,7 +939,7 @@ class Pattern(object):
             if Pattern.LOG_DETAILS == 1:
                 print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
                                                                   Tmax_rep, len(
-                                                                      self.nodes[nid]["children"]) - 1, cld_i,
+                    self.nodes[nid]["children"]) - 1, cld_i,
                                                                   cld))
             if Pattern.LOG_DETAILS == 2:
                 for kk in range(len(self.nodes[nid]["children"]) - 1):
@@ -1003,7 +976,7 @@ class Pattern(object):
         if self.hasNestedPDs():
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 if self.nodes[0]["p"] < Tmax:
                     Tmax_rep = self.nodes[0]["p"]
@@ -1049,7 +1022,7 @@ class Pattern(object):
                 EC_zz = self.getCCorr(o_zz, Ed)
 
             Tmax_rep = data_details["t_end"] - t0 - \
-                self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
