@@ -19,7 +19,8 @@ def tree_data():
         1:
             {
                 'event': 4,
-                'parent': 0}
+                'parent': 0
+            }
     }
 
 

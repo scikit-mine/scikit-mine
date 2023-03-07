@@ -154,17 +154,51 @@ class Pattern(object):
             self.nodes[0] = {"parent": None, "children": []}
 
     def copy(self):
+        """
+        Deep copy of a pattern
+
+        Returns
+        -------
+            None
+        """
         pc = Pattern()
         pc.next_id = self.next_id
         pc.nodes = copy.deepcopy(self.nodes)
         return pc
 
     def mapEvents(self, map_evts):
+        """
+        Mapping of event indexes to their real textual names. Pattern modification in place.
+
+        Parameters
+        ----------
+        map_evts : a list where the value at index i corresponds to the name of the event i
+
+        Returns
+        -------
+            None
+        """
         for nid in self.nodes.keys():
             if self.isLeaf(nid):
                 self.nodes[nid]["event"] = map_evts[self.nodes[nid]["event"]]
 
     def getTranslatedNodes(self, offset):
+        """
+
+        Parameters
+        ----------
+        offset : int
+            Number indicating how much the node/leaf ids are shifted
+
+        Returns
+        -------
+        dict
+            The translated nodes
+        int
+            The next available node id after the translation
+        dict
+            A dictionary mapping the original node ids to the translated node ids
+        """
         nodes = {}
         map_nids = dict([(kk, offset + ki)
                          for ki, kk in enumerate(self.nodes.keys())])
@@ -184,6 +218,26 @@ class Pattern(object):
         return nodes, offset + len(map_nids), map_nids
 
     def merge(self, patt, d, anchor=0):
+        """
+        Merge a given pattern into the current pattern instance.
+
+        Parameters
+        ----------
+        patt : Pattern
+            The pattern to merge
+
+        d : int
+            time distance between the two patterns
+
+        anchor : int, default=0
+            Node id from which the merge is done
+
+        Returns
+        -------
+        dict
+            A dictionary having for key the initial ids of patt and for values the new ids after merging with
+            the Pattern instance.
+        """
         if not self.isInterm(anchor):
             anchor = 0
         nodes, self.next_id, map_nids = patt.getTranslatedNodes(self.next_id)
@@ -193,6 +247,22 @@ class Pattern(object):
         return map_nids
 
     def append(self, event, d, anchor=0):
+        """
+        Append an event with a specific distance and a possible anchor node id to the pattern.
+
+        Parameters
+        ----------
+        event : int
+            The event to be added
+        d : int
+            Time distance from the anchor node
+        anchor : int
+            Node id from which the addition is made
+
+        Returns
+        -------
+            None
+        """
         if not self.isInterm(anchor):
             anchor = 0
         self.nodes[self.next_id] = {"parent": anchor, "event": event}
@@ -200,6 +270,20 @@ class Pattern(object):
         self.next_id += 1
 
     def repeat(self, r, p):
+        """
+        Repeat a pattern r times with a period p.
+
+        Parameters
+        ----------
+        r : int
+            Number of repetitions
+        p : int
+            Period between occurrences
+
+        Returns
+        -------
+            None
+        """
         if "r" not in self.nodes[0]:
             self.nodes[0]["p"] = p
             self.nodes[0]["r"] = r
@@ -214,12 +298,50 @@ class Pattern(object):
         self.next_id += 1
 
     def isNode(self, nid):
+        """
+        Check if node id (nid) exists in the pattern.
+
+        Parameters
+        ----------
+        nid : int
+            Node id to check
+
+        Returns
+        -------
+        bool
+            True if the node id exists in the pattern, False otherwise.
+        """
         return nid in self.nodes
 
     def isInterm(self, nid):
+        """
+        Check if node id (nid) is an intermediate node. It is not a leaf.
+
+        Parameters
+        ----------
+        nid : int
+            Node id to check
+
+        Returns
+        -------
+        bool
+            True if the node id is an intermediate node, False otherwise.
+        """
         return self.isNode(nid) and "children" in self.nodes[nid]
 
     def isLeaf(self, nid):
+        """
+        Check if node id (nid) is a leaf.
+
+        Parameters
+        ----------
+        nid : int
+            Node id to check
+
+        Returns
+        -------
+            True if the node id is a leaf, False otherwise.
+        """
         return self.isNode(nid) and "children" not in self.nodes[nid]
 
     def getNidsRightmostLeaves(self, nid=0, rightmost=True):
