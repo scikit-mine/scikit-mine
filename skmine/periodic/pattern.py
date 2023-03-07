@@ -913,7 +913,7 @@ class Pattern(object):
             time delta in the full sequence
         EC_za : int, default=None
             sum of errors
-        nid :
+        nid : int, default=0
             Node id from which the computation is done
 
         Returns
@@ -927,26 +927,37 @@ class Pattern(object):
         clP = np.log2(maxv)
         return clP
 
-    # L(τ ) = log(∆(S) − σ(E) − (r − 1)p + 1) .
-    def codeLengthT0(self, deltaT, EC_za=None, nid=0, t0=0, tstart=0):
+    def codeLengthT0(self, deltaT, EC_za=None, nid=0):
+        """
+        L(τ) = log(∆(S) − σ(E) − (r − 1)p + 1)
+
+        Parameters
+        ----------
+        deltaT : int
+            time delta in the full sequence
+        EC_za : int, default=None
+            sum of errors
+        nid : int, default=0
+            Node id from which the computation is done
+        t0 : int, default=0
+            Start time of the sequence
+        tstart
+
+        Returns
+        -------
+            float
+        L(τ)
+        """
         if EC_za is None:  # "bare"
             EC_za = 0
 
         if OPT_TO:
-            maxv = deltaT - EC_za - \
-                   self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
+            maxv = deltaT - EC_za - self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1) + 1
         else:
             maxv = deltaT + 1
-        if EC_za is None and maxv <= 0:
+        if EC_za is None and maxv <= 0:  # log2 domain : all positive real numbers
             maxv = 1
         clT = np.log2(maxv)
-        if EC_za is not None and (t0 - tstart) > maxv:
-            pdb.set_trace()
-        if Pattern.LOG_DETAILS == 1:
-            print("t0\t>> val=%d max=%d\tCL=%.3f" % (t0, maxv, clT))
-        if Pattern.LOG_DETAILS == 2:
-            print("$\\Cto$ & $%d$ & $\\log(%d)=$ & $%.3f$ \\\\" %
-                  (t0, maxv, clT))
         return clT
 
     def hasNestedPDs(self, nid=0):

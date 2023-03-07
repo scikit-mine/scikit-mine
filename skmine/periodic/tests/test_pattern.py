@@ -519,3 +519,11 @@ def test_codeLengthPTop():
     L_P = pattern.codeLengthPTop(deltaT=deltaT)
     assert L_P == np.log2((deltaT - 0) / (3 - 1))  # by default sigma(E)=0
 
+
+def test_codeLengthT0():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 8}})
+    deltaT = 10932
+    EC_za = 0
+    L_tau = pattern.codeLengthT0(deltaT, EC_za=EC_za)
+    assert L_tau == np.log2(deltaT - EC_za - (3-1)*150 + 1)
