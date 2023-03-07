@@ -559,3 +559,103 @@ def test_getCyclePs(tree_data_complex):
     assert pattern.getCyclePs(3) == [50000]
 
 
+def test_canFactorize(tree_data_complex):
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'p': 45,
+                'r': 2,
+                'children': [(3, 0)],
+                'parent': None
+            },
+        2:
+            {
+                'p': 45,
+                'r': 2,
+                'children': [(4, 0)],
+                'parent': None
+            },
+        3:
+            {
+                'event': 7,
+                'parent': 1
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 2
+            }
+    })
+    res = pattern.canFactorize()
+    assert res == [0]  # the child nodes of 0 have the same period and repetition and only one child
+    # The tree can be simplified
+
+
+def test_factorizeTree():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'p': 45,
+                'r': 2,
+                'children': [(3, 0)],
+                'parent': None
+            },
+        2:
+            {
+                'p': 45,
+                'r': 2,
+                'children': [(4, 0)],
+                'parent': None
+            },
+        3:
+            {
+                'event': 7,
+                'parent': 1
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 2
+            }
+    })
+    pattern.factorizeTree()  # id 2 is lost during the factorization
+    assert pattern.nodes == {
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0)],
+                'parent': None
+            },
+        1:
+            {
+                'p': 45,
+                'r': 2,
+                'children': [(3, 0), (4, 50)],
+                'parent': None
+            },
+        3:
+            {
+                'event': 7,
+                'parent': 1
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 1
+            }
+    }

@@ -452,7 +452,7 @@ class Pattern(object):
 
     def getEventsList(self, nid=0, markB=True, map_ev=None):
         if not self.isNode(nid):
-            return openB_str + closeB_str
+            return ""  # was initially openB_str + closeB_str` but these two variables do not exist
         if self.isInterm(nid):
             ll = []
             for nn in self.nodes[nid]["children"]:
@@ -481,6 +481,10 @@ class Pattern(object):
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         """
         Generate the visualization of the cycle
+
+        Returns
+        -------
+            str
         """
         if not self.isNode(nid):
             return ("\t" * level) + "()\n"
@@ -581,62 +585,23 @@ class Pattern(object):
             return occs[::len_ext_blck]
         return occs
 
-    # def timeSpanned(self, interleaved=None, nid=0):
-    #     # compute the time spanned by a block
-    #     # checks whether block is interleaved
-    #     if not self.isNode(nid):
-    #         return 0
-    #     if self.isInterm(nid):
-    #         t_ends = []
-    #         t_spans = []
-    #         cum_ds = 0
-    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
-    #             if ni > 0:
-    #                 cum_ds += nn[1]
-    #             t_spans.append(self.timeSpanned(interleaved, nn[0]))
-    #             t_ends.append(t_spans[-1] + cum_ds)
-    #         tspan = np.max(t_ends)
-    #         if interleaved is not None:
-    #             if self.overlap_interleaved:  # count overlaps as interleaving
-    #                 overlaps = [t_spans[i] >= self.nodes[nid]["children"][i + 1][1]
-    #                             for i in range(len(self.nodes[nid]["children"]) - 1)]
-    #                 overlaps.append(tspan >= self.nodes[nid]["p"])
-    #                 interleaved[nid] = any(overlaps)
-    #             else:
-    #                 overtaking = [t_spans[i] > self.nodes[nid]["children"][i + 1][1]
-    #                               for i in range(len(self.nodes[nid]["children"]) - 1)]
-    #                 overtaking.append(tspan > self.nodes[nid]["p"])
-    #                 interleaved[nid] = any(overtaking)
-    #
-    #         return self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1.) + tspan
-    #     else:
-    #         return 0
-    #
-    # def timeSpannedRep(self, nid=0):
-    #     # compute the time spanned by a repetition
-    #     # checks whether block is interleaved
-    #     if not self.isNode(nid):
-    #         return 0
-    #     if self.isInterm(nid):
-    #         t_ends = []
-    #         t_spans = []
-    #         cum_ds = 0
-    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
-    #             if ni > 0:
-    #                 cum_ds += nn[1]
-    #             t_spans.append(self.timeSpanned(nid=nn[0]))
-    #             t_ends.append(t_spans[-1] + cum_ds)
-    #         tspan = np.max(t_ends)
-    #         return tspan
-    #     else:
-    #         return 0
-    #
-    # def isInterleaved(self, nid=0):
-    #     interleaved = {}
-    #     self.timeSpanned(interleaved, nid=nid)
-    #     return any(interleaved.values())
-
     def factorizeTree(self, nid=0):
+        """
+        Factor the pattern tree if it can.
+        This can be done if the children of a node have only one child and if these nodes have the same period
+        and the same repetition.
+
+        When 2 nodes are merged, the id of the deleted node is lost and the following ids are not shifted.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            None
+        """
         ch = self.nodes[nid]["children"]
         anchor = ch[0][0]
         nch = [(self.nodes[nn[0]]["children"][0][0], nn[1]) for nn in ch]
@@ -648,6 +613,20 @@ class Pattern(object):
         self.nodes[nid]["children"] = [(anchor, 0)]
 
     def canFactorize(self, nid=0):
+        """
+        Indicates whether the pattern/tree can be factored or not.
+        This can be done if the children of a node have only one child and if these nodes have the same period
+        and the same repetition.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            list of all nodes of ids where the tree can be factored
+        """
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
@@ -909,6 +888,9 @@ class Pattern(object):
 
         min_occs : list
             The list to be returned
+
+        nid : int, default=0
+            Node id from which the search is launched
 
         Returns
         -------
@@ -1193,3 +1175,58 @@ class Pattern(object):
 
         # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
         return clEv + clRs + clP0 + clT0 + clPDs + clE
+
+    # def timeSpanned(self, interleaved=None, nid=0):
+    #     # compute the time spanned by a block
+    #     # checks whether block is interleaved
+    #     if not self.isNode(nid):
+    #         return 0
+    #     if self.isInterm(nid):
+    #         t_ends = []
+    #         t_spans = []
+    #         cum_ds = 0
+    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
+    #             if ni > 0:
+    #                 cum_ds += nn[1]
+    #             t_spans.append(self.timeSpanned(interleaved, nn[0]))
+    #             t_ends.append(t_spans[-1] + cum_ds)
+    #         tspan = np.max(t_ends)
+    #         if interleaved is not None:
+    #             if self.overlap_interleaved:  # count overlaps as interleaving
+    #                 overlaps = [t_spans[i] >= self.nodes[nid]["children"][i + 1][1]
+    #                             for i in range(len(self.nodes[nid]["children"]) - 1)]
+    #                 overlaps.append(tspan >= self.nodes[nid]["p"])
+    #                 interleaved[nid] = any(overlaps)
+    #             else:
+    #                 overtaking = [t_spans[i] > self.nodes[nid]["children"][i + 1][1]
+    #                               for i in range(len(self.nodes[nid]["children"]) - 1)]
+    #                 overtaking.append(tspan > self.nodes[nid]["p"])
+    #                 interleaved[nid] = any(overtaking)
+    #
+    #         return self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1.) + tspan
+    #     else:
+    #         return 0
+    #
+    # def timeSpannedRep(self, nid=0):
+    #     # compute the time spanned by a repetition
+    #     # checks whether block is interleaved
+    #     if not self.isNode(nid):
+    #         return 0
+    #     if self.isInterm(nid):
+    #         t_ends = []
+    #         t_spans = []
+    #         cum_ds = 0
+    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
+    #             if ni > 0:
+    #                 cum_ds += nn[1]
+    #             t_spans.append(self.timeSpanned(nid=nn[0]))
+    #             t_ends.append(t_spans[-1] + cum_ds)
+    #         tspan = np.max(t_ends)
+    #         return tspan
+    #     else:
+    #         return 0
+    #
+    # def isInterleaved(self, nid=0):
+    #     interleaved = {}
+    #     self.timeSpanned(interleaved, nid=nid)
+    #     return any(interleaved.values())
