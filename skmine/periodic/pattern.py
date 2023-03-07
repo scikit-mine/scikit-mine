@@ -67,7 +67,6 @@ def codeLengthE(E):
 
 
 class Pattern(object):
-    LOG_DETAILS = 0  # 1: basic text, 2: LaTeX table
 
     transmit_Tmax = True
     allow_interleaving = True
@@ -667,6 +666,18 @@ class Pattern(object):
             return []
 
     def getCyclePs(self, nid=0):
+        """
+        Get all p (period) values in the tree
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            list of all p values
+        """
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
@@ -678,6 +689,18 @@ class Pattern(object):
             return []
 
     def getCycleRs(self, nid=0):
+        """
+        Get all r (repetition) values in the tree
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            list of all r values
+        """
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
@@ -691,6 +714,15 @@ class Pattern(object):
     def getNbLeaves(self, nid=0):
         """
         Count the number of leaves in the tree. It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            int
         """
         if not self.isNode(nid):
             return -1
@@ -703,6 +735,15 @@ class Pattern(object):
         """
         From the tree, count the total number of occurrences/timestamps.
         It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            int
         """
         if not self.isNode(nid):
             return -1
@@ -714,6 +755,15 @@ class Pattern(object):
     def getDepth(self, nid=0):
         """
         Get the depth of the tree. It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            int
         """
         if not self.isNode(nid):
             return -1
@@ -725,6 +775,15 @@ class Pattern(object):
     def getWidth(self, nid=0):
         """
         Get the width of the tree. It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            int
         """
         if not self.isNode(nid):
             return -1
@@ -736,6 +795,15 @@ class Pattern(object):
     def getAlphabet(self, nid=0):
         """
         Get all id events from the tree. It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            set
         """
         # recursively collects all the different events
         if not self.isNode(nid):
@@ -748,6 +816,15 @@ class Pattern(object):
     def isSimpleCycle(self, nid=0):
         """
         Checks whether a tree is a simple cycle or not. It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            bool
         """
         return self.getDepth(nid) == 1 and self.getWidth(nid) == 1
 
@@ -755,6 +832,15 @@ class Pattern(object):
         """
         Checks whether a tree is nested (depth > 1 and width == 1) or not.
         It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            bool
         """
         return self.getDepth(nid) > 1 and self.getWidth(nid) == 1
 
@@ -762,12 +848,26 @@ class Pattern(object):
         """
         Checks whether a tree is concat (depth == 1 and width > 1) or not.
         It also works from a certain node id of the tree.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            bool
         """
         return self.getDepth(nid) == 1 and self.getWidth(nid) > 1
 
     def getTypeStr(self):
         """
         Get the type of pattern (simple, nested, concat or other)
+
+        Returns
+        -------
+            str
+        The type of the pattern
         """
         if self.isSimpleCycle():
             return "simple"
@@ -782,6 +882,7 @@ class Pattern(object):
         """
         Compute the code length from a node id
         L(α) = − log(fr (α)) = − log(∣ ∣S(α)∣ ∣ / |S|)
+
         """
         if not self.isNode(nid):
             return 0
@@ -859,7 +960,7 @@ class Pattern(object):
         ----------
         nbOccs : list
             Associates for each event the number of times it appears in the dataset
-        nid : int
+        nid : int, default=0
             Node id from which the computation is done
 
         Returns
@@ -871,12 +972,6 @@ class Pattern(object):
         self.getMinOccs(nbOccs, min_occs, nid)
         rs = self.getRVals()
         clrs = np.log2(min_occs)
-        if Pattern.LOG_DETAILS == 1:
-            print("r\t >> vals%s bounds=%s\tCL=%s" %
-                  (rs, min_occs, ["%.3f" % c for c in clrs]))
-        if Pattern.LOG_DETAILS == 2:
-            print("$\\Clen_0$ & $%s$ & $\\log(%s)=$ & $%s$ \\\\" %
-                  (rs, min_occs, ["%.3f" % c for c in clrs]))
         return np.sum(clrs)
 
     def cardO(self, nid=0):
@@ -971,17 +1066,27 @@ class Pattern(object):
             bool
         If true, this pattern has nested periods and/or inter-block distances else not.
         """
-        if len(self.nodes[nid]["children"]) > 1:
+        if len(self.nodes[nid]["children"]) > 1:  # inter-block distances
             return True
         elif len(self.nodes[nid]["children"]) == 1:
-            return self.isInterm(self.nodes[nid]["children"][0][0])
+            return self.isInterm(self.nodes[nid]["children"][0][0])  # nested
         return False
 
     def codeLengthPDs(self, Tmax, nid=0, rep=False):
-        # Should the value of Tmax used be the deducted value,
-        # or the computed one, which needs to be transmitted first?
+        """
+        Should the value of Tmax used be the deducted value, or the computed one, which needs to be transmitted first?
 
-        # WARNING! check
+        Parameters
+        ----------
+        Tmax
+        nid : int, default=0
+            Node id from which the computation is done
+        rep
+
+        Returns
+        -------
+
+        """
         cl = 0
         if nid not in self.nodes or "children" not in self.nodes[nid]:
             return cl
@@ -1007,16 +1112,7 @@ class Pattern(object):
                 print("PROBLEM!! INCORRECT UPPER BOUND")
             # block period (only not for the root one, already specified)
             pmax = np.floor(Tmax / (self.nodes[nid]["r"] - 1.))
-            # if pmax <= 0: HERE
-            #     pdb.set_trace()
-            #     print("PMAX", pmax)
             clp = np.log2(pmax)
-            if Pattern.LOG_DETAILS == 1:
-                print("p%d\t>> val=%d max=%d\tCL=%.3f" %
-                      (nid, self.nodes[nid]["p"], pmax, clp))
-            if Pattern.LOG_DETAILS == 2:
-                print("$\\Cprd_{%d}$ & $%d$ & $\\log(%d)=$ & $%.3f$ \\\\" % (
-                    nid, self.nodes[nid]["p"], pmax, clp))
             cl += clp
 
         # inter-blocks distances
@@ -1026,19 +1122,9 @@ class Pattern(object):
             cld_i = np.log2(Tmax_rep + 1)
             cld = (len(self.nodes[nid]["children"]) - 1) * cld_i
             ds = [v[1] for v in self.nodes[nid]["children"][1:]]
-            if Pattern.LOG_DETAILS == 1:
-                print("d%d\t>> val=%s max=%d\tCL=%d*%.3f=%.3f" % (nid, ds,
-                                                                  Tmax_rep, len(
-                    self.nodes[nid]["children"]) - 1, cld_i,
-                                                                  cld))
-            if Pattern.LOG_DETAILS == 2:
-                for kk in range(len(self.nodes[nid]["children"]) - 1):
-                    print("$d_{%d}$ & $%d$ & $\\log(%d)=$ & $%.3f$ \\\\" % (
-                        nid, self.nodes[nid]["children"][kk + 1][1], Tmax_rep, cld_i))
             cl += cld
 
-        sum_spans = np.sum([nn[1]
-                            for nn in self.nodes[nid]["children"][1:]])
+        sum_spans = np.sum([nn[1] for nn in self.nodes[nid]["children"][1:]])
         cumsum_spans = 0
         for ni, nn in enumerate(self.nodes[nid]["children"]):
             if self.allow_interleaving:
@@ -1068,15 +1154,10 @@ class Pattern(object):
             clE = 0
 
         clEv = self.codeLengthEvents(data_details["adjFreqs"], nid=nid)
-        if Pattern.LOG_DETAILS == 1:
-            print("a\t>>\tCL=%.3f" % clEv)
-        if Pattern.LOG_DETAILS == 2:
-            print("$\\Cev$ & XX & & $%.3f$ \\\\" % clEv)
 
         clRs = self.codeLengthR(data_details["nbOccs"], nid=nid)
         clP0 = self.codeLengthPTop(data_details["deltaT"], EC_za, nid=nid)
-        clT0 = self.codeLengthT0(
-            data_details["deltaT"], EC_za, nid=nid)
+        clT0 = self.codeLengthT0(data_details["deltaT"], EC_za, nid=nid)
 
         clPDs = 0.
         if self.hasNestedPDs():
@@ -1085,8 +1166,7 @@ class Pattern(object):
                     [(-1, self.nodes[0]["r"] - 1)], cid=-1, rep=-1)
                 EC_zz = self.getCCorr(o_zz, Ed)
 
-            Tmax_rep = data_details["t_end"] - t0 - \
-                       self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
+            Tmax_rep = data_details["t_end"] - t0 - self.nodes[0]["p"] * (self.nodes[0]["r"] - 1.)
             if not self.allow_interleaving:
                 Tmax_rep -= EC_zz
                 if self.nodes[0]["p"] < Tmax_rep:
@@ -1102,15 +1182,6 @@ class Pattern(object):
                 tmpd = dict([(k[2], k[0]) for k in occsStar])
                 Tmax_rep_val = np.max(list(tmpd.values())) - tmpd[o_za]
                 clPDs = self.codeLengthPDs(Tmax_rep_val, nid=nid, rep=True)
-                if Pattern.LOG_DETAILS == 1:
-                    print("Tmax\t>> val=%d max=%d\tCL=%.3f" %
-                          (Tmax_rep_val, Tmax_rep, np.log2(Tmax_rep + 1)))
-                if Pattern.LOG_DETAILS == 2:
-                    print("$\\optspanRep^{*}$ & $%d$ & $\\log(%d+1)=$ & $%.3f$ \\\\" %
-                          (Tmax_rep_val, Tmax_rep, np.log2(Tmax_rep + 1)))
-                # if Tmax_rep <= 0: # HERE
-                #     pdb.set_trace()
-                #     print("Tmax_rep", Tmax_rep)
                 if Tmax_rep < 0:
                     if E is None:
                         Tmax_rep = 0
@@ -1120,14 +1191,5 @@ class Pattern(object):
             else:
                 clPDs = self.codeLengthPDs(Tmax_rep, nid=nid, rep=True)
 
-        # print("CL ev=%.3f rs=%.3f p0=%.3f t0=%.3f pds=%.3f E=%.3f" % (clEv,clRs,clP0,clT0,clPDs,clE))
         # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
         return clEv + clRs + clP0 + clT0 + clPDs + clE
-        # cl = self.codeLengthEvents(data_details["adjFreqs"], nid=nid)
-        # cl += self.codeLengthR(data_details["nbOccs"], nid=nid)
-        # cl += self.codeLengthPTop(data_details["deltaT"], EC_za, nid=nid)
-        # cl += self.codeLengthT0(data_details["deltaT"], EC_za, nid=nid)
-        # cl += self.codeLengthPDs(Tmax, nid=nid)
-        # cl += self.codeLengthE(E, nid=nid)
-
-        # return cl

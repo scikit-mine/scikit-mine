@@ -527,3 +527,35 @@ def test_codeLengthT0():
     EC_za = 0
     L_tau = pattern.codeLengthT0(deltaT, EC_za=EC_za)
     assert L_tau == np.log2(deltaT - EC_za - (3-1)*150 + 1)
+
+
+def test_hasNestedPDs_if(tree_data, tree_data_complex):
+    # if: checks if the node id (pattern) has multiple children
+    p1 = Pattern(tree_data)
+    assert not p1.hasNestedPDs()
+
+    p2 = Pattern(tree_data_complex)
+    assert p2.hasNestedPDs()  # 3 children so this pattern has inter-block (inter-child distances) distances
+    assert not p2.hasNestedPDs(3)
+
+
+def test_hasNestedPDs_else():
+    # if the node id has only one child it checks if it has nested periods
+    pattern = Pattern(event=1, r=5, p=20)
+    assert not pattern.hasNestedPDs()
+    pattern.repeat(10, 500)
+    assert pattern.hasNestedPDs()
+
+
+def test_getCycleRs(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getCycleRs() == [5, 3]
+    assert pattern.getCycleRs(3) == [3]
+
+
+def test_getCyclePs(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getCyclePs() == [8643, 50000]
+    assert pattern.getCyclePs(3) == [50000]
+
+
