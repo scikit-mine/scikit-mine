@@ -33,6 +33,39 @@ def getEDict(oStar, E=[]):
     return dict(zip(*[oids, Ex]))
 
 
+def getEforOccs(map_occs, occs):
+    """
+    Constructs the list of errors
+    # TODO : WARNING! WRONG, this is using absolute errors...
+    Parameters
+    ----------
+    map_occs
+    occs
+
+    Returns
+    -------
+
+    """
+    return [(t - map_occs.get(oid, t)) for (t, alpha, oid) in occs]
+
+
+def codeLengthE(E):
+    """
+    L(E) = 2 |E| + ∑_{e∈E} |e|
+
+    Parameters
+    ----------
+    E : list
+        The list of errors
+
+    Returns
+    -------
+        int
+    L(E)
+    """
+    return np.sum([2 + np.abs(e) for e in E])
+
+
 class Pattern(object):
     LOG_DETAILS = 0  # 1: basic text, 2: LaTeX table
 
@@ -240,6 +273,26 @@ class Pattern(object):
         # all last elements in the previous tuple associated to his shift correction
         Ed = getEDict(oStar, E)
         return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
+
+    def computeEDict(self, occs):
+        refs = {}
+        self.getOccsRefs(refs=refs)
+        Ed = {}
+        t0 = 0
+        for nt, (nf, d) in refs.items():
+            if nf == "root":
+                t0 = occs[nt]
+                Ed[nt] = 0
+            else:
+                Ed[nt] = (occs[nt] - occs[nf]) - d
+        return Ed, t0
+
+    def computeEFromO(self, occs):
+        occsStar = self.getOccsStar()
+        oids = [o[-1] for o in occsStar]
+        occsD = dict(zip(*[oids, occs]))
+        rEd, rt0 = self.computeEDict(occsD)
+        return [rEd[oo] for oo in oids[1:]]
 
     def getOccsRefs(self, nid=0, pref=[], refs={}, cnref='root', offset=0):
         # for each node indicate which other node is used as time reference, together with perfect offsets
@@ -584,16 +637,16 @@ class Pattern(object):
     #     self.timeSpanned(interleaved, nid=nid)
     #     return any(interleaved.values())
 
-    # def factorizeTree(self, nid=0):
-    #     ch = self.nodes[nid]["children"]
-    #     anchor = ch[0][0]
-    #     nch = [(self.nodes[nn[0]]["children"][0][0], nn[1]) for nn in ch]
-    #     for nn in nch:
-    #         self.nodes[nn[0]]["parent"] = anchor
-    #     self.nodes[anchor]["children"] = nch
-    #     for nn in ch[1:]:
-    #         del self.nodes[nn[0]]
-    #     self.nodes[nid]["children"] = [(anchor, 0)]
+    def factorizeTree(self, nid=0):
+        ch = self.nodes[nid]["children"]
+        anchor = ch[0][0]
+        nch = [(self.nodes[nn[0]]["children"][0][0], nn[1]) for nn in ch]
+        for nn in nch:
+            self.nodes[nn[0]]["parent"] = anchor
+        self.nodes[anchor]["children"] = nch
+        for nn in ch[1:]:
+            del self.nodes[nn[0]]
+        self.nodes[nid]["children"] = [(anchor, 0)]
 
     def canFactorize(self, nid=0):
         if not self.isNode(nid):
@@ -847,39 +900,31 @@ class Pattern(object):
         else:
             return 1
 
-    # WARNING! WRONG, this is using absolute errors...
-    def getEforOccs(self, map_occs, occs):
-        # constructs the list of errors
-        return [(t - map_occs.get(oid, t)) for (t, alpha, oid) in occs]
-
     def getE(self, map_occs, nid=0):
-        return self.getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
-
-    ####
-
-    # L(E) = 2 + ∑_{e∈E} |e| ? ( It should not be     :  2 |E| + ∑_{e∈E} |e|     ? )
-    def codeLengthE(self, E, nid=0):
-        clE = np.sum([2 + np.abs(e) for e in E])  # -1
-        if Pattern.LOG_DETAILS == 1:
-            print("E\t>> nb=%d cumsum=%d\tCL=%.3f" %
-                  (len(E), np.sum([np.abs(e) for e in E]), clE))
-        if Pattern.LOG_DETAILS == 2:
-            print("$\\Csc$ & $\\LL{%s}$ & & $%.3f$ \\\\" % (E, clE))
-        return clE
-
-    # L(p) = log ( (∆(S) − σ(E))   /  (r−1) ⌋) .
+        return getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
 
     def codeLengthPTop(self, deltaT, EC_za=None, nid=0):
+        """
+        L(p) = log ( (∆(S) − σ(E))   /  (r−1) ⌋) where σ(E) = sum(E)
+
+        Parameters
+        ----------
+        deltaT : int
+            time delta in the full sequence
+        EC_za : int, default=None
+            sum of errors
+        nid :
+            Node id from which the computation is done
+
+        Returns
+        -------
+            float
+        L(P)
+        """
         if EC_za is None:  # "bare"
             EC_za = 0
         maxv = np.floor((deltaT - EC_za) / (self.nodes[nid]["r"] - 1.))
         clP = np.log2(maxv)
-        if Pattern.LOG_DETAILS == 1:
-            print("p0\t>> val=%d max=%d\tCL=%.3f" %
-                  (self.nodes[nid]["p"], maxv, clP))
-        if Pattern.LOG_DETAILS == 2:
-            print("$\\Cprd_0$ & $%d$ & $\\log(%d)=$ & $%.3f$ \\\\" %
-                  (self.nodes[nid]["p"], maxv, clP))
         return clP
 
     # L(τ ) = log(∆(S) − σ(E) − (r − 1)p + 1) .
@@ -996,7 +1041,7 @@ class Pattern(object):
         if E is not None:
             Ed = getEDict(occsStar, E)
             EC_za = self.getCCorr(o_za, Ed)
-            clE = self.codeLengthE(E, nid=nid)
+            clE = codeLengthE(E)
         else:
             Ed = {}
             EC_za = None

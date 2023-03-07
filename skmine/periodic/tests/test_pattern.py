@@ -3,7 +3,7 @@ import pytest
 
 from unittest import mock
 
-from skmine.periodic.pattern import Pattern, getEDict
+from skmine.periodic.pattern import Pattern, getEDict, codeLengthE
 
 
 @pytest.fixture
@@ -504,4 +504,18 @@ def test_card0(tree_data_complex):
     pattern = Pattern(tree_data_complex)
     assert pattern.cardO() == 25
     assert pattern.cardO(3) == 3
+
+
+def test_codeLengthE():
+    E = [5, 6, 7, 8]
+    L_E = codeLengthE(E)
+    assert L_E == 2*len(E) + 5 + 6 + 7 + 8
+
+
+def test_codeLengthPTop():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 8}})
+    deltaT = 10932
+    L_P = pattern.codeLengthPTop(deltaT=deltaT)
+    assert L_P == np.log2((deltaT - 0) / (3 - 1))  # by default sigma(E)=0
 
