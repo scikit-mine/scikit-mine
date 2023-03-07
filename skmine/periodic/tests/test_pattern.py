@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from unittest import mock
@@ -467,3 +468,34 @@ def test_getTypeStr_nested():
 def test_getTypeStr_other(tree_data_complex):
     pattern = Pattern(tree_data_complex)
     assert pattern.getTypeStr() == "other"
+
+
+def test_codeLengthEvents():
+    pattern = Pattern({0: {'p': 8643, 'r': 5, 'children': [(1, 0)], 'parent': None}, 1: {'event': 0, 'parent': 0}})
+    adjFreqs = {"(": 1/3, ")": 1/3, 0: 1/3}
+    assert pattern.codeLengthEvents(adjFreqs, nid=0) == -np.log2(adjFreqs["("]) - np.log2(adjFreqs[")"]) - \
+           np.log2(adjFreqs[0])
+
+
+def test_getMinOccs():
+    pattern = Pattern(event=4, r=100, p=500)
+    pattern.append(5, 50)
+    nbOccs = {4: 3, 5: 7, -1: 10.0}
+    min_occs = []
+    res = pattern.getMinOccs(nbOccs, min_occs)
+    assert res == [3]
+
+
+def test_getRVals():
+    pattern = Pattern(event=4, r=100, p=500)
+    pattern.append(5, 50)
+    pattern.getRVals() == [100, 50]
+
+
+def test_codeLengthR():
+    pattern = Pattern(event=4, r=100, p=500)
+    pattern.append(5, 50)
+    pattern.append(6, 15)
+    nbOccs = {4: 100, 5: 50, 6: 15, -1: 165}
+    assert pattern.codeLengthR(nbOccs) == np.log2(15)
+

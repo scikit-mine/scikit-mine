@@ -715,7 +715,6 @@ class Pattern(object):
     def getTypeStr(self):
         """
         Get the type of pattern (simple, nested, concat or other)
-
         """
         if self.isSimpleCycle():
             return "simple"
@@ -726,8 +725,11 @@ class Pattern(object):
         else:
             return "other"
 
-    # L(α) = − log(fr (α)) = − log(∣ ∣S(α)∣ ∣ / |S|)
     def codeLengthEvents(self, adjFreqs, nid=0):
+        """
+        Compute the code length from a node id
+        L(α) = − log(fr (α)) = − log(∣ ∣S(α)∣ ∣ / |S|)
+        """
         if not self.isNode(nid):
             return 0
         if self.isInterm(nid):
@@ -737,8 +739,29 @@ class Pattern(object):
             return -np.log2(adjFreqs[self.nodes[nid]["event"]])
 
     def getMinOccs(self, nbOccs, min_occs, nid=0):
-        # recursively collects info on the least occurring event in each block
-        # to be used to determine the code length for r_X
+        """
+        Recursively collects info on the least occurring event in each block to be used to determine
+        the code length for r_X. Each intermediate node B_X is associated with the period p_X and length r_X of the
+        corresponding cycle.
+
+        For a block B_X, the number of repetitions of the block cannot be larger than the number of occurences of the
+        least frequent event participating in the block, denoted as p(B_X). We can thus encode the sequence of cycle
+        lengths R with code of length L(R) = sum(L(r_X)) = sum(log(p(B_X)))
+
+        Parameters
+        ----------
+        nbOccs : dict
+            Associates for each event the number of times it appears in the dataset
+
+        min_occs : list
+            The list to be returned
+
+        Returns
+        -------
+        list
+            The min_occs list containing for each node of the tree, the minimum number of times an event participates
+            in this block.
+        """
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
@@ -750,8 +773,20 @@ class Pattern(object):
             return nbOccs[self.nodes[nid]["event"]]
 
     def getRVals(self, nid=0):
-        # recursively collects info on the least occurring event in each block
-        # to be used to determine the code length for r_X
+        """
+        Recursively collects info on the least occurring event in each block to be used to determine the code length
+        for r_X.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the search is launched
+
+        Returns
+        -------
+        list
+            Get all R values from a certain node id
+        """
         if not self.isNode(nid):
             return -1
         if self.isInterm(nid):
@@ -762,10 +797,23 @@ class Pattern(object):
         else:
             return []
 
-    # L(r) = log(∣ ∣S(α)∣ ∣),
     def codeLengthR(self, nbOccs, nid=0):
-        # determine the code length for r_X
-        # based on info on the least occurring event in each block
+        """
+        Determine the code length for r_X based on info on the least occurring event in each block.
+        L(R) = sum(L(r_X)) = sum(log(p(B_X)))
+
+        Parameters
+        ----------
+        nbOccs : list
+            Associates for each event the number of times it appears in the dataset
+        nid : int
+            Node id from which the computation is done
+
+        Returns
+        -------
+            float
+        The encoded length of the sequence of cycle lengths R
+        """
         min_occs = []
         self.getMinOccs(nbOccs, min_occs, nid)
         rs = self.getRVals()
