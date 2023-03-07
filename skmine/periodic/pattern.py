@@ -939,9 +939,6 @@ class Pattern(object):
             sum of errors
         nid : int, default=0
             Node id from which the computation is done
-        t0 : int, default=0
-            Start time of the sequence
-        tstart
 
         Returns
         -------
@@ -961,7 +958,19 @@ class Pattern(object):
         return clT
 
     def hasNestedPDs(self, nid=0):
-        # does this pattern has nested periods and/or inter-block distances?
+        """
+        Does this pattern has nested periods and/or inter-block distances?
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        Returns
+        -------
+            bool
+        If true, this pattern has nested periods and/or inter-block distances else not.
+        """
         if len(self.nodes[nid]["children"]) > 1:
             return True
         elif len(self.nodes[nid]["children"]) == 1:
