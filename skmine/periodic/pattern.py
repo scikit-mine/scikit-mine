@@ -1067,7 +1067,7 @@ class Pattern(object):
         clRs = self.codeLengthR(data_details["nbOccs"], nid=nid)
         clP0 = self.codeLengthPTop(data_details["deltaT"], EC_za, nid=nid)
         clT0 = self.codeLengthT0(
-            data_details["deltaT"], EC_za, nid=nid, t0=t0, tstart=data_details["t_start"])
+            data_details["deltaT"], EC_za, nid=nid)
 
         clPDs = 0.
         if self.hasNestedPDs():
