@@ -345,6 +345,22 @@ class Pattern(object):
         return self.isNode(nid) and "children" not in self.nodes[nid]
 
     def getNidsRightmostLeaves(self, nid=0, rightmost=True):
+        """
+        Get the rightmost leaves ids under the node with id `nid`.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            The id of the node to start the computation
+
+        rightmost : bool, default=True
+            Wheter the current node is the rightmost child of its parent
+
+        Returns
+        -------
+        list
+            A list of ids of the rightmost leaves.
+        """
         if not self.isNode(nid):
             return []
         if self.isInterm(nid):
@@ -360,7 +376,19 @@ class Pattern(object):
 
     def getOccsStar(self, nid=0, pref=[], time=0):
         """
-            Get the list of timestamp-event pairs from the pattern reconstructed from his tree before correction.
+        Get the list of timestamp-event pairs from the pattern reconstructed from his tree before correction.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+        pref : list, default=[]
+        time : int, default=0
+
+        Returns
+        -------
+        List[Tuple[int, int, str]]
+            List of timestamp-event pairs (timestamp, event, a string representing the position in the tree)
         """
         if not self.isNode(nid):
             return []
