@@ -499,3 +499,9 @@ def test_codeLengthR():
     nbOccs = {4: 100, 5: 50, 6: 15, -1: 165}
     assert pattern.codeLengthR(nbOccs) == np.log2(15)
 
+
+def test_card0(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.cardO() == 25
+    assert pattern.cardO(3) == 3
+
