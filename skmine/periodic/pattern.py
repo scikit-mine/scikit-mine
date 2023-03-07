@@ -67,7 +67,31 @@ def codeLengthE(E):
 
 
 class Pattern(object):
+    """
+    This class models the patterns from a tree structure.
 
+    Attributes:
+    -----------
+    transmit_Tmax : bool, default=True
+        Whether to transmit Tmax.
+    allow_interleaving : bool, default=True
+        Whether to allow interleaving.
+    overlap_interleaved : bool, default=False
+        Whether overlapping counts as interleaved.
+    next_id : int, default=1
+        ID of the next node to be added to the pattern.
+    nodes : dict
+        Dictionary representing the pattern from a tree structure, where keys are node IDs
+        and values are dictionaries with the following keys:
+            - parent: ID of the parent node. None if node is the root.
+            - children: List of tuples representing the children of the node.
+                Each tuple has two elements:
+                    - ID of the child node
+                    - distance between the parent node and the child node
+            - event: The event associated with the node. None if node is an inner node.
+            - p: The period of the node. None if node is not a root node.
+            - r: The repetition of the node. None if node is not a root node.
+    """
     transmit_Tmax = True
     allow_interleaving = True
     # does overlapping count as interleaved?
