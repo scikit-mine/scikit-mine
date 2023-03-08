@@ -779,6 +779,21 @@ class Pattern(object):
             return self.nodes[nid]["r"]
 
     def getMajorOccs(self, occs):
+        """
+        Get the main timestamps from occs and the tree structure
+
+        Only used when complex pattern are desired.
+
+        Parameters
+        ----------
+        occs : list
+            The list of timestamps/occurrences  of the events of the pattern
+
+        Returns
+        -------
+        list
+            The main timestamps of the pattern according to the root repetition number.
+        """
         if self.getDepth() > 1 or self.getWidth() > 1:
             r = self.nodeR(0)
             len_ext_blck = len(occs) // r

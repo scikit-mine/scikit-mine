@@ -473,7 +473,7 @@ def test_getTypeStr_other(tree_data_complex):
 
 def test_codeLengthEvents():
     pattern = Pattern({0: {'p': 8643, 'r': 5, 'children': [(1, 0)], 'parent': None}, 1: {'event': 0, 'parent': 0}})
-    adjFreqs = {"(": 1/3, ")": 1/3, 0: 1/3}
+    adjFreqs = {"(": 1 / 3, ")": 1 / 3, 0: 1 / 3}
     assert pattern.codeLengthEvents(adjFreqs, nid=0) == -np.log2(adjFreqs["("]) - np.log2(adjFreqs[")"]) - \
            np.log2(adjFreqs[0])
 
@@ -510,7 +510,7 @@ def test_card0(tree_data_complex):
 def test_codeLengthE():
     E = [5, 6, 7, 8]
     L_E = codeLengthE(E)
-    assert L_E == 2*len(E) + 5 + 6 + 7 + 8
+    assert L_E == 2 * len(E) + 5 + 6 + 7 + 8
 
 
 def test_codeLengthPTop():
@@ -527,7 +527,7 @@ def test_codeLengthT0():
     deltaT = 10932
     EC_za = 0
     L_tau = pattern.codeLengthT0(deltaT, EC_za=EC_za)
-    assert L_tau == np.log2(deltaT - EC_za - (3-1)*150 + 1)
+    assert L_tau == np.log2(deltaT - EC_za - (3 - 1) * 150 + 1)
 
 
 def test_hasNestedPDs_if(tree_data, tree_data_complex):
@@ -680,3 +680,11 @@ def test_nodeR(tree_data_complex):
     assert pattern.nodeR(2) == 0  # a leaf
     assert pattern.nodeR(3) == 3
     assert pattern.nodeR(4) == 0
+
+
+def test_getMajorOccs():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 9}})
+    occs = [159626862, 159626934, 159627012, 159627084, 159627162, 159627234]
+    assert pattern.getMajorOccs(occs) == occs[::2]  # get only the timestamps of the first event 8
+
