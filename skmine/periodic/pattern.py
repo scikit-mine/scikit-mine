@@ -66,6 +66,31 @@ def codeLengthE(E):
     return np.sum([2 + np.abs(e) for e in E])
 
 
+def prepareFilter(occs, what="firstEvt"):
+    filt = ".*"
+    if what == "firstEvt":
+        tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
+        tmp[0][1] = "[0-9]+"
+        filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
+    elif what == "lastRep":
+        tmp = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
+        tmp[0] = "[0-9]+"
+        filt = "^" + SUB_SEP.join(tmp) + ".*$"
+    elif what == "lastRepFirstEvt":
+        tlast = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
+        tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
+        tmp[0][1] = tlast[1]
+        filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
+    return filt
+
+
+def filterOccsMatch(occs, match_what="firstEvt", match=None):
+    if match is None:
+        match = prepareFilter(occs, match_what)
+    res = [tt for tt in occs if re.search(match, tt[2])]
+    return res
+
+
 class Pattern(object):
     """
     This class models the patterns from a tree structure.
@@ -601,37 +626,33 @@ class Pattern(object):
             cks.extend(self.gatherCorrKeys(key_ints))
         return cks
 
-    def prepareFilter(self, occs, what="fisrtEvt"):
-        filt = ".*"
-        if what == "fisrtEvt":
-            tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
-            tmp[0][1] = "[0-9]+"
-            filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
-        elif what == "lastRep":
-            tmp = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
-            tmp[0] = "[0-9]+"
-            filt = "^" + SUB_SEP.join(tmp) + ".*$"
-        elif what == "lastRepFirstEvt":
-            tlast = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
-            tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
-            tmp[0][1] = tlast[1]
-            filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
-        return filt
+    def getEventsList(self, nid=0, add_delimiter=True):
+        """
+        Get the list of events from a node id and with or without delimiters (parenthesis for child events).
+        This list does not include repeats.
 
-    def filterOccsMatch(self, occs, match_what="fisrtEvt", match=None):
-        if match is None:
-            match = self.prepareFilter(occs, match_what)
-        res = [tt for tt in occs if re.search(match, tt[2])]
-        return res
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+        add_delimiter : bool, default=True
+            Adding a delimiter (parenthesis) to differentiate child events in the tree
 
-    def getEventsList(self, nid=0, markB=True, map_ev=None):
+        Returns
+        -------
+        list
+            A list of tree events.
+            Example with:
+            - `add_delimiter=True` : ['(', '4', '7', '(', '8', ')', ')']
+            - `add_delimiter=True` : ['4', '7', '8']
+        """
         if not self.isNode(nid):
             return ""  # was initially openB_str + closeB_str` but these two variables do not exist
         if self.isInterm(nid):
             ll = []
             for nn in self.nodes[nid]["children"]:
-                ll.extend(self.getEventsList(nn[0], markB))
-            if markB:
+                ll.extend(self.getEventsList(nn[0], add_delimiter))
+            if add_delimiter:
                 return ["("] + ll + [")"]
             else:
                 return ll
@@ -639,6 +660,22 @@ class Pattern(object):
             return ["%s" % self.nodes[nid]["event"]]
 
     def getEventsMinor(self, nid=0, rep=False):
+        """
+        Get the list of events under a node.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+        rep : bool, default=False
+            If true, the repetitions of the child events (leaves) of the nid node are calculated
+            otherwise only the repetitions of the child nodes are calculated.
+
+        Returns
+        -------
+        list
+            The list of events associated to nid
+        """
         if not self.isNode(nid):
             return []
         if self.isInterm(nid):
@@ -654,7 +691,18 @@ class Pattern(object):
 
     def getTreeStr(self, nid=0, level=0, map_ev=None):
         """
-        Generate the visualization of the cycle
+        Generate the visualization of the tree representing the pattern
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the display is made
+
+        level : int, default=0
+            Indentation of the tree. The higher this number, the more indented the leaves/nodes are.
+
+        map_ev : dict
+            Associate to each event id, it's event name
 
         Returns
         -------
@@ -665,7 +713,7 @@ class Pattern(object):
 
         if self.isInterm(nid):
             ss = "%s|_ [%s] r=%s p=%s\n" % (
-                ("\t" * (level)), nid, self.nodes[nid]["r"], self.nodes[nid]["p"])
+                ("\t" * level), nid, self.nodes[nid]["r"], self.nodes[nid]["p"])
             for nn in self.nodes[nid]["children"]:
                 ss += "%s| d=%s\n" % (("\t" * (level + 1)), nn[1])
                 ss += self.getTreeStr(nn[0], level + 1)
@@ -678,6 +726,23 @@ class Pattern(object):
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
     def __str__(self, nid=0, map_ev=None, leaves_first=False):
+        """
+        Display the pattern as a string. The tree representing the pattern is traversed in depth from left to right.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the display is made
+        map_ev : dict
+            Associate to each event id, it's event name
+        leaves_first : bool, default=False
+            If True, leaves are displayed first, otherwise last.
+
+        Returns
+        -------
+        str
+            A string representing the pattern with the form
+        """
         if not self.isNode(nid):
             return ""
         if self.isInterm(nid):
@@ -698,6 +763,20 @@ class Pattern(object):
                 return "%s" % self.nodes[nid]["event"]
 
     def pattKey(self, nid=0):
+        """
+        Displays the tree/pattern as a string
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the string is calculated
+
+        Returns
+        -------
+        str
+            A string of form
+            "[r,p](left_child_event_id-time_distance_left_child_to_just_to_right_child-just_to_right_child_event_id-..."
+        """
         if not self.isNode(nid):
             return ""
         if self.isInterm(nid):
@@ -712,6 +791,21 @@ class Pattern(object):
             return "%s" % self.nodes[nid]["event"]
 
     def pattMinorKey(self, nid=0):
+        """
+        Displays the tree/pattern as a string except the first level where it starts (nid)
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the string is calculated
+
+        Returns
+        -------
+        str
+            A string of form
+            "left_event-[time_distance_left_child_to_just_to_right_child]-just_to_right_event-[r,p](event...)..."
+
+        """
         if not self.isNode(nid):
             return ""
         if self.isInterm(nid):
@@ -725,6 +819,19 @@ class Pattern(object):
             return ""
 
     def pattMajorKey(self, nid=0):
+        """
+        Get the repetition number and the period of a node id (nid) as a string
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the string is calculated
+
+        Returns
+        -------
+        str
+            A string of form : "[r,p]" of nid
+        """
         if not self.isNode(nid):
             return ""
         if self.isInterm(nid):
@@ -733,6 +840,19 @@ class Pattern(object):
             return "[]"
 
     def pattMajorKey_list(self, nid=0):
+        """
+        Get the repetition number and the period of a node id (nid) as a list
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the list is calculated
+
+        Returns
+        -------
+        list
+            A list of form : [r,p] of nid
+        """
         if not self.isNode(nid):
             return []
         if self.isInterm(nid):

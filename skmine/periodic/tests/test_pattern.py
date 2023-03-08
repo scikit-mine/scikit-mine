@@ -688,3 +688,108 @@ def test_getMajorOccs():
     occs = [159626862, 159626934, 159627012, 159627084, 159627162, 159627234]
     assert pattern.getMajorOccs(occs) == occs[::2]  # get only the timestamps of the first event 8
 
+
+def test_pattKey_simple(tree_data):
+    pattern = Pattern(tree_data)
+    assert pattern.pattKey() == "[5,8643](4)"
+
+
+def test_pattKey_complex(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.pattKey() == "[5,8643](4-0-7-50-[3,50000](8))"
+
+
+def test_pattMinorKey():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 9}})
+    assert pattern.pattMinorKey() == "8-[72]-9"
+    pattern.repeat(7, 100000)
+    assert pattern.pattMinorKey() == "[3,150](8-72-9)"
+
+
+def test_pattMinorKey_tree_complex_data():
+    pattern = Pattern({
+        0:
+            {
+                'p': 8643,
+                'r': 5,
+                'children': [(1, 0), (2, 0), (3, 50)],
+                'parent': None
+            },
+        1:
+            {
+                'event': 4,
+                'parent': 0
+            },
+        2:
+            {
+                'event': 7,
+                'parent': 0
+            },
+        3:
+            {
+                'p': 50000,
+                'r': 3,
+                'children': [(4, 0)],
+                'parent': 0
+            },
+        4:
+            {
+                'event': 8,
+                'parent': 3
+            }
+    })
+    assert pattern.pattMinorKey() == "4-[0]-7-[50]-[3,50000](8)"
+
+
+def test_pattMajorKey():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 9}})
+    assert pattern.pattMajorKey() == "[3,150]"
+    assert pattern.pattMajorKey(nid=1) == "[]"
+    assert pattern.pattMajorKey(nid=2) == "[]"
+    pattern.repeat(7, 100000)
+    assert pattern.pattMajorKey() == "[7,100000]"
+    assert pattern.pattMajorKey(nid=3) == "[3,150]"
+
+
+def test_pattMajorKey_list():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 9}})
+    assert pattern.pattMajorKey_list() == [3, 150]
+    assert pattern.pattMajorKey_list(nid=1) == []
+    assert pattern.pattMajorKey_list(nid=2) == []
+    pattern.repeat(7, 100000)
+    assert pattern.pattMajorKey_list() == [7, 100000]
+    assert pattern.pattMajorKey_list(nid=3) == [3, 150]
+
+
+def test_pattern___str__(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.__str__() == "[r=5 p=8643](4 [d=0] 7 [d=50] [r=3 p=50000](8))"
+
+    assert pattern.__str__(leaves_first=True) == "(4 [d=0] 7 [d=50] (8)[r=3 p=50000])[r=5 p=8643]"
+
+    assert pattern.__str__(map_ev={4: "wake up", 7: "coffee", 8: "shower"}) == "[r=5 p=8643](wake up [d=0] coffee [" \
+                                                                               "d=50] [r=3 p=50000](shower))"
+
+
+def test_getTreeStr(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getTreeStr() == "|_ [0] r=5 p=8643\n\t| d=0\n\t|_ [1] 4\n\t| d=0\n\t|_ [2] 7\n\t| d=50\n\t|_ [3] " \
+                                   "r=3 p=50000\n\t\t| d=0\n\t\t|_ [4] 8\n"
+
+
+def test_getEventsMinor(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getEventsMinor() == [4, 7, 8, 8, 8]
+    assert pattern.getEventsMinor(nid=3) == [8]
+    assert pattern.getEventsMinor(rep=True) == [4, 7, 8, 8, 8] * 5
+
+
+def test_getEventsList(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getEventsList() == ['(', '4', '7', '(', '8', ')', ')']
+    assert pattern.getEventsList(nid=3) == ['(', '8', ')']
+    assert pattern.getEventsList(add_delimiter=False) == ['4', '7', '8']
+

@@ -128,7 +128,7 @@ class Candidate(object):
 
     def getEvent(self):
         if self.isPattern():
-            tmp = self.P.getEventsList(markB=False)
+            tmp = self.P.getEventsList(add_delimiter=False)
             if len(tmp) == 1:
                 return tmp[0]
             else:
@@ -138,7 +138,7 @@ class Candidate(object):
 
     def getEventTuple(self):
         if self.isPattern():
-            return tuple(self.P.getEventsList(markB=False))
+            return tuple(self.P.getEventsList(add_delimiter=False))
         else:
             return tuple([self.P["alpha"]])
 
