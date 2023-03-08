@@ -274,20 +274,6 @@ class Candidate(object):
                 mxi -= 1
             self.P["occs_up"] = [self.O[kk] for kk in range(mni, mxi + 1)]
 
-    def getPropsFirst(self, nkey=0):
-        # ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
-        return (
-            self.getT0(), self.getMajorP(), self.getMajorR(
-            ), 0, np.sum(np.abs(self.getMajorE())), nkey,
-            self.getId())
-
-    def getPropsAll(self, nkey=0):
-        Pp, Pr = (self.getMajorP(), self.getMajorR())
-        majO = self.getMajorO()
-        majE = self.getMajorE()
-        return [(ooe, Pp, Pr, ooi, np.sum(np.abs(majE[ooi:])), nkey, self.getId()) for ooi, ooe in
-                enumerate(majO[:-2])]
-
     def getProps(self, nkey=0, max_offset=None):
         if max_offset is None:
             max_offset = PROPS_MAX_OFFSET

@@ -18,7 +18,6 @@ from .pattern_collection import PatternCollection
 from .class_patterns import prop_map
 from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
 from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
-from .read_data import readSequence, readSequenceSacha, group_syms
 
 numpy.set_printoptions(suppress=True)
 
@@ -53,7 +52,6 @@ series_params["sacha_18_rel"] = {
 #                                  "timestamp": False, "drop_event_codes":[0, 126, 33]}
 # series_params["sacha_18_abs_2000W"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
 #                                  "timestamp": True, "max_len": 2000, "max_p": 7*24*60
-# print("UUUUU UbiqLog_")
 All = glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat")
 for f in glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat"):
     # print(f)
@@ -88,20 +86,6 @@ def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
                 graph[v]), R.union([v]), X.intersection(graph[v]))
             P.remove(v)
             X.add(v)
-
-
-# PREPARE PATTERNS
-########################################################
-def prepare_pattern_simple(occs, alpha, p0=None, r0=None):
-    if r0 is None:
-        r0 = len(occs)
-    if p0 is None:
-        p0 = computePeriod(occs)
-    tree = {0: {"p": p0, "r": r0, "children": [(1, 0)], "parent": None},
-            1: {"event": alpha, "parent": 0}}
-    E = [(occs[i] - occs[i - 1]) - p0 for i in range(1, len(occs))]
-    p = Pattern(tree)
-    return p, occs[0], E
 
 
 def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
@@ -542,7 +526,7 @@ def find_complexes(cpool, mk, data_details):
                     top_two[oid] = get_top_p(occs_to_ordc[oid])
                     scores[map_soccs[oid]] = occs_to_ordc[oid][top_two[oid]
                     [0]][0] * occs_to_ordc[oid][top_two[oid][1]][0]
-                    for (nb_left, prd, cid) in excl:
+                    for (_, prd, cid) in excl:
                         del occs_to_cycles[oid][prd]
                 else:
                     scores[map_soccs[oid]] = -1
@@ -958,42 +942,6 @@ def makeCandOnOrder(cand_pids, data_details, patterns_props, cpool):
     return new_cand
 
 
-# CANDIDATE SELECTION BASED ON COST/COV
-########################################################
-def filter_candidates_cover_slow(cands, dcosts, min_cov=1, adjust_occs=False, cis=None):
-    if cis is None:
-        if type(cands) is dict:
-            cis = list(cands.keys())
-        else:
-            cis = list(range(len(cands)))
-
-    for ci in cis:
-        cands[ci].initUncovered()
-
-    cis.sort(key=lambda x: cands[x].getCostUncoveredRatio())
-    selected = []
-    covered = set()
-    max_eff = numpy.max(list(dcosts.values()))
-    while len(cis) > 0:
-        nxti = cis.pop(0)
-        if cands[nxti].getCostUncoveredRatio() <= max_eff:
-            nb = cands[nxti].updateUncovered(covered)
-            if (nb >= min_cov) and cands[nxti].isEfficient(dcosts):
-                i = 0
-                while (i < len(cis)) and (cands[nxti].getCostUncoveredRatio() > cands[cis[i]].getCostUncoveredRatio()):
-                    i += 1
-                if i == 0:
-                    if not cands[nxti].isPattern() and adjust_occs:
-                        cands[nxti].adjustOccs()
-                    selected.append(nxti)
-                    covered.update(cands[nxti].getUncovered())
-                else:
-                    cis.insert(i, nxti)
-        else:
-            cis = []
-    return selected
-
-
 def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=None):
     """
     Filters a list of candidates based on their coverage and cost efficiency.
@@ -1076,29 +1024,6 @@ def filter_candidates_topKeach(cands, k=2):
     return selected
 
 
-def filter_cidpairs_topKeach(cands, k=2):
-    counts_cover = {}
-
-    if type(cands) is dict:
-        cis = list(cands.keys())
-    else:
-        cis = list(range(len(cands)))
-    cis.sort(key=lambda x: cands[x].getCostRatio())
-    selected = []
-    while len(cis) > 0:
-        nxti = cis.pop(0)
-        ccc = [counts_cover.get(pp, 0) for pp in nxti]
-        if numpy.min(ccc) <= k:
-            # print("%s:\t%s\t%s\t->keep" % (nxti, cands[nxti], ccc))
-            for pp in nxti:
-                counts_cover[pp] = counts_cover.get(pp, 0) + 1
-            selected.append(nxti)
-        # else:
-        #     print("%s:\t%s\t%s\t->drop" % (nxti, cands[nxti], ccc))
-
-    return selected
-
-
 def substitute_factorized(cands, data_details, fo_log=None):
     for i in range(len(cands)):
         ext = cands[i].factorizePattern()
@@ -1109,16 +1034,6 @@ def substitute_factorized(cands, data_details, fo_log=None):
                 log_write(fo_log, "%s --> FACT\n" % cands[i])
                 log_write(fo_log, "%s <-- FACT\n" % ext[ii - 1])
                 cands[i] = ext[ii - 1]
-
-
-def disp_seqs(seqs, ffo_log=None):
-    if ffo_log is None:
-        fo_log = sys.stdout
-    else:
-        fo_log = ffo_log
-
-    ds = DataSequence(seqs)
-    log_write(fo_log, ds.getInfoStr() + "\n")
 
 
 def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None):

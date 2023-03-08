@@ -3,7 +3,7 @@ import pytest
 
 from unittest import mock
 
-from skmine.periodic.pattern import Pattern, getEDict, codeLengthE
+from skmine.periodic.pattern import Pattern, getEDict, codeLengthE, getEforOccs
 
 
 @pytest.fixture
@@ -792,3 +792,32 @@ def test_getEventsList(tree_data_complex):
     assert pattern.getEventsList() == ['(', '4', '7', '(', '8', ')', ')']
     assert pattern.getEventsList(nid=3) == ['(', '8', ')']
     assert pattern.getEventsList(add_delimiter=False) == ['4', '7', '8']
+
+
+def test_getKeyLFromNid():
+    pattern = Pattern({0: {'p': 150, 'r': 3, 'children': [(1, 0), (2, 72)], 'parent': None},
+                       1: {'parent': 0, 'event': 8}, 2: {'parent': 0, 'event': 9}})
+    assert pattern.getKeyLFromNid(nid=0) == []
+    assert pattern.getKeyLFromNid(nid=1) == [(0, 0)]  # second element in the tuple is 0 because by default rep=0
+    assert pattern.getKeyLFromNid(nid=2) == [(1, 0)]
+    assert pattern.getKeyLFromNid(nid=2, rep=-1) == [(1, 2)]  # second element in the tuple is r of the parent - 1
+
+
+def test_getKeyLFromNid_complex(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getKeyLFromNid(nid=3, rep=-1) == [(2, 4)]
+    assert pattern.getKeyLFromNid(nid=2, rep=-1) == [(1, 4)]
+    assert pattern.getKeyLFromNid(nid=4, rep=-1) == [(2, 4), (0, 2)]
+    assert pattern.getKeyLFromNid(nid=1, rep=-1) == [(0, 4)]
+
+
+def test_getKeyFromNid(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.getKeyFromNid(nid=4, rep=-1) == "2,4;0,2"
+
+
+def test_getEforOccs():
+    map_occs = {1: 2, 2: 3, 4: 6}
+    occs = [(1, 0.1, 1), (4, 0.2, 2), (5, 0.3, 3)]
+    expected_output = [-1, 1, 0]
+    assert getEforOccs(map_occs, occs) == expected_output

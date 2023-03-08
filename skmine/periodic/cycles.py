@@ -15,8 +15,6 @@ from .pattern import Pattern, getEDict
 from .pattern_collection import PatternCollection
 from .data_sequence import DataSequence
 
-log = np.log2
-
 INDEX_TYPES = (
     pd.DatetimeIndex,
     pd.RangeIndex,

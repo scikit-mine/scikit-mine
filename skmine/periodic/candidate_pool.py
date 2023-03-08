@@ -59,16 +59,6 @@ class CandidatePool(object):
             self.sorted_pids = sortPids(self.cand_props)
         return self.sorted_pids
 
-    def isNewPid(self, pid, nkey=None):
-        if (nkey in self.map_nkeys) and (self.cand_props is not None) and (pid < self.cand_props.shape[0]):
-            return self.cand_props[pid, Candidate.prop_map["new"]] == self.map_nkeys[nkey]
-        return False
-
-    def areNewPids(self, pids, nkey=None):
-        if (nkey in self.map_nkeys) and (self.cand_props is not None):
-            return self.cand_props[pids, Candidate.prop_map["new"]] == self.map_nkeys[nkey]
-        return np.zeros(len(pids), dtype=bool)
-
     def getPidsForCid(self, cid):
         return np.where(self.cand_props[:, -1] == cid)[0]
 
@@ -84,11 +74,6 @@ class CandidatePool(object):
     def getNewKNum(self, nkey):
         return self.map_nkeys.get(nkey, -1)
 
-    def getNewPids(self, nkey):
-        if (nkey in self.map_nkeys) and (self.cand_props is not None):
-            return np.where(self.cand_props[:, Candidate.prop_map["new"]] == self.map_nkeys[nkey])[0]
-        return []
-
     def getNewCids(self, nkey):
         return self.new_cids.get(nkey, [])
 
@@ -99,15 +84,6 @@ class CandidatePool(object):
         if nkey is None:
             return np.sum([len(v) for v in self.new_cids.values()])
         return len(self.new_cids.get(nkey, []))
-
-    def nbMinorKs(self):
-        return len(self.map_minorKs)
-
-    def nbCandidates(self):
-        return len(self.candidates)
-
-    def nbProps(self):
-        return self.cand_props.shape[0]
 
     def getPropMat(self):
         return self.cand_props

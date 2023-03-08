@@ -111,26 +111,11 @@ class DataSequence(object):
     def getNumToEv(self):
         return dict(enumerate(self.list_ev))
 
-    def getEvToNum(self):
-        return self.map_ev_num
-
-    def getSequenceStr(self, sep_te=" ", sep_o="\n", ev=None):
-        if ev is None:
-            return sep_o.join([("%s" + sep_te + "%s") % (t, self.list_ev[e]) for (t, e) in sorted(self.seql)])
-        else:
-            if ev in self.map_ev_num:
-                return sep_o.join(["%s" % p for p in sorted(self.seqd.get(self.map_ev_num[ev], []))])
-            else:
-                return sep_o.join(["%s" % p for p in sorted(self.seqd.get(ev, []))])
-
     def getSequence(self, ev=None):
         if ev is None:
             return self.seql
         else:
             return self.seqd.get(ev, [])
-
-    def getTend(self):
-        return self.data_details["t_end"]
 
     def getDetails(self):
         return self.data_details

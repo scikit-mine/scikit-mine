@@ -258,16 +258,6 @@ def computeLengthResidual(data_details, residual):
     return len(residual["occs"]) * cost_one(data_details, residual["alpha"])
 
 
-def computeLengthRC(data_details, rcs):
-    cl = 0.
-    for rc in rcs:
-        if "p" in rc:
-            cl += computeLengthCycle(data_details, rc)
-        else:
-            cl += computeLengthResidual(data_details, rc)
-    return cl
-
-
 def makeOccsAndFreqs(tmpOccs):
     """
     Return the number of occurrences of each event and the original and adjusted
@@ -288,7 +278,7 @@ def makeOccsAndFreqs(tmpOccs):
     adjFreqs : dict
         A dictionary containing the adjusted frequency of each event in the sequence.
     blck_delim : float
-        A float representing the block delimiter of the sequence.
+        A float representing the size encoded of the block delimiter of the sequence.
     """
     if ADJFR_MED:
         return makeOccsAndFreqsMedian(tmpOccs)

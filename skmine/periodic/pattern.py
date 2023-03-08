@@ -9,15 +9,16 @@ from .class_patterns import l_to_key, key_to_l, SUB_SEP, SUP_SEP, OPT_TO
 
 def getEDict(oStar, E=[]):
     """
-    Construct a dictionary that maps each unique identifier in the input list of tuples `oStar` to a corresponding value
-    in the list `E`.
+    Construct a dictionary that maps each unique identifier in the input list of occurences from `oStar` to
+    it's corresponding value in the list of errors `E`.
 
     Parameters
     ----------
     oStar : list
-        A list of tuples representing objects composed of three items.
+        A list of tuples representing occurences in the tree structure composed of
+        three items (t0, event, position in tree).
     E : list, default=[]
-        A list of values of shift corrections that correspond to the unique identifiers in `oStar`.
+        A list of values of shift corrections (errors) that correspond to the unique identifiers in `oStar`.
         If `len(E)` is less than `len(oStar) - 1`, the remaining values are set to zero.
 
     Returns
@@ -46,7 +47,7 @@ def getEforOccs(map_occs, occs):
     -------
 
     """
-    return [(t - map_occs.get(oid, t)) for (t, alpha, oid) in occs]
+    return [t - map_occs.get(oid, t) for (t, alpha, oid) in occs]
 
 
 def codeLengthE(E):
@@ -76,8 +77,6 @@ class Pattern(object):
         Whether to transmit Tmax.
     allow_interleaving : bool, default=True
         Whether to allow interleaving.
-    overlap_interleaved : bool, default=False
-        Whether overlapping counts as interleaved.
     next_id : int, default=1
         ID of the next node to be added to the pattern.
     nodes : dict
@@ -94,49 +93,6 @@ class Pattern(object):
     """
     transmit_Tmax = True
     allow_interleaving = True
-    # does overlapping count as interleaved?
-    overlap_interleaved = False
-
-    @classmethod
-    def parseTreeStr(cls, tree_str, leaves_first=False, from_inner=False):
-        MATCH_IN = "\((?P<inner>.*)\)"
-        MATCH_PR = "\[r=(?P<r>[0-9]+) p=(?P<p>[0-9]+)\]"
-        if leaves_first:
-            tmp = re.match(MATCH_IN + MATCH_PR + "$", tree_str)
-        else:
-            tmp = re.match(MATCH_PR + MATCH_IN + "$", tree_str)
-
-        if tmp is not None:
-            patt = cls.parseTreeStr(tmp.group("inner"), leaves_first)
-            patt.repeat(int(tmp.group("r")), int(tmp.group("p")))
-            return patt
-        elif not from_inner:
-            return cls.parseInnerStr(tree_str, leaves_first)
-        return None
-
-    @classmethod
-    def parseInnerStr(cls, inner_str, leaves_first=False):
-        MATCH_D = "\[d=(?P<d>[0-9]+)\]"
-        pos_L = 0
-        d_prev = 0
-        parentT = Pattern()
-        for tmp in re.finditer(MATCH_D, inner_str):
-            T = cls.parseTreeStr(
-                inner_str[pos_L: tmp.start()].strip(), leaves_first, from_inner=True)
-            if T is None:
-                parentT.append(inner_str[pos_L: tmp.start()].strip(), d_prev)
-            else:
-                parentT.merge(T, d_prev)
-            d_prev = int(tmp.group("d"))
-            pos_L = tmp.end()
-
-        T = cls.parseTreeStr(
-            inner_str[pos_L:].strip(), leaves_first, from_inner=True)
-        if T is None:
-            parentT.append(inner_str[pos_L:].strip(), d_prev)
-        else:
-            parentT.merge(T, d_prev)
-        return parentT
 
     def __init__(self, event=None, r=None, p=None):
         self.next_id = 1
@@ -291,7 +247,7 @@ class Pattern(object):
         self.nodes[0]["parent"] = 0
         self.nodes[self.next_id] = self.nodes.pop(0)
         if "children" in self.nodes[self.next_id]:
-            for (nc, nd) in self.nodes[self.next_id]["children"]:
+            for (nc, _) in self.nodes[self.next_id]["children"]:
                 self.nodes[nc]["parent"] = self.next_id
         self.nodes[0] = {"parent": None, "p": p,
                          "r": r, "children": [(self.next_id, 0)]}
@@ -447,59 +403,20 @@ class Pattern(object):
         Ed = getEDict(oStar, E)
         return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
 
-    def computeEDict(self, occs):
-        refs = {}
-        self.getOccsRefs(refs=refs)
-        Ed = {}
-        t0 = 0
-        for nt, (nf, d) in refs.items():
-            if nf == "root":
-                t0 = occs[nt]
-                Ed[nt] = 0
-            else:
-                Ed[nt] = (occs[nt] - occs[nf]) - d
-        return Ed, t0
-
-    def computeEFromO(self, occs):
-        occsStar = self.getOccsStar()
-        oids = [o[-1] for o in occsStar]
-        occsD = dict(zip(*[oids, occs]))
-        rEd, rt0 = self.computeEDict(occsD)
-        return [rEd[oo] for oo in oids[1:]]
-
-    def getOccsRefs(self, nid=0, pref=[], refs={}, cnref='root', offset=0):
-        # for each node indicate which other node is used as time reference, together with perfect offsets
-        if not self.isNode(nid):
-            return None
-        first_occ_cycle = None
-        first_occ_rep = None
-        next_ref = None
-        if self.isInterm(nid):
-            for i in range(self.nodes[nid]["r"]):
-                for ni, nn in enumerate(self.nodes[nid]["children"]):
-                    if ni == 0:  # left-most child
-                        if i == 0:  # first rep
-                            next_ref = self.getOccsRefs(
-                                nn[0], [(ni, i)] + pref, refs, cnref, offset)
-                            first_occ_cycle = next_ref
-                            first_occ_rep = next_ref
-                        else:  # not first rep
-                            next_ref = self.getOccsRefs(
-                                nn[0], [(ni, i)] + pref, refs, first_occ_rep, self.nodes[nid]["p"])
-                            first_occ_rep = next_ref
-                    else:  # not left-most child
-                        next_ref = self.getOccsRefs(
-                            nn[0], [(ni, i)] + pref, refs, next_ref, nn[1])
-            return first_occ_cycle
-        else:
-            current_key = l_to_key(pref[::-1])
-            refs[current_key] = (cnref, offset)
-            return current_key
-
     def getNidFromKey(self, k):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        k
+
+        Returns
+        -------
+
+        """
         if len(k) == 0:
             return 0
-        current_node, level, key_ints = (0, 0, [])
         if type(k) is list:
             key_ints = copy.deepcopy(k)
         else:
@@ -521,6 +438,22 @@ class Pattern(object):
         return None
 
     def getKeyFromNid(self, nid=0, rep=0):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        rep : int, default=0
+            If -1, the number of repetitions associated with the node on the left is automatically calculated,
+             otherwise, it is set to the value passed in parameter.
+
+        Returns
+        -------
+        str
+        """
         tt = self.getKeyLFromNid(nid, rep)
         if tt is not None and self.isInterm(nid):
             if rep == -1:
@@ -532,6 +465,30 @@ class Pattern(object):
             return l_to_key(tt)
 
     def getKeyLFromNid(self, nid=0, rep=0):
+        """
+        FIXME : to be explained
+        Get the id node to the left of the nid indicated in parameter with the number of associated repetitions - 1
+        of the parent node.
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which the computation is done
+
+        rep : int, default=0
+            If -1, the number of repetitions associated with the node on the left is automatically calculated,
+             otherwise, it is set to the value passed in parameter.
+
+        Returns
+        -------
+        list[Tuple]
+            Returns a list where each element is a tuple containing 2 items.
+            The first one corresponds to the node id of the leaf on the left and
+            the second to the number of repetitions - 1 of the parent or rep passed in parameter.
+
+            Furthermore, if there is no leaf to the left or directly at its level then the function
+            also returns a tuple (0, rep from the root)
+        """
         if not self.isNode(nid):
             return None
         parent = self.nodes[nid]["parent"]
@@ -554,6 +511,19 @@ class Pattern(object):
         return None
 
     def getLeafKeyFromKey(self, k, cid=0, rep=0):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        k
+        cid
+        rep
+
+        Returns
+        -------
+
+        """
         if type(k) is list:
             key_ints = copy.deepcopy(k)
         else:
@@ -583,6 +553,17 @@ class Pattern(object):
         return None
 
     def gatherCorrKeys(self, k):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        k
+
+        Returns
+        -------
+
+        """
         if type(k) is list:
             key_ints = copy.deepcopy(k)
         else:
@@ -1486,57 +1467,3 @@ class Pattern(object):
         # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
         return clEv + clRs + clP0 + clT0 + clPDs + clE
 
-    # def timeSpanned(self, interleaved=None, nid=0):
-    #     # compute the time spanned by a block
-    #     # checks whether block is interleaved
-    #     if not self.isNode(nid):
-    #         return 0
-    #     if self.isInterm(nid):
-    #         t_ends = []
-    #         t_spans = []
-    #         cum_ds = 0
-    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
-    #             if ni > 0:
-    #                 cum_ds += nn[1]
-    #             t_spans.append(self.timeSpanned(interleaved, nn[0]))
-    #             t_ends.append(t_spans[-1] + cum_ds)
-    #         tspan = np.max(t_ends)
-    #         if interleaved is not None:
-    #             if self.overlap_interleaved:  # count overlaps as interleaving
-    #                 overlaps = [t_spans[i] >= self.nodes[nid]["children"][i + 1][1]
-    #                             for i in range(len(self.nodes[nid]["children"]) - 1)]
-    #                 overlaps.append(tspan >= self.nodes[nid]["p"])
-    #                 interleaved[nid] = any(overlaps)
-    #             else:
-    #                 overtaking = [t_spans[i] > self.nodes[nid]["children"][i + 1][1]
-    #                               for i in range(len(self.nodes[nid]["children"]) - 1)]
-    #                 overtaking.append(tspan > self.nodes[nid]["p"])
-    #                 interleaved[nid] = any(overtaking)
-    #
-    #         return self.nodes[nid]["p"] * (self.nodes[nid]["r"] - 1.) + tspan
-    #     else:
-    #         return 0
-    #
-    # def timeSpannedRep(self, nid=0):
-    #     # compute the time spanned by a repetition
-    #     # checks whether block is interleaved
-    #     if not self.isNode(nid):
-    #         return 0
-    #     if self.isInterm(nid):
-    #         t_ends = []
-    #         t_spans = []
-    #         cum_ds = 0
-    #         for ni, nn in enumerate(self.nodes[nid]["children"]):
-    #             if ni > 0:
-    #                 cum_ds += nn[1]
-    #             t_spans.append(self.timeSpanned(nid=nn[0]))
-    #             t_ends.append(t_spans[-1] + cum_ds)
-    #         tspan = np.max(t_ends)
-    #         return tspan
-    #     else:
-    #         return 0
-    #
-    # def isInterleaved(self, nid=0):
-    #     interleaved = {}
-    #     self.timeSpanned(interleaved, nid=nid)
-    #     return any(interleaved.values())
