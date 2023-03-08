@@ -4,7 +4,7 @@ import re
 
 import numpy as np
 
-from .class_patterns import l_to_key, key_to_l, SUB_SEP, SUP_SEP, OPT_TO
+from .class_patterns import l_to_key, key_to_l, OPT_TO
 
 
 def getEDict(oStar, E=[]):
@@ -36,8 +36,11 @@ def getEDict(oStar, E=[]):
 
 def getEforOccs(map_occs, occs):
     """
+    FIXME : to be explained
+
     Constructs the list of errors
     # TODO : WARNING! WRONG, this is using absolute errors...
+
     Parameters
     ----------
     map_occs
@@ -140,6 +143,7 @@ class Pattern(object):
 
     def getTranslatedNodes(self, offset):
         """
+        Translate the ids of nodes by a certain offset
 
         Parameters
         ----------
@@ -380,12 +384,42 @@ class Pattern(object):
     def getCCorr(self, k, Ed):
         """
         Adds shift corrections to calculated theoretical timestamps
+
+        Parameters
+        ----------
+        k : int
+            Indicate how far we want the sum of the errors to go
+        Ed : dict
+            For each occurrence ('0,0' for example) indicate the shift correction associated
+
+        Returns
+        -------
+        int
+            Return the sum of the errors up to k
         """
         return np.sum([Ed[k]] + [Ed[kk] for kk in self.gatherCorrKeys(k)])
 
     def getOccs(self, oStar, t0, E=[]):
         """
         Get the list of timestamp from the pattern reconstructed from his tree after correction.
+
+        Parameters
+        ----------
+        oStar : list
+            A list of tuples representing occurences in the tree structure composed of
+            three items (t0, event, position in tree).
+
+        t0 : int
+            Start time of the sequence
+
+        E : dict
+            A dictionary associating to each occurrence its error
+            Example : {'0,0': 5}
+
+        Returns
+        -------
+        list
+            List of timestamp from the pattern after correction
         """
         if type(E) is dict:
             Ed = E
@@ -395,8 +429,22 @@ class Pattern(object):
 
     def getCovSeq(self, t0, E=[]):
         """
-        Similar as getOccs but returned tuples where the first item correspond to the timestamp after correction
-        and the second item is the second parameter of oStar
+        Similar as getOccs but returned list of tuples where the first item correspond to the timestamp after correction
+        and the second item is the event.
+
+        Parameters
+        ----------
+        t0 : int
+            Start time of the sequence
+
+        E : dict
+            A dictionary associating to each occurrence its error
+            Example : {'0,0': 5}
+
+        Returns
+        -------
+        list[Tuples]
+            First item of each tuple correspond to the timestamp after correction and the second item is the event.
         """
         oStar = self.getOccsStar()
         # all last elements in the previous tuple associated to his shift correction
@@ -1347,6 +1395,8 @@ class Pattern(object):
 
     def codeLengthPDs(self, Tmax, nid=0, rep=False):
         """
+        FIXME : to be explained
+
         Should the value of Tmax used be the deducted value, or the computed one, which needs to be transmitted first?
 
         Parameters
@@ -1414,6 +1464,21 @@ class Pattern(object):
         return cl
 
     def codeLength(self, t0, E, data_details, match=None, nid=0):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        t0
+        E
+        data_details
+        match
+        nid
+
+        Returns
+        -------
+
+        """
         occsStar = self.getOccsStar(nid=nid, time=t0)
         o_za = self.getLeafKeyFromKey([(-1, self.nodes[0]["r"] - 1)])
         EC_zz = 0
