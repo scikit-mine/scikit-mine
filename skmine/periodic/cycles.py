@@ -1,6 +1,8 @@
 """Periodic pattern mining with a MDL criterion"""
 # Authors: Rémi Adon <remi.adon@gmail.com>
 #          Esther Galbrun <esther.galbrun@inria.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
+#          Thomas Betton <thomas.betton@irisa.fr>
 #
 # License: BSD 3 clause
 

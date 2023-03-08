@@ -349,6 +349,7 @@ class Pattern(object):
         -------
         List[Tuple[int, int, str]]
             List of timestamp-event pairs (timestamp, event, a string representing the position in the tree)
+            FIXME : explain more the latest item
         """
         if not self.isNode(nid):
             return []
