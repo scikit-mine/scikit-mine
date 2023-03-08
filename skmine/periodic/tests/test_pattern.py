@@ -792,4 +792,3 @@ def test_getEventsList(tree_data_complex):
     assert pattern.getEventsList() == ['(', '4', '7', '(', '8', ')', ')']
     assert pattern.getEventsList(nid=3) == ['(', '8', ')']
     assert pattern.getEventsList(add_delimiter=False) == ['4', '7', '8']
-

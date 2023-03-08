@@ -66,31 +66,6 @@ def codeLengthE(E):
     return np.sum([2 + np.abs(e) for e in E])
 
 
-def prepareFilter(occs, what="firstEvt"):
-    filt = ".*"
-    if what == "firstEvt":
-        tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
-        tmp[0][1] = "[0-9]+"
-        filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
-    elif what == "lastRep":
-        tmp = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
-        tmp[0] = "[0-9]+"
-        filt = "^" + SUB_SEP.join(tmp) + ".*$"
-    elif what == "lastRepFirstEvt":
-        tlast = occs[-1][2].split(SUP_SEP)[0].split(SUB_SEP)
-        tmp = [b.split(SUB_SEP) for b in occs[0][2].split(SUP_SEP)]
-        tmp[0][1] = tlast[1]
-        filt = "^" + SUP_SEP.join([SUB_SEP.join(tt) for tt in tmp]) + "$"
-    return filt
-
-
-def filterOccsMatch(occs, match_what="firstEvt", match=None):
-    if match is None:
-        match = prepareFilter(occs, match_what)
-    res = [tt for tt in occs if re.search(match, tt[2])]
-    return res
-
-
 class Pattern(object):
     """
     This class models the patterns from a tree structure.
