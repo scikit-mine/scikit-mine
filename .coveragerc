@@ -7,7 +7,6 @@ omit =
     **/tests/*
     */setup.py
     */__init__.py
-    */skmine/periodic/read_data.py
 
 [report]
 # see `https://stackoverflow.com/questions/9202723/excluding-abstractproperties-from-coverage-reports`

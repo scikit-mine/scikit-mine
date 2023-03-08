@@ -10,31 +10,22 @@ DYN_BLOCK_SIZE = 100
 STEP_SIZE = 80
 
 
-# DYNAMIC PROGRAMMING WITH OVERLAPS
-# extract segments boundaries from dynamic programming output
-def recover_splits_rec_ov(spoints, ia, iz, depth=0):
-    if depth > 200:
-        print("Exceeded depth ", depth)
-        # pdb.set_trace()
-        return []
-    if (ia, iz) in spoints:
-        if spoints[(ia, iz)] is None:
-            return [(ia, iz)]
-        else:
-            im = spoints[(ia, iz)]
-            if im > ia:
-                return recover_splits_rec_ov(spoints, ia, im, depth + 1) + recover_splits_rec_ov(spoints, im, iz,
-                                                                                                 depth + 1)
-    return [(i, i) for i in range(ia, iz + 1)]
-
-
-# DYNAMIC PROGRAMMING
-# extract segments boundaries from dynamic programming output
 def recover_splits_rec(spoints, ia, iz, depth=0, singletons=True):
-    # if depth > 200:
-    #     print("Exceeded depth ", depth)
-    #     # pdb.set_trace()
-    #     return []
+    """
+    Extract segments boundaries from dynamic programming output
+
+    Parameters
+    ----------
+    spoints
+    ia
+    iz
+    depth
+    singletons
+
+    Returns
+    -------
+
+    """
     if (ia, iz) in spoints:
         if spoints[(ia, iz)] is None:
             return [(ia, iz)]
@@ -99,6 +90,18 @@ def compute_table_dyn(occs, alpha, data_details):
 
 
 def combine_splits(splits, adj_splits):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    splits
+    adj_splits
+
+    Returns
+    -------
+
+    """
     if len(adj_splits) > 0:
         if len(splits) == 0:
             splits = adj_splits
@@ -135,6 +138,20 @@ def combine_splits(splits, adj_splits):
 
 
 def compute_cycles_dyn(occs, alpha, data_details, residuals=True):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occs
+    alpha
+    data_details
+    residuals
+
+    Returns
+    -------
+
+    """
     ilast = len(occs)
     if DYN_BLOCK_SIZE == 0 or ilast > 2 * DYN_BLOCK_SIZE:
         # compute best split points on ovelapping blocks of the sequence, for efficiency
@@ -184,6 +201,23 @@ def compute_cycles_dyn(occs, alpha, data_details, residuals=True):
 
 
 def extract_cycles_fold(occs, alpha, data_details, bound_dE, eff_trip, eff_chain, max_p=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occs
+    alpha
+    data_details
+    bound_dE
+    eff_trip
+    eff_chain
+    max_p
+
+    Returns
+    -------
+
+    """
     if len(occs) < 2000:
         return extract_cycles_fold_sub(occs, alpha, data_details, bound_dE, eff_trip, eff_chain, max_p=max_p)
     else:
@@ -199,9 +233,24 @@ def extract_cycles_fold(occs, alpha, data_details, bound_dE, eff_trip, eff_chain
 
 
 def extract_cycles_fold_sub(occs, alpha, data_details, bound_dE, eff_trip, eff_chain, offset=0, max_p=None):
-    # centers = sorted(range(len(occs)), key=lambda x: numpy.abs(x-len(occs)/2), reverse=True)
-    if len(occs) > len(set(occs)):
-        pdb.set_trace()
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occs
+    alpha
+    data_details
+    bound_dE
+    eff_trip
+    eff_chain
+    offset
+    max_p
+
+    Returns
+    -------
+
+    """
     centers = list(range(len(occs) - 1, 0, -1))
     pairs_chain_test = {}
     pairs_chain_fwd = {}
@@ -272,7 +321,6 @@ def extract_cycles_fold_sub(occs, alpha, data_details, bound_dE, eff_trip, eff_c
         current = [pairs_chain_bck[kf][-1], kf[0], kf[1]]
         while (current[-2], current[-1]) in pairs_chain_fwd:
             nxt = pairs_chain_fwd.pop((current[-2], current[-1]))
-            # print(current[-2:], nxt)
             if (current[-1], nxt[-1]) in triples_tmp:
                 del triples_tmp[(current[-1], nxt[-1])]
             current.append(nxt[-1])

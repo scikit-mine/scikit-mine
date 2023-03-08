@@ -185,8 +185,6 @@ class CandidatePool(object):
             if costOne is not None and c.getCost() is not None:
                 max_offset = np.minimum(
                     int(np.floor(c.getCost() / costOne)), c.getNbOccs() - 2)
-                # if c.getNbOccs() > 3:
-                #     print("NbOccs=%s, maxOff=%s" % (c.getNbOccs(), max_offset))
             if c is not None:
                 props.extend(c.getProps(
                     self.map_nkeys[nkey], max_offset=max_offset))

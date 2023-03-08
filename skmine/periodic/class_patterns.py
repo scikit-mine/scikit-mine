@@ -1,5 +1,4 @@
 import itertools
-import pdb
 
 import numpy
 
@@ -9,55 +8,15 @@ prop_list = ["t0i", "p0", "r0", "offset", "cumEi", "new", "cid"]
 # Dictionary mapping property names to their index in `prop_list`.
 prop_map = dict([(v, k) for k, v in enumerate(prop_list)])
 
+# FIXME : to be explained
 # OPT_TO = False
 OPT_TO = True
 OPT_EVFR = True  # False
-ADJFR_MED = False
+# ADJFR_MED = False
 # PROPS_MAX_OFFSET = 3
 # PROPS_MIN_R = 3
 PROPS_MAX_OFFSET = -2
 PROPS_MIN_R: int = 0
-
-
-def _replace_tuple_in_list(l, i):
-    """
-    replace int64 into int in a tuple
-    """
-    if i < len(l):
-        l[i] = tuple(int(v) if isinstance(v, numpy.int64) else v for v in l[i])
-    return l
-
-
-def _replace_list_in_list(l, i):
-    """
-    replace int64 into int in a list
-    """
-    if i < len(l):
-        l[i] = [int(v) if isinstance(v, numpy.int64) else v for v in l[i]]
-    return l
-
-
-def _change_int64_toint(obj):
-    """
-    convert a int64 into int in a nested dict with tuple 
-    """
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            if isinstance(value, dict):
-                _change_int64_toint(value)
-            elif isinstance(value, list):
-                for it, val_ in enumerate(value):
-                    if isinstance(val_, tuple):
-                        value = _replace_tuple_in_list(value, it)
-                    if isinstance(val_, list):
-                        value = _replace_list_in_list(value, it)
-                _change_int64_toint(value)
-            elif isinstance(value, tuple):
-                _change_int64_toint(value)
-            elif isinstance(value, numpy.int64):
-                value = int(value)
-                obj[key] = value
-    return obj
 
 
 def _getChained(listsd, keys=None):
@@ -103,10 +62,21 @@ def computeE(occs, p0, sort=False):
 
 
 def cost_triple(data_details, alpha, dp, deltaE):
-    # FIXME
+    """
+    FIXME : to be explained
+    Parameters
+    ----------
+    data_details
+    alpha
+    dp
+    deltaE
+
+    Returns
+    -------
+
+    """
     if (data_details["deltaT"] - deltaE + 1) / 2. - dp < 0:
         print("!!!---- Problem delta", data_details["deltaT"], deltaE, dp)
-        pdb.set_trace()
 
     if alpha in data_details["nbOccs"]:
         cl_alpha_and_r = -numpy.log2(data_details["adjFreqs"][alpha]) + data_details.get(
@@ -280,52 +250,7 @@ def makeOccsAndFreqs(tmpOccs):
     blck_delim : float
         A float representing the size encoded of the block delimiter of the sequence.
     """
-    if ADJFR_MED:
-        return makeOccsAndFreqsMedian(tmpOccs)
     return makeOccsAndFreqsThird(tmpOccs)
-
-
-def makeOccsAndFreqsMedian(tmpOccs):
-    """
-    Return the number of occurrences of each event and the original and adjusted frequencies (taking into account block
-    delimiter "(" and ")") of each event in a sequence using the median frequency of all events as a threshold.
-
-    Parameters
-    ----------
-    tmpOccs : dict
-        A dictionary containing the number of occurrences of each event in the sequence.
-
-    Returns
-    -------
-    nbOccs : dict
-        A dictionary containing the number of occurrences of each event in the sequence,
-        including a special key -1 for the total number of events.
-    orgFreqs : dict
-        A dictionary containing the original frequency of each event in the sequence.
-    adjFreqs : dict
-        A dictionary containing the adjusted frequency of each event in the sequence.
-    blck_delim : float
-        A float representing the block delimiter of the sequence.
-    """
-    nbOccs = dict(tmpOccs.items())
-    nbOccs[-1] = numpy.sum(list(nbOccs.values())) * 1.
-
-    symOccs = dict(tmpOccs.items())
-    med = numpy.median(list(tmpOccs.values()))
-    symOccs["("] = med
-    symOccs[")"] = med
-    symSum = numpy.sum(list(symOccs.values())) * 1.
-    adjFreqs = {}
-    orgFreqs = {}
-    for k in symOccs.keys():
-        if OPT_EVFR:
-            adjFreqs[k] = symOccs[k] / symSum
-            orgFreqs[k] = nbOccs.get(k, 0.) / nbOccs[-1]
-        else:
-            adjFreqs[k] = 1. / len(symOccs)
-            orgFreqs[k] = 1. / len(tmpOccs)
-    # print("ADJ FRQ:",  adjFreqs)
-    return nbOccs, orgFreqs, adjFreqs, -(numpy.log2(adjFreqs["("]) + numpy.log2(adjFreqs[")"]))
 
 
 def makeOccsAndFreqsThird(tmpOccs):
