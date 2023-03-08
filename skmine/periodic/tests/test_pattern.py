@@ -662,5 +662,21 @@ def test_factorizeTree():
     }
 
 
-    # def test_getMajorOccs():
-    #
+def test_nodeP(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.nodeP(10) == 0  # this node doesn't exist
+    assert pattern.nodeP(0) == 8643
+    assert pattern.nodeP(1) == 0  # a leaf
+    assert pattern.nodeP(2) == 0  # a leaf
+    assert pattern.nodeP(3) == 50000
+    assert pattern.nodeP(4) == 0
+
+
+def test_nodeR(tree_data_complex):
+    pattern = Pattern(tree_data_complex)
+    assert pattern.nodeR(10) == 0  # this node doesn't exist
+    assert pattern.nodeR(0) == 5
+    assert pattern.nodeR(1) == 0  # a leaf
+    assert pattern.nodeR(2) == 0  # a leaf
+    assert pattern.nodeR(3) == 3
+    assert pattern.nodeR(4) == 0

@@ -741,12 +741,38 @@ class Pattern(object):
             return []
 
     def nodeP(self, nid=0):
+        """
+        Get the period of a certain node id
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which we want the period
+
+        Returns
+        -------
+        int
+            Returns the period of the node if it is a node of the tree and not a leaf, otherwise returns 0.
+        """
         if not self.isNode(nid) or not self.isInterm(nid):
             return 0
         else:
             return self.nodes[nid]["p"]
 
     def nodeR(self, nid=0):
+        """
+        Get the repetition number of a certain node id
+
+        Parameters
+        ----------
+        nid : int, default=0
+            Node id from which we want the repetition number
+
+        Returns
+        -------
+        int
+            Returns the repetition number of the node if it is a node of the tree and not a leaf, otherwise returns 0.
+        """
         if not self.isNode(nid) or not self.isInterm(nid):
             return 0
         else:
