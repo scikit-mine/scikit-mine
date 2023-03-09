@@ -453,6 +453,92 @@ class Pattern(object):
         Ed = getEDict(oStar, E)
         return [(o[0] + t0 + self.getCCorr(o[-1], Ed), o[1]) for o in oStar]
 
+    def computeEDict(self, occs):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        occs
+
+        Returns
+        -------
+
+        """
+        refs = {}
+        self.getOccsRefs(refs=refs)
+        Ed = {}
+        t0 = 0
+        for nt, (nf, d) in refs.items():
+            if nf == "root":
+                t0 = occs[nt]
+                Ed[nt] = 0
+            else:
+                Ed[nt] = (occs[nt] - occs[nf]) - d
+        return Ed, t0
+
+    def computeEFromO(self, occs):
+        """
+        FIXME : to be explained
+
+        Parameters
+        ----------
+        occs
+
+        Returns
+        -------
+
+        """
+        occsStar = self.getOccsStar()
+        oids = [o[-1] for o in occsStar]
+        occsD = dict(zip(*[oids, occs]))
+        rEd, rt0 = self.computeEDict(occsD)
+        return [rEd[oo] for oo in oids[1:]]
+
+    def getOccsRefs(self, nid=0, pref=[], refs={}, cnref='root', offset=0):
+        """
+        FIXME : to be explained
+        For each node indicate which other node is used as time reference, together with perfect offsets
+
+        Parameters
+        ----------
+        nid
+        pref
+        refs
+        cnref
+        offset
+
+        Returns
+        -------
+
+        """
+        if not self.isNode(nid):
+            return None
+        first_occ_cycle = None
+        first_occ_rep = None
+        next_ref = None
+        if self.isInterm(nid):
+            for i in range(self.nodes[nid]["r"]):
+                for ni, nn in enumerate(self.nodes[nid]["children"]):
+                    if ni == 0:  # left-most child
+                        if i == 0:  # first rep
+                            next_ref = self.getOccsRefs(
+                                nn[0], [(ni, i)] + pref, refs, cnref, offset)
+                            first_occ_cycle = next_ref
+                            first_occ_rep = next_ref
+                        else:  # not first rep
+                            next_ref = self.getOccsRefs(
+                                nn[0], [(ni, i)] + pref, refs, first_occ_rep, self.nodes[nid]["p"])
+                            first_occ_rep = next_ref
+                    else:  # not left-most child
+                        next_ref = self.getOccsRefs(
+                            nn[0], [(ni, i)] + pref, refs, next_ref, nn[1])
+            return first_occ_cycle
+        else:
+            current_key = l_to_key(pref[::-1])
+            refs[current_key] = (cnref, offset)
+            return current_key
+
     def getNidFromKey(self, k):
         """
         FIXME : to be explained
