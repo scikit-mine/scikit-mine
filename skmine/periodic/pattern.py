@@ -344,6 +344,7 @@ class Pattern(object):
             Node id from which the computation is done
         pref : list, default=[]
         time : int, default=0
+            t0
 
         Returns
         -------
