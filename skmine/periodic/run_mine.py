@@ -70,6 +70,20 @@ def log_write(fo_log, what):
 
 
 def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
+    """
+    FIXME : to be explained
+    Parameters
+    ----------
+    graph
+    collect
+    P
+    R
+    X
+
+    Returns
+    -------
+
+    """
     if X is None:
         X = set()
     if R is None:
@@ -87,6 +101,22 @@ def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
 
 
 def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    P_minor
+    p0
+    r0
+    p1
+    r1
+    first_rs
+
+    Returns
+    -------
+
+    """
     tree = {0: {"p": p0, "r": r0, "children": [(1, 0)], "parent": None},
             1: {"p": p1, "r": r1, "children": [(2, 0)], "parent": 0}}
 
@@ -122,6 +152,19 @@ def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
 
 
 def prepare_tree_nested(cand, prds, lens):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cand
+    prds
+    lens
+
+    Returns
+    -------
+
+    """
     P = cand.getPattern()
     if P is None:
         depth = 1
@@ -147,6 +190,19 @@ def prepare_tree_nested(cand, prds, lens):
 
 
 def prepare_candidate_nested(cp_det, P_minor, cmplx_candidates):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cp_det
+    P_minor
+    cmplx_candidates
+
+    Returns
+    -------
+
+    """
     idxs = cp_det[-1]
     pr_key = cp_det[1]
     tmp = pr_key.split("_")
@@ -185,6 +241,20 @@ def prepare_candidate_nested(cp_det, P_minor, cmplx_candidates):
 
 
 def prepare_candidate_concats(cands, p0, r0, first_rs):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cands
+    p0
+    r0
+    first_rs
+
+    Returns
+    -------
+
+    """
     tree = {0: {"p": p0, "r": r0, "children": [], "parent": None}}
     offset = 0
     Pblks_occs = []
@@ -230,10 +300,42 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
 
 
 def mine_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occs
+    alpha
+    data_details
+    costOne
+    fo_log
+    max_p
+
+    Returns
+    -------
+
+    """
     return extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log, max_p)
 
 
 def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occs
+    alpha
+    data_details
+    costOne
+    fo_log
+    max_p
+
+    Returns
+    -------
+
+    """
     # XX = [3-2*k+numpy.log2(k-1)-k*numpy.log2(data_details["nbOccs"][alpha])+(k-1)*numpy.log2(data_details[
     # "nbOccs"][-1])+(k-2)*numpy.log2(data_details["deltaT"]+1) for k in range(3, 10)]
     bound_dE = numpy.log2(data_details["deltaT"] + 1) - 2
@@ -268,6 +370,17 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
 
 
 def merge_cycle_lists(cyclesL):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cyclesL
+
+    Returns
+    -------
+
+    """
     keys = []
     for ci, cycles in enumerate(cyclesL):
         # keys.extend([(":".join(map(str, kk["occs"])), ki, ci) for ki,kk in enumerate(cycles)])
@@ -293,6 +406,21 @@ def merge_cycle_lists(cyclesL):
 # COMBINE CANDIDATES VERTICALLY
 ########################################################
 def run_combine_vertical(cpool, data_details, dcosts, nkey="H", fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cpool
+    data_details
+    dcosts
+    nkey
+    fo_log
+
+    Returns
+    -------
+
+    """
     minorKeys = cpool.getNewMinorKeys(nkey)
     candidates = []
     for mk in minorKeys:
@@ -314,6 +442,20 @@ def run_combine_vertical(cpool, data_details, dcosts, nkey="H", fo_log=None):
 
 
 def run_combine_vertical_cands(cpool, mk, data_details, fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cpool
+    mk
+    data_details
+    fo_log
+
+    Returns
+    -------
+
+    """
     cmplx_candidatesX = [cpool.getCandidate(
         cid) for cid in cpool.getCidsForMinorK(mk)]
     nested, covered = nest_cmplx(cmplx_candidatesX, mk, data_details)
@@ -328,6 +470,20 @@ def run_combine_vertical_cands(cpool, mk, data_details, fo_log=None):
 
 
 def run_combine_vertical_event(cpool, mk, data_details, fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cpool
+    mk
+    data_details
+    fo_log
+
+    Returns
+    -------
+
+    """
     store_candidates = find_complexes(cpool, mk, data_details)
     if len(store_candidates) == 0:
         return []
@@ -348,6 +504,17 @@ def run_combine_vertical_event(cpool, mk, data_details, fo_log=None):
 
 
 def get_top_p(occ_ordc):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    occ_ordc
+
+    Returns
+    -------
+
+    """
     top1, top2, topN = (0, 1, -1)
     if top2 + 1 < len(occ_ordc) and occ_ordc[top2][0] == occ_ordc[top2 + 1][0]:
         topN = top2 + 1
@@ -359,6 +526,19 @@ def get_top_p(occ_ordc):
 
 
 def find_complexes(cpool, mk, data_details):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cpool
+    mk
+    data_details
+
+    Returns
+    -------
+
+    """
     occs_to_cycles = {}
     cids = cpool.getCidsForMinorK(mk)
     if len(cids) < 4:  # not enough to make combinations
@@ -411,7 +591,7 @@ def find_complexes(cpool, mk, data_details):
 
         else:  # tolerate period +- offset
             Wcids, Wlefts, i = ([], [], 0)
-            while i >= 0 and i < nbOleftA:
+            while 0 <= i < nbOleftA:
                 nocc = cpool.getCandidate(ciA).getMajorO()[-nbOleftA + i]
                 if nocc in occs_to_cycles:
                     ps = occs_to_cycles[nocc].keys()
@@ -518,6 +698,20 @@ def find_complexes(cpool, mk, data_details):
 
 
 def compute_costs_verticals(store_candidates, cpool, mk, data_details):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    store_candidates
+    cpool
+    mk
+    data_details
+
+    Returns
+    -------
+
+    """
     selection = []
     store_candidates.sort(
         key=lambda x: x["dims"][0] * x["dims"][1], reverse=True)
@@ -562,6 +756,19 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
 
 
 def nest_cmplx(cmplx_candidates, P_minor, data_details):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cmplx_candidates
+    P_minor
+    data_details
+
+    Returns
+    -------
+
+    """
     map_cmplx_pos = {}
     for cki, c in enumerate(cmplx_candidates):
         if c.getPattern() is not None:
@@ -654,6 +861,21 @@ def nest_cmplx(cmplx_candidates, P_minor, data_details):
 
 
 def getPidsSlice(patterns_props, pids, slice_size, col, max_v):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    patterns_props
+    pids
+    slice_size
+    col
+    max_v
+
+    Returns
+    -------
+
+    """
     if patterns_props[pids[-1], col] <= max_v:
         return pids
     elif patterns_props[pids[0], col] > max_v:
@@ -668,6 +890,21 @@ def getPidsSlice(patterns_props, pids, slice_size, col, max_v):
 # COMBINE CANDIDATES HORIZONTALLY
 ########################################################
 def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cpool
+    data_details
+    dcosts
+    nkey
+    fo_log
+
+    Returns
+    -------
+
+    """
     if cpool.nbNewCandidates(nkey) == 0:
         return []
 
@@ -848,7 +1085,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
     for cand_pids_unsrt in collect:
         cand_pids = sorted(cand_pids_unsrt,
                            key=lambda x: (patterns_props[x, prop_map["t0i"]],
-                                          tuple(int(x) for x in cpool.getCandidate(patterns_props[x, prop_map["cid"]]).getEventTuple())))
+                                          tuple(int(x) for x in cpool.getCandidate(
+                                              patterns_props[x, prop_map["cid"]]).getEventTuple())))
         new_cand = makeCandOnOrder(
             cand_pids, data_details, patterns_props, cpool)
 
@@ -907,6 +1145,20 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
 
 
 def makeCandOnOrder(cand_pids, data_details, patterns_props, cpool):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cand_pids
+    data_details
+    patterns_props
+    cpool
+
+    Returns
+    -------
+
+    """
     cands = [cpool.getCandidate(
         patterns_props[cci, prop_map["cid"]]) for cci in cand_pids]
     r0 = numpy.min(patterns_props[cand_pids, prop_map["r0"]] -
@@ -980,6 +1232,18 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
 
 
 def filter_candidates_topKeach(cands, k=2):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cands
+    k
+
+    Returns
+    -------
+
+    """
     counts_cover = {}
 
     if type(cands) is dict:
@@ -1001,6 +1265,19 @@ def filter_candidates_topKeach(cands, k=2):
 
 
 def substitute_factorized(cands, data_details, fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    cands
+    data_details
+    fo_log
+
+    Returns
+    -------
+
+    """
     for i in range(len(cands)):
         ext = cands[i].factorizePattern()
         if len(ext) > 0:
@@ -1293,6 +1570,21 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
 
 def writePCout(pc, ds, fn_basis, suff, fo_log=None):
+    """
+    FIXME : to be explained
+
+    Parameters
+    ----------
+    pc
+    ds
+    fn_basis
+    suff
+    fo_log
+
+    Returns
+    -------
+
+    """
     if fn_basis is None:
         return
     if fn_basis == "-":
