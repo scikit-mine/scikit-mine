@@ -56,7 +56,7 @@ class PatternCollection(object):
         List of patterns, where each pattern is represented as a tuple of three elements:
         1) the pattern object;
         2) an integer representing the starting time of the pattern occurrences;
-        3) a list of integers representing the event types in the pattern occurrences.
+        3) a list of integers representing the shift corrections.
 
     Attributes
     ----------

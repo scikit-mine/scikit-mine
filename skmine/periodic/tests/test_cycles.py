@@ -249,3 +249,16 @@ def test_get_residuals(data, expected_reconstruct):
 
     residuals = pcm.get_residuals()
     assert_frame_equal(residuals, expected_residuals.reset_index(drop=True))
+
+
+def test_get_residuals(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    data = fetch_health_app()
+    pcm.fit(data[:100])
+
+    residuals_not_sorted = pcm.get_residuals()
+    assert residuals_not_sorted["event"].is_monotonic_increasing is False
+
+    residuals_event_sorted = pcm.get_residuals(sort="event")
+
+    assert residuals_event_sorted["event"].is_monotonic_increasing is True

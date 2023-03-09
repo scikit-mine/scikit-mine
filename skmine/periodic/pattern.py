@@ -9,7 +9,7 @@ from .class_patterns import l_to_key, key_to_l, OPT_TO
 
 def getEDict(oStar, E=[]):
     """
-    Construct a dictionary that maps each unique identifier in the input list of occurences from `oStar` to
+    Construct a dictionary that maps each unique identifier in the input list of occurrences from `oStar` to
     it's corresponding value in the list of errors `E`.
 
     Parameters
