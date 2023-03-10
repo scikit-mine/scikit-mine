@@ -224,7 +224,6 @@ class PatternCollection(object):
             dict_pattern["length_major"] = p.pattMajorKey_list()[0]
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
             dict_pattern["cost"] = clp
-            dict_pattern["type"] = p.getTypeStr()
             dict_pattern["E"] = E
 
             patterns_list_of_dict.append(dict_pattern)

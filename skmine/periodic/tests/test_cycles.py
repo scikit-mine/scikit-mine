@@ -82,13 +82,12 @@ def test_discover(data):
     pcm.fit(data)
     res_discover = pcm.discover()
 
-    assert len(res_discover.columns) == 7
+    assert len(res_discover.columns) == 6
     assert res_discover["t0"].dtypes.name == "datetime64[ns]"
     assert res_discover["info"].dtypes.name == "object"
     assert res_discover["length_major"].dtypes.name == "int64"
     assert res_discover["period_major"].dtypes.name == "timedelta64[ns]"
     assert res_discover["cost"].dtypes.name == "float64"
-    assert res_discover["type"].dtypes.name == "object"
     assert res_discover["E"].dtypes.name == "timedelta64[ns]"
 
     res_discover = pcm.discover(dE_sum=False)
