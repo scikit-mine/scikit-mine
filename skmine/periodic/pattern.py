@@ -15,10 +15,10 @@ def getEDict(oStar, E=[]):
     Parameters
     ----------
     oStar : list
-        A list of tuples representing occurences in the tree structure composed of
+        A list of tuples representing occurrences in the tree structure composed of
         three items (t0, event, position in tree).
     E : list, default=[]
-        A list of values of shift corrections (errors) that correspond to the unique identifiers in `oStar`.
+        A list of values of cycle shift corrections that correspond to the unique identifiers in `oStar`.
         If `len(E)` is less than `len(oStar) - 1`, the remaining values are set to zero.
 
     Returns
@@ -483,7 +483,9 @@ class Pattern(object):
 
         Parameters
         ----------
-        occs
+        occs : list
+            list of timestamp-event pairs reconstructed from the pattern tree of P after correction,
+            a.k.a corrected occurences
 
         Returns
         -------
@@ -1440,7 +1442,7 @@ class Pattern(object):
         deltaT : int
             time delta in the full sequence
         EC_za : int, default=None
-            sum of errors
+            the cumulated time correction (σ(E))
         nid : int, default=0
             Node id from which the computation is done
 
@@ -1557,8 +1559,8 @@ class Pattern(object):
 
         Parameters
         ----------
-        t0
-        E
+        t0 : int
+            timestamp of the first occurrence
         data_details
         match
         nid

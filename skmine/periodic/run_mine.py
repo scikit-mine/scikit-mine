@@ -20,48 +20,11 @@ from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
 numpy.set_printoptions(suppress=True)
 
 OFFSETS_T = [0, 1, -1]
-# MINE_CPLX = True
 TOP_KEACH = 5
-USE_GRIDS = False  # True
+USE_GRIDS = False
 CHECK_HORDER = True
 
 PICKLE = 0  # 1 -> load pickled init cands; -1 -> store pickled init cands; 0 -> nothing
-
-BASIS_REP = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DATA_REP = BASIS_REP + "/data/"
-XPS_REP = BASIS_REP + "/xps/runs/"
-
-series_params = {"bugzilla_0_rel_all": {"input_file": "traces/trace_bugzilla_0_data.dat", "timestamp": False},
-                 "bugzilla_1_rel_all": {"input_file": "traces/trace_bugzilla_1_data.dat", "timestamp": False},
-                 "3zap_0_rel": {"input_file": "traces/trace_kptrace_3zap_0_data.dat", "timestamp": False},
-                 "3zap_1_rel": {"input_file": "traces/trace_kptrace_3zap_1_data.dat", "timestamp": False},
-                 "samba_auth_abs": {"input_file": "samba_commits/commit_auth_data_smll.dat", "timestamp": True}
-                 }
-
-# series_params["samba_auth_abs"] = {"input_file": "samba_commits/commit_auth_data.dat", "timestamp": True}
-
-for grain in [1, 15, 30, 60, 720, 1440]:
-    series_params["sacha_18_absI_G%d" % grain] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt", "timestamp": True,
-                                                  "granularity": grain, "I": True}
-
-series_params["sacha_18_rel"] = {
-    "input_file": "sacha/data_18-03-22_lagg200NL.txt", "timestamp": False}
-# series_params["sacha_18_rel_2000"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
-#                                  "timestamp": False, "drop_event_codes":[0, 126, 33]}
-# series_params["sacha_18_abs_2000W"] = {"input_file": "sacha/data_18-03-22_lagg200NL.txt",
-#                                  "timestamp": True, "max_len": 2000, "max_p": 7*24*60
-All = glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat")
-for f in glob.glob(DATA_REP + "UbiqLog/prepared/*_data.dat"):
-    # print(f)
-    bb = f.split("/")[-1].strip("_data.dat")
-    if not re.search("ISE", bb):
-        series_params["UbiqLog_%s_rel" % bb] = {
-            "filename": f, "timestamp": False}
-    else:
-        series_params["UbiqLog_%s_abs" % bb] = {
-            "filename": f, "timestamp": True}
-
-series_groups = ["ALL", "OTHER", "UBIQ_ABS", "UBIQ_REL", "TEST", "SACHA"]
 
 
 def log_write(fo_log, what):
@@ -71,7 +34,10 @@ def log_write(fo_log, what):
 
 def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
     """
-    FIXME : to be explained
+    Algorithm for finding maximal cliques in an undirected graph.
+    A clique is a subset of vertices of an undirected graph such that every two distinct vertices  in the clique
+    are adjacent. A maximal clique is a clique that cannot be extended by including one more adjacent vertex.
+
     Parameters
     ----------
     graph
