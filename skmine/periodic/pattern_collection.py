@@ -219,11 +219,11 @@ class PatternCollection(object):
 
             dict_pattern["t0"] = t0
             dict_pattern["pattern_json_tree"] = pattern_tree
-            dict_pattern["info"] = p.__str__(
+            dict_pattern["pattern"] = p.__str__(
                 map_ev=map_ev, leaves_first=True)
-            dict_pattern["length_major"] = p.pattMajorKey_list()[0]
+            dict_pattern["repetition_major"] = p.pattMajorKey_list()[0]
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
-            dict_pattern["cost"] = clp
+            # dict_pattern["cost"] = clp
             dict_pattern["E"] = E
 
             patterns_list_of_dict.append(dict_pattern)

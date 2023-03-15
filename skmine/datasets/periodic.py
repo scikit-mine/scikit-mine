@@ -29,7 +29,7 @@ def fetch_file(filepath, separator=','):
         Logs from the custom dataset, as an in-memory pandas Series.
         Events are indexed by timestamps.
     """
-    s = pd.read_csv(filepath, sep=separator, header=None, dtype="string").squeeze(axis="columns")
+    s = pd.read_csv(filepath, sep=separator, header=None, dtype="string", skipinitialspace=True).squeeze(axis="columns")
     if type(s) == pd.DataFrame:
         s = pd.Series(s[1].values, index=s[0])
         try:

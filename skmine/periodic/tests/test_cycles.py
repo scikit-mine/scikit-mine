@@ -82,12 +82,11 @@ def test_discover(data):
     pcm.fit(data)
     res_discover = pcm.discover()
 
-    assert len(res_discover.columns) == 6
+    assert len(res_discover.columns) == 5
     assert res_discover["t0"].dtypes.name == "datetime64[ns]"
-    assert res_discover["info"].dtypes.name == "object"
-    assert res_discover["length_major"].dtypes.name == "int64"
+    assert res_discover["pattern"].dtypes.name == "object"
+    assert res_discover["repetition_major"].dtypes.name == "int64"
     assert res_discover["period_major"].dtypes.name == "timedelta64[ns]"
-    assert res_discover["cost"].dtypes.name == "float64"
     assert res_discover["E"].dtypes.name == "timedelta64[ns]"
 
     res_discover = pcm.discover(dE_sum=False)
@@ -250,7 +249,7 @@ def test_get_residuals(data, expected_reconstruct):
     assert_frame_equal(residuals, expected_residuals.reset_index(drop=True))
 
 
-def test_get_residuals(data, expected_reconstruct):
+def test_get_residuals_health_app(data, expected_reconstruct):
     pcm = PeriodicPatternMiner()
     data = fetch_health_app()
     pcm.fit(data[:100])

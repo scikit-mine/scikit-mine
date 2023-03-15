@@ -77,7 +77,7 @@ class Pattern(object):
     Attributes:
     -----------
     transmit_Tmax : bool, default=True
-        Whether to transmit Tmax.
+        Indicates whether Tmax (maximum time span of a repetition) is deducted or whether it should be calculated.
     allow_interleaving : bool, default=True
         Whether to allow interleaving.
     next_id : int, default=1
