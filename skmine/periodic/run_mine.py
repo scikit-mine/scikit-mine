@@ -40,15 +40,18 @@ def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
 
     Parameters
     ----------
-    graph
-    collect
-    P
-    R
-    X
+    graph : dict
+        A dictionary where each key (vertex) contains a vertex set to which the key is linked
+    collect : list
+        A set list where each set is a clique that contains the vertices
+    P : set
+    R : set
+    X : set
 
     Returns
     -------
-
+    None
+        The list of cliques is in the variable collect
     """
     if X is None:
         X = set()
