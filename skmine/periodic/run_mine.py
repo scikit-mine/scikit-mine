@@ -340,33 +340,37 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
 
 def merge_cycle_lists(cyclesL):
     """
-    FIXME : to be explained
+    Merge two cycle lists if they have the same t0, number of occurrences when reconstructed and period.
+    The one with the lowest cost is kept.
 
     Parameters
     ----------
-    cyclesL
+    cyclesL : list
+        A list of cycle lists for each cycle
 
     Returns
     -------
-
+        list
+    The list of merged cycles
     """
     keys = []
     for ci, cycles in enumerate(cyclesL):
-        # keys.extend([(":".join(map(str, kk["occs"])), ki, ci) for ki,kk in enumerate(cycles)])
+        # ((t0, nb occs, period), cycle_index, cyclesL_index
         keys.extend([((kk["occs"][0], len(kk["occs"]), kk["p"]), ki, ci)
                      for ki, kk in enumerate(cycles)])
-    keys.sort()
+    keys.sort()  # sort by ascending t0
     cycles = []
     if len(keys) > 0:
-        cycles = [cyclesL[keys[0][2]][keys[0][1]]]
+        cycles = [cyclesL[keys[0][2]][keys[0][1]]]  # get the cycle associated with t0
         cycles[-1]["source"] = (keys[0][2], keys[0][1])
 
     for i in range(1, len(keys)):
-        if keys[i][0] != keys[i - 1][0]:
+        if keys[i][0] != keys[i - 1][0]:  # if the first tuple is different between keys i and i-1
             cycles.append(cyclesL[keys[i][2]][keys[i][1]])
             cycles[-1]["source"] = (keys[i][2], keys[i][1])
-        else:
-            if cyclesL[keys[i][2]][keys[i][1]]["cost"] < cycles[-1]["cost"]:
+        else:  # if they are the same, we merge the cycles
+            if cyclesL[keys[i][2]][keys[i][1]]["cost"] < cycles[-1]["cost"]:  # if the cost of cycle i is less than
+                # the last added in cycles
                 cycles[-1] = cyclesL[keys[i][2]][keys[i][1]]
                 cycles[-1]["source"] = (keys[i][2], keys[i][1])
     return cycles
