@@ -149,6 +149,7 @@ def prepare_tree_nested(cand, prds, lens):
 def prepare_candidate_nested(cp_det, cmplx_candidates):
     """
     FIXME : to be explained
+    Prepare a new nested candidate
 
     Parameters
     ----------
@@ -157,6 +158,7 @@ def prepare_candidate_nested(cp_det, cmplx_candidates):
 
     Returns
     -------
+    Candidate
 
     """
     idxs = cp_det[-1]

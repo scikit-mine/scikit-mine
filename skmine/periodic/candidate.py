@@ -15,9 +15,9 @@ class Candidate(object):
     P : dict or Pattern
         Dictionary containing the properties of the pattern, or an instance of `Pattern`.
     O : list, optional
-        List of occurrences/timestamps of the pattern.
+        List of corrected occurrences/timestamps of the pattern.
     E : list, optional
-        List of deltaE of the occurrences.
+        List of cycle shift corrections
     cost : float, optional
         Computed cost of the pattern.
 

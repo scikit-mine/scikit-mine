@@ -27,15 +27,12 @@ def _getChained(listsd, keys=None):
 
 def computePeriodDiffs(diffs):
     return int(numpy.floor(numpy.median(diffs)))
-    # return int(numpy.ceil(numpy.median(diffs)))
 
 
 def computePeriod(occs, sort=False):
     if sort:
         occs = sorted(occs)
     return computePeriodDiffs(numpy.diff(occs))
-    # dfs = sorted([cycle["occs"][i] - cycle["occs"][i-1] for i in range(1,len(cycle["occs"]))])
-    # cp = dfs[len(dfs)/2]
 
 
 def computeE(occs, p0, sort=False):
