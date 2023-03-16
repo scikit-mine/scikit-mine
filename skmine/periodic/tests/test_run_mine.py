@@ -3,7 +3,7 @@ import pytest
 
 from skmine.periodic.candidate import Candidate
 from skmine.periodic.candidate_pool import CandidatePool
-from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder
+from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder, get_top_p
 
 
 def test_bronKerbosch3Plus():
@@ -51,6 +51,10 @@ def test_merge_cycle_lists():
     ]
 
 
+def test_get_top_p():
+    occ_ordc = [(2, 5), (1, 10), (1, 7), (3, 3), (2, 8)]
+    result = get_top_p(occ_ordc)
+    assert result == (0, 1, 2)
 
 
 

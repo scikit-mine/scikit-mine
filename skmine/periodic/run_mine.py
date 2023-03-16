@@ -151,7 +151,6 @@ def prepare_candidate_nested(cp_det, cmplx_candidates):
     Parameters
     ----------
     cp_det
-    P_minor
     cmplx_candidates
 
     Returns
@@ -780,8 +779,7 @@ def nest_cmplx(cmplx_candidates, P_minor, data_details):
         next_cp = keep.pop()
         if len(set(next_cp[-1]).difference(covered)) > 2 or next_cp[0] == prev_size:
             prev_size = next_cp[0]
-            new_cand = prepare_candidate_nested(
-                next_cp, P_minor, cmplx_candidates)
+            new_cand = prepare_candidate_nested(next_cp, cmplx_candidates)
             new_cand.computeCost(data_details)
 
             covered.update(next_cp[-1])
