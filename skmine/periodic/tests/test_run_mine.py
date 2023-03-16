@@ -46,3 +46,23 @@ def test_merge_cycle_lists():
          'cost': 52.14909723805441,
          'source': (2, 0)}
     ]
+
+
+def test_recover_splits_rec():
+    spoints = {
+        (0, 2): None,
+        (1, 3): None,
+        (2, 4): None,
+        (3, 5): -1,
+        (0, 3): None,
+        (1, 4): None,
+        (2, 5): 4,
+        (0, 4): None,
+        (1, 5): 4,
+        (0, 5): 4
+    }
+    ia = 0
+    iz = 5
+    depth = 0
+    singletons=False
+

@@ -21,7 +21,6 @@ numpy.set_printoptions(suppress=True)
 
 OFFSETS_T = [0, 1, -1]
 TOP_KEACH = 5
-USE_GRIDS = False
 CHECK_HORDER = True
 
 PICKLE = 0  # 1 -> load pickled init cands; -1 -> store pickled init cands; 0 -> nothing
@@ -399,17 +398,11 @@ def run_combine_vertical(cpool, data_details, dcosts, nkey="H", fo_log=None):
     for mk in minorKeys:
         if len(cpool.getCidsForMinorK(mk)) >= 3:
             # only for simple events
-            if USE_GRIDS and (mk in data_details["nbOccs"]):
-                candidates.extend(run_combine_vertical_event(
-                    cpool, mk, data_details, fo_log))
-            else:
-                candidates.extend(run_combine_vertical_cands(
-                    cpool, mk, data_details, fo_log))
+            candidates.extend(run_combine_vertical_cands(
+                cpool, mk, data_details, fo_log))
 
     if len(candidates) > 0:
         selected_ids = filter_candidates_topKeach(candidates, k=TOP_KEACH)
-        log_write(fo_log, "%d/%d candidate vertical filtered (%s)\n" %
-                  (len(selected_ids), len(candidates), nkey))
         return [candidates[s] for s in selected_ids]
     return []
 
