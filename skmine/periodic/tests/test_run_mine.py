@@ -1,6 +1,9 @@
+import numpy
 import pytest
 
-from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists
+from skmine.periodic.candidate import Candidate
+from skmine.periodic.candidate_pool import CandidatePool
+from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder
 
 
 def test_bronKerbosch3Plus():
@@ -48,21 +51,6 @@ def test_merge_cycle_lists():
     ]
 
 
-def test_recover_splits_rec():
-    spoints = {
-        (0, 2): None,
-        (1, 3): None,
-        (2, 4): None,
-        (3, 5): -1,
-        (0, 3): None,
-        (1, 4): None,
-        (2, 5): 4,
-        (0, 4): None,
-        (1, 5): 4,
-        (0, 5): 4
-    }
-    ia = 0
-    iz = 5
-    depth = 0
-    singletons=False
+
+
 

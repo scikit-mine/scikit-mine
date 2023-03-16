@@ -1,7 +1,5 @@
 import datetime
-import glob
 import itertools
-import os
 import pickle
 import re
 import sys
@@ -10,12 +8,12 @@ import numpy
 
 from .candidate import Candidate
 from .candidate_pool import CandidatePool
+from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
+from .class_patterns import prop_map
 from .data_sequence import DataSequence
+from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
 from .pattern import Pattern
 from .pattern_collection import PatternCollection
-from .class_patterns import prop_map
-from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
-from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
 
 numpy.set_printoptions(suppress=True)
 
@@ -24,11 +22,6 @@ TOP_KEACH = 5
 CHECK_HORDER = True
 
 PICKLE = 0  # 1 -> load pickled init cands; -1 -> store pickled init cands; 0 -> nothing
-
-
-def log_write(fo_log, what):
-    if fo_log is not None:
-        fo_log.write(what)
 
 
 def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
@@ -245,7 +238,6 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
     ds = [c[1] for c in tree[0]["children"]]
     O = []
     E = []
-    t00 = None
     for ri in range(r0):
         for ei in range(len(Pblks_occs)):
             O.extend(Pblks_occs[ei][ri])
@@ -307,8 +299,7 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
     # XX = [3-2*k+numpy.log2(k-1)-k*numpy.log2(data_details["nbOccs"][alpha])+(k-1)*numpy.log2(data_details[
     # "nbOccs"][-1])+(k-2)*numpy.log2(data_details["deltaT"]+1) for k in range(3, 10)]
     bound_dE = numpy.log2(data_details["deltaT"] + 1) - 2
-    log_write(fo_log, "Cycle extraction cost_one=%s bound_dE=%s\n" %
-              (costOne, bound_dE))
+
     dyn_cycles = compute_cycles_dyn(occs, alpha, data_details, residuals=False)
     drop_occs = set()
     for dc in dyn_cycles:
@@ -318,8 +309,6 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
         # FIX (  numpy.array  )  to not send a list to extract_cycles_fold()
         tmp_occs = numpy.array(sorted(set(occs).difference(drop_occs)))
 
-        log_write(fo_log, "Dropping from fold %d, left %d\n" %
-                  (len(drop_occs), len(tmp_occs)))
     else:
         tmp_occs = occs
 
@@ -332,8 +321,6 @@ def extract_cycles_alpha(occs, alpha, data_details, costOne, fo_log=None, max_p=
               for c in merge_cycle_lists([dyn_cycles, chains, triples])]
 
     selected_ids = filter_candidates_topKeach(cycles, k=TOP_KEACH)
-    log_write(fo_log, "%d/%d merged cycles (%d dyn, %d chains, %d triples)\n" %
-              (len(selected_ids), len(cycles), len(dyn_cycles), len(chains), len(triples)))
     return [cycles[s] for s in selected_ids]
 
 
@@ -429,8 +416,6 @@ def run_combine_vertical_cands(cpool, mk, data_details, fo_log=None):
     if len(nested) > 0:
         # selected = filter_candidates_cover(nested)
         selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
-        log_write(fo_log, "%d/%d candidate vertical combinations selected (%s)\n" %
-                  (len(selected_ids), len(nested), mk))
         return [nested[s] for s in selected_ids]
     return []
 
@@ -456,7 +441,6 @@ def run_combine_vertical_event(cpool, mk, data_details, fo_log=None):
 
     cmplx_candidates = compute_costs_verticals(
         store_candidates, cpool, mk, data_details)
-    log_write(fo_log, "%d cmplx selected" % (len(cmplx_candidates)))
 
     nested, covered = nest_cmplx(cmplx_candidates, mk, data_details)
     nested.extend([cmplx_cand for cci, cmplx_cand in enumerate(
@@ -464,8 +448,6 @@ def run_combine_vertical_event(cpool, mk, data_details, fo_log=None):
 
     # selected = filter_candidates_cover(nested)
     selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
-    log_write(fo_log, "%d/%d candidate vertical combinations selected (grid %s)" %
-              (len(selected_ids), len(nested), mk))
     return [nested[s] for s in selected_ids]
 
 
@@ -885,18 +867,10 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
     if numpy.sum(Inew) < 500:
         pids_new = [pids[p] for p in numpy.where(Inew)[0]]
 
-    log_write(fo_log, "Horizontal org %d pids (%s)\n" % (len(pids), nkey))
-    # pids = [pid for pid in pids if (patterns_props[pid, prop_map["offset"]] < 2)]
-
     keep_cands = {}
     drop_overlap = 0
     # for each pattern Pa in turn
-    log_write(fo_log, "Horizontal %d pids (%s)\n" % (len(pids), nkey))
     while len(pids) > 1:
-        if len(pids) % 1000 == 0:
-            log_write(fo_log, "Horizontal %d pids left (%s)\n" %
-                      (len(pids), nkey))
-
         if pids_new is not None:
             if len(pids_new) > 0:
                 j = 0
@@ -1028,12 +1002,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                         if len(pids_new) == 0:
                             pids = []
 
-    log_write(fo_log, "Dropped overlap %d (%s)\n" % (drop_overlap, nkey))
     nb_generated = len(keep_cands)
-    # selected_ids = filter_cidpairs_topKeach(keep_cands, k=3)
     selected_ids = filter_candidates_topKeach(keep_cands, k=TOP_KEACH)
-    log_write(fo_log, "Generated %d/%d candidates (%s)\n" %
-              (len(selected_ids), nb_generated, nkey))
     keep_cands = dict([(k, keep_cands[k]) for k in selected_ids])
     graph_candidates = {}
     for cand_pids in selected_ids:
@@ -1043,11 +1013,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
             else:
                 graph_candidates[cand_pids[cci]].add(cand_pids[1 - cci])
 
-    # drop_pairs = set()
     collect = []
     bronKerbosch3Plus(graph_candidates, collect, set(graph_candidates.keys()))
-    log_write(fo_log, "BronKerbosch collected %d (%s)\n" %
-              (len(collect), nkey))
     for cand_pids_unsrt in collect:
         cand_pids = sorted(cand_pids_unsrt,
                            key=lambda x: (patterns_props[x, prop_map["t0i"]],
@@ -1055,12 +1022,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                                               patterns_props[x, prop_map["cid"]]).getEventTuple())))
         new_cand = makeCandOnOrder(
             cand_pids, data_details, patterns_props, cpool)
-
-        # cands = [cpool.getCandidate(patterns_props[cci, prop_map["cid"]]) for cci in cand_pids] r0 =
-        # numpy.min(patterns_props[cand_pids, prop_map["r0"]]-patterns_props[cand_pids, prop_map[
-        # "offset"]]) p0 = patterns_props[cand_pids[0], prop_map["p0"]] new_cand =
-        # prepare_candidate_concats(cands, p0, r0, patterns_props[cand_pids, prop_map["offset"]])
-        # new_cand.computeCost(data_details)
 
         if CHECK_HORDER and len(set(patterns_props[cand_pids, prop_map["t0i"]])) < len(cand_pids):
             ppids = [s for s in selected_ids if (
@@ -1072,12 +1033,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
             if cand_pidsX != cand_pids:
                 new_candX = makeCandOnOrder(
                     cand_pidsX, data_details, patterns_props, cpool)
-                # print("PREF PIDS\n\t%s\n\t%s" % (new_cand, new_candX))
 
-                # or (new_cand.getCost() == new_candX.getCost() and new_candX.getEventTuple() <
-                # new_cand.getEventTuple()):
                 if new_candX.getCost() < new_cand.getCost():
-                    # print("Replaced PREF", new_candX.getCost(), new_cand.getCost())
                     new_cand = new_candX
                     cand_pids = cand_pidsX
 
@@ -1086,9 +1043,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
             if cand_pidsY != cand_pids:
                 new_candY = makeCandOnOrder(
                     cand_pidsY, data_details, patterns_props, cpool)
-                # print("SORT PIDS\n\t%s\n\t%s" % (new_cand, new_candY))
                 if new_candY.getCost() < new_cand.getCost():
-                    # print("Replaced SORT", new_candY.getCost(), new_cand.getCost())
                     new_cand = new_candY
                     cand_pids = cand_pidsY
 
@@ -1096,17 +1051,10 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
         sum_nboccs = numpy.sum([c.getNbOccs() for c in cands])
 
         if new_cand.getCostRatio() < (sum_cost / sum_nboccs):
-            # print("Pc: %f/%d=%f %s t0=%d\tvs. %s" % (new_cand.getCost(), new_cand.getNbOccs(),
-            # new_cand.getCostRatio(), new_cand.P, new_cand.getT0(), sum_cost/sum_nboccs))
             keep_cands[tuple(cand_pids)] = new_cand
-            # drop_pairs.update(itertools.combinations(cand_pids, 2))
 
-    # for dp in drop_pairs:
-    #     keep_cands.pop(dp, None)
     selected = list(keep_cands.values())
     substitute_factorized(selected, data_details, fo_log)
-    log_write(fo_log, "%d/%d candidate horizontal combinations selected (%s)\n" %
-              (len(selected), nb_generated, nkey))
     return selected
 
 
@@ -1191,8 +1139,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
                         else:
                             i += 1
                     cis.sort(key=lambda x: cands[x].getCostUncoveredRatio())
-        else:
-            cids = []
 
     return selected
 
@@ -1250,12 +1196,10 @@ def substitute_factorized(cands, data_details, fo_log=None):
             ii = numpy.argmin([cands[i].getCost()] +
                               [e.computeCost(data_details) for e in ext])
             if ii > 0:
-                log_write(fo_log, "%s --> FACT\n" % cands[i])
-                log_write(fo_log, "%s <-- FACT\n" % ext[ii - 1])
                 cands[i] = ext[ii - 1]
 
 
-def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None):
+def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None):
     """
     Mines cycles and patterns from a set of sequences.
 
@@ -1269,8 +1213,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         Specifies the filename to use as a basis for output files. Default is "-" which use the standard output.
     max_p : int or None, optional
         The maximum size of the patterns to mine. Default is None.
-    writePCout_fun : function or None, optional
-        The function to use to write the output. Default is None.
 
     Returns
     -------
@@ -1279,8 +1221,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     """
     MINE_CPLX = True if complex else False
 
-    if writePCout_fun is None:
-        writePCout_fun = writePCout
     if fn_basis is None:
         fo_log = None
     elif fn_basis == "-":
@@ -1302,7 +1242,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     tic = datetime.datetime.now()
     dT_sel = datetime.timedelta()
 
-    # log_write(fo_log, "[TIME] Start --- %s\n" % tic)
     results["TIME Start"] = str(tic)
 
     cpool = CandidatePool()
@@ -1319,8 +1258,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         tic_ev = datetime.datetime.now()
         seq = ds.getSequence(alpha)  # return the associated timestamps associated to the event number alpha
 
-        # log_write(fo_log, "------------\n")
-        # log_write(fo_log, "SEQUENCE %s[%s]: (%d)\n" % (ev, alpha, len(seq)))
         results["ev"].append(ev)
         results["alpha"].append(alpha)
         results["len(seq)"].append(len(seq))
@@ -1330,49 +1267,29 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
         cpool.addCands(cycles_alpha, costOne=dcosts[alpha])
         tac_ev = datetime.datetime.now()
-        # log_write(fo_log, "[TIME] Cycle extraction event %s done in %s\n" % (
-        # ev, tac_ev-tic_ev))
         results["TIME run"].append(str(tac_ev - tic_ev))
-        tic_ev = tac_ev
 
     if PICKLE == -1 and fn_basis is not None and fn_basis != "-":
         fpick = "%s_init.pick" % re.sub("_log.txt", "", fo_log.name)
         fp = open(fpick, "w")
         pickle.dump(cpool, fp)
         fp.close()
-        # log_write(fo_log, "[PICKLE] Stored candidates to %s\n" % fpick)
         results["[PICKLE]"] = fpick
     if PICKLE == 1 and fn_basis is not None and fn_basis != "-":
         fpick = "%s_init.pick" % re.sub("_log.txt", "", fo_log.name)
         pkl_file = open(fpick, "rb")
         cpool = pickle.load(pkl_file)
         pkl_file.close()
-        # log_write(fo_log, "[PICKLE] Loaded candidates from %s\n" % fpick)
         results["[PICKLE]"] = fpick
 
     tac_init = datetime.datetime.now()
-    # log_write(fo_log, "[TIME] simple cycle mining done in %s\n" %
-    #          (tac_init-tic))
     results["[TIME] simple cycle"] = str(tac_init - tic)
 
     #############
     tic_sel = datetime.datetime.now()
     cdict = cpool.getCandidates()
 
-    # print("\n\n **********SIMPLE    Candidates**********")
-
-    # print(" getCandidate(0) getPattern", cpool.getCandidate(0).getPattern())
-    # print(" getCandidate(0) getE", cpool.getCandidate(0).getE())
-    # print(" getCandidate(0) getOccs", cpool.getCandidate(0).getOccs())
-    # print(" getCandidate(0) getT0", cpool.getCandidate(0).getT0())
-    # print(" getCandidate(0) getEvOccs", cpool.getCandidate(0).getEvOccs())
-    # print(" getCandidate(0) getEventsMinor",
-    #       cpool.getCandidate(0).getEventsMinor())
-    # print(" getCandidate(0) getEvent", cpool.getCandidate(0).getEvent())
-
     simple_cids = list(cdict.keys())
-    # log_write(fo_log, "[INTER] Simple selection (%d candidates) at %s\n" % (
-    #    len(cdict), tic_sel))
     results["Nb candidates"] = len(cdict)
     # print("\n Nb candidates",  len(cdict), "\n")
     # print("\n simple_cids", simple_cids, "\n")
@@ -1385,21 +1302,15 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     # print("\n\n\n\n\n\n selected", selected)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
 
-    writePCout_fun(pc, ds, fn_basis, "-simple", fo_log)
     tac_sel = datetime.datetime.now()
     dT_sel += (tac_sel - tic_sel)
-    # log_write(fo_log, "[INTER] Simple selection done in %s at %s\n" % (
-    #     (tac_sel - tic_sel), tac_sel))
     results["[INTER] Simple selection DT"] = str(tac_sel - tic_sel)
     results["[INTER] Simple selection TIME"] = str(tac_sel)
     #############
 
-    log_write(fo_log, "------------------------\n")
     nkeyV, nkeyH = (None, None)
     roundi = 0
 
-    # results["candsV"] = []
-    # results["candsH"] = []
     results["nkeyV"] = []
     results["nkeyH"] = []
     results["[TIME] Combination round"] = []
@@ -1421,11 +1332,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         tac_rH = datetime.datetime.now()
 
         nkeyV, nkeyH = ("V%d" % roundi, "H%d" % roundi)
-        # log_write(fo_log, "-- %d Cands vertical (%s)\n" % (len(candsV), nkeyV))
-        # log_write(fo_log, "-- %d Cands horizontal (%s)\n" %
-        #           (len(candsH), nkeyH))
-        # results["candsV"].append(candsV)
-        # results["candsH"].append(candsH)
+
         results["nkeyV"].append(nkeyV)
         results["nkeyH"].append(nkeyH)
 
@@ -1433,8 +1340,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         cpool.addCands(candsV, nkeyV)
         cpool.addCands(candsH, nkeyH)
         tac_round = datetime.datetime.now()
-        # log_write(fo_log, "[TIME] Combination round %d done in %s (V=%s, H=%s, C=%s)\n" % (
-        #     roundi, tac_round-tic_round, tac_rV-tic_round, tac_rH-tac_rV, tac_round-tac_rH))
+
         results["[TIME] Combination round"].append(roundi)
         results["[DT] Combination round"].append(str(tac_round - tic_round))
         results["[DT] V"].append(str(tac_rV - tic_round))
@@ -1449,9 +1355,7 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         simple_selection_finalDT = []
         simple_selection_finalTime = []
 
-        # print("\n\n roundi", roundi)
         if roundi == 1:
-            #############
             for (side, nks) in [("V", [nkeyV]), ("H", [nkeyH]), ("V+H", [nkeyV, nkeyH])]:
                 tic_sel = datetime.datetime.now()
                 cdict = cpool.getCandidates()
@@ -1462,8 +1366,6 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
                 to_filter = list(simple_cids)
                 for nk in nks:
                     to_filter.extend(cpool.getNewCids(nk))
-                # log_write(fo_log, "[INTER] Simple+%s selection (%d candidates) at %s\n" %
-                #           (side, len(to_filter), tic_sel))
 
                 simple_selection_side.append(side)
                 simple_selection_nb_candidates.append(len(to_filter))
@@ -1471,19 +1373,13 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
 
                 selected = filter_candidates_cover(
                     cdict, dcosts, min_cov=3, adjust_occs=True, cis=to_filter)
-                pc = PatternCollection([cdict[c].getPattT0E()
-                                        for c in selected])
-                writePCout_fun(pc, ds, fn_basis, "-simple+%s" % side, fo_log)
+
                 tac_sel = datetime.datetime.now()
                 dT_sel += (tac_sel - tic_sel)
-                # log_write(fo_log, "[INTER] Simple+%s selection done in %s at %s\n" %
-                #           (side, (tac_sel - tic_sel), tac_sel))
 
                 simple_selection_finalside.append(side)
                 simple_selection_finalDT.append(str(tac_sel - tic_sel))
                 simple_selection_finalTime.append(str(tac_sel))
-
-        #############
 
         simple_selection["side"] = simple_selection_side
         simple_selection["nb_candidates"] = simple_selection_nb_candidates
@@ -1495,14 +1391,10 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
         results["Simple selection"].append(simple_selection)
 
     tac_comb = datetime.datetime.now()
-    # log_write(fo_log, "[TIME] Combinations done in %s\n" % (tac_comb-tac_init))
 
     results["[TIME] Combinations"] = str(tac_comb - tac_init)
 
-    #############
     cdict = cpool.getCandidates()
-    # log_write(fo_log, "Final selection (%d candidates) at %s\n" %
-    #           (len(cdict), tac_comb))
 
     results["Final_selection_nb_candidates"] = len(cdict)
     results["Final_selection_TIME"] = str(tac_comb)
@@ -1510,56 +1402,13 @@ def mine_seqs(seqs, complex=True, fn_basis="-", max_p=None, writePCout_fun=None)
     selected = filter_candidates_cover(
         cdict, dcosts, min_cov=3, adjust_occs=True)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
-    writePCout_fun(pc, ds, fn_basis, "", fo_log)
     tac = datetime.datetime.now()
-    # log_write(fo_log, "[TIME] Final selection done in %s at %s\n" % (
-    #     tac-tac_comb, tac))
 
     results["Final DT selection"] = str(tac - tac_comb)
     results["Final TIME selection"] = str(tac)
-    #############
-    # log_write(fo_log, "[TIME] Mining done in %s (-inter=%s)\n" %
-    #           (tac-tic, (tac-tic)-dT_sel))
-    # log_write(fo_log, "[TIME] End --- %s\n" % tac)
 
     results["Final Mining DT"] = str(tac - tac_comb)
     results["Final Mining inter DT"] = str((tac - tic) - dT_sel)
     results["Final DT"] = str((tac - tic) - dT_sel)
 
-    # print("\n\n\n\n results", json.dumps(results))
-
-    # print("\n\n\n\n fo_log", fo_log)
-    # print("\n\n\n ac-tac_comb", tac-tac_comb)
-    # print("\n\n\n\n tac",  tac)
-
     return cpool, ds, pc
-
-
-def writePCout(pc, ds, fn_basis, suff, fo_log=None):
-    """
-    FIXME : to be explained
-
-    Parameters
-    ----------
-    pc
-    ds
-    fn_basis
-    suff
-    fo_log
-
-    Returns
-    -------
-
-    """
-    if fn_basis is None:
-        return
-    if fn_basis == "-":
-        fo_patts = sys.stdout
-    else:
-        fo_patts = open(fn_basis + ("_patts%s.txt" % suff), "w")
-    str_stats, str_pl = pc.strDetailed(ds)
-    fo_patts.write(str_stats + str_pl)
-    if fn_basis != "-":
-        if fo_log is not None:
-            log_write(fo_log, str_stats)
-        fo_patts.close()
