@@ -416,7 +416,7 @@ def run_combine_vertical_event(cpool, mk, data_details):
     -------
 
     """
-    store_candidates = find_complexes(cpool, mk, data_details)
+    store_candidates = find_complexes(cpool, mk)
     if len(store_candidates) == 0:
         return []
 
@@ -453,7 +453,7 @@ def get_top_p(occ_ordc):
     return top1, top2, topN
 
 
-def find_complexes(cpool, mk, data_details):
+def find_complexes(cpool, mk):
     """
     FIXME : to be explained
 
@@ -461,7 +461,6 @@ def find_complexes(cpool, mk, data_details):
     ----------
     cpool
     mk
-    data_details
 
     Returns
     -------

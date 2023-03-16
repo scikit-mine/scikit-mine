@@ -53,8 +53,13 @@ def test_merge_cycle_lists():
 
 def test_get_top_p():
     occ_ordc = [(2, 5), (1, 10), (1, 7), (3, 3), (2, 8)]
-    result = get_top_p(occ_ordc)
-    assert result == (0, 1, 2)
+    assert get_top_p(occ_ordc) == (0, 1, 2)
+
+    occ_ordc = [(2, 5), (1, 10), (1, 7), (1, 3), (2, 8)]
+    assert get_top_p(occ_ordc) == (0, 1, 3)
+
+    occ_ordc = [(2, 5), (1, 10), (1, 7), (1, 11), (2, 8)]
+    assert get_top_p(occ_ordc) == (0, 3, 1)
 
 
 
