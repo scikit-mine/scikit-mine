@@ -156,8 +156,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         self.data_details = data_details
         self.miners_ = pc
 
-        out_str, pl_str = self.miners_.strDetailed(self.data_details)
-        print(out_str)
+        # out_str, pl_str = self.miners_.strDetailed(self.data_details)
 
         return self
 

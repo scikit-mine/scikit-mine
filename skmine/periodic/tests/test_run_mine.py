@@ -3,7 +3,8 @@ import pytest
 
 from skmine.periodic.candidate import Candidate
 from skmine.periodic.candidate_pool import CandidatePool
-from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder, get_top_p
+from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder, get_top_p, \
+    prepare_tree_nested
 
 
 def test_bronKerbosch3Plus():
@@ -62,4 +63,19 @@ def test_get_top_p():
     assert get_top_p(occ_ordc) == (0, 3, 1)
 
 
-
+def test_prepare_tree_nested():
+    prds = [5640, 150]
+    lens = [3, 4]
+    cand = Candidate(
+        cid=23,
+        P={'alpha': 9, 'p': 150, 'pos': [66, 68, 69, 70], 'uncov': {66, 68, 69, 70}, 'source': (1, 25)},
+        O=[159652698, 159652842, 159652992, 159653142],
+        E=[-6, 0, 0],
+        cost=54.65572817232237
+    )
+    tree = prepare_tree_nested(cand, prds, lens)
+    assert tree == {
+        0: {'p': 5640, 'r': 3, 'children': [(1, 0)], 'parent': None},
+        1: {'p': 150, 'r': 4, 'children': [(2, 0)], 'parent': 0},
+        2: {'event': 9, 'parent': 1}
+    }

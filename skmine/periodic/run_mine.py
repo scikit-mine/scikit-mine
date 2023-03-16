@@ -108,17 +108,19 @@ def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
 
 def prepare_tree_nested(cand, prds, lens):
     """
-    FIXME : to be explained
+    Generate the tree of a nested candidate
 
     Parameters
     ----------
     cand
-    prds
-    lens
-
+    prds : list
+        Period values
+    lens : list
+        Repetition numbers
     Returns
     -------
-
+    dict
+        The nested tree
     """
     P = cand.getPattern()
     if P is None:
@@ -178,9 +180,7 @@ def prepare_candidate_nested(cp_det, cmplx_candidates):
     for pi, pp in enumerate(list_reps):
         t0i = cmplx_candidates[idxs[pi]].getT0()
         Ei = cmplx_candidates[idxs[pi]].getE()
-        if pi == 0:
-            t00 = t0i
-        else:
+        if pi != 0:
             copy_pp = list(pp)
             i = len(pp) - 1
             while pp[i] == 0:
@@ -420,12 +420,10 @@ def run_combine_vertical_event(cpool, mk, data_details):
     if len(store_candidates) == 0:
         return []
 
-    cmplx_candidates = compute_costs_verticals(
-        store_candidates, cpool, mk, data_details)
+    cmplx_candidates = compute_costs_verticals(store_candidates, cpool, mk, data_details)
 
     nested, covered = nest_cmplx(cmplx_candidates, mk, data_details)
-    nested.extend([cmplx_cand for cci, cmplx_cand in enumerate(
-        cmplx_candidates) if cci not in covered])
+    nested.extend([cmplx_cand for cci, cmplx_cand in enumerate(cmplx_candidates) if cci not in covered])
 
     selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
     return [nested[s] for s in selected_ids]
