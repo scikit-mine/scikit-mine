@@ -26,10 +26,42 @@ def _getChained(listsd, keys=None):
 
 
 def computePeriodDiffs(diffs):
+    """
+    From a list of timestamp diffs, computes the period of a pattern.
+
+    This method calculates the median of the differences and then takes the floor of this value. The floor of the scalar
+    x is the largest integer i, such that i <= x.
+
+    Parameters
+    ----------
+    diffs : list
+        List of timestamp differences
+
+    Returns
+    -------
+    int
+        The pattern period
+    """
     return int(numpy.floor(numpy.median(diffs)))
 
 
 def computePeriod(occs, sort=False):
+    """
+    Calculates the period of a pattern from its timestamps
+
+    Parameters
+    ----------
+    occs : list
+        The list of timestamps
+
+    sort : bool, default=False
+        Whether or not to sort the timestamps of occs
+
+    Returns
+    -------
+    int
+        The pattern period
+    """
     if sort:
         occs = sorted(occs)
     return computePeriodDiffs(numpy.diff(occs))
