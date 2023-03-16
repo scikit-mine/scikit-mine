@@ -50,8 +50,7 @@ def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
     else:
         lP = list(P)
         for v in lP:
-            bronKerbosch3Plus(graph, collect, P.intersection(
-                graph[v]), R.union([v]), X.intersection(graph[v]))
+            bronKerbosch3Plus(graph, collect, P.intersection(graph[v]), R.union([v]), X.intersection(graph[v]))
             P.remove(v)
             X.add(v)
 
@@ -145,7 +144,7 @@ def prepare_tree_nested(cand, prds, lens):
     return tree
 
 
-def prepare_candidate_nested(cp_det, P_minor, cmplx_candidates):
+def prepare_candidate_nested(cp_det, cmplx_candidates):
     """
     FIXME : to be explained
 
@@ -250,13 +249,10 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
     return Candidate(-1, p, O, E)
 
 
-# MINE INITIAL CANDIDATES
-########################################################
-
-
 def mine_cycles_alpha(occs, alpha, data_details, costOne, max_p=None):
     """
     FIXME : to be explained
+    Mine initial candidates
 
     Parameters
     ----------
@@ -353,11 +349,10 @@ def merge_cycle_lists(cyclesL):
     return cycles
 
 
-# COMBINE CANDIDATES VERTICALLY
-########################################################
 def run_combine_vertical(cpool, data_details, dcosts, nkey="H"):
     """
     FIXME : to be explained
+    Combine candidates vertically
 
     Parameters
     ----------
@@ -403,7 +398,6 @@ def run_combine_vertical_cands(cpool, mk, data_details):
     nested, covered = nest_cmplx(cmplx_candidatesX, mk, data_details)
 
     if len(nested) > 0:
-        # selected = filter_candidates_cover(nested)
         selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
         return [nested[s] for s in selected_ids]
     return []
@@ -457,7 +451,7 @@ def get_top_p(occ_ordc):
             topN += 1
         if numpy.abs(occ_ordc[top1][1] - occ_ordc[topN][1]) > numpy.abs(occ_ordc[top1][1] - occ_ordc[top2][1]):
             (top2, topN) = (topN, top2)
-    return (top1, top2, topN)
+    return top1, top2, topN
 
 
 def find_complexes(cpool, mk, data_details):
@@ -622,8 +616,8 @@ def find_complexes(cpool, mk, data_details):
                     t for t in occs_to_ordc[oid] if t[-1] not in cids_drop]
                 if len(occs_to_ordc[oid]) > 1:
                     top_two[oid] = get_top_p(occs_to_ordc[oid])
-                    scores[map_soccs[oid]] = occs_to_ordc[oid][top_two[oid]
-                    [0]][0] * occs_to_ordc[oid][top_two[oid][1]][0]
+                    scores[map_soccs[oid]] = occs_to_ordc[oid][top_two[oid][0]][0] * \
+                                             occs_to_ordc[oid][top_two[oid][1]][0]
                     for (_, prd, cid) in excl:
                         del occs_to_cycles[oid][prd]
                 else:
@@ -822,11 +816,10 @@ def getPidsSlice(patterns_props, pids, slice_size, col, max_v):
     return pids[:last_id]
 
 
-# COMBINE CANDIDATES HORIZONTALLY
-########################################################
 def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
     """
-    FIXME : to be explained
+    Combine candidates horizontally
+
 
     Parameters
     ----------
@@ -961,22 +954,10 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
                 cov = set().union(*[c.getEvOccs() for c in cands])
                 residuals = cov.difference(new_cand.getEvOccs())
                 cresiduals = numpy.sum([dcosts[o[1]] for o in residuals])
-                # if nkey == "V1":
-                #     print("------------------------")
-                #     print("\n".join(["%s\n\t%s" % (c, c.getEvOccs()) for c in cands]))
-                #     print("%s\n\t%s" % (new_cand, new_cand.getEvOccs()))
-                #     print("%d+%d=%d vs. %d vs. %d" % (new_cand.getNbOccs(), len(residuals), new_cand.getNbOccs(
-                #     )+len(residuals), len(cov), sum_nboccs))
-                #     print("------------------------")
 
                 if (new_cand.getCost() + cresiduals) / (new_cand.getNbOccs() + len(residuals)) < (
                         sum_cost / sum_nboccs):
-
                     keep_cands[cand_pids] = new_cand
-
-                    # for cci in [0,1]: print("\tP[%s,%s]: %f/%d=%f %s t0=%d\t%s" % (cand_cids[cci], cand_pids[cci],
-                    # cands[cci].getCost(), cands[cci].getNbOccs(), cands[cci].getCostRatio(), cands[cci].getEvent(),
-                    # cands[cci].getT0(), patterns_props[cand_pids[cci], :]))
 
                     for pp in numpy.where(patterns_props[i, prop_map["cid"]] == patterns_props[
                         pids, prop_map["cid"]])[0][::-1]:
