@@ -15,10 +15,10 @@ def getEDict(oStar, E=[]):
     Parameters
     ----------
     oStar : list
-        A list of tuples representing occurences in the tree structure composed of
+        A list of tuples representing occurrences in the tree structure composed of
         three items (t0, event, position in tree).
     E : list, default=[]
-        A list of values of shift corrections (errors) that correspond to the unique identifiers in `oStar`.
+        A list of values of cycle shift corrections that correspond to the unique identifiers in `oStar`.
         If `len(E)` is less than `len(oStar) - 1`, the remaining values are set to zero.
 
     Returns
@@ -483,7 +483,9 @@ class Pattern(object):
 
         Parameters
         ----------
-        occs
+        occs : list
+            list of timestamp-event pairs reconstructed from the pattern tree of P after correction,
+            a.k.a corrected occurences
 
         Returns
         -------
@@ -736,7 +738,7 @@ class Pattern(object):
             A list of tree events.
             Example with:
             - `add_delimiter=True` : ['(', '4', '7', '(', '8', ')', ')']
-            - `add_delimiter=True` : ['4', '7', '8']
+            - `add_delimiter=False` : ['4', '7', '8']
         """
         if not self.isNode(nid):
             return ""  # was initially openB_str + closeB_str` but these two variables do not exist
@@ -1287,7 +1289,8 @@ class Pattern(object):
     def codeLengthEvents(self, adjFreqs, nid=0):
         """
         Compute the code length from a node id
-        L(α) = − log(fr (α)) = − log(∣ ∣S(α)∣ ∣ / |S|)
+        L(α) = −log(fr(α)) = −log(∣S(α)∣ / |S|)
+
 
         """
         if not self.isNode(nid):
@@ -1301,12 +1304,12 @@ class Pattern(object):
     def getMinOccs(self, nbOccs, min_occs, nid=0):
         """
         Recursively collects info on the least occurring event in each block to be used to determine
-        the code length for r_X. Each intermediate node B_X is associated with the period p_X and length r_X of the
+        the code length for rₓ. Each intermediate node Bₓ is associated with the period pₓ and length rₓ of the
         corresponding cycle.
 
-        For a block B_X, the number of repetitions of the block cannot be larger than the number of occurences of the
-        least frequent event participating in the block, denoted as p(B_X). We can thus encode the sequence of cycle
-        lengths R with code of length L(R) = sum(L(r_X)) = sum(log(p(B_X)))
+        For a block Bₓ, the number of repetitions of the block cannot be larger than the number of occurrences of the
+        least frequent event participating in the block, denoted as p(Bₓ). We can thus encode the sequence of cycle
+        lengths R with code of length L(R) = ∑(L(rₓ)) = ∑(log(ρ(Bₓ)))
 
         Parameters
         ----------
@@ -1338,7 +1341,7 @@ class Pattern(object):
     def getRVals(self, nid=0):
         """
         Recursively collects info on the least occurring event in each block to be used to determine the code length
-        for r_X.
+        for rₓ.
 
         Parameters
         ----------
@@ -1363,7 +1366,7 @@ class Pattern(object):
     def codeLengthR(self, nbOccs, nid=0):
         """
         Determine the code length for r_X based on info on the least occurring event in each block.
-        L(R) = sum(L(r_X)) = sum(log(p(B_X)))
+        L(R) = ∑(L(rₓ)) = ∑(log(ρ(Bₓ)))
 
         Parameters
         ----------
@@ -1379,7 +1382,6 @@ class Pattern(object):
         """
         min_occs = []
         self.getMinOccs(nbOccs, min_occs, nid)
-        rs = self.getRVals()
         clrs = np.log2(min_occs)
         return np.sum(clrs)
 
@@ -1405,11 +1407,23 @@ class Pattern(object):
             return 1
 
     def getE(self, map_occs, nid=0):
+        """
+        Compute the errors by assuming perfect periodicity (occsStar) and differentiating from the actual occurrences.
+
+        Parameters
+        ----------
+        map_occs
+        nid
+
+        Returns
+        -------
+
+        """
         return getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
 
     def codeLengthPTop(self, deltaT, EC_za=None, nid=0):
         """
-        L(p) = log ( (∆(S) − σ(E))   /  (r−1) ⌋) where σ(E) = sum(E)
+        L(p) = log (⌊(∆(S)−σ(E))/(r−1)⌋) where σ(E) = sum(E)
 
         Parameters
         ----------
@@ -1440,7 +1454,7 @@ class Pattern(object):
         deltaT : int
             time delta in the full sequence
         EC_za : int, default=None
-            sum of errors
+            the cumulated time correction (σ(E))
         nid : int, default=0
             Node id from which the computation is done
 
@@ -1557,8 +1571,8 @@ class Pattern(object):
 
         Parameters
         ----------
-        t0
-        E
+        t0 : int
+            timestamp of the first occurrence
         data_details
         match
         nid
@@ -1619,4 +1633,3 @@ class Pattern(object):
 
         # L(C) = L(α)+L(r)+L(p)+L(τ0 )+L?+L(E)
         return clEv + clRs + clP0 + clT0 + clPDs + clE
-

@@ -11,12 +11,11 @@ import json
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from skmine.datasets import fetch_canadian_tv, fetch_ubiq
 
-from skmine.periodic.run_mine import mine_seqs
-from skmine.periodic.pattern import Pattern, getEDict
-from skmine.periodic.pattern_collection import PatternCollection
-from skmine.periodic.data_sequence import DataSequence
+from .run_mine import mine_seqs
+from .pattern import Pattern, getEDict
+from .pattern_collection import PatternCollection
+from .data_sequence import DataSequence
 
 INDEX_TYPES = (
     pd.DatetimeIndex,
@@ -142,7 +141,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             S = S.reset_index(level=0, drop=True)
             diff = len_S - len(S)
             if diff:
-                warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
+                warnings.warn(
+                    f"found {diff} duplicates in the input sequence, they have been removed.")
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -151,13 +151,13 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.alpha_groups = S.groupby(S.values).groups
 
-        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups), fn_basis=None, complex=complex)
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
+                                            fn_basis=None, complex=complex)
 
         self.data_details = data_details
         self.miners_ = pc
 
-        out_str, pl_str = self.miners_.strDetailed(self.data_details)
-        print(out_str)
+        # out_str, pl_str = self.miners_.strDetailed(self.data_details)
 
         return self
 
@@ -424,18 +424,3 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             residuals_transf_pd = residuals_transf_pd.sort_values(by=['event'])
 
         return residuals_transf_pd
-
-
-if __name__ == '__main__':
-
-    # S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
-    # print(S)
-    # pcm = PeriodicPatternMiner().fit(S)
-    # print(pcm.discover(dE_sum=True, chronological_order=True))
-    ubiq_data = fetch_ubiq(data_home=None, user_filename="2_F_ISE_data.dat")
-    # ctv_logs = fetch_canadian_tv()
-    # print(ctv_logs)
-    pcm = PeriodicPatternMiner().fit(ubiq_data)
-    res = pcm.discover(dE_sum=True, chronological_order=True)
-
-

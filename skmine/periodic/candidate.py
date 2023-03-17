@@ -1,7 +1,7 @@
 import numpy as np
 
-from .pattern import Pattern
 from .class_patterns import computePeriod, computeE, computeLengthCycle, PROPS_MIN_R, PROPS_MAX_OFFSET
+from .pattern import Pattern
 
 
 class Candidate(object):
@@ -15,9 +15,9 @@ class Candidate(object):
     P : dict or Pattern
         Dictionary containing the properties of the pattern, or an instance of `Pattern`.
     O : list, optional
-        List of occurrences/timestamps of the pattern.
+        List of corrected occurrences/timestamps of the pattern.
     E : list, optional
-        List of deltaE of the occurrences.
+        List of cycle shift corrections
     cost : float, optional
         Computed cost of the pattern.
 
@@ -127,6 +127,15 @@ class Candidate(object):
             return self.P["alpha"]
 
     def getEvent(self):
+        """
+
+        Returns
+        -------
+            list or int or str
+        list : if the candidate is a `Pattern` and if there is multiple events, it returns the list of events
+        str : if the candidate is a `Pattern` and if there is only one event, it returns the event id as a str
+        int : otherwise it returns an int
+        """
         if self.isPattern():
             tmp = self.P.getEventsList(add_delimiter=False)
             if len(tmp) == 1:
@@ -137,6 +146,14 @@ class Candidate(object):
             return self.P["alpha"]
 
     def getEventTuple(self):
+        """
+        Get the list of events associated to the candidate
+
+        Returns
+        -------
+        tuple
+            A tuple with all events. If the candidate is a pattern, events are returned as str else as int
+        """
         if self.isPattern():
             return tuple(self.P.getEventsList(add_delimiter=False))
         else:
@@ -165,7 +182,7 @@ class Candidate(object):
             MK = self.P.pattMajorKey()
         else:
             MK = "[%s,%s]" % (len(self.O), self.P["p"])
-        return (self.getT0(), MK)
+        return self.getT0(), MK
 
     def getMajorP(self):
         if self.isPattern():
@@ -240,6 +257,14 @@ class Candidate(object):
         return counts_cover
 
     def initUncovered(self):
+        """
+        FIXME : why the list of peer timestamps/events not covered by the candidate is equal to the list of occurrences
+                of the pattern?
+
+        Returns
+        -------
+
+        """
         self.uncov = set(self.getEvOccs())
 
     def getUncovered(self):
@@ -265,6 +290,13 @@ class Candidate(object):
         return (self.getCost() / self.getNbUncovered()) < np.mean([dcosts[unc[1]] for unc in self.uncov])
 
     def adjustOccs(self):
+        """
+        Adds to self.P["occs_up"], the list of uncov timestamps
+
+        Returns
+        -------
+        None
+        """
         if not self.isPattern() and (self.uncov is not None) and (self.getNbUncovered() < self.getNbOccs()):
             okk = self.getEvOccs()
             mni, mxi = (0, len(self.O) - 1)
@@ -287,6 +319,16 @@ class Candidate(object):
             return []
 
     def factorizePattern(self):
+        """
+        Factorize the candidate pattern
+
+        The candidate cid is affected to -1.
+
+        Returns
+        -------
+            list
+        List of factorized candidate
+        """
         fs = []
         if self.isPattern():
             nf = self.P.canFactorize()
@@ -308,4 +350,6 @@ class Candidate(object):
                 tmp = Candidate(-1, Q, Qoccs, QE)
                 fs.append(tmp)
                 fs.extend(tmp.factorizePattern())
+        if fs:
+            print("hello")
         return fs

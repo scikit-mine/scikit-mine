@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from skmine.periodic.extract_cycles import combine_splits, compute_cycles_dyn
+from skmine.periodic.extract_cycles import combine_splits, recover_splits_rec
 
 
 def test_combine_splits():
@@ -21,3 +21,23 @@ def test_combine_splits():
     splits4 = [(0, 1), (4, 5), (8, 9)]
     adj_splits4 = [(1, 3), (5, 6), (7, 8)]
     assert combine_splits(splits4, adj_splits4) == [(0, 3), (5, 6), (7, 8)]
+
+
+def test_recover_splits_rec():
+    spoints = {
+        (0, 2): None,
+        (1, 3): None,
+        (2, 4): None,
+        (3, 5): -1,
+        (0, 3): None,
+        (1, 4): None,
+        (2, 5): 4,
+        (0, 4): None,
+        (1, 5): 4,
+        (0, 5): 4
+    }
+    ia = 0
+    iz = 5
+    depth = 0
+    assert recover_splits_rec(spoints, ia, iz, depth, singletons=False) == [(0, 4)]
+    assert recover_splits_rec(spoints, ia, iz, depth, singletons=True) == [(0, 4), (5, 5)]

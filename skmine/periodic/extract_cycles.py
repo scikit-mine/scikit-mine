@@ -16,15 +16,15 @@ def recover_splits_rec(spoints, ia, iz, depth=0, singletons=True):
 
     Parameters
     ----------
-    spoints
-    ia
-    iz
-    depth
-    singletons
+    spoints : dict
+    ia : int
+    iz : int
+    depth : int, default=0
+    singletons : bool, default=True
 
     Returns
     -------
-
+        list
     """
     if (ia, iz) in spoints:
         if spoints[(ia, iz)] is None:
@@ -32,9 +32,8 @@ def recover_splits_rec(spoints, ia, iz, depth=0, singletons=True):
         else:
             im = spoints[(ia, iz)]
             if im >= 0:
-                return recover_splits_rec(spoints, ia, im, depth + 1, singletons) + recover_splits_rec(spoints, im + 1,
-                                                                                                       iz, depth + 1,
-                                                                                                       singletons)
+                return recover_splits_rec(spoints, ia, im, depth + 1, singletons) \
+                    + recover_splits_rec(spoints, im + 1, iz, depth + 1, singletons)
     if singletons:
         return [(i, i) for i in range(ia, iz + 1)]
     else:
