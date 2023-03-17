@@ -155,7 +155,7 @@ class PatternCollection(object):
             cl += nb * cost_one(data_details, ev)
         return cl
 
-    def strPatternListAndCost(self, data_seq, print_simple=True):
+    def strPatternListAndCost(self, data_seq, print_simple=True):  # pragma : no cover
         cl = 0
         data_details = data_seq.getDetails()
         ocls = self.getOccLists()
@@ -170,7 +170,7 @@ class PatternCollection(object):
             cl += clp
         return str_out, cl
 
-    def strDetailed(self, data_seq, print_simple=True):
+    def strDetailed(self, data_seq, print_simple=True):  # pragma : no cover
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 
