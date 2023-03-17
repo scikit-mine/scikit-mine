@@ -1,7 +1,7 @@
 import numpy as np
 
-from .pattern import Pattern
 from .class_patterns import computePeriod, computeE, computeLengthCycle, PROPS_MIN_R, PROPS_MAX_OFFSET
+from .pattern import Pattern
 
 
 class Candidate(object):
@@ -249,6 +249,14 @@ class Candidate(object):
         return counts_cover
 
     def initUncovered(self):
+        """
+        FIXME : why the list of peer timestamps/events not covered by the candidate is equal to the list of occurrences
+                of the pattern?
+
+        Returns
+        -------
+
+        """
         self.uncov = set(self.getEvOccs())
 
     def getUncovered(self):
@@ -274,6 +282,13 @@ class Candidate(object):
         return (self.getCost() / self.getNbUncovered()) < np.mean([dcosts[unc[1]] for unc in self.uncov])
 
     def adjustOccs(self):
+        """
+        Adds to self.P["occs_up"], the list of uncov timestamps
+
+        Returns
+        -------
+        None
+        """
         if not self.isPattern() and (self.uncov is not None) and (self.getNbUncovered() < self.getNbOccs()):
             okk = self.getEvOccs()
             mni, mxi = (0, len(self.O) - 1)
