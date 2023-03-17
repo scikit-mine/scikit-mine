@@ -237,9 +237,7 @@ def prepare_candidate_concats(cands, p0, r0, first_rs):
         for ei in range(len(Pblks_occs)):
             O.extend(Pblks_occs[ei][ri])
             if ei == 0:
-                if ri == 0:
-                    t00 = Pblks_occs[ei][ri][0]
-                else:
+                if ri != 0:
                     E.append((Pblks_occs[ei][ri][0] -
                               Pblks_occs[ei][ri - 1][0]) - p0)
             else:
@@ -350,7 +348,7 @@ def merge_cycle_lists(cyclesL):
     return cycles
 
 
-def run_combine_vertical(cpool, data_details, dcosts, nkey="H"):
+def run_combine_vertical(cpool, data_details, nkey="H"):
     """
     FIXME : to be explained
     Combine candidates vertically
@@ -359,7 +357,6 @@ def run_combine_vertical(cpool, data_details, dcosts, nkey="H"):
     ----------
     cpool
     data_details
-    dcosts
     nkey
 
     Returns
@@ -396,7 +393,7 @@ def run_combine_vertical_cands(cpool, mk, data_details):
     """
     cmplx_candidatesX = [cpool.getCandidate(
         cid) for cid in cpool.getCidsForMinorK(mk)]
-    nested, covered = nest_cmplx(cmplx_candidatesX, mk, data_details)
+    nested, covered = nest_cmplx(cmplx_candidatesX, data_details)
 
     if len(nested) > 0:
         selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
@@ -424,7 +421,7 @@ def run_combine_vertical_event(cpool, mk, data_details):
 
     cmplx_candidates = compute_costs_verticals(store_candidates, cpool, mk, data_details)
 
-    nested, covered = nest_cmplx(cmplx_candidates, mk, data_details)
+    nested, covered = nest_cmplx(cmplx_candidates, data_details)
     nested.extend([cmplx_cand for cci, cmplx_cand in enumerate(cmplx_candidates) if cci not in covered])
 
     selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
@@ -579,8 +576,7 @@ def find_complexes(cpool, mk):
             if top_two[occ][-1] == top_two[occ][1] + direct:
                 top_two[occ] = (top_two[occ][0], top_two[occ][1] + direct, -1)
             else:
-                top_two[occ] = (top_two[occ][0], top_two[occ]
-                [1] + direct, top_two[occ][-1])
+                top_two[occ] = (top_two[occ][0], top_two[occ][1] + direct, top_two[occ][-1])
 
         else:
 
@@ -682,14 +678,13 @@ def compute_costs_verticals(store_candidates, cpool, mk, data_details):
     return selection
 
 
-def nest_cmplx(cmplx_candidates, P_minor, data_details):
+def nest_cmplx(cmplx_candidates, data_details):
     """
     FIXME : to be explained
 
     Parameters
     ----------
     cmplx_candidates
-    P_minor
     data_details
 
     Returns
@@ -836,8 +831,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
     patterns_props = cpool.getPropMat()
 
     pids_new = None
-    Inew = patterns_props[pids, prop_map["new"]
-           ] == cpool.getNewKNum(nkey)
+    Inew = patterns_props[pids, prop_map["new"]] == cpool.getNewKNum(nkey)
     if numpy.sum(Inew) == 0:
         return []
     if numpy.sum(Inew) < 500:
@@ -870,10 +864,8 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
         # (3) pb-pa <= 2 (cum_E of Pb) / r(r-1) with r = min(ra, rb)
 
         # (2)
-        next_it = patterns_props[i, prop_map["t0i"]
-                  ] + patterns_props[i, prop_map["p0"]]
-        i_new = patterns_props[i, prop_map["new"]
-                ] == cpool.getNewKNum(nkey)
+        next_it = patterns_props[i, prop_map["t0i"]] + patterns_props[i, prop_map["p0"]]
+        i_new = patterns_props[i, prop_map["new"]] == cpool.getNewKNum(nkey)
         cmp_ids = []
         if i_new:  # i is new, compare to both new and old
             cmp_ids = numpy.array(getPidsSlice(
@@ -887,8 +879,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
                 ppp = numpy.array(getPidsSlice(
                     patterns_props, pids, 500, prop_map["t0i"], next_it))
                 if len(ppp) > 0:
-                    cmp_ids = ppp[patterns_props[ppp,
-                    prop_map["new"]] == cpool.getNewKNum(nkey)]
+                    cmp_ids = ppp[patterns_props[ppp, prop_map["new"]] == cpool.getNewKNum(nkey)]
         ###
 
         sel_ids = []
@@ -966,7 +957,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
                         if len(pids_new) == 0:
                             pids = []
 
-    nb_generated = len(keep_cands)
     selected_ids = filter_candidates_topKeach(keep_cands, k=TOP_KEACH)
     keep_cands = dict([(k, keep_cands[k]) for k in selected_ids])
     graph_candidates = {}
@@ -1233,11 +1223,6 @@ def mine_seqs(seqs, complex=True, max_p=None):
     # print("\n\n\n cdict", simple_cids, "\n\n\n")
     results["time candidates"] = str(tic_sel)
 
-    selected = filter_candidates_cover(
-        cdict, dcosts, min_cov=3, adjust_occs=True)
-
-    # print("\n\n\n\n\n\n selected", selected)
-    pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
 
     tac_sel = datetime.datetime.now()
     dT_sel += (tac_sel - tic_sel)
@@ -1262,7 +1247,7 @@ def mine_seqs(seqs, complex=True, max_p=None):
 
         tic_round = datetime.datetime.now()
         candsV = run_combine_vertical(
-            cpool, data_details, dcosts, nkeyH)
+            cpool, data_details, nkeyH)
         tac_rV = datetime.datetime.now()
         candsH = run_combine_horizontal(
             cpool, data_details, dcosts, nkeyV)
@@ -1307,9 +1292,6 @@ def mine_seqs(seqs, complex=True, max_p=None):
                 simple_selection_side.append(side)
                 simple_selection_nb_candidates.append(len(to_filter))
                 simple_selection_nb_time.append(str(tic_sel))
-
-                selected = filter_candidates_cover(
-                    cdict, dcosts, min_cov=3, adjust_occs=True, cis=to_filter)
 
                 tac_sel = datetime.datetime.now()
                 dT_sel += (tac_sel - tic_sel)

@@ -152,7 +152,6 @@ class CandidatePool(object):
             props = self.candidates[self.next_cid].getProps(
                 self.map_nkeys[nkey])
             if self.cand_props is None:
-                npids = range(len(props))
                 self.cand_props = np.array(props)
                 self.sorted_pids = range(len(props))
             else:

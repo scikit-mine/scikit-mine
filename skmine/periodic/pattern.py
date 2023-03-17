@@ -1,6 +1,5 @@
 import copy
 import pdb
-import re
 
 import numpy as np
 
@@ -29,7 +28,7 @@ def getEDict(oStar, E=[]):
     if len(E) >= len(oStar) - 1:
         Ex = [0] + list(E[:len(oStar) - 1])
     else:
-        Ex = [0 for o in oStar]
+        Ex = [0 for _ in oStar]
     oids = [o[-1] for o in oStar]
     return dict(zip(*[oids, Ex]))
 
@@ -1546,7 +1545,6 @@ class Pattern(object):
         if len(self.nodes[nid]["children"]) > 1:
             cld_i = np.log2(Tmax_rep + 1)
             cld = (len(self.nodes[nid]["children"]) - 1) * cld_i
-            ds = [v[1] for v in self.nodes[nid]["children"][1:]]
             cl += cld
 
         sum_spans = np.sum([nn[1] for nn in self.nodes[nid]["children"][1:]])
@@ -1565,7 +1563,7 @@ class Pattern(object):
             cl += self.codeLengthPDs(Tmax_i, nn[0])
         return cl
 
-    def codeLength(self, t0, E, data_details, match=None, nid=0):
+    def codeLength(self, t0, E, data_details, nid=0):
         """
         FIXME : to be explained
 
@@ -1574,7 +1572,6 @@ class Pattern(object):
         t0 : int
             timestamp of the first occurrence
         data_details
-        match
         nid
 
         Returns
