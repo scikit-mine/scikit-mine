@@ -350,6 +350,4 @@ class Candidate(object):
                 tmp = Candidate(-1, Q, Qoccs, QE)
                 fs.append(tmp)
                 fs.extend(tmp.factorizePattern())
-        if fs:
-            print("hello")
         return fs

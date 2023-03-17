@@ -5,7 +5,7 @@ import numpy
 
 from .candidate import Candidate
 from .candidate_pool import CandidatePool
-from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
+from .class_patterns import computePeriod, cost_one, sortPids
 from .class_patterns import prop_map
 from .data_sequence import DataSequence
 from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
@@ -55,57 +55,6 @@ def bronKerbosch3Plus(graph, collect, P, R=None, X=None):
             X.add(v)
 
 
-def prepare_candidate_two_nested(P_minor, p0, r0, p1, r1, first_rs):
-    """
-    FIXME : to be explained
-
-    Parameters
-    ----------
-    P_minor
-    p0
-    r0
-    p1
-    r1
-    first_rs
-
-    Returns
-    -------
-
-    """
-    tree = {0: {"p": p0, "r": r0, "children": [(1, 0)], "parent": None},
-            1: {"p": p1, "r": r1, "children": [(2, 0)], "parent": 0}}
-
-    if P_minor[0].isComplex():
-        nodes, offset, nmap = P_minor[0].getTranslatedPNodes(1)
-        ch = nodes.pop(nmap[0])["children"]
-        for c in ch:
-            nodes[c[0]]["parent"] = 1
-        tree[1]["children"] = ch
-        tree.update(nodes)
-    else:
-        tree[2] = {"event": P_minor[0].getEvent(), "parent": 1}
-
-    Pblks_occs = []
-    Pblks_errs = []
-    for ci, cand in enumerate(P_minor):
-        Pblks_occs.append(cand.getBlocksO(first_rs[ci]))
-        Pblks_errs.append(cand.getBlocksE(first_rs[ci]))
-
-    O = []
-    E = []
-    for i in range(r0):
-        for j in range(r1):
-            if j == 0:
-                if i > 0:
-                    E.append((Pblks_occs[i][j][0] - Pblks_occs[i - 1][j][0]) - p0)
-            else:
-                E.append((Pblks_occs[i][j][0] - Pblks_occs[i][j - 1][0]) - p1)
-            E.extend(Pblks_errs[i][j])
-            O.extend(Pblks_occs[i][j])
-    p = Pattern(tree)
-    return Candidate(-1, p, O, E)
-
-
 def prepare_tree_nested(cand, prds, lens):
     """
     Generate the tree of a nested candidate
@@ -146,7 +95,7 @@ def prepare_tree_nested(cand, prds, lens):
     return tree
 
 
-def prepare_candidate_nested(cp_det, cmplx_candidates):
+def prepare_candidate_nested(cp_det, cmplx_candidates):  # pragma : no cover
     """
     FIXME : to be explained
     Prepare a new nested candidate
@@ -401,33 +350,6 @@ def run_combine_vertical_cands(cpool, mk, data_details):
     return []
 
 
-def run_combine_vertical_event(cpool, mk, data_details):
-    """
-    FIXME : to be explained
-
-    Parameters
-    ----------
-    cpool
-    mk
-    data_details
-
-    Returns
-    -------
-
-    """
-    store_candidates = find_complexes(cpool, mk)
-    if len(store_candidates) == 0:
-        return []
-
-    cmplx_candidates = compute_costs_verticals(store_candidates, cpool, mk, data_details)
-
-    nested, covered = nest_cmplx(cmplx_candidates, data_details)
-    nested.extend([cmplx_cand for cci, cmplx_cand in enumerate(cmplx_candidates) if cci not in covered])
-
-    selected_ids = filter_candidates_topKeach(nested, k=TOP_KEACH)
-    return [nested[s] for s in selected_ids]
-
-
 def get_top_p(occ_ordc):
     """
     FIXME : to be explained
@@ -448,234 +370,6 @@ def get_top_p(occ_ordc):
         if numpy.abs(occ_ordc[top1][1] - occ_ordc[topN][1]) > numpy.abs(occ_ordc[top1][1] - occ_ordc[top2][1]):
             (top2, topN) = (topN, top2)
     return top1, top2, topN
-
-
-def find_complexes(cpool, mk):
-    """
-    FIXME : to be explained
-
-    Parameters
-    ----------
-    cpool
-    mk
-
-    Returns
-    -------
-
-    """
-    occs_to_cycles = {}
-    cids = cpool.getCidsForMinorK(mk)
-    if len(cids) < 4:  # not enough to make combinations
-        return []
-
-    for cid in cids:
-        for pid in cpool.getPidsForCid(cid):
-            (t0i, p0, r0, offset, cumEi, _) = cpool.getProp(pid)
-            remain = r0 - offset
-            if t0i not in occs_to_cycles:
-                occs_to_cycles[t0i] = {}
-            if p0 not in occs_to_cycles[t0i] or occs_to_cycles[t0i][p0][0] < remain:
-                occs_to_cycles[t0i][p0] = (remain, cid)
-
-    occs_to_ordc = {}
-    top_two = {}
-    for occ, dt in occs_to_cycles.items():
-        if len(dt) > 1:
-            # triples (nb_occ_after, period, cycle_id)
-            occs_to_ordc[occ] = sorted([(v[0], k, v[1])
-                                        for k, v in dt.items()], reverse=True)
-            top_two[occ] = get_top_p(occs_to_ordc[occ])
-
-    if len(occs_to_ordc) == 0:
-        return []
-
-    cids_keep = set(cids)
-    soccs = sorted(occs_to_ordc.keys())
-    map_soccs = dict([(v, k) for (k, v) in enumerate(soccs)])
-    scores = numpy.array([occs_to_ordc[x][top_two[x][0]][0]
-                          * occs_to_ordc[x][top_two[x][1]][0] for x in soccs])
-    store_candidates = []
-    same_score_candidates = []
-    cids_drop = set()
-
-    # print("nb cycles DYN=%d FOLD=%d start_comb=%d" % (nb_dync, len(cycles)-nb_dync, len(start_comb_seq)))
-    while numpy.max(scores) > 0:
-        topi = numpy.argmax(scores)
-
-        occ = soccs[topi]
-        (nbOleftA, pA, ciA) = occs_to_ordc[occ][top_two[occ][0]]
-        (nbOleftB, pB, ciB) = occs_to_ordc[occ][top_two[occ][1]]
-
-        # retrieve the length of the cycles starting along the two sides
-        if OFFSETS_T == [0]:  # strictly same period
-            Ws = [occs_to_cycles.get(nocc, {}).get(
-                pB, (0, -1)) for nocc in cpool.getCandidate(ciA).getMajorO()[-nbOleftA::]]
-            Hs = [occs_to_cycles.get(nocc, {}).get(
-                pA, (0, -1)) for nocc in cpool.getCandidate(ciB).getMajorO()[-nbOleftB::]]
-
-        else:  # tolerate period +- offset
-            Wcids, Wlefts, i = ([], [], 0)
-            while 0 <= i < nbOleftA:
-                nocc = cpool.getCandidate(ciA).getMajorO()[-nbOleftA + i]
-                if nocc in occs_to_cycles:
-                    ps = occs_to_cycles[nocc].keys()
-                    ppi = numpy.argmin([numpy.abs(k - pB) for k in ps])
-                    nleft, ncid = occs_to_cycles[nocc][ps[ppi]]
-                    if ncid not in Wcids:
-                        Wcids.append(ncid)
-                        Wlefts.append(nleft)
-                        i += 1
-                    else:
-                        i = -1
-                else:
-                    i = -1
-
-            Hcids, Hlefts, i = ([], [], 0)
-            while 0 <= i < nbOleftB:
-                nocc = cpool.getCandidate(ciB).getMajorO()[-nbOleftB + i]
-                if nocc in occs_to_cycles:
-                    ps = occs_to_cycles[nocc].keys()
-                    ppi = numpy.argmin([numpy.abs(k - pA) for k in ps])
-                    nleft, ncid = occs_to_cycles[nocc][ps[ppi]]
-                    if ncid not in Hcids:
-                        Hcids.append(ncid)
-                        Hlefts.append(nleft)
-                        i += 1
-                    else:
-                        i = -1
-                else:
-                    i = -1
-
-        h, w = (1, 1)
-        if len(Hcids) > 2 and len(Wcids) > 2:
-            # compute the actual size of tiles for different end corners
-            Wsmin = numpy.array([numpy.min(Wlefts[:i + 1])
-                                 for i in range(len(Wlefts))])
-            Hsmin = numpy.array([numpy.min(Hlefts[:i + 1])
-                                 for i in range(len(Hlefts))])
-            I, J = numpy.mgrid[0:len(Hcids), 0:len(Wcids)]
-            sizes = numpy.minimum(Wsmin[J], I + 1) * numpy.minimum(Hsmin[I], J + 1)
-            # pick the end corner of the largest tile
-            hi, wi = numpy.unravel_index(numpy.argmax(
-                sizes + (I / (2. * I.shape[0]) + J / (2. * J.shape[1]))), sizes.shape)
-            # hh,ww = (hi+1, wi+1)
-            h, w = (numpy.minimum(Wsmin[J], I + 1)[hi, wi],
-                    numpy.minimum(Hsmin[I], J + 1)[hi, wi])
-
-        if h > 2 and w > 2:
-            same_score_candidates.append({"cids": (Hcids[:h], Wcids[:w]),
-                                          "lefts": (Hlefts[:h], Wlefts[:w]),
-                                          "ps": (pA, pB),
-                                          "corner": occ,
-                                          "dims": (h, w)})
-
-        if top_two[occ][-1] > -1:  # if there is another pair with same score
-            direct = +1
-            if top_two[occ][-1] < top_two[occ][1]:
-                direct = -1
-            if top_two[occ][-1] == top_two[occ][1] + direct:
-                top_two[occ] = (top_two[occ][0], top_two[occ][1] + direct, -1)
-            else:
-                top_two[occ] = (top_two[occ][0], top_two[occ][1] + direct, top_two[occ][-1])
-
-        else:
-
-            scores[topi] = -1
-
-            if len(same_score_candidates) > 0:
-                same_score_candidates.sort(key=lambda x: (
-                    x["dims"][0] * x["dims"][1], x["ps"][1]), reverse=True)
-                tscore = same_score_candidates[0]["dims"][0] * \
-                         same_score_candidates[0]["dims"][1]
-
-                for cand in same_score_candidates[:1]:
-                    if cand["dims"][0] * cand["dims"][1] == tscore:
-                        cids_drop.update(cand["cids"][0] + cand["cids"][1])
-                        store_candidates.append(cand)
-
-                same_score_candidates = []
-
-        # update scores
-        # strictest: remove all cycles involved
-        # cids_drop = Wcids + Hcids
-        if len(cids_drop) > 0:
-            cids_keep.difference_update(cids_drop)
-            oids = set().union(
-                *[cpool.getCandidate(cid).getMajorO() for cid in cids_drop])
-            for oid in oids:
-                if oid not in occs_to_ordc:
-                    continue
-                excl = [t for t in occs_to_ordc[oid] if t[-1] in cids_drop]
-                occs_to_ordc[oid] = [
-                    t for t in occs_to_ordc[oid] if t[-1] not in cids_drop]
-                if len(occs_to_ordc[oid]) > 1:
-                    top_two[oid] = get_top_p(occs_to_ordc[oid])
-                    scores[map_soccs[oid]] = occs_to_ordc[oid][top_two[oid][0]][0] * \
-                                             occs_to_ordc[oid][top_two[oid][1]][0]
-                    for (_, prd, cid) in excl:
-                        del occs_to_cycles[oid][prd]
-                else:
-                    scores[map_soccs[oid]] = -1
-            cids_drop = set()
-    return store_candidates
-
-
-def compute_costs_verticals(store_candidates, cpool, mk, data_details):
-    """
-    FIXME : to be explained
-
-    Parameters
-    ----------
-    store_candidates
-    cpool
-    mk
-    data_details
-
-    Returns
-    -------
-
-    """
-    selection = []
-    store_candidates.sort(
-        key=lambda x: x["dims"][0] * x["dims"][1], reverse=True)
-    for ci, cand in enumerate(store_candidates):
-        new_cands = {}
-        sum_cost = {}
-        sum_nboccs = {}
-
-        for hw in [0, 1]:  # consider both ways of nesting
-            Pdiffs_minor = []
-            Poccs_major = []
-            first_rs = []
-            # occurrence list and periods
-            P_minor = [cpool.getCandidate(cid) for cid in cand["cids"][hw]]
-            for cci, P in enumerate(P_minor):
-                first_rs.append(P.getMajorR() - cand["lefts"][hw][cci])
-                tmp = P.getMajorO()[first_rs[-1]:first_rs[-1] + cand["dims"][1 - hw]]
-                Poccs_major.append(tmp[0])
-                Pdiffs_minor.extend(numpy.diff(tmp))
-
-            if mk in data_details["nbOccs"]:
-                sum_cost[hw] = cost_one(data_details, mk)
-                sum_nboccs[hw] = 1.
-            else:
-                sum_cost[hw] = numpy.sum([c.getCost() for c in P_minor])
-                sum_nboccs[hw] = numpy.sum([c.getNbOccs() for c in P_minor])
-
-            p1 = computePeriodDiffs(Pdiffs_minor)
-            p0 = computePeriod(Poccs_major)
-            r0, r1 = (cand["dims"][hw], cand["dims"][1 - hw])
-            new_cands[hw] = prepare_candidate_two_nested(
-                P_minor, p0, r0, p1, r1, first_rs)
-            new_cands[hw].computeCost(data_details)
-
-        choose_id = 0
-        # choose inside/outside
-        if new_cands[1].getCostRatio() < new_cands[0].getCostRatio():
-            choose_id = 1
-        if new_cands[choose_id].getCostRatio() < (sum_cost[choose_id] / sum_nboccs[choose_id]):
-            selection.append(new_cands[choose_id])
-    return selection
 
 
 def nest_cmplx(cmplx_candidates, data_details):
