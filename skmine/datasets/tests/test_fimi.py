@@ -1,10 +1,7 @@
 import os
-import types
+from urllib.request import urlopen
 
 import pandas as pd
-
-import pytest
-from urllib.request import urlopen
 
 from skmine.datasets import fimi
 

@@ -2,11 +2,11 @@
 Base IO for all FIMI datasets
 All datasets are available here : `http://fimi.uantwerpen.be/data/`
 """
-import os
-import wget
 import gzip
+import os
 
 import pandas as pd
+import wget
 
 from ._base import get_data_home
 

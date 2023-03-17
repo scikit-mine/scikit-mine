@@ -1,9 +1,8 @@
 """
 Callback API for scikit-mine
 """
-from inspect import signature, getsource
-
 import re
+from inspect import signature, getsource
 
 
 def has_self_assigment(f):

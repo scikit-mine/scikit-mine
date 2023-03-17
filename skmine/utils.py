@@ -3,7 +3,6 @@ Utils functions
 """
 
 import numbers
-from itertools import count
 
 import numpy as np
 import pandas as pd

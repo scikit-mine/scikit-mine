@@ -1,11 +1,11 @@
-import json
 import os
+from datetime import datetime
 from unittest import mock
 from unittest.mock import patch, mock_open
-from pandas._testing import assert_series_equal
-from datetime import datetime
+
 import pandas as pd
 import pytest
+from pandas._testing import assert_series_equal
 
 from ..periodic import fetch_canadian_tv, fetch_health_app, fetch_file, read_ubiq_user
 

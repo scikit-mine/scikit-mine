@@ -1,6 +1,3 @@
-import numpy as np
-import pytest
-
 from skmine.periodic.extract_cycles import combine_splits, recover_splits_rec
 
 

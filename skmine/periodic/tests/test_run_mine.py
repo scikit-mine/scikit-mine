@@ -1,9 +1,5 @@
-import numpy
-import pytest
-
 from skmine.periodic.candidate import Candidate
-from skmine.periodic.candidate_pool import CandidatePool
-from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, makeCandOnOrder, get_top_p, \
+from skmine.periodic.run_mine import bronKerbosch3Plus, merge_cycle_lists, get_top_p, \
     prepare_tree_nested
 
 

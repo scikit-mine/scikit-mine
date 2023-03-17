@@ -1,10 +1,11 @@
+from itertools import chain
+
+import numpy as np
 import pytest
 
-from .._samples_generator import make_transactions
 from .._samples_generator import make_classification
+from .._samples_generator import make_transactions
 from ..utils import describe
-from itertools import chain
-import numpy as np
 
 
 def test_make_transactions():

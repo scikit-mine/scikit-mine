@@ -1,7 +1,7 @@
+from unittest import mock
+
 import numpy as np
 import pytest
-
-from unittest import mock
 
 from skmine.periodic.pattern import Pattern, getEDict, codeLengthE, getEforOccs
 
