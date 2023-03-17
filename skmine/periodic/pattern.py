@@ -252,6 +252,7 @@ class Pattern(object):
         if "children" in self.nodes[self.next_id]:
             for (nc, _) in self.nodes[self.next_id]["children"]:
                 self.nodes[nc]["parent"] = self.next_id
+
         self.nodes[0] = {"parent": None, "p": p,
                          "r": r, "children": [(self.next_id, 0)]}
         self.next_id += 1
@@ -313,7 +314,7 @@ class Pattern(object):
             The id of the node to start the computation
 
         rightmost : bool, default=True
-            Wheter the current node is the rightmost child of its parent
+            Whether the current node is the rightmost child of its parent
 
         Returns
         -------
