@@ -8,14 +8,14 @@ import sys
 
 import numpy
 
-from .candidate import Candidate
-from .candidate_pool import CandidatePool
-from .data_sequence import DataSequence
-from .pattern import Pattern
-from .pattern_collection import PatternCollection
-from .class_patterns import prop_map
-from .class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
-from .extract_cycles import compute_cycles_dyn, extract_cycles_fold
+from skmine.periodic.candidate import Candidate
+from skmine.periodic.candidate_pool import CandidatePool
+from skmine.periodic.data_sequence import DataSequence
+from skmine.periodic.pattern import Pattern
+from skmine.periodic.pattern_collection import PatternCollection
+from skmine.periodic.class_patterns import prop_map
+from skmine.periodic.class_patterns import computePeriodDiffs, computePeriod, cost_one, sortPids
+from skmine.periodic.extract_cycles import compute_cycles_dyn, extract_cycles_fold
 
 numpy.set_printoptions(suppress=True)
 
@@ -1056,8 +1056,7 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V", fo_log=None):
                         pids, prop_map["cid"]])[0][::-1]:
                         pids.pop(pp)
                     if pids_new is not None:
-                        for pp in numpy.where(patterns_props[i, prop_map["cid"]] == patterns_props[
-                            pids_new, prop_map["cid"]])[0][::-1]:
+                        for pp in numpy.where(patterns_props[i, prop_map["cid"]] == patterns_props[pids_new, prop_map["cid"]])[0][::-1]:
                             pids_new.pop(pp)
                         if len(pids_new) == 0:
                             pids = []

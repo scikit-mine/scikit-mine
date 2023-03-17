@@ -1,12 +1,13 @@
 import json
 import os
+from unittest import mock
 from unittest.mock import patch, mock_open
 from pandas._testing import assert_series_equal
-
+from datetime import datetime
 import pandas as pd
 import pytest
 
-from ..periodic import fetch_canadian_tv, fetch_health_app, fetch_file
+from ..periodic import fetch_canadian_tv, fetch_health_app, fetch_file, read_ubiq_user
 
 
 def mock_read_csv(*args, **kwargs):
@@ -17,6 +18,16 @@ def mock_read_csv_canadian_tv(*args, **kwargs):
     programs = ["The Moblees", "Big Block Sing Song", "Big Block Sing Song", "CBC Kids"]
     index = pd.date_range(start="08/01/2020", periods=len(programs), freq="1H")
     return pd.DataFrame(programs, index=index)
+
+
+def mock_read_csv_ubiq(*args, **kwargs):
+    events = ["com.android.launcher_I", "com.android.settings_I", "com.motorola.context_I",
+              "com.motorola.modemservice_S"]
+    index = pd.date_range(start="14/11/2013", periods=len(events), freq="1S")
+    s = pd.Series(events, index=index)
+    s.index.name = 'timestamp'
+    s.name = 'USER_0'
+    return pd.Series(events, index=index)
 
 
 def test_fetch_file_two_columns():
@@ -97,3 +108,35 @@ def test_fetch_canadian_tv(monkeypatch, already_downloaded):
     data = fetch_canadian_tv()
     assert data.shape == (4,)
     assert isinstance(data.index, pd.DatetimeIndex)
+
+
+# @pytest.mark.parametrize("already_downloaded", [True, False])
+# def test_fetch_ubiq(monkeypatch, already_downloaded):
+#     d_file = ["1_M_IS_data.dat"] if already_downloaded else []
+#     if not already_downloaded:
+#         monkeypatch.setattr(pd.Series, "to_csv", lambda *args, **kwargs: None)
+#     monkeypatch.setattr(os, "listdir", lambda *args: d_file)
+#     monkeypatch.setattr(pd, "read_csv", mock_read_csv_ubiq)
+#     read_ubiq_user
+#     data = fetch_ubiq()
+#
+#     # assert data.shape == (4,)
+#     # assert isinstance(data.index, pd.DatetimeIndex)
+
+
+@mock.patch('builtins.open', mock_open(
+    read_data='user_info=1_M\tstart_time=2018-01-01 00:00:00\n' \
+              '0\tUnlockPhone\n' \
+              '60\tOpenScreen\n'))
+def test_read_ubiq_user():
+    filename = 'dummy_file.txt'
+    df, user, start_time = read_ubiq_user(filename)
+
+    assert isinstance(df, pd.Series)
+    assert isinstance(user, str)
+    assert isinstance(start_time, datetime)
+    assert df.name == 'event'
+    assert df.index.name == 'time'
+    assert df.index[0] == datetime(2018, 1, 1, 0, 0, 0)
+    assert df.iloc[0] == 'UnlockPhone'
+    assert df.iloc[1] == 'OpenScreen'
