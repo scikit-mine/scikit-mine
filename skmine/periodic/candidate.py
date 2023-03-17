@@ -127,6 +127,15 @@ class Candidate(object):
             return self.P["alpha"]
 
     def getEvent(self):
+        """
+
+        Returns
+        -------
+            list or int or str
+        list : if the candidate is a `Pattern` and if there is multiple events, it returns the list of events
+        str : if the candidate is a `Pattern` and if there is only one event, it returns the event id as a str
+        int : otherwise it returns an int
+        """
         if self.isPattern():
             tmp = self.P.getEventsList(add_delimiter=False)
             if len(tmp) == 1:
@@ -165,7 +174,7 @@ class Candidate(object):
             MK = self.P.pattMajorKey()
         else:
             MK = "[%s,%s]" % (len(self.O), self.P["p"])
-        return (self.getT0(), MK)
+        return self.getT0(), MK
 
     def getMajorP(self):
         if self.isPattern():
