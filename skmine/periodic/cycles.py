@@ -151,8 +151,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.alpha_groups = S.groupby(S.values).groups
 
-        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups),
-                                            fn_basis=None, complex=complex)
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups), complex=complex)
 
         self.data_details = data_details
         self.miners_ = pc

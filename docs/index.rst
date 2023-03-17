@@ -31,6 +31,8 @@ Welcome to scikit-mine's documentation!
    tutorials/itemsets/index
    tutorials/callbacks/index
    tutorials/graph/index
+   tutorials/periodic/index
+
 
 
 

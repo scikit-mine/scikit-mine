@@ -152,7 +152,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     return s
 
 
-def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"):
+def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"): # pragma : no cover
     """
     Fetch and return smartphone lifelogging event from different users
     see : https://archive.ics.uci.edu/ml/datasets/UbiqLog+%28smartphone+lifelogging%29
@@ -246,7 +246,7 @@ def read_ubiq_user(filename: str) -> tuple:
     return df, user, start_time
 
 
-def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:
+def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:  # pragma : no cover
     """   Parse global file with multiple user and construct csv files , one per user
 
     Parameters
@@ -323,9 +323,3 @@ def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:
                             if pair != prev:
                                 fo.write("%d\t%s\n" % pair)
                                 prev = pair
-
-
-if __name__ == "__main__":
-    # s = fetch_ubiq(data_home=None, user_filename="2_F_ISE_data.dat")
-    s = fetch_ubiq()
-    # h = fetch_health_app()
