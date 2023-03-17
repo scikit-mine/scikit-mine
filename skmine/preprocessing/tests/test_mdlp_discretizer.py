@@ -1,12 +1,12 @@
+import numpy as np
+import pandas as pd
+import pytest
+
 from ..mdlp_discretizer import (
     MDLPVectDiscretizer,
     MDLPDiscretizer,
     generate_cut_point,
 )
-import numpy as np
-import pandas as pd
-
-import pytest
 
 
 def test_generate_cut_points():

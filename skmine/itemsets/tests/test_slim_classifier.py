@@ -1,9 +1,7 @@
-import pytest
-from ..slim_classifier import SlimClassifier
-from ...datasets.fimi import fetch_iris
-
 import pandas as pd
-import numpy as np
+import pytest
+
+from ..slim_classifier import SlimClassifier
 
 
 @pytest.fixture

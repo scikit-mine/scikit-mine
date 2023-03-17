@@ -1,12 +1,13 @@
-import logging
+import math
 import time
 from collections import defaultdict
+
+import networkx as nx
 import numpy
 import pandas
-from .code_table_row import CodeTableRow
-import math
-import networkx as nx
+
 import skmine.graph.graphmdl.utils as utils
+from .code_table_row import CodeTableRow
 
 
 class CodeTable:

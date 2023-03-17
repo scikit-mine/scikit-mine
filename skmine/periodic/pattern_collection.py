@@ -195,7 +195,7 @@ class PatternCollection(object):
                 cl, 100 * cl / clRonly, clRonly)
         return out_str, pl_str
 
-    def output_pattern_list_and_cost(self, data_seq, print_simple=True, auto_time_scale_factor=1):
+    def output_pattern_list_and_cost(self, data_seq, print_simple=True):
         cl = 0
         data_details = data_seq.getDetails()
         ocls = self.getOccLists()
@@ -237,7 +237,7 @@ class PatternCollection(object):
         data_details = data_seq.getDetails()
 
         patterns_list_of_dict, cl = self.output_pattern_list_and_cost(
-            data_seq, print_simple, auto_time_scale_factor=auto_time_scale_factor)
+            data_seq, print_simple)
 
         global_stat_dict = {"Total patterns nb": len(self)}
         for (k, v) in sorted(nbs.items(), key=lambda x: -x[1]):

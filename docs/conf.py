@@ -12,6 +12,7 @@
 #
 import os
 import sys
+
 from packaging.version import parse
 
 sys.path.insert(0, os.path.abspath('../'))

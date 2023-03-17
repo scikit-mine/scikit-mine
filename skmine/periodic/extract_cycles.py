@@ -1,10 +1,7 @@
-import datetime
-import pdb
-
 import numpy
 
 from .class_patterns import computeLengthCycle, computeLengthResidual, computePeriod, \
-    cost_triple, cost_one
+    cost_triple
 
 DYN_BLOCK_SIZE = 100
 STEP_SIZE = 80

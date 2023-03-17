@@ -1,8 +1,7 @@
 import os
 
-import pandas as pd
-import pytest
 import numpy as np
+import pandas as pd
 
 from ..lcm import LCM
 from ..lcm import LCMMax

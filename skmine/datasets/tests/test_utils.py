@@ -1,7 +1,6 @@
-import pytest
+import pandas as pd
 
 from ..utils import describe
-import pandas as pd
 
 
 def test_describe():

@@ -59,9 +59,6 @@ class CandidatePool(object):
             self.sorted_pids = sortPids(self.cand_props)
         return self.sorted_pids
 
-    def getPidsForCid(self, cid):
-        return np.where(self.cand_props[:, -1] == cid)[0]
-
     def getCidsForMinorK(self, mK):
         return list(self.map_minorKs.get(mK, {}).values())
 
@@ -87,16 +84,6 @@ class CandidatePool(object):
 
     def getPropMat(self):
         return self.cand_props
-
-    def getProp(self, pid, att=None):
-        """
-        Returns the property values for the specified candidate ID and property name or index.
-        """
-        if type(att) is int and att < len(Candidate.prop_list):
-            return self.cand_props[pid, att]
-        elif att in Candidate.prop_map:
-            return self.cand_props[pid, Candidate.prop_map[att]]
-        return self.cand_props[pid, :]
 
     def addCand(self, p, nkey=None, with_props=True):
         """
@@ -152,7 +139,6 @@ class CandidatePool(object):
             props = self.candidates[self.next_cid].getProps(
                 self.map_nkeys[nkey])
             if self.cand_props is None:
-                npids = range(len(props))
                 self.cand_props = np.array(props)
                 self.sorted_pids = range(len(props))
             else:

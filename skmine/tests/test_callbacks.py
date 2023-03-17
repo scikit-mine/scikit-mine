@@ -1,10 +1,10 @@
-from ..callbacks import CallBacks, post, _print_candidates_size, _print_positive_gain
-from ..callbacks import has_self_assigment
-
-from io import StringIO
 import sys
+from io import StringIO
 
 import pytest
+
+from ..callbacks import CallBacks, post, _print_candidates_size, _print_positive_gain
+from ..callbacks import has_self_assigment
 
 
 class Obj:

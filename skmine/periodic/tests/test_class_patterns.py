@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from skmine.periodic.class_patterns import _getChained, computePeriodDiffs, computePeriod, computeE, cost_one, \
     computeLengthEOccs, computeLengthResidual, key_to_l, l_to_key, l_to_br, key_to_br, propCmp, sortPids, \

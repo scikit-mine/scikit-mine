@@ -3,10 +3,10 @@
 
 import inspect
 from abc import ABC, abstractmethod
-from sklearn.base import TransformerMixin
 
 import numpy as np
 import pandas as pd
+from sklearn.base import TransformerMixin
 
 
 class BaseMiner(ABC):

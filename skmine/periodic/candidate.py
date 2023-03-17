@@ -343,13 +343,11 @@ class Candidate(object):
                 map_Q = dict([(v, k) for (k, v) in enumerate(
                     [c[:2] for c in Q.getTimesNidsRefs()])])
 
-                Qoccs = [None for i in range(len(self.O))]
+                Qoccs = [None for _ in range(len(self.O))]
                 for i, r in enumerate(refs_P):
                     Qoccs[map_Q[r]] = self.O[i]
                 QE = Q.computeEFromO(Qoccs)
                 tmp = Candidate(-1, Q, Qoccs, QE)
                 fs.append(tmp)
                 fs.extend(tmp.factorizePattern())
-        if fs:
-            print("hello")
         return fs

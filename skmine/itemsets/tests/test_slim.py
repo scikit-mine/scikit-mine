@@ -1,11 +1,8 @@
-from itertools import compress
 import numpy as np
-import pandas
 import pandas as pd
 import pytest
-from sortedcontainers import SortedDict
-
 from pyroaring import BitMap as Bitmap
+from sortedcontainers import SortedDict
 
 from ..slim import SLIM, _to_vertical, _log2, cover
 

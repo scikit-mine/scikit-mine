@@ -6,16 +6,17 @@
 #
 # License: BSD 3 clause
 
-import warnings
 import json
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from .run_mine import mine_seqs
+from .data_sequence import DataSequence
 from .pattern import Pattern, getEDict
 from .pattern_collection import PatternCollection
-from .data_sequence import DataSequence
+from .run_mine import mine_seqs
 
 INDEX_TYPES = (
     pd.DatetimeIndex,
@@ -44,7 +45,7 @@ def _iterdict_str_to_int_keys(dict_):
             value = _iterdict_str_to_int_keys(value)
         try:
             key = int(key)
-        except Exception as ex:
+        except Exception:
             pass
         correctedDict[key] = value
 

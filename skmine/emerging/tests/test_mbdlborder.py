@@ -1,9 +1,9 @@
+import pandas as pd
+
 from ..mbdldorber import MBDLLBorder
 from ..mbdldorber import border_diff
-from ..mbdldorber import mbdllborder
 from ..mbdldorber import borders_to_patterns
-
-import pandas as pd
+from ..mbdldorber import mbdllborder
 
 
 def test_borders_diff():

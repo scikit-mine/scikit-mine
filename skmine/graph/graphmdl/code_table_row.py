@@ -1,5 +1,6 @@
-from skmine.graph.graphmdl import utils
 import math
+
+from skmine.graph.graphmdl import utils
 
 
 class CodeTableRow:

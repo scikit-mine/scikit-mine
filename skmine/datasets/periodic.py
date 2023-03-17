@@ -2,10 +2,10 @@
 Base IO for all periodic datasets
 """
 import os
-import warnings
 import re
-import pandas as pd
 from datetime import datetime, timedelta
+
+import pandas as pd
 
 from skmine.datasets._base import get_data_home
 
