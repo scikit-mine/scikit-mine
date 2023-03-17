@@ -311,6 +311,16 @@ class Candidate(object):
             return []
 
     def factorizePattern(self):
+        """
+        Factorize the candidate pattern
+
+        The candidate cid is affected to -1.
+
+        Returns
+        -------
+            list
+        List of factorized candidate
+        """
         fs = []
         if self.isPattern():
             nf = self.P.canFactorize()
@@ -332,4 +342,6 @@ class Candidate(object):
                 tmp = Candidate(-1, Q, Qoccs, QE)
                 fs.append(tmp)
                 fs.extend(tmp.factorizePattern())
+        if fs:
+            print("hello")
         return fs

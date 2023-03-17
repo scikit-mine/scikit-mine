@@ -181,3 +181,37 @@ def test_adjustOccs():
     # 6 uncovered and 7 occurrences
     cand.adjustOccs()
     assert cand.P["occs_up"] == [159626862, 159626934, 159627012, 159627090, 159627162, 159627234]
+
+
+def test_factorizePattern():
+    cid = 1
+    pattern = Pattern(
+        {0: {'p': 60480, 'r': 4, 'children': [(1, 0), (3, 360)], 'parent': None},
+         2: {'event': 36, 'parent': 1},
+         1: {'p': 8640, 'r': 5, 'children': [(2, 0)], 'parent': 0},
+         4: {'event': 20, 'parent': 3},
+         3: {'p': 8640, 'r': 5, 'children': [(4, 0)], 'parent': 0}})
+    O = [159645240, 159653880, 159662520, 159671160, 159679800, 159645600, 159654240, 159662880, 159671520, 159680160,
+         159705720, 159714360, 159723000, 159731640, 159740280, 159706080, 159714720, 159723360, 159732000, 159740640,
+         159766200, 159774840, 159783480, 159792120, 159800760, 159766560, 159775200, 159783840, 159792480, 159801120,
+         159826680, 159835320, 159843960, 159852600, 159861240, 159827040, 159835680, 159844320, 159852960, 159861600]
+
+    E = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0]
+
+    cost = 206.8680130396454
+    cand = Candidate(cid, pattern, O, E, cost)
+    cands_factorized = cand.factorizePattern()
+    assert len(cands_factorized) == 1
+    cand_factorized = cands_factorized[0]
+    assert set(cand_factorized.O) == set(O)
+    assert cand_factorized.E == E
+    assert cand_factorized.cid == -1
+    pattern_factorized = Pattern(
+        {0: {'p': 60480, 'r': 4, 'children': [(1, 0)], 'parent': None},
+         2: {'event': 36, 'parent': 1},
+         1: {'p': 8640, 'r': 5, 'children': [(2, 0), (4, 360)], 'parent': 0},
+         4: {'event': 20, 'parent': 1}}
+    )
+    assert cand_factorized.P.nodes == pattern_factorized.nodes
+    print(cand_factorized)
