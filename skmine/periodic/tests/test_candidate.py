@@ -215,3 +215,8 @@ def test_factorizePattern():
     )
     assert cand_factorized.P.nodes == pattern_factorized.nodes
     print(cand_factorized)
+
+
+def test_getEventTuple(cand, cand_pattern):
+    assert cand.getEventTuple() == (1,)
+    assert cand_pattern.getEventTuple() == ('4',)

@@ -146,6 +146,14 @@ class Candidate(object):
             return self.P["alpha"]
 
     def getEventTuple(self):
+        """
+        Get the list of events associated to the candidate
+
+        Returns
+        -------
+        tuple
+            A tuple with all events. If the candidate is a pattern, events are returned as str else as int
+        """
         if self.isPattern():
             return tuple(self.P.getEventsList(add_delimiter=False))
         else:
