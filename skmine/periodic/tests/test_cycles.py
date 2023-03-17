@@ -87,7 +87,7 @@ def test_discover(data):
     assert res_discover["pattern"].dtypes.name == "object"
     assert res_discover["repetition_major"].dtypes.name == "int64"
     assert res_discover["period_major"].dtypes.name == "timedelta64[ns]"
-    assert res_discover["E"].dtypes.name == "timedelta64[ns]"
+    assert res_discover["sum_E"].dtypes.name == "timedelta64[ns]"
 
     res_discover = pcm.discover(dE_sum=False)
     assert res_discover["E"].dtypes.name == "object"

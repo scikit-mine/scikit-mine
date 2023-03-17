@@ -180,7 +180,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 start       when the cycle starts
                 length      number of occurrences in the event
                 period      inter-occurrence delay
-                dE          shift corrections
+                sum_E       absolute sum of errors
+                E           shift corrections (if dE_sum=False)
                 cost        MDL cost
                 ==========  ======================================
 
@@ -216,7 +217,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
                 self.cycles["E"] = self.cycles["E"].apply(lambda x: list(map(to_timedelta, x)))
         if dE_sum:
-            self.cycles["E"] = self.cycles["E"].apply(lambda x: np.sum(np.abs(x)))
+            self.cycles.rename(columns={"E": "sum_E"}, inplace=True)
+            self.cycles["sum_E"] = self.cycles["sum_E"].apply(lambda x: np.sum(np.abs(x)))
 
         if chronological_order:
             self.cycles.sort_values(by='t0', inplace=True)
