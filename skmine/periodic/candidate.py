@@ -289,23 +289,6 @@ class Candidate(object):
     def isEfficient(self, dcosts):
         return (self.getCost() / self.getNbUncovered()) < np.mean([dcosts[unc[1]] for unc in self.uncov])
 
-    def adjustOccs(self):
-        """
-        Adds to self.P["occs_up"], the list of uncov timestamps
-
-        Returns
-        -------
-        None
-        """
-        if not self.isPattern() and (self.uncov is not None) and (self.getNbUncovered() < self.getNbOccs()):
-            okk = self.getEvOccs()
-            mni, mxi = (0, len(self.O) - 1)
-            while okk[mni] not in self.uncov:
-                mni += 1
-            while okk[mxi] not in self.uncov:
-                mxi -= 1
-            self.P["occs_up"] = [self.O[kk] for kk in range(mni, mxi + 1)]
-
     def getProps(self, nkey=0, max_offset=None):
         if max_offset is None:
             max_offset = PROPS_MAX_OFFSET

@@ -732,7 +732,7 @@ def makeCandOnOrder(cand_pids, data_details, patterns_props, cpool):
     return new_cand
 
 
-def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=None):
+def filter_candidates_cover(cands, dcosts, min_cov=1, cis=None):
     """
     Filters a list of candidates based on their coverage and cost efficiency.
 
@@ -740,7 +740,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
     cands (dict or list): A dictionary or list of Candidate objects.
     dcosts (dict): A dictionary of costs for each data point.
     min_cov (int): The minimum number of data points a candidate must cover to be selected. Default is 1.
-    adjust_occs (bool): Whether to adjust occurrences of patterns. Default is False.
     cis (list): A list of candidate indices to consider. If not provided, all candidates will be considered.
 
     Returns:
@@ -750,7 +749,7 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
     ------
     >>> cands = [Candidate(...), Candidate(...), ...]
     >>> dcosts = {'data1': 0.5, 'data2': 0.8, ...}
-    >>> selected = filter_candidates_cover(cands, dcosts, min_cov=2, adjust_occs=True, cis=[0, 2, 5])
+    >>> selected = filter_candidates_cover(cands, dcosts, min_cov=2,  cis=[0, 2, 5])
     """
     if cis is None:
         if type(cands) is dict:
@@ -771,8 +770,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
         nxti = cis.pop(0)
         if cands[nxti].getCostUncoveredRatio() <= max_eff:
             if cands[nxti].getNbUncovered() >= min_cov and cands[nxti].isEfficient(dcosts):
-                if not cands[nxti].isPattern() and adjust_occs:
-                    cands[nxti].adjustOccs()
 
                 selected.append(nxti)
                 covered.update(cands[nxti].getUncovered())
@@ -1013,7 +1010,7 @@ def mine_seqs(seqs, complex=True, max_p=None):
     results["Final_selection_TIME"] = str(tac_comb)
 
     selected = filter_candidates_cover(
-        cdict, dcosts, min_cov=3, adjust_occs=True)
+        cdict, dcosts, min_cov=3)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
     tac = datetime.datetime.now()
 
