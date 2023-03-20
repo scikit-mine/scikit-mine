@@ -1,6 +1,7 @@
 import copy
 import pdb
 
+import graphviz
 import numpy as np
 
 from .class_patterns import l_to_key, key_to_l, OPT_TO
@@ -48,6 +49,39 @@ def codeLengthE(E):
     L(E)
     """
     return np.sum([2 + np.abs(e) for e in E])
+
+
+def draw_pattern(json_pattern):
+    graph = graphviz.Digraph("graph", filename="process.gv", engine="dot")
+    return draw_pattern_rec(graph, json_pattern, id_to_pr_event=None, id=0, id_parent=-1, distance=(-1, -1))
+
+
+def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, distance=(-1, -1)):
+    if id_to_pr_event is None:
+        id_to_pr_event = {}
+
+    element = pattern[id]
+
+    if "p" in element:  # node
+        id_to_pr_event[id] = "p=" + str(element["p"]) + "\nr=" + str(element["r"])
+        graph.node(id_to_pr_event[id], shape="box")
+
+        if id_parent != -1:
+            graph.edge(id_to_pr_event[id_parent], id_to_pr_event[id], dir="none")
+
+            if distance != (-1, -1):
+                graph.edge(id_to_pr_event[distance[0]], id_to_pr_event[id], label=str(distance[1]), style="dotted")
+
+        for i, child in enumerate(element["children"]):
+            distance = (element["children"][i - 1][0], child[1]) if child[1] != 0 else (-1, -1)
+            draw_pattern_rec(graph, pattern, id_to_pr_event=id_to_pr_event, id=child[0], id_parent=id,
+                             distance=distance)
+
+    else:  # leaf
+        id_to_pr_event[id] = str(element["event"])
+        graph.edge(id_to_pr_event[id_parent], id_to_pr_event[id], dir="none")
+
+    return graph
 
 
 class Pattern(object):
