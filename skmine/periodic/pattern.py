@@ -33,25 +33,6 @@ def getEDict(oStar, E=[]):
     return dict(zip(*[oids, Ex]))
 
 
-def getEforOccs(map_occs, occs):
-    """
-    FIXME : to be explained
-
-    Constructs the list of errors
-    # TODO : WARNING! WRONG, this is using absolute errors...
-
-    Parameters
-    ----------
-    map_occs
-    occs
-
-    Returns
-    -------
-
-    """
-    return [t - map_occs.get(oid, t) for (t, alpha, oid) in occs]
-
-
 def codeLengthE(E):
     """
     L(E) = 2 |E| + ∑_{e∈E} |e|
@@ -1405,21 +1386,6 @@ class Pattern(object):
             return self.nodes[nid]["r"] * np.sum([self.cardO(nn[0]) for nn in self.nodes[nid]["children"]])
         else:
             return 1
-
-    def getE(self, map_occs, nid=0):
-        """
-        Compute the errors by assuming perfect periodicity (occsStar) and differentiating from the actual occurrences.
-
-        Parameters
-        ----------
-        map_occs
-        nid
-
-        Returns
-        -------
-
-        """
-        return getEforOccs(map_occs, self.getOccsStar(nid, time=map_occs[None]))
 
     def codeLengthPTop(self, deltaT, EC_za=None, nid=0):
         """
