@@ -475,7 +475,7 @@ class Pattern(object):
         occsStar = self.getOccsStar()
         oids = [o[-1] for o in occsStar]
         occsD = dict(zip(*[oids, occs]))
-        rEd, rt0 = self.computeEDict(occsD)
+        rEd, _ = self.computeEDict(occsD)
         return [rEd[oo] for oo in oids[1:]]
 
     def getOccsRefs(self, nid=0, pref=[], refs={}, cnref='root', offset=0):

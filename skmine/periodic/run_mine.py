@@ -14,7 +14,6 @@ from .pattern_collection import PatternCollection
 
 numpy.set_printoptions(suppress=True)
 
-OFFSETS_T = [0, 1, -1]
 TOP_KEACH = 5
 CHECK_HORDER = True
 
@@ -127,7 +126,7 @@ def prepare_candidate_nested(cp_det, cmplx_candidates):  # pragma : no cover
 
     list_reps = list(itertools.product(*[range(l) for l in lens[:-depth]]))
     map_reps = dict([(v, k) for (k, v) in enumerate(list_reps)])
-    t00, Es = (None, [])
+    Es = []
     for pi, pp in enumerate(list_reps):
         t0i = cmplx_candidates[idxs[pi]].getT0()
         Ei = cmplx_candidates[idxs[pi]].getE()
@@ -532,7 +531,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
         pids_new = [pids[p] for p in numpy.where(Inew)[0]]
 
     keep_cands = {}
-    drop_overlap = 0
     # for each pattern Pa in turn
     while len(pids) > 1:
         if pids_new is not None:
@@ -601,7 +599,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
                     patterns_props[i, prop_map["t0i"]] == patterns_props[j, prop_map["t0i"]]):
                 continue
             if len(set(cands[0].getEvOccs()).intersection(cands[1].getEvOccs())) > 0:
-                drop_overlap += 1
                 continue
 
             r0 = numpy.min(patterns_props[cand_pids, prop_map["r0"]] -
