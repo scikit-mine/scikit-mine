@@ -232,7 +232,7 @@ class PatternCollection(object):
 
         return patterns_list_of_dict, cl
 
-    def output_detailed(self, data_seq, print_simple=True, auto_time_scale_factor=1):
+    def output_detailed(self, data_seq, print_simple=True):
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 

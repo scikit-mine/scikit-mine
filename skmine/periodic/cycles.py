@@ -198,7 +198,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         """
 
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details, auto_time_scale_factor=10 ** self.n_zeros_ if self.auto_time_scale else 1)
+            self.data_details)
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME

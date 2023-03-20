@@ -258,12 +258,15 @@ class Candidate(object):
 
     def initUncovered(self):
         """
-        FIXME : why the list of peer timestamps/events not covered by the candidate is equal to the list of occurrences
-                of the pattern?
+        Initializes the list of occurrences of the candidate pattern that are not covered by occurrences of other
+        patterns already selected.
+
+        The set "uncovered" corresponds to "occs(P)\\ O", initially no pattern is selected, O is empty, none of the
+        occurrences are covered. See : https://arxiv.org/pdf/1807.01706.pdf#page=29
 
         Returns
         -------
-
+        None
         """
         self.uncov = set(self.getEvOccs())
 
