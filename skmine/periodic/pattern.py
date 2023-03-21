@@ -53,6 +53,7 @@ def codeLengthE(E):
 
 def draw_pattern(json_pattern):
     """
+    TODO
 
     Parameters
     ----------

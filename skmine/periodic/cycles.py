@@ -238,7 +238,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         # allows us to call export_patterns without explicitly calling discover method before
         self.discover()
 
-        big_dict_list = [json.loads(i) for i in self.cycles["pattern_json_tree"].values]
+        big_dict_list = [i for i in self.cycles["pattern_json_tree"].values]
 
         data_dict = self.alpha_groups.copy()
         for k, v in data_dict.items():
@@ -416,4 +416,21 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
 
     def draw_pattern(self, pattern_id):
+        """
+        TODO
+
+        Parameters
+        ----------
+        pattern_id
+
+        Returns
+        -------
+
+        """
+        pattern = self.cycles.loc[pattern_id]["pattern_json_tree"]
+        # map each event id to its real textual name
+        for nid in pattern.keys():
+            if isinstance(nid, int):
+                if "event" in pattern[nid].keys():
+                    pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
         return draw_pattern(self.cycles.loc[pattern_id]["pattern_json_tree"])
