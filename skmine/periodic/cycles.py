@@ -444,12 +444,28 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if "event" in pattern[nid].keys():
                     pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
 
-        if self.auto_time_scale:
-            pattern["t0"] *= 10 ** self.n_zeros_
-            if self.is_datetime_:
-                pattern["t0"] = np.datetime64(pattern["t0"], "ns")
+                elif "p" in pattern[nid].keys():
+                    if self.auto_time_scale:
+                        pattern[nid]["p"] *= 10 ** self.n_zeros_
+                        if self.is_datetime_:
+                            pattern[nid]["p"] = np.timedelta64(pattern[nid]["p"], "ns")
+                    for i, child in enumerate(pattern[nid]["children"]):
+                        new_distance = child[1]
+                        if self.auto_time_scale:
+                            new_distance = child[1] * 10 ** self.n_zeros_
+                            if self.is_datetime_:
+                                new_distance = np.timedelta64(child[1], "ns")
+                        pattern[nid]["children"][i] = (child[0], new_distance)
 
-        graph = draw_pattern(pattern)
+            elif nid == "t0":
+                if self.auto_time_scale:
+                    pattern["t0"] *= 10 ** self.n_zeros_
+                    if self.is_datetime_:
+                        pattern["t0"] = np.datetime64(pattern["t0"], "ns")
+
+
+
+                graph = draw_pattern(pattern)
         if directory:
             graph.render(directory=directory)
         return graph
