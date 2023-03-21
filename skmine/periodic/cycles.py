@@ -1,11 +1,5 @@
 """Periodic pattern mining with a MDL criterion"""
-# Authors: Rémi Adon <remi.adon@gmail.com>
-#          Esther Galbrun <esther.galbrun@inria.fr>
-#          Cyril Regan <cyril.regan@loria.fr>
-#          Thomas Betton <thomas.betton@irisa.fr>
-#
-# License: BSD 3 clause
-
+import copy
 import json
 import warnings
 
@@ -17,6 +11,13 @@ from .data_sequence import DataSequence
 from .pattern import Pattern, getEDict, draw_pattern
 from .pattern_collection import PatternCollection
 from .run_mine import mine_seqs
+
+# Authors: Rémi Adon <remi.adon@gmail.com>
+#          Esther Galbrun <esther.galbrun@inria.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
+#          Thomas Betton <thomas.betton@irisa.fr>
+#
+# License: BSD 3 clause
 
 INDEX_TYPES = (
     pd.DatetimeIndex,
@@ -427,10 +428,10 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         -------
 
         """
-        pattern = self.cycles.loc[pattern_id]["pattern_json_tree"]
+        pattern = copy.deepcopy(self.cycles.loc[pattern_id]["pattern_json_tree"])
         # map each event id to its real textual name
         for nid in pattern.keys():
             if isinstance(nid, int):
                 if "event" in pattern[nid].keys():
                     pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
-        return draw_pattern(self.cycles.loc[pattern_id]["pattern_json_tree"])
+        return draw_pattern(pattern)

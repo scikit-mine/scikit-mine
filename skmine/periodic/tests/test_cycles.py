@@ -195,6 +195,19 @@ def test_import_patterns(patterns_json):
     assert pcm.miners_.patterns[0][2] == patterns_json["patterns"][0]["E"]
 
 
+def test_import_export_patterns(data):
+    pcm1 = PeriodicPatternMiner()
+    pcm1.fit(data)
+    res1 = pcm1.discover()
+    pcm1.export_patterns()
+
+    pcm2 = PeriodicPatternMiner()
+    pcm2.import_patterns()
+    res2 = pcm2.discover()
+
+    assert_frame_equal(res1, res2)
+
+
 @pytest.fixture
 def expected_reconstruct():
     expected_reconstruct = pd.DataFrame({

@@ -95,7 +95,7 @@ def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, di
         graph.edge(str(id_parent), str(id), dir="none")
 
         if distance != (-1, -1):
-            graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted")
+            graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted", constraint="false")
 
     return graph
 
