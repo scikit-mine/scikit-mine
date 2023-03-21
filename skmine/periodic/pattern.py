@@ -104,7 +104,10 @@ def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, di
     element = pattern[id]
 
     if "p" in element:  # node containing p and r
-        id_to_pr_event[id] = "p=" + str(element["p"]) + "\nr=" + str(element["r"])
+        if id == 0:
+            id_to_pr_event[id] = "t0=" + str(pattern["t0"]) + "\np=" + str(element["p"]) + "\nr=" + str(element["r"])
+        else:
+            id_to_pr_event[id] = "p=" + str(element["p"]) + "\nr=" + str(element["r"])
         graph.node(name=str(id), label=id_to_pr_event[id], shape="box")
 
         if id_parent != -1:

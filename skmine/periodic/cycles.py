@@ -444,6 +444,11 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if "event" in pattern[nid].keys():
                     pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
 
+        if self.auto_time_scale:
+            pattern["t0"] *= 10 ** self.n_zeros_
+            if self.is_datetime_:
+                pattern["t0"] = np.datetime64(pattern["t0"], "ns")
+
         graph = draw_pattern(pattern)
         if directory:
             graph.render(directory=directory)
