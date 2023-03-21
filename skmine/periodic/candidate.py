@@ -258,12 +258,15 @@ class Candidate(object):
 
     def initUncovered(self):
         """
-        FIXME : why the list of peer timestamps/events not covered by the candidate is equal to the list of occurrences
-                of the pattern?
+        Initializes the list of occurrences of the candidate pattern that are not covered by occurrences of other
+        patterns already selected.
+
+        The set "uncovered" corresponds to "occs(P)\\ O", initially no pattern is selected, O is empty, none of the
+        occurrences are covered. See : https://arxiv.org/pdf/1807.01706.pdf#page=29
 
         Returns
         -------
-
+        None
         """
         self.uncov = set(self.getEvOccs())
 
@@ -288,23 +291,6 @@ class Candidate(object):
 
     def isEfficient(self, dcosts):
         return (self.getCost() / self.getNbUncovered()) < np.mean([dcosts[unc[1]] for unc in self.uncov])
-
-    def adjustOccs(self):
-        """
-        Adds to self.P["occs_up"], the list of uncov timestamps
-
-        Returns
-        -------
-        None
-        """
-        if not self.isPattern() and (self.uncov is not None) and (self.getNbUncovered() < self.getNbOccs()):
-            okk = self.getEvOccs()
-            mni, mxi = (0, len(self.O) - 1)
-            while okk[mni] not in self.uncov:
-                mni += 1
-            while okk[mxi] not in self.uncov:
-                mxi -= 1
-            self.P["occs_up"] = [self.O[kk] for kk in range(mni, mxi + 1)]
 
     def getProps(self, nkey=0, max_offset=None):
         if max_offset is None:

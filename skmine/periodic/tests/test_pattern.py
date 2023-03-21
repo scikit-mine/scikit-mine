@@ -3,7 +3,7 @@ from unittest import mock
 import numpy as np
 import pytest
 
-from skmine.periodic.pattern import Pattern, getEDict, codeLengthE, getEforOccs
+from skmine.periodic.pattern import Pattern, getEDict, codeLengthE
 
 
 @pytest.fixture
@@ -814,13 +814,6 @@ def test_getKeyLFromNid_complex(tree_data_complex):
 def test_getKeyFromNid(tree_data_complex):
     pattern = Pattern(tree_data_complex)
     assert pattern.getKeyFromNid(nid=4, rep=-1) == "2,4;0,2"
-
-
-def test_getEforOccs():
-    map_occs = {1: 2, 2: 3, 4: 6}
-    occs = [(1, 0.1, 1), (4, 0.2, 2), (5, 0.3, 3)]
-    expected_output = [-1, 1, 0]
-    assert getEforOccs(map_occs, occs) == expected_output
 
 
 def test_codeLength():

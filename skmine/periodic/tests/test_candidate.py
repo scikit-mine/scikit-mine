@@ -147,40 +147,11 @@ def test___str__(cand):
         50.22386061518789, 3, cand.getCostRatio(), 3, {'alpha': 1, 'p': 50, 'source': (2, 0)}, 0)
 
 
-def test_adjustOccs_no_changes(cand, cand_pattern):
-    P = cand.P
-    cand.adjustOccs()
-    assert cand.P == P
-
-    P = cand_pattern.P
-    cand_pattern.adjustOccs()
-    assert cand_pattern.P == P
-
-
 def test_initUncovered(cand, cand_pattern):
     cand.initUncovered()
     assert cand.uncov == {(0, 1), (51, 1), (100, 1)}
     cand_pattern.initUncovered()
     assert cand_pattern.uncov == {(0, 4), (60480, 4), (120961, 4), (181441, 4), (241921, 4)}
-
-
-def test_adjustOccs():
-    cid = 1
-    pattern = {
-        'alpha': 10,
-        'p': 75,
-        'pos': [8, 9, 11, 12, 14, 15, 16],
-        'uncov': {8, 9, 11, 12, 14, 15, 16},
-        'source': (1, 1)
-    }
-    O = [159626778, 159626862, 159626934, 159627012, 159627090, 159627162, 159627234]
-    E = [9, -3, 3, 3, -3, -3]
-    cost = 78.81334894354123
-    cand = Candidate(cid, pattern, O, E, cost)
-    cand.uncov = {(159626862, 10), (159626934, 10), (159627012, 10), (159627090, 10), (159627162, 10), (159627234, 10)}
-    # 6 uncovered and 7 occurrences
-    cand.adjustOccs()
-    assert cand.P["occs_up"] == [159626862, 159626934, 159627012, 159627090, 159627162, 159627234]
 
 
 def test_factorizePattern():

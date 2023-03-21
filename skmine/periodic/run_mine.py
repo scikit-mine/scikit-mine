@@ -14,7 +14,6 @@ from .pattern_collection import PatternCollection
 
 numpy.set_printoptions(suppress=True)
 
-OFFSETS_T = [0, 1, -1]
 TOP_KEACH = 5
 CHECK_HORDER = True
 
@@ -127,7 +126,7 @@ def prepare_candidate_nested(cp_det, cmplx_candidates):  # pragma : no cover
 
     list_reps = list(itertools.product(*[range(l) for l in lens[:-depth]]))
     map_reps = dict([(v, k) for (k, v) in enumerate(list_reps)])
-    t00, Es = (None, [])
+    Es = []
     for pi, pp in enumerate(list_reps):
         t0i = cmplx_candidates[idxs[pi]].getT0()
         Ei = cmplx_candidates[idxs[pi]].getE()
@@ -532,7 +531,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
         pids_new = [pids[p] for p in numpy.where(Inew)[0]]
 
     keep_cands = {}
-    drop_overlap = 0
     # for each pattern Pa in turn
     while len(pids) > 1:
         if pids_new is not None:
@@ -601,7 +599,6 @@ def run_combine_horizontal(cpool, data_details, dcosts, nkey="V"):
                     patterns_props[i, prop_map["t0i"]] == patterns_props[j, prop_map["t0i"]]):
                 continue
             if len(set(cands[0].getEvOccs()).intersection(cands[1].getEvOccs())) > 0:
-                drop_overlap += 1
                 continue
 
             r0 = numpy.min(patterns_props[cand_pids, prop_map["r0"]] -
@@ -732,7 +729,7 @@ def makeCandOnOrder(cand_pids, data_details, patterns_props, cpool):
     return new_cand
 
 
-def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=None):
+def filter_candidates_cover(cands, dcosts, min_cov=1, cis=None):
     """
     Filters a list of candidates based on their coverage and cost efficiency.
 
@@ -740,7 +737,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
     cands (dict or list): A dictionary or list of Candidate objects.
     dcosts (dict): A dictionary of costs for each data point.
     min_cov (int): The minimum number of data points a candidate must cover to be selected. Default is 1.
-    adjust_occs (bool): Whether to adjust occurrences of patterns. Default is False.
     cis (list): A list of candidate indices to consider. If not provided, all candidates will be considered.
 
     Returns:
@@ -750,7 +746,7 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
     ------
     >>> cands = [Candidate(...), Candidate(...), ...]
     >>> dcosts = {'data1': 0.5, 'data2': 0.8, ...}
-    >>> selected = filter_candidates_cover(cands, dcosts, min_cov=2, adjust_occs=True, cis=[0, 2, 5])
+    >>> selected = filter_candidates_cover(cands, dcosts, min_cov=2,  cis=[0, 2, 5])
     """
     if cis is None:
         if type(cands) is dict:
@@ -771,8 +767,6 @@ def filter_candidates_cover(cands, dcosts, min_cov=1, adjust_occs=False, cis=Non
         nxti = cis.pop(0)
         if cands[nxti].getCostUncoveredRatio() <= max_eff:
             if cands[nxti].getNbUncovered() >= min_cov and cands[nxti].isEfficient(dcosts):
-                if not cands[nxti].isPattern() and adjust_occs:
-                    cands[nxti].adjustOccs()
 
                 selected.append(nxti)
                 covered.update(cands[nxti].getUncovered())
@@ -1013,7 +1007,7 @@ def mine_seqs(seqs, complex=True, max_p=None):
     results["Final_selection_TIME"] = str(tac_comb)
 
     selected = filter_candidates_cover(
-        cdict, dcosts, min_cov=3, adjust_occs=True)
+        cdict, dcosts, min_cov=3)
     pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
     tac = datetime.datetime.now()
 

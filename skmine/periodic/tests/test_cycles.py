@@ -87,7 +87,7 @@ def test_discover(data):
     assert res_discover["pattern"].dtypes.name == "object"
     assert res_discover["repetition_major"].dtypes.name == "int64"
     assert res_discover["period_major"].dtypes.name == "timedelta64[ns]"
-    assert res_discover["E"].dtypes.name == "timedelta64[ns]"
+    assert res_discover["sum_E"].dtypes.name == "timedelta64[ns]"
 
     res_discover = pcm.discover(dE_sum=False)
     assert res_discover["E"].dtypes.name == "object"
@@ -193,6 +193,19 @@ def test_import_patterns(patterns_json):
     assert pcm.miners_.patterns[0][0].nodes[1] == patterns_json["patterns"][0]["1"]
     assert pcm.miners_.patterns[0][1] == patterns_json["patterns"][0]["t0"]
     assert pcm.miners_.patterns[0][2] == patterns_json["patterns"][0]["E"]
+
+
+def test_import_export_patterns(data):
+    pcm1 = PeriodicPatternMiner()
+    pcm1.fit(data)
+    res1 = pcm1.discover()
+    pcm1.export_patterns()
+
+    pcm2 = PeriodicPatternMiner()
+    pcm2.import_patterns()
+    res2 = pcm2.discover()
+
+    assert_frame_equal(res1, res2)
 
 
 @pytest.fixture

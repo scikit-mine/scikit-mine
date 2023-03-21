@@ -13,10 +13,17 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from skmine.periodic.data_sequence import DataSequence
-from skmine.periodic.pattern import Pattern, getEDict
-from skmine.periodic.pattern_collection import PatternCollection
-from skmine.periodic.run_mine import mine_seqs
+from .data_sequence import DataSequence
+from .pattern import Pattern, getEDict
+from .pattern_collection import PatternCollection
+from .run_mine import mine_seqs
+
+# Authors: Rémi Adon <remi.adon@gmail.com>
+#          Esther Galbrun <esther.galbrun@inria.fr>
+#          Cyril Regan <cyril.regan@loria.fr>
+#          Thomas Betton <thomas.betton@irisa.fr>
+#
+# License: BSD 3 clause
 
 INDEX_TYPES = (
     pd.DatetimeIndex,
@@ -180,7 +187,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 start       when the cycle starts
                 length      number of occurrences in the event
                 period      inter-occurrence delay
-                dE          shift corrections
+                sum_E       absolute sum of errors
+                E           shift corrections (if dE_sum=False)
                 cost        MDL cost
                 ==========  ======================================
 
@@ -197,7 +205,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         """
 
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details, auto_time_scale_factor=10 ** self.n_zeros_ if self.auto_time_scale else 1)
+            self.data_details)
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME
@@ -216,7 +224,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
                 self.cycles["E"] = self.cycles["E"].apply(lambda x: list(map(to_timedelta, x)))
         if dE_sum:
-            self.cycles["E"] = self.cycles["E"].apply(lambda x: np.sum(np.abs(x)))
+            self.cycles.rename(columns={"E": "sum_E"}, inplace=True)
+            self.cycles["sum_E"] = self.cycles["sum_E"].apply(lambda x: np.sum(np.abs(x)))
 
         if chronological_order:
             self.cycles.sort_values(by='t0', inplace=True)
@@ -236,7 +245,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         # allows us to call export_patterns without explicitly calling discover method before
         self.discover()
 
-        big_dict_list = [json.loads(i) for i in self.cycles["pattern_json_tree"].values]
+        big_dict_list = [i for i in self.cycles["pattern_json_tree"].values]
 
         data_dict = self.alpha_groups.copy()
         for k, v in data_dict.items():
@@ -413,3 +422,35 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         return residuals_transf_pd
 
 
+    def draw_pattern(self, pattern_id, directory=None):
+        """
+        Visually display a pattern based on its id from the discover command.
+
+        Parameters
+        ----------
+        pattern_id : int
+            The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.
+
+        directory : str, default=None
+             Directory where the generated image and the DOT file are stored
+
+        Returns
+        -------
+        Digraph
+            The generated tree. To see it in a python script, you have to add .view()
+        """
+        # discover must have been called before draw_pattern
+        if self.cycles is None:
+            raise Exception("discover must have been called before draw_pattern")
+
+        pattern = copy.deepcopy(self.cycles.loc[pattern_id]["pattern_json_tree"])
+        # map each event id to its real textual name
+        for nid in pattern.keys():
+            if isinstance(nid, int):
+                if "event" in pattern[nid].keys():
+                    pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
+
+        graph = draw_pattern(pattern)
+        if directory:
+            graph.render(directory=directory)
+        return graph

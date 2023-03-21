@@ -104,7 +104,6 @@ def combine_splits(splits, adj_splits):
         else:
             # append and combine splits
             prev_i = 0
-            popped = 0
             ready = False
 
             while not ready:
@@ -122,7 +121,6 @@ def combine_splits(splits, adj_splits):
                     if adj_splits[0][1] <= splits[prev_i][1]:
                         # first adj ends before current splits
                         adj_splits.pop(0)
-                        popped += 1
                         if len(adj_splits) == 0:
                             ready = True
                     else:
