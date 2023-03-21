@@ -172,6 +172,7 @@ class PatternCollection(object):
 
     def strDetailed(self, data_seq, print_simple=True):  # pragma : no cover
         nbs = self.nbPatternsByType()
+
         data_details = data_seq.getDetails()
 
         pl_str, cl = self.strPatternListAndCost(data_seq, print_simple)
@@ -193,7 +194,10 @@ class PatternCollection(object):
         if clRonly > 0:
             out_str += "-- Total code length = %f (%f%% of %f)\n" % (
                 cl, 100 * cl / clRonly, clRonly)
-        return out_str, pl_str
+        # print(out_str)
+        # print("=" * 60)
+        # print(pl_str)
+        return cl, clRonly, clR, nbs['simple'], nbR, len(self)
 
     def output_pattern_list_and_cost(self, data_seq, print_simple=True):
         cl = 0
