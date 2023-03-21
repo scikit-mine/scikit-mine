@@ -416,7 +416,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         return residuals_transf_pd
 
 
-    def draw_pattern(self, pattern_id):
+    def draw_pattern(self, pattern_id, directory=None):
         """
         Visually display a pattern based on its id from the discover command.
 
@@ -424,6 +424,9 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         ----------
         pattern_id : int
             The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.
+
+        directory : str, default=None
+             Directory where the generated image and the DOT file are stored
 
         Returns
         -------
@@ -440,4 +443,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if isinstance(nid, int):
                 if "event" in pattern[nid].keys():
                     pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
-        return draw_pattern(pattern)
+
+        graph = draw_pattern(pattern)
+        if directory:
+            graph.render(directory=directory)
+        return graph
