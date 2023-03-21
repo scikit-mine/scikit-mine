@@ -1,5 +1,3 @@
-import json
-
 import numpy as np
 
 from .class_patterns import cost_one
@@ -215,7 +213,7 @@ class PatternCollection(object):
             pattern_tree["next_id"] = p.next_id
             pattern_tree["t0"] = int(t0)
             pattern_tree["E"] = [int(e) for e in E]
-            pattern_tree = json.dumps(_change_int64_toint(pattern_tree))
+            pattern_tree = _change_int64_toint(pattern_tree)
 
             dict_pattern["t0"] = t0
             dict_pattern["pattern_json_tree"] = pattern_tree

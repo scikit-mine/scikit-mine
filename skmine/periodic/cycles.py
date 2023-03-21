@@ -14,7 +14,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .data_sequence import DataSequence
-from .pattern import Pattern, getEDict
+from .pattern import Pattern, getEDict, draw_pattern
 from .pattern_collection import PatternCollection
 from .run_mine import mine_seqs
 
@@ -413,3 +413,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             residuals_transf_pd = residuals_transf_pd.sort_values(by=['event'])
 
         return residuals_transf_pd
+
+
+    def draw_pattern(self, pattern_id):
+        return draw_pattern(self.cycles.loc[pattern_id]["pattern_json_tree"])

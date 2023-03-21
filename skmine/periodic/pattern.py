@@ -74,22 +74,27 @@ def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, di
 
     if "p" in element:  # node
         id_to_pr_event[id] = "p=" + str(element["p"]) + "\nr=" + str(element["r"])
-        graph.node(id_to_pr_event[id], shape="box")
+        graph.node(name=str(id), label=id_to_pr_event[id], shape="box")
 
         if id_parent != -1:
-            graph.edge(id_to_pr_event[id_parent], id_to_pr_event[id], dir="none")
+            graph.edge(str(id_parent), str(id), dir="none")
 
             if distance != (-1, -1):
-                graph.edge(id_to_pr_event[distance[0]], id_to_pr_event[id], label=str(distance[1]), style="dotted")
+                graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted")
 
         for i, child in enumerate(element["children"]):
             distance = (element["children"][i - 1][0], child[1]) if child[1] != 0 else (-1, -1)
+            # id of the node where the distance starts + distance
             draw_pattern_rec(graph, pattern, id_to_pr_event=id_to_pr_event, id=child[0], id_parent=id,
                              distance=distance)
 
     else:  # leaf
         id_to_pr_event[id] = str(element["event"])
-        graph.edge(id_to_pr_event[id_parent], id_to_pr_event[id], dir="none")
+        graph.node(name=str(id), label=id_to_pr_event[id])
+        graph.edge(str(id_parent), str(id), dir="none")
+
+        if distance != (-1, -1):
+            graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted")
 
     return graph
 
