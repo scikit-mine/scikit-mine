@@ -52,6 +52,16 @@ def codeLengthE(E):
 
 
 def draw_pattern(json_pattern):
+    """
+
+    Parameters
+    ----------
+    json_pattern
+
+    Returns
+    -------
+
+    """
     graph = graphviz.Digraph("graph", filename="process.gv", engine="dot")
     return draw_pattern_rec(graph, json_pattern, id_to_pr_event=None, id=0, id_parent=-1, distance=(-1, -1))
 
