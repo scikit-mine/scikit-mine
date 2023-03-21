@@ -418,16 +418,22 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
     def draw_pattern(self, pattern_id):
         """
-        TODO
+        Visually display a pattern based on its id from the discover command.
 
         Parameters
         ----------
-        pattern_id
+        pattern_id : int
+            The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.
 
         Returns
         -------
-
+        Digraph
+            The generated tree. To see it in a python script, you have to add .view()
         """
+        # discover must have been called before draw_pattern
+        if self.cycles is None:
+            raise Exception("discover must have been called before draw_pattern")
+
         pattern = copy.deepcopy(self.cycles.loc[pattern_id]["pattern_json_tree"])
         # map each event id to its real textual name
         for nid in pattern.keys():

@@ -53,35 +53,66 @@ def codeLengthE(E):
 
 def draw_pattern(json_pattern):
     """
-    TODO
+    Visualising a pattern from its compact node tree structure
 
     Parameters
     ----------
-    json_pattern
+    json_pattern : dict
+        The pattern tree (node) as a dictionary
 
     Returns
     -------
-
+        Digraph
     """
-    graph = graphviz.Digraph("graph", filename="process.gv", engine="dot")
-    return draw_pattern_rec(graph, json_pattern, id_to_pr_event=None, id=0, id_parent=-1, distance=(-1, -1))
+    graph = graphviz.Digraph(engine="dot")
+    return draw_pattern_rec(graph, json_pattern)
 
 
 def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, distance=(-1, -1)):
+    """
+    The recursive method for generating the graph from Graphviz
+
+    Parameters
+    ----------
+    graph : Digraph
+        The graph to be passed at each recursive call
+
+    pattern : dict
+        The pattern tree (node)
+
+    id_to_pr_event : dict
+        This dictionary contains as key the ids of the events contained in the tree and as value the textual events.
+
+    id : int, default=0
+        id of the current node processed
+
+    id_parent : int, default=-1
+        id of the parent node of the current node
+
+    distance : tuple, default=(-1, -1)
+        tuple to indicate the inter-distances. Items:
+        1. id of the node where the distance starts
+        2. inter-block distance value
+
+    Returns
+    -------
+    Digraph
+    """
     if id_to_pr_event is None:
         id_to_pr_event = {}
 
     element = pattern[id]
 
-    if "p" in element:  # node
+    if "p" in element:  # node containing p and r
         id_to_pr_event[id] = "p=" + str(element["p"]) + "\nr=" + str(element["r"])
         graph.node(name=str(id), label=id_to_pr_event[id], shape="box")
 
         if id_parent != -1:
-            graph.edge(str(id_parent), str(id), dir="none")
+            graph.edge(str(id_parent), str(id), dir="none")  # dir="none": undirected arrow
 
-            if distance != (-1, -1):
-                graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted")
+            if distance != (-1, -1):  # inter-block distance d
+                graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted", constraint="false")
+                # constraint="false": to not increase the depth
 
         for i, child in enumerate(element["children"]):
             distance = (element["children"][i - 1][0], child[1]) if child[1] != 0 else (-1, -1)
@@ -94,7 +125,7 @@ def draw_pattern_rec(graph, pattern, id_to_pr_event=None, id=0, id_parent=-1, di
         graph.node(name=str(id), label=id_to_pr_event[id])
         graph.edge(str(id_parent), str(id), dir="none")
 
-        if distance != (-1, -1):
+        if distance != (-1, -1):  # inter-block distance d
             graph.edge(str(distance[0]), str(id), label=str(distance[1]), style="dotted", constraint="false")
 
     return graph
