@@ -463,9 +463,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                     if self.is_datetime_:
                         pattern["t0"] = np.datetime64(pattern["t0"], "ns")
 
-
-
-                graph = draw_pattern(pattern)
+        graph = draw_pattern(pattern)
         if directory:
             graph.render(directory=directory)
         return graph
