@@ -1,20 +1,15 @@
 """Periodic pattern mining with a MDL criterion"""
-# Authors: Rémi Adon <remi.adon@gmail.com>
-#          Esther Galbrun <esther.galbrun@inria.fr>
-#          Cyril Regan <cyril.regan@loria.fr>
-#          Thomas Betton <thomas.betton@irisa.fr>
-#
-# License: BSD 3 clause
-
+import copy
 import json
 import warnings
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from .data_sequence import DataSequence
-from .pattern import Pattern, getEDict
+from .pattern import Pattern, getEDict, draw_pattern
 from .pattern_collection import PatternCollection
 from .run_mine import mine_seqs
 
@@ -149,6 +144,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if diff:
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
+
+        S = S.copy()
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -449,6 +446,25 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if isinstance(nid, int):
                 if "event" in pattern[nid].keys():
                     pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
+
+                elif "p" in pattern[nid].keys():
+                    if self.auto_time_scale:
+                        pattern[nid]["p"] *= 10 ** self.n_zeros_
+                        if self.is_datetime_:
+                            pattern[nid]["p"] = timedelta(microseconds=pattern[nid]["p"]/1000)
+                    for i, child in enumerate(pattern[nid]["children"]):
+                        new_distance = child[1]
+                        if new_distance != 0 and self.auto_time_scale:
+                            new_distance = child[1] * 10 ** self.n_zeros_
+                            if self.is_datetime_:
+                                new_distance = timedelta(microseconds=new_distance/1000)
+                        pattern[nid]["children"][i] = (child[0], new_distance)
+
+            elif nid == "t0":
+                if self.auto_time_scale:
+                    pattern["t0"] *= 10 ** self.n_zeros_
+                    if self.is_datetime_:
+                        pattern["t0"] = np.datetime64(pattern["t0"], "ns")
 
         graph = draw_pattern(pattern)
         if directory:
