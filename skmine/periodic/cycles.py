@@ -2,7 +2,7 @@
 import copy
 import json
 import warnings
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import numpy as np
 import pandas as pd
@@ -464,7 +464,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if self.auto_time_scale:
                     pattern["t0"] *= 10 ** self.n_zeros_
                     if self.is_datetime_:
-                        pattern["t0"] = np.datetime64(pattern["t0"], "ns")
+                        pattern["t0"] = datetime.fromtimestamp(pattern["t0"]/1_000_000_000)
 
         graph = draw_pattern(pattern)
         if directory:
