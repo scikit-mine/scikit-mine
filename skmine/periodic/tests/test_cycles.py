@@ -282,4 +282,4 @@ def test_draw_pattern(data):
     graph = pcm.draw_pattern(0)
     assert 0 in res.index
     assert type(graph) == graphviz.graphs.Digraph
-    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 09:30:00\np=1 day, 0:00:30\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'
+    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 07:30:00\np=1 day, 0:00:30\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'

@@ -462,7 +462,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if self.auto_time_scale:
                     pattern["t0"] *= 10 ** self.n_zeros_
                     if self.is_datetime_:
-                        pattern["t0"] = datetime.fromtimestamp(pattern["t0"]/1_000_000_000)
+                        pattern["t0"] = datetime.utcfromtimestamp(pattern["t0"]/1_000_000_000)
 
         graph = draw_pattern(pattern)
         if directory:
