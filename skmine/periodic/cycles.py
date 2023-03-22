@@ -2,6 +2,7 @@
 import copy
 import json
 import warnings
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -138,10 +139,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             # same time AND with the same event. At this line, the second condition is not yet verified.
             len_S = len(S)
             S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
-            S = S.reset_index(level=0, drop=True)
             diff = len_S - len(S)
             if diff:
+                S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
+
+        S = S.copy()
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -448,13 +451,13 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                     if self.auto_time_scale:
                         pattern[nid]["p"] *= 10 ** self.n_zeros_
                         if self.is_datetime_:
-                            pattern[nid]["p"] = np.timedelta64(pattern[nid]["p"], "ns")
+                            pattern[nid]["p"] = timedelta(microseconds=pattern[nid]["p"]/1000)
                     for i, child in enumerate(pattern[nid]["children"]):
                         new_distance = child[1]
-                        if self.auto_time_scale:
+                        if new_distance != 0 and self.auto_time_scale:
                             new_distance = child[1] * 10 ** self.n_zeros_
                             if self.is_datetime_:
-                                new_distance = np.timedelta64(child[1], "ns")
+                                new_distance = timedelta(microseconds=new_distance/1000)
                         pattern[nid]["children"][i] = (child[0], new_distance)
 
             elif nid == "t0":
