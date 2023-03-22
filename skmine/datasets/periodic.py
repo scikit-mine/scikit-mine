@@ -14,7 +14,7 @@ health_app_url = "https://raw.githubusercontent.com/logpai/loghub/master/HealthA
 canadianTV_url = "https://zenodo.org/record/4671512/files/canadian_tv.txt"
 
 
-def fetch_file(filepath, separator=','):
+def fetch_file(filepath, separator=',', format=None):
     """Loader for files in periodic format (timestamp,event\n). The first element can be a datetime or an integer and
     the second is a string.
     This file reader can also work for files with only one value per line (the event).
@@ -28,6 +28,9 @@ def fetch_file(filepath, separator=','):
     separator : str
         Indicate a custom separator between timestamps and events. By default, it is a comma.
         If the file contains only one column, this parameter is not useful.
+    format : str
+        format for datetime, like "%d/%m/%Y %H:%M:%S" for day/month/year hour:min:sec
+         see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior for all possibilities
 
     Returns
     -------
@@ -39,7 +42,7 @@ def fetch_file(filepath, separator=','):
     if type(s) == pd.DataFrame:
         s = pd.Series(s[1].values, index=s[0])
         try:
-            s.index = pd.to_datetime(s.index)
+            s.index = pd.to_datetime(s.index, format=format)
         except ValueError:
             s.index = s.index.astype("int64")
     s.index.name = "timestamp"
