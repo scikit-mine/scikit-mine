@@ -129,7 +129,7 @@ def test_fetch_canadian_tv(monkeypatch, already_downloaded):
               '0\tUnlockPhone\n' \
               '60\tOpenScreen\n'))
 def test_read_ubiq_user():
-    filename = 'dummy_file.txt'
+    filename = 'test_ISE_data.dat'
     df, user, start_time = read_ubiq_user(filename)
 
     assert isinstance(df, pd.Series)
