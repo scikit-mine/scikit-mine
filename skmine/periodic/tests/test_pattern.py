@@ -774,6 +774,22 @@ def test_pattern___str__(tree_data_complex):
                                                                                "d=50] [r=3 p=50000](shower))"
 
 
+def test_pattern___str___datetime():
+    pattern = Pattern({0: {'p': 8640, 'r': 5,
+                           'children': [(1, 0), (2, 132), (3, 6), (4, 0), (5, 12), (6, 30)],
+                           'parent': None},
+                       1: {'parent': 0, 'event': 10},
+                       2: {'parent': 0, 'event': 10},
+                       3: {'parent': 0, 'event': 7},
+                       4: {'parent': 0, 'event': 10},
+                       5: {'parent': 0, 'event': 7},
+                       6: {'parent': 0, 'event': 5}})
+
+    assert pattern.__str__(map_ev={10: "CBC Kids", 7: "Big Block Sing Song", 5: "Beat Bugs"}, leaves_first=True,
+                           n_zeros=10, is_datetime=True) == "(CBC Kids [d=0:22:00] CBC Kids [d=0:01:00] Big Block Sing " \
+                                                            "Song [d=0:00:00] CBC Kids [d=0:02:00] Big Block Sing Song " \
+                                                            "[d=0:05:00] Beat Bugs)[r=5 p=1 day, 0:00:00]"
+
 def test_getTreeStr(tree_data_complex):
     pattern = Pattern(tree_data_complex)
     assert pattern.getTreeStr() == "|_ [0] r=5 p=8643\n\t| d=0\n\t|_ [1] 4\n\t| d=0\n\t|_ [2] 7\n\t| d=50\n\t|_ [3] " \
