@@ -144,8 +144,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
 
-        S = S.copy()
-
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
         else:
