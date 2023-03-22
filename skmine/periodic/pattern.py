@@ -1,5 +1,6 @@
 import copy
 import pdb
+from datetime import timedelta
 
 import graphviz
 import numpy as np
@@ -884,7 +885,7 @@ class Pattern(object):
             else:
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
-    def __str__(self, nid=0, map_ev=None, leaves_first=False):
+    def __str__(self, nid=0, map_ev=None, leaves_first=False, n_zeros=0, is_datetime=False):
         """
         Display the pattern as a string. The tree representing the pattern is traversed in depth from left to right.
 
@@ -896,22 +897,34 @@ class Pattern(object):
             Associate to each event id, it's event name
         leaves_first : bool, default=False
             If True, leaves are displayed first, otherwise last.
+        n_zeros : int, default=0
+            The number of 0s deleted during preprocessing. Useful to have a more understandable display.
+        is_datetime : bool, default=0
+            Indicates whether the time information (datetime, timestamp) is a duration or a simple integer (false)
 
         Returns
         -------
         str
-            A string representing the pattern with the form
+            A string representing the pattern
         """
         if not self.isNode(nid):
             return ""
         if self.isInterm(nid):
-            ss = "[r=%s p=%s]" % (self.nodes[nid].get(
-                "r", "-"), self.nodes[nid].get("p", "-"))
+            r = self.nodes[nid].get("r", "-")
+            p = self.nodes[nid].get("p", "-")
+            if is_datetime:
+                p *= 10 ** n_zeros
+                p = timedelta(microseconds=p / 1000)
+            ss = "[r=%s p=%s]" % (r, p)
             sc = ""
             for ni, nn in enumerate(self.nodes[nid]["children"]):
                 if ni > 0:
-                    sc += " [d=%s] " % nn[1]
-                sc += self.__str__(nn[0], map_ev, leaves_first)
+                    d = nn[1]
+                    if is_datetime:
+                        d *= 10 ** n_zeros
+                        d = timedelta(microseconds=d / 1000)
+                    sc += " [d=%s] " % d
+                sc += self.__str__(nn[0], map_ev, leaves_first, n_zeros, is_datetime)
             if leaves_first:
                 return "(" + sc + ")" + ss
             return ss + "(" + sc + ")"

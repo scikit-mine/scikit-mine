@@ -200,7 +200,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         """
 
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details)
+            self.data_details, n_zeros=self.n_zeros_, is_datetime=self.is_datetime_)
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME
@@ -462,7 +462,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if self.auto_time_scale:
                     pattern["t0"] *= 10 ** self.n_zeros_
                     if self.is_datetime_:
-                        pattern["t0"] = datetime.fromtimestamp(pattern["t0"]/1_000_000_000)
+                        pattern["t0"] = datetime.utcfromtimestamp(pattern["t0"]/1_000_000_000)
 
         graph = draw_pattern(pattern)
         if directory:

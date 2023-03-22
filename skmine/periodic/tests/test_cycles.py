@@ -2,6 +2,7 @@ import datetime as dt
 import json
 from unittest.mock import patch, mock_open
 
+import graphviz
 import numpy as np
 import pandas as pd
 import pytest
@@ -273,3 +274,12 @@ def test_get_residuals_health_app(data, expected_reconstruct):
     residuals_event_sorted = pcm.get_residuals(sort="event")
 
     assert residuals_event_sorted["event"].is_monotonic_increasing is True
+
+
+def test_draw_pattern(data):
+    pcm = PeriodicPatternMiner().fit(data)
+    res = pcm.discover()
+    graph = pcm.draw_pattern(0)
+    assert 0 in res.index
+    assert type(graph) == graphviz.graphs.Digraph
+    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 07:30:00\np=1 day, 0:00:30\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'

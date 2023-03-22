@@ -197,7 +197,7 @@ class PatternCollection(object):
         # print(pl_str)
         return cl, clRonly, clR, nbs['simple'], nbR, len(self)
 
-    def output_pattern_list_and_cost(self, data_seq, print_simple=True):
+    def output_pattern_list_and_cost(self, data_seq, print_simple=True, n_zeros=0, is_datetime=False):
         cl = 0
         data_details = data_seq.getDetails()
         ocls = self.getOccLists()
@@ -222,7 +222,7 @@ class PatternCollection(object):
             dict_pattern["t0"] = t0
             dict_pattern["pattern_json_tree"] = pattern_tree
             dict_pattern["pattern"] = p.__str__(
-                map_ev=map_ev, leaves_first=True)
+                map_ev=map_ev, leaves_first=True, n_zeros=n_zeros, is_datetime=is_datetime)
             dict_pattern["repetition_major"] = p.pattMajorKey_list()[0]
             dict_pattern["period_major"] = p.pattMajorKey_list()[1]
             # dict_pattern["cost"] = clp
@@ -234,12 +234,12 @@ class PatternCollection(object):
 
         return patterns_list_of_dict, cl
 
-    def output_detailed(self, data_seq, print_simple=True):
+    def output_detailed(self, data_seq, print_simple=True, n_zeros=0, is_datetime=False):
         nbs = self.nbPatternsByType()
         data_details = data_seq.getDetails()
 
         patterns_list_of_dict, cl = self.output_pattern_list_and_cost(
-            data_seq, print_simple)
+            data_seq, print_simple, n_zeros, is_datetime)
 
         global_stat_dict = {"Total patterns nb": len(self)}
         for (k, v) in sorted(nbs.items(), key=lambda x: -x[1]):
