@@ -2,7 +2,7 @@
 import copy
 import json
 import warnings
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import numpy as np
 import pandas as pd
@@ -144,8 +144,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if diff:
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
-
-        S = S.copy()
 
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
@@ -464,7 +462,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 if self.auto_time_scale:
                     pattern["t0"] *= 10 ** self.n_zeros_
                     if self.is_datetime_:
-                        pattern["t0"] = np.datetime64(pattern["t0"], "ns")
+                        pattern["t0"] = datetime.fromtimestamp(pattern["t0"]/1_000_000_000)
 
         graph = draw_pattern(pattern)
         if directory:
