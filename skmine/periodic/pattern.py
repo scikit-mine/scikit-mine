@@ -225,8 +225,7 @@ class Pattern(object):
             A dictionary mapping the original node ids to the translated node ids
         """
         nodes = {}
-        map_nids = dict([(kk, offset + ki)
-                         for ki, kk in enumerate(self.nodes.keys())])
+        map_nids = dict([(kk, offset + ki) for ki, kk in enumerate(self.nodes.keys())])
         nks = list(self.nodes.keys())
         while len(nks) > 0:
             fn = nks.pop()
@@ -595,8 +594,7 @@ class Pattern(object):
                             first_occ_cycle = next_ref
                             first_occ_rep = next_ref
                         else:  # not first rep
-                            next_ref = self.getOccsRefs(
-                                nn[0], [(ni, i)] + pref, refs, first_occ_rep, self.nodes[nid]["p"])
+                            next_ref = self.getOccsRefs(nn[0], [(ni, i)] + pref, refs, first_occ_rep, self.nodes[nid]["p"])
                             first_occ_rep = next_ref
                     else:  # not left-most child
                         next_ref = self.getOccsRefs(

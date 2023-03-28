@@ -14,7 +14,7 @@ health_app_url = "https://raw.githubusercontent.com/logpai/loghub/master/HealthA
 canadianTV_url = "https://zenodo.org/record/4671512/files/canadian_tv.txt"
 
 
-def fetch_file(filepath, separator=','):
+def fetch_file(filepath, separator=',', format=None):
     """Loader for files in periodic format (timestamp,event\n). The first element can be a datetime or an integer and
     the second is a string.
     This file reader can also work for files with only one value per line (the event).
@@ -28,6 +28,9 @@ def fetch_file(filepath, separator=','):
     separator : str
         Indicate a custom separator between timestamps and events. By default, it is a comma.
         If the file contains only one column, this parameter is not useful.
+    format : str
+        format for datetime, like "%d/%m/%Y %H:%M:%S" for day/month/year hour:min:sec
+         see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior for all possibilities
 
     Returns
     -------
@@ -39,7 +42,7 @@ def fetch_file(filepath, separator=','):
     if type(s) == pd.DataFrame:
         s = pd.Series(s[1].values, index=s[0])
         try:
-            s.index = pd.to_datetime(s.index)
+            s.index = pd.to_datetime(s.index, format=format)
         except ValueError:
             s.index = s.index.astype("int64")
     s.index.name = "timestamp"
@@ -152,7 +155,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     return s
 
 
-def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"): # pragma : no cover
+def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"):  # pragma : no cover
     """
     Fetch and return smartphone lifelogging event from different users
     see : https://archive.ics.uci.edu/ml/datasets/UbiqLog+%28smartphone+lifelogging%29
@@ -162,8 +165,9 @@ def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"): # pragma : no c
     Parameters
     ----------
     user_filename : str, default: 1_M_IS_data.dat
-       file to be loaded , by default 1_M is user  , IS for normal dataset (ISE if events are annotated with
-       Instantaneous, Start, End) like file 2_F_ISE_data.dat
+       file to be loaded , by default 1_M is user , IS for normal dataset where timestamps are dropped and replace by
+       1, 2, 3, 4...                                ISE for real timed dataset(events are annotated with
+       Instantaneous _I, Start _S, End _E) like file 2_F_ISE_data.dat
 
     data_home : optional, default: None
        Specify another download and cache folder for the datasets.
@@ -207,7 +211,8 @@ def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"): # pragma : no c
     s.name = "Ubiq" + user
 
     print(f"Series loaded from {user_filename} : user {user}, start time {start_time}, nb_event {len(s)}")
-
+    typ = "absolute time" if "ISE" in user_filename else "relative time"
+    print("timestamps are in ", typ)
     return s
 
 
@@ -226,11 +231,11 @@ def read_ubiq_user(filename: str) -> tuple:
     tuple
         (df, user, start_time)
         df is the returned pd.Series, user is 1_M for example and , start time is the first timestamp
-       smartphone lifelogging event for the sepcified user
+       smartphone lifelogging event for the specified user
        Events are indexed by timestamps.
     """
     sep = "\t"
-    df = pd.read_csv(filename, sep=sep, header=None)
+    df = pd.read_csv(filename, sep=sep, header=None, dtype="string")
     user_info, start_time_str = df.loc[0]
     datetime_str = start_time_str.split('=')[1]
     user = user_info.split('=')[1]
@@ -239,11 +244,17 @@ def read_ubiq_user(filename: str) -> tuple:
     df.drop(index=df.index[0], axis=0, inplace=True)
     df.rename(columns={0: 'diff_time', 1: 'event'}, inplace=True)
     df = df.astype({"diff_time": int, "event": str})
-    df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(seconds=x))
+    if filename.endswith('_IS_data.dat'):
+        df['time'] = df.index  # succession of events , index = 1 2 3 4 5 ....
+    elif filename.endswith('_ISE_data.dat'):
+        df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(minutes=x))
+    else:
+        raise ValueError("cant parse such files")
     df = df[['time', 'event']]
+    df['event_str'] = df['event']
     df.set_index('time', inplace=True)
-    df = pd.Series(df['event'], index=df.index)
-    return df, user, start_time
+    serie = pd.Series(df['event'], index=df.index).astype('string')  # cast from object to string
+    return serie, user, start_time
 
 
 def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:  # pragma : no cover
@@ -323,3 +334,4 @@ def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:  # pragma : n
                             if pair != prev:
                                 fo.write("%d\t%s\n" % pair)
                                 prev = pair
+

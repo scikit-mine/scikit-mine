@@ -139,6 +139,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             # same time AND with the same event. At this line, the second condition is not yet verified.
             len_S = len(S)
             S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
+            # if same time and same event,  create Multi inde names =[timestamp, timestamp]
             diff = len_S - len(S)
             if diff:
                 S = S.reset_index(level=0, drop=True)
@@ -155,8 +156,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.data_details = data_details
         self.miners_ = pc
-
-        # out_str, pl_str = self.miners_.strDetailed(self.data_details)
+        # self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC= self.miners_.strDetailed(self.data_details)
 
         return self
 
