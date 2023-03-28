@@ -452,7 +452,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                             pattern[nid]["p"] = timedelta(microseconds=pattern[nid]["p"]/1000)
                     for i, child in enumerate(pattern[nid]["children"]):
                         new_distance = child[1]
-                        if new_distance != 0 and self.auto_time_scale:
+                        if i != 0 and self.auto_time_scale:
                             new_distance = child[1] * 10 ** self.n_zeros_
                             if self.is_datetime_:
                                 new_distance = timedelta(microseconds=new_distance/1000)
