@@ -144,11 +144,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if diff:
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
-
+        ty = type(S.index)
+        S_index64 = S.index.astype("int64")
         if self.auto_time_scale:
-            S.index, self.n_zeros_ = _remove_zeros(S.index.astype("int64"))
+            S.index, self.n_zeros_ = _remove_zeros(S_index64)
         else:
-            S.index = S.index.astype("int64")
+            S.index = S_index64
 
         self.alpha_groups = S.groupby(S.values).groups
 
@@ -156,7 +157,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.data_details = data_details
         self.miners_ = pc
-        # self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC= self.miners_.strDetailed(self.data_details)
+        self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC= self.miners_.strDetailed(self.data_details)
 
         return self
 

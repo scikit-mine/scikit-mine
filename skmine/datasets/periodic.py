@@ -247,11 +247,11 @@ def read_ubiq_user(filename: str) -> tuple:
     if filename.endswith('_IS_data.dat'):
         df['time'] = df.index  # succession of events , index = 1 2 3 4 5 ....
     elif filename.endswith('_ISE_data.dat'):
-        df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(minutes=x))
+        df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(seconds=x))
+        # TODO : minuts normal but no residuals , error
     else:
         raise ValueError("cant parse such files")
     df = df[['time', 'event']]
-    df['event_str'] = df['event']
     df.set_index('time', inplace=True)
     serie = pd.Series(df['event'], index=df.index).astype('string')  # cast from object to string
     return serie, user, start_time
