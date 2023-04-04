@@ -93,7 +93,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     """
 
     def __init__(self):
-        self.miners_ = {}
+        self.miners_ = None
         self.is_datetime_ = None
         self.n_zeros_ = 0
         # associates to each event (key) its associated datetimes (list of values)
@@ -417,7 +417,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         return residuals_transf_pd
 
-
     def draw_pattern(self, pattern_id, directory=None):
         """
         Visually display a pattern based on its id from the discover command.
@@ -450,20 +449,20 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                     if self.auto_time_scale:
                         pattern[nid]["p"] *= 10 ** self.n_zeros_
                         if self.is_datetime_:
-                            pattern[nid]["p"] = timedelta(microseconds=pattern[nid]["p"]/1000)
+                            pattern[nid]["p"] = timedelta(microseconds=pattern[nid]["p"] / 1000)
                     for i, child in enumerate(pattern[nid]["children"]):
                         new_distance = child[1]
                         if i != 0 and self.auto_time_scale:
                             new_distance = child[1] * 10 ** self.n_zeros_
                             if self.is_datetime_:
-                                new_distance = timedelta(microseconds=new_distance/1000)
+                                new_distance = timedelta(microseconds=new_distance / 1000)
                         pattern[nid]["children"][i] = (child[0], new_distance)
 
             elif nid == "t0":
                 if self.auto_time_scale:
                     pattern["t0"] *= 10 ** self.n_zeros_
                     if self.is_datetime_:
-                        pattern["t0"] = datetime.utcfromtimestamp(pattern["t0"]/1_000_000_000)
+                        pattern["t0"] = datetime.utcfromtimestamp(pattern["t0"] / 1_000_000_000)
 
         graph = draw_pattern(pattern)
         if directory:

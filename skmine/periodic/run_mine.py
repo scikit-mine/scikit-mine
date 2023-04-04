@@ -901,7 +901,7 @@ def mine_seqs(seqs, complex=True, max_p=None):
         roundi += 1
 
         tic_round = datetime.datetime.now()
-        candsV = run_combine_vertical(cpool, data_details, nkeyH)
+        candsV = run_combine_vertical(cpool, data_details, nkeyH)  # call candidate
         tac_rV = datetime.datetime.now()
         candsH = run_combine_horizontal(cpool, data_details, dcosts, nkeyV)
         tac_rH = datetime.datetime.now()
@@ -972,7 +972,9 @@ def mine_seqs(seqs, complex=True, max_p=None):
     results["Final_selection_TIME"] = str(tac_comb)
 
     selected = filter_candidates_cover(cdict, dcosts, min_cov=3)
-    pc = PatternCollection([cdict[c].getPattT0E() for c in selected])
+
+    pc_list = [cdict[c].getPattT0E() for c in selected]
+    pc = PatternCollection(pc_list)
     tac = datetime.datetime.now()
 
     results["Final DT selection"] = str(tac - tac_comb)
