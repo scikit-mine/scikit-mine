@@ -4,8 +4,8 @@ import pandas as pd
 from skmine.periodic.data_sequence import DataSequence
 
 seqs = {
-    "wake up": pd.Int64Index([158702220, 158710854, 158719494, 158728140, 158736792, 158762700], dtype='int64'),
-    "coffee": pd.Int64Index([158719499, 158702225], dtype='int64')
+    "wake up": pd.Index([158702220, 158710854, 158719494, 158728140, 158736792, 158762700], dtype='int64'),
+    "coffee": pd.Index([158719499, 158702225], dtype='int64')
 }
 
 
