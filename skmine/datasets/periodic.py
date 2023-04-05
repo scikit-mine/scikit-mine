@@ -154,7 +154,6 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     s.name = "canadian_tv"
     return s
 
-
 def fetch_ubiq(user_filename="25_F_ISE_data.dat", data_home=None):  # pragma : no cover
     """
     Fetch and return smartphone lifelogging event from different users
