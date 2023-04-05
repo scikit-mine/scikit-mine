@@ -155,7 +155,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     return s
 
 
-def fetch_ubiq(data_home=None, user_filename="1_M_IS_data.dat"):  # pragma : no cover
+def fetch_ubiq(user_filename="1_M_IS_data.dat", data_home=None):  # pragma : no cover
     """
     Fetch and return smartphone lifelogging event from different users
     see : https://archive.ics.uci.edu/ml/datasets/UbiqLog+%28smartphone+lifelogging%29
