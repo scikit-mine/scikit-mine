@@ -154,6 +154,7 @@ def fetch_canadian_tv(data_home=None, filename="canadian_tv.txt"):
     s.name = "canadian_tv"
     return s
 
+
 def fetch_ubiq(user_filename="25_F_ISE_data.dat", data_home=None):  # pragma : no cover
     """
     Fetch and return smartphone lifelogging event from different users
@@ -246,7 +247,7 @@ def read_ubiq_user(filename: str) -> tuple:
     if filename.endswith('_IS_data.dat'):
         df['time'] = df.index  # succession of events , index = 1 2 3 4 5 ....
     elif filename.endswith('_ISE_data.dat'):
-        df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(minutes=x))
+        df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(seconds=x))
         # TODO : minuts normal but no residuals , error
     else:
         raise ValueError("cant parse such files")
@@ -333,4 +334,3 @@ def parse_all_user(infile: str, out_dir: str, min_occ=10) -> None:  # pragma : n
                             if pair != prev:
                                 fo.write("%d\t%s\n" % pair)
                                 prev = pair
-

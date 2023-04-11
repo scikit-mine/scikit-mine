@@ -28,8 +28,12 @@ INDEX_TYPES = (
 
 
 def _remove_zeros(numbers: pd.Series):
+    """ Convert unix time nano-second to second by dropping all zeros
+
+    """
     n = 0
-    while (numbers % 10 == 0).all():
+    second_limit = 9
+    while (numbers % 10 == 0).all() :# and n< second_limit:
         numbers //= 10
         n += 1
     return numbers, n
@@ -146,10 +150,21 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
         ty = type(S.index)
         S_index64 = S.index.astype("int64")
+        print("Autoscale before first S.index \n", *S.index[0:4], sep='\n')
+
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S_index64)
+            print("Autoscale after first S.index\n ", S.index[0:4])
+
+            print("Autoscale DeltaT", S.index[-1] - S.index[0])
+            print("Autoscale remove nb zeros ", self.n_zeros_)
+
         else:
             S.index = S_index64
+            print("No Autoscale first S.index ", *S.index[0:4], sep='\n')
+            print("No Autoscale DeltaT", S.index[-1] - S.index[0])
+
+
 
         self.alpha_groups = S.groupby(S.values).groups
 
@@ -157,7 +172,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.data_details = data_details
         self.miners_ = pc
-        self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC= self.miners_.strDetailed(self.data_details)
+        # self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC = self.miners_.strDetailed(
+        #     self.data_details)
 
         return self
 

@@ -30,7 +30,6 @@ res = pcm.discover()
 
 duration = round(time.time() - start)
 dur = serie.index[-1] - serie.index[0]
-duree = dur / 60 if isinstance(dur, np.integer) else round(dur.total_seconds() / 60)
 
 print("=" * 60)
 print("USER: ", USER, "_ISE")
@@ -41,12 +40,9 @@ print("-> nb R: ", pcm.nbR)
 print("-> nb C: ", pcm.nbC)
 print("-> nb simple: ", pcm.nb_simple)
 print("-> nb event in serie: ", len(serie))
-print(f"-> delta S: {duree} min", )
 print("-> card event: ", len(pd.unique(serie)))
 print("-> time in s: ", duration)
 
-ind = serie.index.astype('int64')
-print(*list(zip(map(str, serie.index[:6]), ind[:6]//10**9)), sep='\n')
 
 #
 print("Sum Res", res.sum_E.sum())
@@ -86,3 +82,13 @@ print("Sum Res", res.sum_E.sum())
 # S.index = S.index.map(lambda e: start + dt.timedelta(minutes=e))
 # S.index = S.index.round("min")  # minutes as the lowest unit of difference
 # S[1] = 'coffee'
+
+
+# Pour 00:05:43 sans auto-timescale
+# res.sum_E
+# Name: sum_E, dtype: timedelta64[ns]
+# Sum Res 0 days 00:00:00
+# pcm.n_zeros = 9
+# Pour 00:05:40 sans auto-timescale
+# Name: sum_E, dtype: int64
+# pcm.n_zeros = 0

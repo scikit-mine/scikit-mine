@@ -11,9 +11,10 @@ import sklearn
 from sklearn.utils.estimator_checks import check_estimator
 
 import skmine.itemsets
+import skmine.periodic
 import skmine.preprocessing
 
-MODULES = [skmine.itemsets]  # ,= skmine.preprocessing,]
+MODULES = [skmine.itemsets, skmine.periodic]  # ,= skmine.preprocessing,]
 
 EXCLUDED_CHECKS = [
     "check_estimators_pickle", 
