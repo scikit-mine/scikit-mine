@@ -41,7 +41,7 @@ Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.
 
 It is currently maintained by a team of volunteers.
 
-See examples in the tutorials; the notebooks are available here_.
+See examples in the tutorials; the notebooks are available here_. To execute the tutorials, you will have to install jupyter notebook or jupyterlab (https://jupyter.org/install)
 
 
 .. _here: https://github.com/scikit-mine/scikit-mine/tree/master/docs/tutorials
