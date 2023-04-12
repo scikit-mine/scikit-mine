@@ -59,9 +59,9 @@ def test_fit(data):
     assert pcm.is_datetime_ is True
     assert pcm.auto_time_scale is True
     assert pcm.n_zeros_ > 0
-    assert [*pcm.alpha_groups.keys()] == ["coffee", "wake up"]
-    assert len(pcm.alpha_groups["coffee"]) == 1
-    assert len(pcm.alpha_groups["wake up"]) == 6  # one duplicate has been removed
+    assert [*pcm.alpha_groups_.keys()] == ["coffee", "wake up"]
+    assert len(pcm.alpha_groups_["coffee"]) == 1
+    assert len(pcm.alpha_groups_["wake up"]) == 6  # one duplicate has been removed
     expected_data_details = {
         "t_start": "",
         "t_end": "",
@@ -71,38 +71,38 @@ def test_fit(data):
         "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
         "blck_delim": -2 * np.log2(1 / 3)
     }
-    assert pcm.data_details.data_details["nbOccs"] == expected_data_details["nbOccs"]
-    assert pcm.data_details.data_details["orgFreqs"] == expected_data_details["orgFreqs"]
-    assert pcm.data_details.data_details["adjFreqs"] == expected_data_details["adjFreqs"]
-    assert pcm.data_details.data_details["blck_delim"] == expected_data_details["blck_delim"]
+    assert pcm.data_details_.data_details["nbOccs"] == expected_data_details["nbOccs"]
+    assert pcm.data_details_.data_details["orgFreqs"] == expected_data_details["orgFreqs"]
+    assert pcm.data_details_.data_details["adjFreqs"] == expected_data_details["adjFreqs"]
+    assert pcm.data_details_.data_details["blck_delim"] == expected_data_details["blck_delim"]
     assert pcm.miners_ is not None
 
 
 def test_discover(data):
     pcm = PeriodicPatternMiner()
     pcm.fit(data)
-    res_discover = pcm.discover()
+    res_transform = pcm.transform(data)
 
-    assert len(res_discover.columns) == 5
-    assert res_discover["t0"].dtypes.name == "datetime64[ns]"
-    assert res_discover["pattern"].dtypes.name == "object"
-    assert res_discover["repetition_major"].dtypes.name == "int64"
-    assert res_discover["period_major"].dtypes.name == "timedelta64[ns]"
-    assert res_discover["sum_E"].dtypes.name == "timedelta64[ns]"
+    assert len(res_transform.columns) == 5
+    assert res_transform["t0"].dtypes.name == "datetime64[ns]"
+    assert res_transform["pattern"].dtypes.name == "object"
+    assert res_transform["repetition_major"].dtypes.name == "int64"
+    assert res_transform["period_major"].dtypes.name == "timedelta64[ns]"
+    assert res_transform["sum_E"].dtypes.name == "timedelta64[ns]"
 
-    res_discover = pcm.discover(dE_sum=False)
-    assert res_discover["E"].dtypes.name == "object"
+    res_transform = pcm.transform(data, dE_sum=False)
+    assert res_transform["E"].dtypes.name == "object"
 
 
 def test_discover_chronological_order():
     pcm = PeriodicPatternMiner()
     data = fetch_health_app()
     pcm.fit(data[:100])
-    res_discover_not_sorted = pcm.discover(chronological_order=False)
-    assert res_discover_not_sorted["t0"].is_monotonic_increasing is False
+    res_transform_not_sorted = pcm.transform(data, chronological_order=False)
+    assert res_transform_not_sorted["t0"].is_monotonic_increasing is False
 
-    res_discover_sorted = pcm.discover(chronological_order=True)
-    assert res_discover_sorted["t0"].is_monotonic_increasing is True
+    res_transform_sorted = pcm.transform(data, chronological_order=True)
+    assert res_transform_sorted["t0"].is_monotonic_increasing is True
 
 
 @pytest.fixture
@@ -168,8 +168,6 @@ def test_export_patterns(data, patterns_json):
 def test_import_patterns(patterns_json):
     pcm = PeriodicPatternMiner()
 
-    assert pcm.n_zeros_ == 0
-    assert pcm.is_datetime_ is None
 
     mock_file = mock_open(read_data=json.dumps(patterns_json))
     with patch("builtins.open", mock_file):
@@ -179,7 +177,7 @@ def test_import_patterns(patterns_json):
 
     assert pcm.n_zeros_ == patterns_json["n_zeros_"]
     assert pcm.is_datetime_ == patterns_json["is_datetime_"]
-    assert pcm.data_details.data_details == {
+    assert pcm.data_details_.data_details == {
         "t_start": 158702220,
         "t_end": 158762700,
         "deltaT": 60480,
@@ -199,12 +197,13 @@ def test_import_patterns(patterns_json):
 def test_import_export_patterns(data):
     pcm1 = PeriodicPatternMiner()
     pcm1.fit(data)
-    res1 = pcm1.discover()
+    dummy_var = 17
+    res1 = pcm1.transform(dummy_var)
     pcm1.export_patterns()
 
     pcm2 = PeriodicPatternMiner()
     pcm2.import_patterns()
-    res2 = pcm2.discover()
+    res2 = pcm2.transform(dummy_var)
 
     assert_frame_equal(res1, res2)
 
@@ -278,7 +277,7 @@ def test_get_residuals_health_app(data, expected_reconstruct):
 
 def test_draw_pattern(data):
     pcm = PeriodicPatternMiner().fit(data)
-    res = pcm.discover()
+    res = pcm.transform(data)
     graph = pcm.draw_pattern(0)
     assert 0 in res.index
     assert type(graph) == graphviz.graphs.Digraph

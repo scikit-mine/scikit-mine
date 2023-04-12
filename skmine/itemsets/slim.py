@@ -141,7 +141,7 @@ class SLIM(BaseEstimator, TransformerMixin):
         return {
             "non_deterministic": True,
             "no_validation": True,
-            "preserves_dtype": False,
+            "preserves_dtype": [],
         }
 
     def fit(self, X, y=None):

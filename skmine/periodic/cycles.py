@@ -6,7 +6,10 @@ from datetime import timedelta, datetime
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted
+
+from skmine.base import TransformerMixin
+from sklearn.base import BaseEstimator
 
 from .data_sequence import DataSequence
 from .pattern import Pattern, getEDict, draw_pattern
@@ -17,6 +20,7 @@ from .run_mine import mine_seqs
 #          Esther Galbrun <esther.galbrun@inria.fr>
 #          Cyril Regan <cyril.regan@loria.fr>
 #          Thomas Betton <thomas.betton@irisa.fr>
+#          Hermann Courteille <hermann.courteille@irisa.fr>
 #
 # License: BSD 3 clause
 
@@ -33,7 +37,7 @@ def _remove_zeros(numbers: pd.Series):
     """
     n = 0
     second_limit = 9
-    while (numbers % 10 == 0).all() :# and n< second_limit:
+    while (numbers % 10 == 0).all():  # and n< second_limit:
         numbers //= 10
         n += 1
     return numbers, n
@@ -84,7 +88,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     >>> import pandas as pd
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
     >>> pcm = PeriodicPatternMiner().fit(S)
-    >>> pcm.discover()
+    >>> pcm.transform()
        start  length  period       cost                             residuals 	event
     0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]
     1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]
@@ -96,17 +100,20 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         "Mining Periodic Pattern with a MDL Criterion"
     """
 
-    def __init__(self):
-        self.miners_ = None
-        self.is_datetime_ = None
-        self.n_zeros_ = 0
-        # associates to each event (key) its associated datetimes (list of values)
-        self.alpha_groups = {}
-        self.cycles = None
-        self.data_details = None
-        self.auto_time_scale = True
+    def __init__(self, complex=True, auto_time_scale=True):
+        self.complex = complex
+        self.auto_time_scale = auto_time_scale
 
-    def fit(self, S, complex=True, auto_time_scale=True):
+    def _more_tags(self):
+        return {
+            "non_deterministic": True,
+            "no_validation": True,
+            "preserves_dtype": [],
+            "requires_y": False, #default for transformer
+            "X_types": ['2darray']
+        }
+
+    def fit(self, S, y=None):
         """fit PeriodicPatternMiner on data logs
 
         This generates new candidate cycles and evaluate them.
@@ -129,7 +136,10 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             extra zeros on time index.
             False: no preprocessing on time data index
         """
-        self.auto_time_scale = auto_time_scale
+
+        self._validate_data(S, force_all_finite=False, accept_sparse=False, ensure_2d=False,
+                            ensure_min_samples=2, dtype=str)
+        # associates to each event (key) its associated datetimes (list of values)
 
         if not isinstance(S, pd.Series):
             raise TypeError("S must be a pandas Series")
@@ -148,14 +158,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if diff:
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
-        ty = type(S.index)
         S_index64 = S.index.astype("int64")
         print("Autoscale before first S.index \n", *S.index[0:4], sep='\n')
-
+        self.n_zeros_ = 0
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S_index64)
             print("Autoscale after first S.index\n ", S.index[0:4])
-
             print("Autoscale DeltaT", S.index[-1] - S.index[0])
             print("Autoscale remove nb zeros ", self.n_zeros_)
 
@@ -164,20 +172,18 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             print("No Autoscale first S.index ", *S.index[0:4], sep='\n')
             print("No Autoscale DeltaT", S.index[-1] - S.index[0])
 
+        self.alpha_groups_ = S.groupby(S.values).groups
 
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups_), complex=complex)
 
-        self.alpha_groups = S.groupby(S.values).groups
-
-        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups), complex=complex)
-
-        self.data_details = data_details
+        self.data_details_ = data_details
         self.miners_ = pc
         # self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC = self.miners_.strDetailed(
         #     self.data_details)
-
+        # self.is_fitted_ = True
         return self
 
-    def discover(self, dE_sum=True, chronological_order=True):
+    def transform(self, S, dE_sum=True, chronological_order=True):
         """Return cycles as a pandas DataFrame, with 3 columns,
         with a 2-level multi-index: the first level mapping events,
         and the second level being positional
@@ -210,14 +216,14 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             >>> import pandas as pd
             >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
             >>> pcm = PeriodicPatternMiner().fit(S)
-            >>> pcm.discover()
+            >>> pcm.transform()
             start  length  period       cost                                residuals 	        event              dE
             0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]
             1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
         """
-
+        check_is_fitted(self, "miners_")
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details, n_zeros=self.n_zeros_, is_datetime=self.is_datetime_)
+            self.data_details_, n_zeros=self.n_zeros_, is_datetime=self.is_datetime_)
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME
@@ -255,11 +261,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             name of the json file
         """
         # allows us to call export_patterns without explicitly calling discover method before
-        self.discover()
+        dummy_var = 17
+        self.transform(dummy_var)
 
         big_dict_list = [i for i in self.cycles["pattern_json_tree"].values]
 
-        data_dict = self.alpha_groups.copy()
+        data_dict = self.alpha_groups_.copy()
         for k, v in data_dict.items():
             data_dict[k] = v.to_list()
 
@@ -289,7 +296,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         self.n_zeros_ = big_dict["n_zeros_"]
         self.is_datetime_ = big_dict["is_datetime_"]
 
-        self.data_details = DataSequence(dict(big_dict["data_details"]))
+        self.data_details_ = DataSequence(dict(big_dict["data_details"]))
         big_dict_list = big_dict["patterns"]
 
         patterns_list = []
@@ -336,7 +343,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         reconstruct_list = []
 
-        map_ev = self.data_details.getNumToEv()
+        map_ev = self.data_details_.getNumToEv()
 
         if not patterns_id:
             patterns_id = range(len(self.miners_.getPatterns()))
@@ -400,8 +407,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         else:
             patterns_id = patterns_id[0]
 
-        map_ev = self.data_details.getNumToEv()
-        residuals = self.miners_.getUncoveredOccs(self.data_details)
+        map_ev = self.data_details_.getNumToEv()
+        residuals = self.miners_.getUncoveredOccs(self.data_details_)
         residuals_transf_list = []
 
         for res in residuals:
@@ -459,7 +466,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         for nid in pattern.keys():
             if isinstance(nid, int):
                 if "event" in pattern[nid].keys():
-                    pattern[nid]["event"] = list(self.data_details.map_ev_num.keys())[int(pattern[nid]["event"])]
+                    pattern[nid]["event"] = list(self.data_details_.map_ev_num.keys())[int(pattern[nid]["event"])]
 
                 elif "p" in pattern[nid].keys():
                     if self.auto_time_scale:
