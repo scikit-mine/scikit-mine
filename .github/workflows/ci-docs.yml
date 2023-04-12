@@ -1,8 +1,8 @@
 name: CI
 on:
   push:
-    branches:
-      - [master, periodic]
+    # branches:
+    #   - [master, periodic]
 jobs:
   docs:
     runs-on: ubuntu-latest
