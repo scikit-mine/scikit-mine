@@ -50,7 +50,7 @@ See examples in the tutorials; the notebooks are available here_.
 Dependencies
 ------------
 
-scikit-mine requires Python>=3.7,
+scikit-mine requires Python>=3.8,
 and some extra dependencies
 
 * scipy>=1.2.1
