@@ -1,3 +1,3 @@
 .. toctree::
 
-    periodic_canadian_tv
+    periodic_pattern_mining_on_canadian_TV_logs
