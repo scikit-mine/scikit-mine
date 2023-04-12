@@ -107,12 +107,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -188,9 +182,8 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Callback API for scikit-mine</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span><span class="p">,</span> <span class="n">getsource</span>
-
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span><span class="p">,</span> <span class="n">getsource</span>
 
 
 <span class="k">def</span> <span class="nf">has_self_assigment</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -287,9 +280,26 @@
     <span class="n">update</span> <span class="o">=</span> <span class="n">_frozen</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">miner</span><span class="p">):</span>
-        <span class="n">miner_methods</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">f_name</span> <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">))</span>
-        <span class="p">]</span>
+        <span class="c1"># print(&quot;dir(miner)&quot;, dir(miner))</span>
+        <span class="c1"># print(&quot;miner&quot;, miner)</span>
+        <span class="c1"># print(&quot;miner transform&quot;, getattr(miner, &quot;transform&quot;))</span>
+        <span class="c1"># print(&quot;miner update&quot;, getattr(miner, &quot;update&quot;),miner.update )</span>
+        <span class="c1"># print(&quot;miner set_output&quot;,miner.set_output )</span>
+
+        <span class="n">miner_methods</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span> <span class="p">:</span> 
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">))</span> <span class="p">:</span> 
+                    <span class="n">miner_methods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_name</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warning : `f_name`=&#39;</span><span class="si">{</span><span class="n">f_name</span><span class="si">}</span><span class="s2">&#39; return an error for `callable(getattr(miner, f_name)`&quot;</span><span class="p">)</span> 
+
+
+        <span class="c1"># miner_methods = [</span>
+        <span class="c1">#     f_name for f_name in dir(miner) if callable(getattr(miner, f_name))</span>
+        <span class="c1"># ]</span>
+
+
         <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="n">miner_methods</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>

@@ -116,12 +116,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -636,21 +630,27 @@ in only 20 different events.</p>
 <col style="width: 54%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p>Number of events</p></td>
+<tr class="row-odd"><td><p>Number of occurrences</p></td>
+<td><p>2000</p></td>
+</tr>
+<tr class="row-even"><td><p>Number of events</p></td>
 <td><p>20</p></td>
 </tr>
-<tr class="row-even"><td><p>Average delta per event</p></td>
+<tr class="row-odd"><td><p>Average delta per event</p></td>
 <td><p>Timedelta(‘0 days 00:53:24.984000’)</p></td>
 </tr>
-<tr class="row-odd"><td><p>Average nb of points per event</p></td>
+<tr class="row-even"><td><p>Average nb of points per event</p></td>
 <td><p>100.0</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>default: health_app.csv</em>) – Name of the file (without the data_home directory) where the dataset will be or is already downloaded.</p></li>
+<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>System logs from the health app dataset, as an in-memory pandas Series.
@@ -676,21 +676,27 @@ Adverts are ignored when loading the dataset.</p>
 <col style="width: 57%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p>Number of events</p></td>
+<tr class="row-odd"><td><p>Number of occurrences</p></td>
+<td><p>2093</p></td>
+</tr>
+<tr class="row-even"><td><p>Number of events</p></td>
 <td><p>98</p></td>
 </tr>
-<tr class="row-even"><td><p>Average delta per event</p></td>
+<tr class="row-odd"><td><p>Average delta per event</p></td>
 <td><p>Timedelta(‘19 days 02:13:36.122448979’)</p></td>
 </tr>
-<tr class="row-odd"><td><p>Average nb of points per event</p></td>
+<tr class="row-even"><td><p>Average nb of points per event</p></td>
 <td><p>21.35714285714285</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets. By default
-all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>default: canadian_tv.txt</em>) – Name of the file (without the data_home directory) where the dataset will be or is already downloaded.</p></li>
+<li><p><strong>data_home</strong> (<em>optional</em><em>, </em><em>default: None</em>) – Specify another download and cache folder for the datasets.
+By default, all scikit-mine data is stored in <cite>scikit-mine_data</cite>.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>TV series events from canadian TV, as an in-memory pandas Series.
@@ -702,7 +708,7 @@ Events are indexed by timestamps.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>For now the entire .zip file is downloaded, being ~90mb on disk
-Downloading preprocessd dataset from zenodo.org is something we consider.</p>
+Downloading preprocessed dataset from zenodo.org is something we consider.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <p><a class="reference internal" href="#skmine.datasets.get_data_home" title="skmine.datasets.get_data_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skmine.datasets.get_data_home</span></code></a></p>

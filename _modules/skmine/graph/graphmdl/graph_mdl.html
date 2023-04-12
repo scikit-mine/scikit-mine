@@ -107,12 +107,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -185,15 +179,13 @@
            <div itemprop="articleBody">
             
   <h1>Source code for skmine.graph.graphmdl.graph_mdl</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">import</span> <span class="nn">networkx</span>
+<span></span><span class="kn">import</span> <span class="nn">time</span>
+
 <span class="kn">from</span> <span class="nn">skmine.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
-<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.label_codes</span> <span class="kn">import</span> <span class="n">LabelCodes</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl</span> <span class="kn">import</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.code_table</span> <span class="kn">import</span> <span class="n">CodeTable</span>
 <span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.code_table_row</span> <span class="kn">import</span> <span class="n">CodeTableRow</span>
-<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">skmine.graph.graphmdl.label_codes</span> <span class="kn">import</span> <span class="n">LabelCodes</span>
 
 
 <span class="k">def</span> <span class="nf">_order_pruning_rows</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>

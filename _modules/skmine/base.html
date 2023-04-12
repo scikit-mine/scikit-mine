@@ -107,12 +107,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -190,10 +184,10 @@
 
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
 
 
 <div class="viewcode-block" id="BaseMiner"><a class="viewcode-back" href="../../reference/base.html#skmine.base.BaseMiner">[docs]</a><span class="k">class</span> <span class="nc">BaseMiner</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>

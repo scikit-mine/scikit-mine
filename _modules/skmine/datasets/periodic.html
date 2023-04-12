@@ -107,12 +107,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -189,20 +183,52 @@
 <span class="sd">Base IO for all periodic datasets</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">get_data_home</span>
+<span class="kn">from</span> <span class="nn">skmine.datasets._base</span> <span class="kn">import</span> <span class="n">get_data_home</span>
+
+<span class="n">UBIQ_url</span> <span class="o">=</span> <span class="s2">&quot;https://archive.ics.uci.edu/ml/machine-learning-databases/00369/UbiqLog4UCI.zip&quot;</span>
+<span class="n">health_app_url</span> <span class="o">=</span> <span class="s2">&quot;https://raw.githubusercontent.com/logpai/loghub/master/HealthApp/HealthApp_2k.log&quot;</span>
+<span class="n">canadianTV_url</span> <span class="o">=</span> <span class="s2">&quot;https://zenodo.org/record/4671512/files/canadian_tv.txt&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">deduplicate</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;deduplicate pd.Series by removing rows with same index and values&quot;&quot;&quot;</span>
-    <span class="n">dedup</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-    <span class="n">diff</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">dedup</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">diff</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;found </span><span class="si">{</span><span class="n">diff</span><span class="si">}</span><span class="s2"> duplicates in S, removing them&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">dedup</span>
-    <span class="k">return</span> <span class="n">S</span>
+<span class="k">def</span> <span class="nf">fetch_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loader for files in periodic format (timestamp,event\n). The first element can be a datetime or an integer and</span>
+<span class="sd">    the second is a string.</span>
+<span class="sd">    This file reader can also work for files with only one value per line (the event).</span>
+<span class="sd">    The indexes then correspond to the line numbers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filepath : str</span>
+<span class="sd">        Path of the file to load</span>
+
+<span class="sd">    separator : str</span>
+<span class="sd">        Indicate a custom separator between timestamps and events. By default, it is a comma.</span>
+<span class="sd">        If the file contains only one column, this parameter is not useful.</span>
+<span class="sd">    format : str</span>
+<span class="sd">        format for datetime, like &quot;%d/%m/%Y %H:%M:%S&quot; for day/month/year hour:min:sec</span>
+<span class="sd">         see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior for all possibilities</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">        Logs from the custom dataset, as an in-memory pandas Series.</span>
+<span class="sd">        Events are indexed by timestamps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">separator</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">skipinitialspace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">filepath</span>
+    <span class="k">return</span> <span class="n">s</span>
 
 
 <div class="viewcode-block" id="fetch_health_app"><a class="viewcode-back" href="../../../reference/datasets.html#skmine.datasets.fetch_health_app">[docs]</a><span class="k">def</span> <span class="nf">fetch_health_app</span><span class="p">(</span><span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;health_app.csv&quot;</span><span class="p">):</span>
@@ -217,6 +243,7 @@
 <span class="sd">    in only 20 different events.</span>
 
 <span class="sd">    ==============================      ===================================</span>
+<span class="sd">    Number of occurrences               2000</span>
 <span class="sd">    Number of events                    20</span>
 <span class="sd">    Average delta per event             Timedelta(&#39;0 days 00:53:24.984000&#39;)</span>
 <span class="sd">    Average nb of points per event      100.0</span>
@@ -224,9 +251,12 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    filename : str, default: health_app.csv</span>
+<span class="sd">        Name of the file (without the data_home directory) where the dataset will be or is already downloaded.</span>
+
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -236,17 +266,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data_home</span> <span class="o">=</span> <span class="n">data_home</span> <span class="ow">or</span> <span class="n">get_data_home</span><span class="p">()</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_home</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_home</span><span class="p">):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
-            <span class="s2">&quot;https://raw.githubusercontent.com/logpai/loghub/master/HealthApp/HealthApp_2k.log&quot;</span><span class="p">,</span>
-            <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">,</span>
-            <span class="n">error_bad_lines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">health_app_url</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">,</span> <span class="n">on_bad_lines</span><span class="o">=</span><span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
         <span class="n">s</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
     <span class="n">s</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H:%M:%S:</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -266,6 +290,7 @@
 <span class="sd">    Adverts are ignored when loading the dataset.</span>
 
 <span class="sd">    ==============================      =======================================</span>
+<span class="sd">    Number of occurrences               2093</span>
 <span class="sd">    Number of events                    98</span>
 <span class="sd">    Average delta per event             Timedelta(&#39;19 days 02:13:36.122448979&#39;)</span>
 <span class="sd">    Average nb of points per event      21.35714285714285</span>
@@ -273,9 +298,12 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    filename : str, default: canadian_tv.txt</span>
+<span class="sd">        Name of the file (without the data_home directory) where the dataset will be or is already downloaded.</span>
+
 <span class="sd">    data_home : optional, default: None</span>
-<span class="sd">        Specify another download and cache folder for the datasets. By default</span>
-<span class="sd">        all scikit-mine data is stored in `scikit-mine_data`.</span>
+<span class="sd">        Specify another download and cache folder for the datasets.</span>
+<span class="sd">        By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -286,7 +314,7 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    For now the entire .zip file is downloaded, being ~90mb on disk</span>
-<span class="sd">    Downloading preprocessd dataset from zenodo.org is something we consider.</span>
+<span class="sd">    Downloading preprocessed dataset from zenodo.org is something we consider.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    -------</span>
@@ -294,18 +322,199 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data_home</span> <span class="o">=</span> <span class="n">data_home</span> <span class="ow">or</span> <span class="n">get_data_home</span><span class="p">()</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_home</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">data_home</span><span class="p">):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;https://zenodo.org/record/4671512/files/canadian_tv.txt&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">canadianTV_url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
         <span class="n">s</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
 
     <span class="n">s</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
     <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;canadian_tv&quot;</span>
     <span class="k">return</span> <span class="n">s</span></div>
+
+
+<span class="k">def</span> <span class="nf">fetch_ubiq</span><span class="p">(</span><span class="n">user_filename</span><span class="o">=</span><span class="s2">&quot;25_F_ISE_data.dat&quot;</span><span class="p">,</span> <span class="n">data_home</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma : no cover</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fetch and return smartphone lifelogging event from different users</span>
+<span class="sd">    see : https://archive.ics.uci.edu/ml/datasets/UbiqLog+%28smartphone+lifelogging%29</span>
+
+<span class="sd">    If the dataset has never been downloaded before, it will be downloaded and stored.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_filename : str, default: 1_M_IS_data.dat</span>
+<span class="sd">       file to be loaded , by default 1_M is user , IS for normal dataset where timestamps are dropped and replace by</span>
+<span class="sd">       1, 2, 3, 4...                                ISE for real timed dataset(events are annotated with</span>
+<span class="sd">       Instantaneous _I, Start _S, End _E) like file 2_F_ISE_data.dat</span>
+
+<span class="sd">    data_home : optional, default: None</span>
+<span class="sd">       Specify another download and cache folder for the datasets.</span>
+<span class="sd">       By default, all scikit-mine data is stored in `scikit-mine_data`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.Series</span>
+<span class="sd">       smartphone lifelogging event for the sepcified user</span>
+<span class="sd">       Events are indexed by timestamps.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For now the entire .zip file is downloaded, being ~64mb on disk</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    -------</span>
+<span class="sd">    skmine.datasets.get_data_home</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_home</span> <span class="o">=</span> <span class="n">data_home</span> <span class="ow">or</span> <span class="n">get_data_home</span><span class="p">()</span>
+    <span class="n">ubiq_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_home</span><span class="p">,</span> <span class="s1">&#39;UbiqLog&#39;</span><span class="p">)</span>
+    <span class="n">user_ubiq_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ubiq_dir</span><span class="p">,</span> <span class="s1">&#39;users_ubiq&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ubiq_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ubiq_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">ubiq_dir</span><span class="p">)</span>
+
+        <span class="n">infile</span> <span class="o">=</span> <span class="s2">&quot;all_log_applications_nonbin.txt&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;wget &quot;</span> <span class="o">+</span> <span class="n">UBIQ_url</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;unzip UbiqLog4UCI.zip&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm __MACOSX -rf&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;grep &quot;</span><span class="se">\\</span><span class="s1">&quot;Application</span><span class="se">\\</span><span class="s1">&quot;:&quot; UbiqLog4UCI/*/log_*.txt &gt; &#39;</span> <span class="o">+</span> <span class="n">infile</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">user_ubiq_dir</span><span class="p">)</span>
+        <span class="n">parse_all_user</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">user_ubiq_dir</span><span class="p">,</span> <span class="n">min_occ</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">user_ubiq_dir</span><span class="p">,</span> <span class="n">user_filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Searching for :&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">s</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">read_ubiq_user</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Ubiq&quot;</span> <span class="o">+</span> <span class="n">user</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Series loaded from </span><span class="si">{</span><span class="n">user_filename</span><span class="si">}</span><span class="s2"> : user </span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s2">, start time </span><span class="si">{</span><span class="n">start_time</span><span class="si">}</span><span class="s2">, nb_event </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">typ</span> <span class="o">=</span> <span class="s2">&quot;absolute time&quot;</span> <span class="k">if</span> <span class="s2">&quot;ISE&quot;</span> <span class="ow">in</span> <span class="n">user_filename</span> <span class="k">else</span> <span class="s2">&quot;relative time&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;timestamps are in &quot;</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">read_ubiq_user</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;   Read user-event file (csv format with tabulation) and process it to return a pd.Series with event and</span>
+<span class="sd">    timestamps as index</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str, default: 1_M_IS_data.dat</span>
+<span class="sd">       file to be loaded , by default 1_M is user , IS for normal dataset (ISE if events are annotated with</span>
+<span class="sd">       Instantaneous, Start, End)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (df, user, start_time)</span>
+<span class="sd">        df is the returned pd.Series, user is 1_M for example and , start time is the first timestamp</span>
+<span class="sd">       smartphone lifelogging event for the specified user</span>
+<span class="sd">       Events are indexed by timestamps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
+    <span class="n">user_info</span><span class="p">,</span> <span class="n">start_time_str</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">datetime_str</span> <span class="o">=</span> <span class="n">start_time_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">user_info</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">datetime_str</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+    <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;diff_time&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;event&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s2">&quot;diff_time&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_IS_data.dat&#39;</span><span class="p">):</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>  <span class="c1"># succession of events , index = 1 2 3 4 5 ....</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_ISE_data.dat&#39;</span><span class="p">):</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;diff_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">x</span><span class="p">))</span>
+        <span class="c1"># TODO : minuts normal but no residuals , error</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cant parse such files&quot;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">]]</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">serie</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;event&#39;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;string&#39;</span><span class="p">)</span>  <span class="c1"># cast from object to string</span>
+    <span class="k">return</span> <span class="n">serie</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">start_time</span>
+
+
+<span class="k">def</span> <span class="nf">parse_all_user</span><span class="p">(</span><span class="n">infile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">min_occ</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma : no cover</span>
+    <span class="sd">&quot;&quot;&quot;   Parse global file with multiple user and construct csv files , one per user</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infile :  str</span>
+<span class="sd">       global event file for all users . all_log_applications_nonbin.txt by example</span>
+
+<span class="sd">    out_dir: str</span>
+<span class="sd">        directory where to write each user csv.file</span>
+
+<span class="sd">    min_occ: int</span>
+<span class="sd">        minimum of occurence : FIXME to be explained</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># exemple line to parse</span>
+    <span class="c1"># UbiqLog4UCI/10_M/log_11-29-2013.txt:{&quot;Application&quot;:{&quot;ProcessName&quot;:&quot;com.broadcom.bt.app.system&quot;,</span>
+    <span class="c1"># &quot;Start&quot;:&quot;11-29-2013 08:15:57&quot;,&quot;End&quot;:&quot;11-29-2013 08:18:18&quot;}}</span>
+
+    <span class="n">users</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">users_drop</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">li</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="c1"># print(line)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>  <span class="c1"># drop UbiqLog4UCI/</span>
+            <span class="c1"># print(line)</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;(?P&lt;user&gt;[0-9]*_[FM])/(?P&lt;file&gt;log_[0-9\-]+.txt):.*&quot;ProcessName&quot;:&quot;(?P&lt;process&gt;[^&quot;]*)&quot;,&#39;</span>
+                           <span class="s1">&#39;.*&quot;Start&quot;:&quot;(?P&lt;start_time&gt;[^&quot;]*)&quot;,.*&quot;End&quot;:&quot;(?P&lt;end_time&gt;[^&quot;]*)&quot;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tmp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">users_drop</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">),</span> <span class="s1">&#39;%m-</span><span class="si">%d</span><span class="s1">-%Y %H:%M:%S&#39;</span><span class="p">),</span>
+                             <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;end_time&quot;</span><span class="p">),</span> <span class="s1">&#39;%m-</span><span class="si">%d</span><span class="s1">-%Y %H:%M:%S&#39;</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">users_drop</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+                        <span class="n">d</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">users_drop</span> <span class="ow">and</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+                        <span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ev&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;counts&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+
+                    <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span>  <span class="c1"># last less than a minute</span>
+                        <span class="n">evs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_I&quot;</span> <span class="o">%</span> <span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;process&quot;</span><span class="p">))]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">evs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_S&quot;</span> <span class="o">%</span> <span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;process&quot;</span><span class="p">)),</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_E&quot;</span> <span class="o">%</span> <span class="n">tmp</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;process&quot;</span><span class="p">))]</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">tt</span><span class="p">,</span> <span class="n">ev</span><span class="p">)</span> <span class="ow">in</span> <span class="n">evs</span><span class="p">:</span>
+                        <span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="s2">&quot;ev&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">tt</span><span class="p">,</span> <span class="n">ev</span><span class="p">))</span>
+                        <span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="s2">&quot;counts&quot;</span><span class="p">][</span><span class="n">ev</span><span class="p">]</span> <span class="o">=</span> <span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="s2">&quot;counts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DROP&quot;</span><span class="p">,</span> <span class="n">users_drop</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">user</span><span class="p">,</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">users</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">users_drop</span><span class="p">:</span>
+            <span class="n">evs_tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">[</span><span class="s2">&quot;ev&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">dt</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_occ</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">evs_tmp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_occ</span><span class="p">:</span>
+                <span class="n">evs_tmp</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">evs_tmp</span><span class="p">)</span>
+                <span class="n">evs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([(</span><span class="nb">int</span><span class="p">((</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">evs_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">60</span><span class="p">),</span> <span class="n">d</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">evs_tmp</span><span class="p">])</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_ISE_data.dat&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">user</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fo</span><span class="p">:</span>
+                    <span class="n">fo</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### user=</span><span class="si">%s</span><span class="se">\t</span><span class="s2">start_time=</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">evs_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+                    <span class="n">prev</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">evs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">pair</span> <span class="o">!=</span> <span class="n">prev</span><span class="p">:</span>
+                            <span class="n">fo</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="se">\t</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pair</span><span class="p">)</span>
+                            <span class="n">prev</span> <span class="o">=</span> <span class="n">pair</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_IS_data.dat&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">user</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fo</span><span class="p">:</span>
+                    <span class="n">fo</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### user=</span><span class="si">%s</span><span class="se">\t</span><span class="s2">start_time=</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">evs_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+                    <span class="n">prev</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="n">evs</span><span class="p">:</span>
+                        <span class="n">db</span> <span class="o">=</span> <span class="n">tt</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">db</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;S&quot;</span><span class="p">]:</span>
+                            <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">tt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">db</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                            <span class="k">if</span> <span class="n">pair</span> <span class="o">!=</span> <span class="n">prev</span><span class="p">:</span>
+                                <span class="n">fo</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="se">\t</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pair</span><span class="p">)</span>
+                                <span class="n">prev</span> <span class="o">=</span> <span class="n">pair</span>
 </pre></div>
 
            </div>

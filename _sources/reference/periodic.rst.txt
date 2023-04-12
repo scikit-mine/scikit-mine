@@ -6,14 +6,10 @@ Periodic
 Models and functions to mine periodic patterns
 
 
-PeriodicCycleMiner
-------------------
-.. autoclass:: skmine.periodic.PeriodicCycleMiner
+
 
 PeriodicPatternMiner
 --------------------
-.. autoclass:: skmine.periodic.PeriodicPatternMiner
+.. autoclass:: skmine.periodic.cycles.PeriodicPatternMiner
 
-SingleEventCycleMiner
----------------------
-.. autoclass:: skmine.periodic.SingleEventCycleMiner
+

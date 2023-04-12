@@ -107,12 +107,6 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/synthetic_transactions.html">Generate synthetic data to train on</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/LCM_on_chess.html">Linear time Closed item set Miner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM.html">SLIM for market basket analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classifier_examples.html">Classification examples with SLIM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callbacks.html">Callback API demo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDLTest.html">GraphMDL for graph pattern mining</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -186,470 +180,75 @@
             
   <h1>Source code for skmine.periodic.cycles</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Periodic pattern mining with a MDL criterion&quot;&quot;&quot;</span>
-<span class="c1"># Authors: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
-<span class="c1">#          Esther Galbrun &lt;esther.galbrun@inria.fr&gt;</span>
-<span class="c1">#</span>
-<span class="c1"># License: BSD 3 clause</span>
-
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">groupby</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
-<span class="kn">from</span> <span class="nn">pyroaring</span> <span class="kn">import</span> <span class="n">BitMap</span> <span class="k">as</span> <span class="n">Bitmap</span>
+<span class="kn">from</span> <span class="nn">.data_sequence</span> <span class="kn">import</span> <span class="n">DataSequence</span>
+<span class="kn">from</span> <span class="nn">.pattern</span> <span class="kn">import</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">getEDict</span><span class="p">,</span> <span class="n">draw_pattern</span>
+<span class="kn">from</span> <span class="nn">.pattern_collection</span> <span class="kn">import</span> <span class="n">PatternCollection</span>
+<span class="kn">from</span> <span class="nn">.run_mine</span> <span class="kn">import</span> <span class="n">mine_seqs</span>
 
-<span class="kn">from</span> <span class="nn">..base</span> <span class="kn">import</span> <span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">,</span> <span class="n">MDLOptimizer</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">intersect2d</span><span class="p">,</span> <span class="n">sliding_window_view</span>
+<span class="c1"># Authors: Rémi Adon &lt;remi.adon@gmail.com&gt;</span>
+<span class="c1">#          Esther Galbrun &lt;esther.galbrun@inria.fr&gt;</span>
+<span class="c1">#          Cyril Regan &lt;cyril.regan@loria.fr&gt;</span>
+<span class="c1">#          Thomas Betton &lt;thomas.betton@irisa.fr&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># License: BSD 3 clause</span>
 
-<span class="n">log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span>
-
-<span class="n">INDEX_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Int64Index</span><span class="p">,)</span>
-
-
-<span class="k">def</span> <span class="nf">residual_length</span><span class="p">(</span><span class="n">S_alpha</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">dS</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    compute L(o) = L(t) + L(a) for all (a, t) in S_alpha</span>
-<span class="sd">    i.e the length from a block of residual events</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    S_a: np.ndarray of shape or scalar</span>
-<span class="sd">        array containing indices for the event `alpha` to consider</span>
-
-<span class="sd">    n_occs_tot: int</span>
-<span class="sd">        total number of occurrences in the original data</span>
-
-<span class="sd">    dS: int</span>
-<span class="sd">        max - min from original events</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">card</span> <span class="o">=</span> <span class="p">(</span><span class="n">S_alpha</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_alpha</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># TODO : remove me</span>
-    <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="n">dS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">card</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_occs_tot</span><span class="p">))</span>
-
-
-<span class="k">def</span> <span class="nf">cycle_length</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">inter</span><span class="p">,</span> <span class="n">n_event_tot</span><span class="p">,</span> <span class="n">dS</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    S : np.array of type int64</span>
-<span class="sd">        a collection of cycles, all having the same length : r</span>
-<span class="sd">        The width of S is then r</span>
-
-<span class="sd">    inter: np.array of type int64</span>
-<span class="sd">        a collection of inter occurrence gaps, all having the same length: r - 1</span>
-
-<span class="sd">    n_event_tot: int</span>
-<span class="sd">        number of events in the original events</span>
-
-<span class="sd">    dS: int</span>
-<span class="sd">        max - min from original events</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple:</span>
-<span class="sd">        lengths for (a, r, p, tau, E)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">inter</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">r</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># check inter occurrences compliant with events</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">inter</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">E</span> <span class="o">=</span> <span class="n">inter</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">dE</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">S_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="o">+</span> <span class="n">r</span> <span class="o">-</span> <span class="mi">1</span>
-
-    <span class="n">L_a</span> <span class="o">=</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="n">S_size</span> <span class="o">/</span> <span class="n">n_event_tot</span><span class="p">)</span>  <span class="c1"># FIXME</span>
-    <span class="n">L_r</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">S_size</span><span class="p">)</span>
-    <span class="n">L_p</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">dS</span> <span class="o">-</span> <span class="n">dE</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
-    <span class="n">L_tau</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">dS</span> <span class="o">-</span> <span class="n">dE</span> <span class="o">-</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">L_E</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">E</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">E</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">L_a</span><span class="p">,</span> <span class="n">L_r</span><span class="p">,</span> <span class="n">L_p</span><span class="p">,</span> <span class="n">L_tau</span><span class="p">,</span> <span class="n">L_E</span>
-
-
-<span class="k">def</span> <span class="nf">compute_cycles_dyn</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">n_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    S: pd.Index or np.array</span>
-<span class="sd">        a Series of occurrences</span>
-<span class="sd">    n_tot: int</span>
-<span class="sd">        total number of occurrences in the original events</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">cut_points</span> <span class="o">=</span> <span class="n">get_table_dyn</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">n_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="p">)</span>
-    <span class="n">splits</span> <span class="o">=</span> <span class="n">_recover_splits_rec</span><span class="p">(</span><span class="n">cut_points</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="n">cycles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="n">covered</span> <span class="o">=</span> <span class="n">Bitmap</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">length</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="n">splits</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># eq to length + 1 &gt;= 3</span>
-            <span class="n">curr_cycles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">S</span><span class="p">[</span><span class="n">s</span> <span class="p">:</span> <span class="n">e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="p">])</span>  <span class="c1"># COPY</span>
-            <span class="n">cycles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_cycles</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
-                <span class="n">covered</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">cycles</span><span class="p">)),</span> <span class="n">covered</span>
-
-
-<span class="k">def</span> <span class="nf">get_table_dyn</span><span class="p">(</span><span class="n">S</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">n_tot</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    S: pd.Index or np.ndarray</span>
-<span class="sd">        a Series of occurrences</span>
-<span class="sd">    n_tot: int</span>
-<span class="sd">        total number of occurrences in the original events</span>
-<span class="sd">    max_length: int, default=None</span>
-<span class="sd">        maximum number of occurrences for a cycle to cover,</span>
-<span class="sd">        by default it will be set to :math:`\log_{2}\left(|S|\right)`</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">diffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-    <span class="n">triples</span> <span class="o">=</span> <span class="n">sliding_window_view</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-    <span class="n">diff_pairs</span> <span class="o">=</span> <span class="n">sliding_window_view</span><span class="p">(</span><span class="n">diffs</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">dS</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-
-    <span class="n">score_one</span> <span class="o">=</span> <span class="n">residual_length</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_tot</span><span class="p">,</span> <span class="n">dS</span><span class="p">)</span>  <span class="c1"># 1 really ?</span>
-
-    <span class="n">scores</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">triples</span><span class="p">,</span> <span class="n">diff_pairs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">dS</span><span class="p">))</span>
-    <span class="n">change</span> <span class="o">=</span> <span class="n">scores</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">score_one</span>
-    <span class="n">scores</span><span class="p">[</span><span class="n">change</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">score_one</span>  <span class="c1"># inplace replacement</span>
-    <span class="n">cut_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
-    <span class="n">cut_points</span><span class="p">[</span><span class="o">~</span><span class="n">change</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="n">scores</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">))),</span> <span class="n">scores</span><span class="p">))</span>
-    <span class="n">cut_points</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">cut_points</span><span class="p">))</span>
-
-    <span class="n">max_length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">max_length</span><span class="p">])</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">max_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="n">sliding_window_view</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-        <span class="n">_diffs</span> <span class="o">=</span> <span class="n">sliding_window_view</span><span class="p">(</span><span class="n">diffs</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">_s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">_diffs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">dS</span><span class="p">))</span>
-
-        <span class="k">for</span> <span class="n">ia</span><span class="p">,</span> <span class="n">best_score</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_s</span><span class="p">):</span>
-            <span class="n">cut_point</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">iz</span> <span class="o">=</span> <span class="n">ia</span> <span class="o">+</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">im</span> <span class="o">-</span> <span class="n">ia</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                    <span class="n">score_left</span> <span class="o">=</span> <span class="n">score_one</span> <span class="o">*</span> <span class="p">(</span><span class="n">im</span> <span class="o">-</span> <span class="n">ia</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">score_left</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">im</span><span class="p">)]</span>
-
-                <span class="k">if</span> <span class="n">iz</span> <span class="o">-</span> <span class="n">im</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                    <span class="n">score_right</span> <span class="o">=</span> <span class="n">score_one</span> <span class="o">*</span> <span class="p">(</span><span class="n">iz</span> <span class="o">-</span> <span class="n">im</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">score_right</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[(</span><span class="n">im</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span>
-
-                <span class="k">if</span> <span class="n">score_left</span> <span class="o">+</span> <span class="n">score_right</span> <span class="o">&lt;</span> <span class="n">best_score</span><span class="p">:</span>
-                    <span class="n">best_score</span> <span class="o">=</span> <span class="n">score_left</span> <span class="o">+</span> <span class="n">score_right</span>
-                    <span class="n">cut_point</span> <span class="o">=</span> <span class="n">im</span>
-
-            <span class="n">scores</span><span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span> <span class="o">=</span> <span class="n">best_score</span>
-            <span class="n">cut_points</span><span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span> <span class="o">=</span> <span class="n">cut_point</span>
-
-    <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">cut_points</span>
-
-
-<span class="k">def</span> <span class="nf">extract_triples</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">l_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Extract cycles of length 3 given a list of occurrences S</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    S: pd.Index</span>
-<span class="sd">        input occurrences</span>
-
-<span class="sd">    l_max: float</span>
-<span class="sd">        maximum absolute difference between two occurrences to considered</span>
-<span class="sd">        for inclusion in the same triple.</span>
-<span class="sd">        By default it will be set to the median of the</span>
-<span class="sd">        inter-occurrence differences from S.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">triples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="n">l_max</span> <span class="o">=</span> <span class="n">l_max</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
-    <span class="c1"># TODO : precompute diffs instead of for loop inner computation</span>
-
-    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">occ</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">righties</span> <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
-        <span class="n">lefties</span> <span class="o">=</span> <span class="n">S</span><span class="p">[:</span><span class="n">idx</span><span class="p">]</span>
-        <span class="n">righties_diffs</span> <span class="o">=</span> <span class="n">righties</span> <span class="o">-</span> <span class="n">occ</span>
-        <span class="n">lefties_diffs</span> <span class="o">=</span> <span class="n">lefties</span> <span class="o">-</span> <span class="n">occ</span>
-        <span class="n">dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lefties_diffs</span><span class="p">,</span> <span class="n">righties_diffs</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
-        <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">grid</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">grid</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">l_max</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="n">occ</span> <span class="o">+</span> <span class="n">dists</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">t</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">occ</span><span class="p">]</span> <span class="o">*</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">t</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">T</span>
-            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
-            <span class="n">triples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">triples</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">triples</span><span class="p">)</span>
-    <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span> <span class="nf">merge_triples</span><span class="p">(</span><span class="n">triples</span><span class="p">,</span> <span class="n">n_merge</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    triples: ndarray</span>
-<span class="sd">        cycles of size 3 (i.e triples.shape[1] == 3)</span>
-<span class="sd">    n_merge: int</span>
-<span class="sd">        maximum number of merge operation to perform</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    list[np.ndarray]</span>
-<span class="sd">        a list of cycles</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">triples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="n">triples</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_merge</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">prev</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="n">lefties</span> <span class="o">=</span> <span class="n">prev</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-        <span class="n">righties</span> <span class="o">=</span> <span class="n">prev</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">left_idx</span><span class="p">,</span> <span class="n">right_idx</span> <span class="o">=</span> <span class="n">intersect2d</span><span class="p">(</span><span class="n">lefties</span><span class="p">,</span> <span class="n">righties</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">left_idx</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">right_idx</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="n">merged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">prev</span><span class="p">[</span><span class="n">right_idx</span><span class="p">],</span> <span class="n">prev</span><span class="p">[</span><span class="n">left_idx</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]])</span>
-        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
-        <span class="n">to_delete</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">left_idx</span><span class="p">,</span> <span class="n">right_idx</span><span class="p">)</span>
-        <span class="n">res</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">to_delete</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">merged</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-            <span class="n">res</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="k">break</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>  <span class="c1"># inverse order of length</span>
-
-
-<span class="k">def</span> <span class="nf">_recover_splits_rec</span><span class="p">(</span><span class="n">cut_points</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">):</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cut_points</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">cut_points</span><span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span>
-        <span class="n">im</span> <span class="o">=</span> <span class="n">cut_points</span><span class="p">[(</span><span class="n">ia</span><span class="p">,</span> <span class="n">iz</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">im</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_recover_splits_rec</span><span class="p">(</span><span class="n">cut_points</span><span class="p">,</span> <span class="n">ia</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span> <span class="o">+</span> <span class="n">_recover_splits_rec</span><span class="p">(</span>
-                <span class="n">cut_points</span><span class="p">,</span> <span class="n">im</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">iz</span>
-            <span class="p">)</span>
-    <span class="k">return</span> <span class="p">[]</span>
+<span class="n">INDEX_TYPES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">,</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">,</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_remove_zeros</span><span class="p">(</span><span class="n">numbers</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert unix time nano-second to second by dropping all zeros</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+    <span class="n">second_limit</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="p">:</span><span class="c1"># and n&lt; second_limit:</span>
         <span class="n">numbers</span> <span class="o">//=</span> <span class="mi">10</span>
         <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">n</span>
 
 
-<span class="k">def</span> <span class="nf">_reconstruct</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">dE</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reconstruct occurrences,</span>
-<span class="sd">    starting from `start`, and</span>
-<span class="sd">    correcting `period` with a delta for all deltas in `dE`,</span>
-<span class="sd">    `len(dE)` occurrences are reconstructed</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    start: int or datetime</span>
-<span class="sd">        starting point for the event</span>
-<span class="sd">    period: int or timedelta</span>
-<span class="sd">        period between two occurrences</span>
-<span class="sd">    d_E: np.array of [int|timedelta]</span>
-<span class="sd">        inters occurrences deltas</span>
+<span class="k">def</span> <span class="nf">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type</span>
+<span class="sd">    will remain unchanged.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">occurrences</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span><span class="p">]</span>
-    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
-    <span class="k">for</span> <span class="n">d_e</span> <span class="ow">in</span> <span class="n">dE</span><span class="p">:</span>
-        <span class="n">e</span> <span class="o">=</span> <span class="n">current</span> <span class="o">+</span> <span class="n">period</span> <span class="o">+</span> <span class="n">d_e</span>
-        <span class="n">occurrences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="n">e</span>
-    <span class="k">return</span> <span class="n">occurrences</span>
+    <span class="n">correctedDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">correctedDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">correctedDict</span>
 
 
-<span class="k">def</span> <span class="nf">_generate_candidates_batch</span><span class="p">(</span>
-    <span class="n">S_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">presort</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate occurrences to be merged together for form a cycle</span>
-<span class="sd">    The result if a list of np.array, sorted by decreasing order of width</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">S_a</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">presort</span><span class="p">:</span>
-        <span class="n">S_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">S_a</span><span class="p">)</span>
-    <span class="n">dS</span> <span class="o">=</span> <span class="n">S_a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S_a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">l_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">dS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
-    <span class="n">cycles</span><span class="p">,</span> <span class="n">covered</span> <span class="o">=</span> <span class="n">compute_cycles_dyn</span><span class="p">(</span><span class="n">S_a</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="p">)</span>
-    <span class="n">covered</span> <span class="o">=</span> <span class="n">Bitmap</span><span class="p">(</span><span class="n">covered</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">S_a</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">covered</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># add triples if necessary</span>
-        <span class="n">_all</span> <span class="o">=</span> <span class="n">Bitmap</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">S_a</span><span class="p">)))</span>
-        <span class="n">_S_a</span> <span class="o">=</span> <span class="n">S_a</span><span class="p">[</span><span class="n">_all</span> <span class="o">-</span> <span class="n">covered</span><span class="p">]</span>
-        <span class="n">triples</span> <span class="o">=</span> <span class="n">extract_triples</span><span class="p">(</span><span class="n">_S_a</span><span class="p">,</span> <span class="n">l_max</span><span class="p">)</span>
-        <span class="n">merged</span> <span class="o">=</span> <span class="n">merge_triples</span><span class="p">(</span><span class="n">triples</span><span class="p">)</span>
-        <span class="n">cycles</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cycles</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-
-
-<span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="n">S_a</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    A list of candidate batches. Each batch contains candidates occurrences of the same length,</span>
-<span class="sd">    hence stored in a common `numpy.ndarray`.</span>
-<span class="sd">    Batches are sorted by decreasing order of width, so that we consider larger candidates first.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">occ_batches</span> <span class="o">=</span> <span class="n">_generate_candidates_batch</span><span class="p">(</span><span class="n">S_a</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">max_length</span><span class="p">)</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">cand_batch</span> <span class="ow">in</span> <span class="n">occ_batches</span><span class="p">:</span>
-        <span class="n">length</span> <span class="o">=</span> <span class="n">cand_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">cand_batch</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">period</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
-        <span class="n">dE</span> <span class="o">=</span> <span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">period</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">tids</span> <span class="o">=</span> <span class="p">[</span><span class="n">Bitmap</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">S_a</span><span class="p">,</span> <span class="n">cand_batch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">cand_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
-        <span class="n">mdl_cost</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">cand_batch</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">S_a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S_a</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">cand_batch</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span> <span class="n">dE</span><span class="o">=</span><span class="n">dE</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">tids</span><span class="o">=</span><span class="n">tids</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="n">mdl_cost</span><span class="p">,))</span>
-        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-    <span class="n">res</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">res</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">res</span>
-
-
-<span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">cands</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluate candidates `cands`, given S</span>
-
-<span class="sd">    Unlike the original implementation by Galbrun &amp; Al.,</span>
-<span class="sd">    if an occurrence is present in more than one candidate cycle, we keep the cycle</span>
-<span class="sd">    with the greatest length.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    cands: pd.DataFrame</span>
-<span class="sd">        a dataframe containing the candidates, as well-formed cycles</span>
-<span class="sd">    k: int</span>
-<span class="sd">        number of cycles to keep for the same occurence covered</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">cands</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="s2">&quot;tids&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;tids&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">nsmallest</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">):</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">cands</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-
-<div class="viewcode-block" id="SingleEventCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">SingleEventCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Miner periodic cycles, but in the scope of a single event</span>
-
-<span class="sd">    To this end, we only accept 1 dimensional arrays as input</span>
-<span class="sd">    PeriodicCycleMiner will operate by instantiating one SingleEventCycleMiner per event.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    max_length: int, default=20</span>
-<span class="sd">        maximum length for a cycle</span>
-<span class="sd">    keep_residuals: bool, default=False</span>
-<span class="sd">        either to keep residuals (lossless compression) or not (lossy compression)</span>
-<span class="sd">    n_occs_tot: int, default=None</span>
-<span class="sd">        Number of total occurrences. When instanciating this class on a subset of the original</span>
-<span class="sd">        data, this can be useful to pass the number of occurrences in this original data.</span>
-<span class="sd">    k: int, default=2</span>
-<span class="sd">        Maximum number of cycles covering the same occurrence</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">keep_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">,</span> <span class="s2">&quot;dE&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="n">max_length</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keep_residuals</span> <span class="o">=</span> <span class="n">keep_residuals</span>
-        <span class="k">if</span> <span class="n">n_occs_tot</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_occs_tot</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_occs_tot</span> <span class="o">=</span> <span class="n">n_occs_tot</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dS</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># difference between the last occurrence and the first</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tid_pad</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># TODO : set self.n_zeros_ at the scale of an event-projected miner like this one ?</span>
-
-<div class="viewcode-block" id="SingleEventCycleMiner.fit"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        X: np.array of shape (n_occs, )</span>
-<span class="sd">            Input occurrences</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        X will be reshaped to a 1-d vector in any case</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># COPY</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">n_occs_tot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_occs_tot</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">candidates</span> <span class="o">=</span> <span class="n">generate_candidates</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">candidates</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;could not generate candidates for the input sequence,</span>
-<span class="sd">                the model is left empty&quot;&quot;&quot;</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_residuals</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span> <span class="o">=</span> <span class="n">X</span>
-            <span class="k">return</span> <span class="bp">self</span>
-
-        <span class="n">cycles</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span> <span class="o">=</span> <span class="n">cycles</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_residuals</span><span class="p">:</span>
-            <span class="c1"># careful with `~`</span>
-            <span class="n">uncovered</span> <span class="o">=</span> <span class="n">Bitmap</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span> <span class="o">-</span> <span class="n">Bitmap</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span><span class="o">.</span><span class="n">tids</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">uncovered</span><span class="p">]</span>
-
-        <span class="c1"># cycles.dE = cycles.dE.map(np.array) ?</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="SingleEventCycleMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Expose cycles as a brand new dataframe</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
-
-    <span class="n">evaluate</span> <span class="o">=</span> <span class="n">evaluate</span>
-
-<div class="viewcode-block" id="SingleEventCycleMiner.reconstruct"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.SingleEventCycleMiner.reconstruct">[docs]</a>    <span class="k">def</span> <span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reconstruct the original occurrences from the current cycles.</span>
-<span class="sd">        Residuals will also be included, as the compression scheme is lossless</span>
-
-<span class="sd">        Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle</span>
-<span class="sd">        :math:`C`, we have</span>
-
-<span class="sd">        .. math::</span>
-<span class="sd">            \Delta(C)=(r-1) p+\sigma(E)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pd.Series</span>
-<span class="sd">            The reconstructed dataset</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        The index of the resulting pd.Series will not be sorted</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">alpha_occurrences</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">dE</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles_</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">,</span> <span class="s2">&quot;dE&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-            <span class="n">occurrences</span> <span class="o">=</span> <span class="n">_reconstruct</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">dE</span><span class="p">)</span>
-            <span class="n">alpha_occurrences</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">occurrences</span><span class="p">)</span>
-        <span class="n">alpha_occurrences</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residuals_</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">alpha_occurrences</span><span class="p">)</span></div></div>
-
-
-<div class="viewcode-block" id="PeriodicCycleMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicCycleMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">,</span> <span class="n">MDLOptimizer</span><span class="p">,</span> <span class="n">DiscovererMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicPatternMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicPatternMiner</span><span class="p">(</span><span class="n">TransformerMixin</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mining periodic cycles with a MDL Criterion</span>
 
-<span class="sd">    PeriodicCycleMiner is an approach to mine periodic cycles from event logs</span>
+<span class="sd">    PeriodicPatternMiner is an approach to mine periodic cycles from event logs</span>
 <span class="sd">    while relying on a Minimum Description Length (MDL) criterion to evaluate</span>
 <span class="sd">    candidate cycles. The goal here is to extract a set of cycles that characterizes</span>
 <span class="sd">    the periodic structure present in the data</span>
 
-<span class="sd">    A cycle is defined a 5-tuple of of the form</span>
+<span class="sd">    A cycle is defined a 5-tuple of the form</span>
 <span class="sd">        .. math:: \\alpha, r, p, \\tau, E</span>
 
 <span class="sd">    Where</span>
@@ -660,29 +259,16 @@
 <span class="sd">    - :math:`\\tau` is the index of the first occurrence, called the `cycle starting point`</span>
 <span class="sd">    - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`</span>
 
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    max_length: int, default=20</span>
-<span class="sd">        maximum length for a candidate cycle, when running the dynamic programming heuristic</span>
-<span class="sd">    keep_residuals: bool, default=False</span>
-<span class="sd">        Either to keep track of residuals (occurrences not covered by any cycle) or not.</span>
-<span class="sd">        Residuals are required for a lossless reconstruction of the original data.</span>
-<span class="sd">    n_jobs : int, default=1</span>
-<span class="sd">        The number of jobs to use for the computation. Each single event is attributed a job</span>
-<span class="sd">        to discover potential cycles.</span>
-<span class="sd">        Threads are preffered over processes.</span>
-
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; from skmine.periodic import PeriodicCycleMiner</span>
+<span class="sd">    &gt;&gt;&gt; from skmine.periodic import PeriodicPatternMiner</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; S = pd.Series(&quot;ring_a_bell&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
-<span class="sd">    &gt;&gt;&gt; pcm = PeriodicCycleMiner().fit(S)</span>
+<span class="sd">    &gt;&gt;&gt; pcm = PeriodicPatternMiner().fit(S)</span>
 <span class="sd">    &gt;&gt;&gt; pcm.discover()</span>
-<span class="sd">                   start  length  period       cost</span>
-<span class="sd">    ring_a_bell 1     10       3      11  23.552849</span>
-<span class="sd">                0     40       4      20  24.665780</span>
+<span class="sd">       start  length  period       cost                             residuals 	event</span>
+<span class="sd">    0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]</span>
+<span class="sd">    1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -691,18 +277,20 @@
 <span class="sd">        &quot;Mining Periodic Pattern with a MDL Criterion&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">keep_residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_length</span> <span class="o">=</span> <span class="n">max_length</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keep_residuals</span> <span class="o">=</span> <span class="n">keep_residuals</span>
+        <span class="c1"># associates to each event (key) its associated datetimes (list of values)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="PeriodicCycleMiner.fit"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;fit PeriodicCycleMiner on data logs</span>
+<div class="viewcode-block" id="PeriodicPatternMiner.fit"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="nb">complex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_time_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;fit PeriodicPatternMiner on data logs</span>
 
-<span class="sd">        This generate new candidate cycles and evaluate them.</span>
+<span class="sd">        This generates new candidate cycles and evaluate them.</span>
 <span class="sd">        Residual occurrences are stored as an internal attribute,</span>
 <span class="sd">        for later reconstruction (MDL is lossless)</span>
 
@@ -712,7 +300,18 @@
 <span class="sd">            logs, represented as a pandas Series</span>
 <span class="sd">            This pandas Series must have an index of type in</span>
 <span class="sd">            (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)</span>
+
+<span class="sd">        complex: boolean</span>
+<span class="sd">            True : compute complex pattern with horizontal and vertical combinations.</span>
+<span class="sd">            False: compute only simple cycles.</span>
+
+<span class="sd">        auto_time_scale: boolean</span>
+<span class="sd">            True : preprocessing on time data index. Compute automatically the timescale for mining cycles by removing</span>
+<span class="sd">            extra zeros on time index.</span>
+<span class="sd">            False: no preprocessing on time data index</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="o">=</span> <span class="n">auto_time_scale</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;S must be a pandas Series&quot;</span><span class="p">)</span>
 
@@ -721,38 +320,57 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;found duplicates in input sequence, removing them&quot;</span><span class="p">)</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># there are potentially duplicates, i.e. occurrences that happened at the</span>
+            <span class="c1"># same time AND with the same event. At this line, the second condition is not yet verified.</span>
+            <span class="n">len_S</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">())</span>
+            <span class="c1"># if same time and same event,  create Multi inde names =[timestamp, timestamp]</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">len_S</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">diff</span><span class="p">:</span>
+                <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;found </span><span class="si">{</span><span class="n">diff</span><span class="si">}</span><span class="s2"> duplicates in the input sequence, they have been removed.&quot;</span><span class="p">)</span>
+        <span class="n">ty</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">S_index64</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale before first S.index </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">_remove_zeros</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">))</span>
-        <span class="c1"># TODO : do this in SingleEventCycleMiner?</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">_remove_zeros</span><span class="p">(</span><span class="n">S_index64</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale after first S.index</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
 
-        <span class="n">n_occs_tot</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">alpha_groups</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
-        <span class="n">miners</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">k</span><span class="p">:</span> <span class="n">SingleEventCycleMiner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_residuals</span><span class="p">,</span> <span class="n">n_occs_tot</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">alpha_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">miners</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">alpha_groups</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale DeltaT&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale remove nb zeros &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">miner</span><span class="p">,)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s2">&quot;tids&quot;</span> <span class="ow">in</span> <span class="n">miner</span><span class="o">.</span><span class="n">cycles_</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="c1"># FIXME: this is highly inefficient</span>
-                <span class="n">miner</span><span class="o">.</span><span class="n">cycles_</span><span class="o">.</span><span class="n">tids</span> <span class="o">=</span> <span class="n">miner</span><span class="o">.</span><span class="n">cycles_</span><span class="o">.</span><span class="n">tids</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">tids</span><span class="p">:</span> <span class="n">Bitmap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">alpha_groups</span><span class="p">[</span><span class="n">event</span><span class="p">][</span><span class="n">tids</span><span class="p">])</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">S_index64</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Autoscale first S.index &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Autoscale DeltaT&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
+
+        <span class="n">cpool</span><span class="p">,</span> <span class="n">data_details</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">mine_seqs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span><span class="p">),</span> <span class="nb">complex</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="n">data_details</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="n">pc</span>
+        <span class="c1"># self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC = self.miners_.strDetailed(</span>
+        <span class="c1">#     self.data_details)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-    <span class="n">evaluate</span> <span class="o">=</span> <span class="n">SingleEventCycleMiner</span><span class="o">.</span><span class="n">evaluate</span>
-
-<div class="viewcode-block" id="PeriodicCycleMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shifts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tids</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicPatternMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dE_sum</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">chronological_order</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return cycles as a pandas DataFrame, with 3 columns,</span>
 <span class="sd">        with a 2-level multi-index: the first level mapping events,</span>
 <span class="sd">        and the second level being positional</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------</span>
+<span class="sd">        dE_sum: boolean</span>
+<span class="sd">            True : returm a columns &quot;dE&quot; with the sum of the errors</span>
+<span class="sd">            False: returm a columns &quot;dE&quot; with the full list of errors.</span>
+
+<span class="sd">        chronological_order: boolean, default=True</span>
+<span class="sd">            To sort or not the occurences by ascending date</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -762,111 +380,291 @@
 <span class="sd">                start       when the cycle starts</span>
 <span class="sd">                length      number of occurrences in the event</span>
 <span class="sd">                period      inter-occurrence delay</span>
-<span class="sd">                dE          shift corrections, if shifts=True</span>
-<span class="sd">                tids        Transactions ids covered, if tids=True</span>
+<span class="sd">                sum_E       absolute sum of errors</span>
+<span class="sd">                E           shift corrections (if dE_sum=False)</span>
 <span class="sd">                cost        MDL cost</span>
 <span class="sd">                ==========  ======================================</span>
 
-<span class="sd">        Example</span>
-<span class="sd">        -------</span>
-<span class="sd">        &gt;&gt;&gt; from skmine.periodic import PeriodicCycleMiner</span>
-<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
-<span class="sd">        &gt;&gt;&gt; S = pd.Series(&quot;ring&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
-<span class="sd">        &gt;&gt;&gt; pcm = PeriodicCycleMiner().fit(S)</span>
-<span class="sd">        &gt;&gt;&gt; pcm.discover()</span>
-<span class="sd">                start  length  period       cost</span>
-<span class="sd">        ring 1     10       3      11  23.552849</span>
-<span class="sd">             0     40       4      20  24.665780</span>
+<span class="sd">            Examples</span>
+<span class="sd">            --------</span>
+<span class="sd">            &gt;&gt;&gt; from skmine.periodic import PeriodicPatternMiner</span>
+<span class="sd">            &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">            &gt;&gt;&gt; S = pd.Series(&quot;ring_a_bell&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
+<span class="sd">            &gt;&gt;&gt; pcm = PeriodicPatternMiner().fit(S)</span>
+<span class="sd">            &gt;&gt;&gt; pcm.discover()</span>
+<span class="sd">            start  length  period       cost                                residuals 	        event              dE</span>
+<span class="sd">            0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]</span>
+<span class="sd">            1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">all_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;length&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">tids</span><span class="p">:</span>
-            <span class="n">all_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;tids&quot;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">shifts</span><span class="p">:</span>
-            <span class="n">all_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;dE&quot;</span><span class="p">])</span>
 
-        <span class="n">series</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">miner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">disc</span> <span class="o">=</span> <span class="n">miner</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">disc</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-                <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disc</span><span class="p">)</span>
+        <span class="n">global_stat_dict</span><span class="p">,</span> <span class="n">patterns_list_of_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">output_detailed</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="p">,</span> <span class="n">n_zeros</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">,</span> <span class="n">is_datetime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">series</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">patterns_list_of_dict</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>  <span class="c1"># FIXME</span>
-        <span class="n">cycles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="n">all_cols</span><span class="p">]</span>
-        <span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">cycles</span><span class="p">[[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;period&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">shifts</span><span class="p">:</span>
-            <span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;dE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycles</span><span class="o">.</span><span class="n">dE</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">patterns_list_of_dict</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
-            <span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycles</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
-            <span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;period&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycles</span><span class="o">.</span><span class="n">period</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;timedelta64[ns]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;period_major&quot;</span><span class="p">]]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
 
-        <span class="k">return</span> <span class="n">cycles</span></div>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">t0</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;period_major&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">period_major</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;timedelta64[ns]&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;E&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PeriodicCycleMiner.reconstruct"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.reconstruct">[docs]</a>    <span class="k">def</span> <span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reconstruct the original occurrences from the current cycles.</span>
-<span class="sd">        Residuals will also be included, as the compression scheme is lossless</span>
+                <span class="k">def</span> <span class="nf">to_timedelta</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;ns&#39;</span><span class="p">)</span>
 
-<span class="sd">        Denoting as :math:`\sigma(E)` the sum of the shift corrections for a cycle</span>
-<span class="sd">        :math:`C`, we have</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">to_timedelta</span><span class="p">,</span> <span class="n">x</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">dE_sum</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;E&quot;</span><span class="p">:</span> <span class="s2">&quot;sum_E&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;sum_E&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;sum_E&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
 
-<span class="sd">        .. math::</span>
-<span class="sd">            \Delta(C)=(r-1) p+\sigma(E)</span>
+        <span class="k">if</span> <span class="n">chronological_order</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;t0&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">dropped_col_for_output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pattern_json_tree&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">dropped_col_for_output</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.export_patterns"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.export_patterns">[docs]</a>    <span class="k">def</span> <span class="nf">export_patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">&quot;patterns.json&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Export pattern into a json file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------</span>
+<span class="sd">        file: string</span>
+<span class="sd">            name of the json file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># allows us to call export_patterns without explicitly calling discover method before</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
+
+        <span class="n">big_dict_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;pattern_json_tree&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">data_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+
+        <span class="n">big_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;is_datetime_&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">,</span>
+            <span class="s2">&quot;n_zeros_&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">,</span>
+            <span class="s2">&quot;data_details&quot;</span><span class="p">:</span> <span class="n">data_dict</span><span class="p">,</span>
+            <span class="s2">&quot;patterns&quot;</span><span class="p">:</span> <span class="n">big_dict_list</span>
+        <span class="p">}</span>
+
+        <span class="n">big_json_str</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">big_dict</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">big_json_str</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.import_patterns"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.import_patterns">[docs]</a>    <span class="k">def</span> <span class="nf">import_patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">&quot;patterns.json&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Import pattern into a json file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------</span>
+<span class="sd">        file: string</span>
+<span class="sd">            name of the json file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">big_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;n_zeros_&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;is_datetime_&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="n">DataSequence</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;data_details&quot;</span><span class="p">]))</span>
+        <span class="n">big_dict_list</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;patterns&quot;</span><span class="p">]</span>
+
+        <span class="n">patterns_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pseudo_pat</span> <span class="ow">in</span> <span class="n">big_dict_list</span><span class="p">:</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="n">Pattern</span><span class="p">()</span>
+            <span class="n">pattern</span><span class="o">.</span><span class="n">next_id</span> <span class="o">=</span> <span class="n">pseudo_pat</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;next_id&quot;</span><span class="p">)</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="n">pseudo_pat</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;t0&quot;</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">pseudo_pat</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>
+            <span class="n">pattern</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">pseudo_pat</span><span class="p">)</span>
+            <span class="n">patterns_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pattern</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">E</span><span class="p">))</span>
+
+        <span class="n">patterns_collection</span> <span class="o">=</span> <span class="n">PatternCollection</span><span class="p">(</span><span class="n">patterns</span><span class="o">=</span><span class="n">patterns_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="n">patterns_collection</span></div>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.reconstruct"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.reconstruct">[docs]</a>    <span class="k">def</span> <span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">patterns_id</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">drop_duplicates</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reconstruct all the occurrences from patterns (no argument), or the</span>
+<span class="sd">        occurrences of selected patterns (with a patterns&#39;id list as argument).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------</span>
+<span class="sd">        patterns_id: None or List</span>
+<span class="sd">            None (when `reconstruct()` is called) : Reconstruct all occurrences of the patterns</span>
+<span class="sd">            List : of pattern id : Reconstruct occurrences of the patterns ids</span>
+
+<span class="sd">        sort: string</span>
+<span class="sd">            &quot;time&quot; (by default) : sort by occurrences time</span>
+<span class="sd">            &quot;event&quot; : sort by event names</span>
+<span class="sd">            &quot;construction_order&quot; : sort by pattern reconstruction</span>
+
+<span class="sd">        drop_duplicates: bool, default=True</span>
+<span class="sd">            An occurrence can appear in several patterns and thus appear several times in the reconstruction.</span>
+<span class="sd">            To remove duplicates, set drop_duplicates to True otherwise to False to keep them.</span>
+<span class="sd">            In the natural order of pattern construction, it is best to set the `drop_duplicates` variable to False</span>
+<span class="sd">            for better understanding.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        pd.Series</span>
+<span class="sd">        pd.DataFrame</span>
 <span class="sd">            The reconstructed dataset</span>
 
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        The index of the resulting pd.Series will not be sorted</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">series</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">miner</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">())</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">miner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
-        <span class="n">S</span><span class="o">.</span><span class="n">index</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+        <span class="k">if</span> <span class="n">drop_duplicates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">drop_duplicates</span> <span class="o">=</span> <span class="n">sort</span> <span class="o">!=</span> <span class="s2">&quot;construction_order&quot;</span>
+
+        <span class="n">reconstruct_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">patterns_id</span><span class="p">:</span>
+            <span class="n">patterns_id</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getPatterns</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">patterns_id</span> <span class="o">=</span> <span class="n">patterns_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">pattern_id</span> <span class="ow">in</span> <span class="n">patterns_id</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getPatterns</span><span class="p">()[</span><span class="n">pattern_id</span><span class="p">]</span>
+
+            <span class="n">occsStar</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">getOccsStar</span><span class="p">()</span>
+            <span class="n">Ed</span> <span class="o">=</span> <span class="n">getEDict</span><span class="p">(</span><span class="n">occsStar</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+            <span class="n">occs</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">getOccs</span><span class="p">(</span><span class="n">occsStar</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">Ed</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">occ</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">occs</span><span class="p">):</span>
+                <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">occ</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="k">else</span> <span class="n">occ</span><span class="p">,</span>
+                         <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="n">map_ev</span><span class="p">[</span><span class="n">occsStar</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]]}</span>
+
+                <span class="n">reconstruct_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_</span><span class="p">)</span>
+
+        <span class="n">reconstruct_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">reconstruct_list</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
-            <span class="n">S</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
+            <span class="n">reconstruct_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reconstruct_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reconstruct_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reconstruct_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
 
-        <span class="c1"># TODO : this is due to duplicate event in the cycles, handle this in .evaluate()</span>
-        <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sort</span> <span class="o">==</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span>
+            <span class="n">reconstruct_pd</span> <span class="o">=</span> <span class="n">reconstruct_pd</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">sort</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span>
+            <span class="n">reconstruct_pd</span> <span class="o">=</span> <span class="n">reconstruct_pd</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;event&#39;</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">S</span></div>
+        <span class="c1"># some events can be in multiple patterns : need to remove duplicates</span>
+        <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+            <span class="n">reconstruct_pd</span> <span class="o">=</span> <span class="n">reconstruct_pd</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
 
-<div class="viewcode-block" id="PeriodicCycleMiner.generate_candidates"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.generate_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">generate_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">reconstruct_pd</span></div>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.get_residuals"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.get_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">patterns_id</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all residual occurences, i.e. events not covered by any pattern (no argument)</span>
+<span class="sd">        or get the complementary occurences of the selected patterns         (with a patterns&#39;id list as argument).</span>
+
 <span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        S: pd.Index or numpy.ndarray</span>
-<span class="sd">            Series of occurrences for a specific event</span>
+<span class="sd">        -------</span>
+<span class="sd">        patterns_id: None or list</span>
+<span class="sd">            None (when `reconstruct()` is called) : complementary of all patterns occurences</span>
+<span class="sd">            List of pattern id : complementary of patterns ids occurences</span>
+
+<span class="sd">        sort: string</span>
+<span class="sd">            &quot;time&quot; (by default) : sort by occurences time</span>
+<span class="sd">            &quot;event&quot; : sort by event names</span>
+<span class="sd">            anything else : sort by pattern reconstruction</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict[object, list[np.ndarray]]</span>
-<span class="sd">            A dict, where each key is an event and each value a list of batch of candidates.</span>
-<span class="sd">            Batches are sorted in inverse order of width,</span>
-<span class="sd">            so that we consider larger candidate cycles first.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-        <span class="c1"># TODO only for InteractiveMode</span>
-
-<div class="viewcode-block" id="PeriodicCycleMiner.get_residuals"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.PeriodicCycleMiner.get_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the residual events, i.e events not covered by any cycle</span>
-
-<span class="sd">        It is the complementary function to `discover`</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pd.Series</span>
+<span class="sd">        pd.DataFrame</span>
 <span class="sd">            residual events</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">series</span> <span class="o">=</span> <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">miner</span><span class="o">.</span><span class="n">residuals_</span><span class="p">)</span> <span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">miner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
-        <span class="n">residuals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">residuals</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">residuals</span><span class="o">.</span><span class="n">index</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
-            <span class="n">residuals</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">residuals</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">residuals</span></div></div>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">patterns_id</span><span class="p">:</span>
+            <span class="n">patterns_id</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getPatterns</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">patterns_id</span> <span class="o">=</span> <span class="n">patterns_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
+        <span class="n">residuals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getUncoveredOccs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="p">)</span>
+        <span class="n">residuals_transf_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">residuals</span><span class="p">:</span>
+            <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="k">else</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="n">map_ev</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]]}</span>
+            <span class="n">residuals_transf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_</span><span class="p">)</span>
+
+        <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">residuals_transf_list</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+            <span class="n">residuals_transf_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">residuals_transf_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">residuals_transf_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">residuals_transf_pd</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+        <span class="n">reconstruct_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">(</span><span class="n">patterns_id</span><span class="p">)</span>
+        <span class="n">reconstruct_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">()</span>
+        <span class="n">complementary_reconstruct</span> <span class="o">=</span> <span class="n">reconstruct_all</span><span class="p">[</span><span class="o">~</span><span class="n">reconstruct_all</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">reconstruct_</span><span class="p">)]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">reconstruct_all</span><span class="p">,</span> <span class="n">residuals_transf_pd</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;inner&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">residuals_transf_pd</span><span class="p">,</span> <span class="n">complementary_reconstruct</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;residuals and complementary of reconstruct have common patterns&quot;</span><span class="p">)</span>
+            <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">residuals_transf_pd</span><span class="p">,</span> <span class="n">complementary_reconstruct</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">sort</span> <span class="o">==</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span>
+            <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">residuals_transf_pd</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">sort</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span>
+            <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">residuals_transf_pd</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;event&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">residuals_transf_pd</span></div>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.draw_pattern"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.draw_pattern">[docs]</a>    <span class="k">def</span> <span class="nf">draw_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern_id</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Visually display a pattern based on its id from the discover command.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pattern_id : int</span>
+<span class="sd">            The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.</span>
+
+<span class="sd">        directory : str, default=None</span>
+<span class="sd">             Directory where the generated image and the DOT file are stored</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Digraph</span>
+<span class="sd">            The generated tree. To see it in a python script, you have to add .view()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># discover must have been called before draw_pattern</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;discover must have been called before draw_pattern&quot;</span><span class="p">)</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pattern_id</span><span class="p">][</span><span class="s2">&quot;pattern_json_tree&quot;</span><span class="p">])</span>
+        <span class="c1"># map each event id to its real textual name</span>
+        <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nid</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s2">&quot;event&quot;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">map_ev_num</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="nb">int</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">])]</span>
+
+                <span class="k">elif</span> <span class="s2">&quot;p&quot;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+                        <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+                            <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;children&quot;</span><span class="p">]):</span>
+                        <span class="n">new_distance</span> <span class="o">=</span> <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+                            <span class="n">new_distance</span> <span class="o">=</span> <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+                                <span class="n">new_distance</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">new_distance</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+                        <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;children&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">child</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_distance</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">nid</span> <span class="o">==</span> <span class="s2">&quot;t0&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+                    <span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
+                        <span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1_000_000_000</span><span class="p">)</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">draw_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">directory</span><span class="p">:</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">graph</span></div></div>
 </pre></div>
 
            </div>
