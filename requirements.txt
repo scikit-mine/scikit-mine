@@ -10,3 +10,4 @@ scikit-learn
 graphviz
 matplotlib
 pydot
+# notebook
