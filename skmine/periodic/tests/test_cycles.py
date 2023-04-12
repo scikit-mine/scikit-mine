@@ -200,7 +200,6 @@ def test_import_export_patterns(data):
     dummy_var = 17
     res1 = pcm1.transform(dummy_var)
     pcm1.export_patterns()
-
     pcm2 = PeriodicPatternMiner()
     pcm2.import_patterns()
     res2 = pcm2.transform(dummy_var)
