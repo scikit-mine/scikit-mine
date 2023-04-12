@@ -1,4 +1,4 @@
 .. toctree::
 
     fetch_fimi_datasets
-    synthetic_transactions
+    generate_synthetic_data_to_train_on

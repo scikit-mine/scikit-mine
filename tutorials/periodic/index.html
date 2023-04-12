@@ -39,8 +39,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Compatibility with Scikit-Learn" href="../../sklearn_compat.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="../graph/index.html" />
+    <link rel="next" title="Periodic pattern mining on canadian TV logs" href="periodic_pattern_mining_on_canadian_TV_logs.html" />
+    <link rel="prev" title="GraphMDL for graph pattern mining" href="../graph/GraphMDL_for_graph_pattern_mining.html" />
     <link href="../../_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -110,6 +110,14 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../callbacks/callback_API_demo.html">Callback API demo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
 <ul>
@@ -208,6 +216,37 @@
 }
 </style>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#The-problem,-informally">The problem, informally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Introduction-to-periodic-pattern-mining">Introduction to periodic pattern mining</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#The-cycle-:-a-building-block-for-periodic-pattern-mining">The cycle : a building block for periodic pattern mining</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Handling-noise-in-our-timestamps">Handling noise in our timestamps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#A-tiny-example-with-scikit-mine">A tiny example with scikit-mine</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#An-example-with-Canadian-TV-programs">An example with Canadian TV programs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Fetching-logs-from-canadian-TV">Fetching logs from canadian TV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Searching-for-cycles-in-TV-programs">Searching for cycles in TV programs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Viewing-the-patterns">Viewing the patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Patterns-import---export">Patterns import - export</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Did-I-find-cycles-for-the-TV-show-“Arthurt-Shorts”">Did I find cycles for the TV show “Arthurt Shorts”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#What-are-the-top-10-longest-cycles-?">What are the top 10 longest cycles ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#what-are-the-10-most-unpunctual-TV-programs-?">what are the 10 most unpunctual TV programs ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#What-TV-programs-have-been-broadcasted-every-day-for-at-least-5-days-straight?">What TV programs have been broadcasted every day for at least 5 days straight?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#What-TV-programs-are-broadcast-only-on-business-days-?">What TV programs are broadcast only on business days ?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Load-your-own-custom-datasets">Load your own custom datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#1.-Each-line-consists-of-a-datetime-followed-by-its-associated-event.-By-default,-the-separator-is-a-``,``.-This-is-customisable.">1. <strong>Each line consists of a datetime followed by its associated event.</strong> By default, <strong>the separator is a ``,``</strong>. This is customisable.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#2.-Datetimes-can-also-be-replaced-by-integers.">2. <strong>Datetimes can also be replaced by integers</strong>.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#3.-Use-only-the-name-of-the-events.-In-this-case,-the-indexes-correspond-to-the-line-numbers-(starting-from-0).">3. <strong>Use only the name of the events</strong>. In this case, <strong>the indexes correspond to the line numbers (starting from 0)</strong>.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
+</ul>
 </div>
 
 
@@ -218,10 +257,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../../sklearn_compat.html" class="btn btn-neutral float-right" title="Compatibility with Scikit-Learn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="periodic_pattern_mining_on_canadian_TV_logs.html" class="btn btn-neutral float-right" title="Periodic pattern mining on canadian TV logs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../graph/index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../graph/GraphMDL_for_graph_pattern_mining.html" class="btn btn-neutral float-left" title="GraphMDL for graph pattern mining" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

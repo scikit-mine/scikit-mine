@@ -1,3 +1,3 @@
 .. toctree::
 
-    callbacks
+    callback_API_demo
