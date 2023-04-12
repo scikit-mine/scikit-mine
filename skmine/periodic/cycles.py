@@ -6,11 +6,11 @@ from datetime import timedelta, datetime
 
 import numpy as np
 import pandas as pd
-from sklearn.utils.validation import check_is_fitted
 
-from skmine.base import TransformerMixin
+from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator
 
+from skmine.base import TransformerMixin
 from .data_sequence import DataSequence
 from .pattern import Pattern, getEDict, draw_pattern
 from .pattern_collection import PatternCollection
@@ -88,10 +88,9 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     >>> import pandas as pd
     >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
     >>> pcm = PeriodicPatternMiner().fit(S)
-    >>> pcm.transform()
-       start  length  period       cost                             residuals 	event
-    0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]
-    1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]
+    >>> pcm.transform(S)
+       t0                  pattern  repetition_major  period_major  sum_E
+    0  20  (ring_a_bell)[r=5 p=20]                 5            20      2
 
     References
     ----------
@@ -159,18 +158,18 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
         S_index64 = S.index.astype("int64")
-        print("Autoscale before first S.index \n", *S.index[0:4], sep='\n')
+        # print("Autoscale before first S.index \n", *S.index[0:4], sep='\n')
         self.n_zeros_ = 0
         if self.auto_time_scale:
             S.index, self.n_zeros_ = _remove_zeros(S_index64)
-            print("Autoscale after first S.index\n ", S.index[0:4])
-            print("Autoscale DeltaT", S.index[-1] - S.index[0])
-            print("Autoscale remove nb zeros ", self.n_zeros_)
+            # print("Autoscale after first S.index\n ", S.index[0:4])
+            # print("Autoscale DeltaT", S.index[-1] - S.index[0])
+            # print("Autoscale remove nb zeros ", self.n_zeros_)
 
         else:
             S.index = S_index64
-            print("No Autoscale first S.index ", *S.index[0:4], sep='\n')
-            print("No Autoscale DeltaT", S.index[-1] - S.index[0])
+            # print("No Autoscale first S.index ", *S.index[0:4], sep='\n')
+            # print("No Autoscale DeltaT", S.index[-1] - S.index[0])
 
         self.alpha_groups_ = S.groupby(S.values).groups
 
@@ -210,16 +209,15 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
                 cost        MDL cost
                 ==========  ======================================
 
-            Examples
-            --------
-            >>> from skmine.periodic import PeriodicPatternMiner
-            >>> import pandas as pd
-            >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
-            >>> pcm = PeriodicPatternMiner().fit(S)
-            >>> pcm.transform()
-            start  length  period       cost                                residuals 	        event              dE
-            0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]
-            1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]
+        Examples
+        --------
+        >>> from skmine.periodic import PeriodicPatternMiner
+        >>> import pandas as pd
+        >>> S = pd.Series("ring_a_bell", [10, 20, 32, 40, 60, 79, 100, 240])
+        >>> pcm = PeriodicPatternMiner().fit(S)
+        >>> pcm.transform(S)
+           t0                  pattern  repetition_major  period_major  sum_E
+        0  20  (ring_a_bell)[r=5 p=20]                 5            20      2
         """
         check_is_fitted(self, "miners_")
         global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
@@ -260,7 +258,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         file: string
             name of the json file
         """
-        # allows us to call export_patterns without explicitly calling discover method before
+        # allows us to call export_patterns without explicitly calling transform method before
         dummy_var = 17
         self.transform(dummy_var)
 
@@ -295,7 +293,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
         self.n_zeros_ = big_dict["n_zeros_"]
         self.is_datetime_ = big_dict["is_datetime_"]
-
         self.data_details_ = DataSequence(dict(big_dict["data_details"]))
         big_dict_list = big_dict["patterns"]
 
@@ -342,7 +339,6 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             drop_duplicates = sort != "construction_order"
 
         reconstruct_list = []
-
         map_ev = self.data_details_.getNumToEv()
 
         if not patterns_id:
@@ -382,17 +378,17 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         return reconstruct_pd
 
     def get_residuals(self, *patterns_id, sort="time"):
-        """Get all residual occurences, i.e. events not covered by any pattern (no argument)
-        or get the complementary occurences of the selected patterns         (with a patterns'id list as argument).
+        """Get all residual occurrences, i.e. events not covered by any pattern (no argument)
+        or get the complementary occurrences of the selected patterns         (with a patterns'id list as argument).
 
         Parameters
         -------
         patterns_id: None or list
-            None (when `reconstruct()` is called) : complementary of all patterns occurences
-            List of pattern id : complementary of patterns ids occurences
+            None (when `reconstruct()` is called) : complementary of all patterns occurrences
+            List of pattern id : complementary of patterns ids occurrences
 
         sort: string
-            "time" (by default) : sort by occurences time
+            "time" (by default) : sort by occurrences time
             "event" : sort by event names
             anything else : sort by pattern reconstruction
 
@@ -442,12 +438,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
 
     def draw_pattern(self, pattern_id, directory=None):
         """
-        Visually display a pattern based on its id from the discover command.
+        Visually display a pattern based on its id from the transform command.
 
         Parameters
         ----------
         pattern_id : int
-            The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.
+            The ID of the pattern to be displayed. This ID is to be retrieved directly from the transform command.
 
         directory : str, default=None
              Directory where the generated image and the DOT file are stored
@@ -457,9 +453,9 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         Digraph
             The generated tree. To see it in a python script, you have to add .view()
         """
-        # discover must have been called before draw_pattern
+        # transform must have been called before draw_pattern
         if self.cycles is None:
-            raise Exception("discover must have been called before draw_pattern")
+            raise Exception("transform must have been called before draw_pattern")
 
         pattern = copy.deepcopy(self.cycles.loc[pattern_id]["pattern_json_tree"])
         # map each event id to its real textual name

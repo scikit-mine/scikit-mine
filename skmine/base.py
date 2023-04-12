@@ -8,6 +8,11 @@ import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
 
+"""
+Notes : for algorithm LCM, SLIM, SlimClassifier and PeriodicPatternMiner sklearn base classes are used.
+TODO: Other skmine algorithm should follow the same.
+"""
+
 
 class BaseMiner(ABC):
     """Base class for all miners in scikit-mine."""
@@ -27,7 +32,7 @@ class BaseMiner(ABC):
             "non_deterministic": False,
             "requires_positive_X": True,
             "requires_positive_y": False,
-            "X_types": ['2darray'] , #["categorical"],
+            "X_types": ['2darray'],  # ["categorical"],
             "poor_score": False,
             "no_validation": False,
             "multioutput": False,
@@ -43,6 +48,7 @@ class BaseMiner(ABC):
             "requires_y": False,
             "pairwise": False,
         }
+
     @classmethod
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
@@ -218,7 +224,7 @@ class InteractiveMiner(ABC):
 
     @abstractmethod
     def prefit(self, D):
-        """ingest data `D` and track basic informations to be used later"""
+        """ingest data `D` and track basic information to be used later"""
         return self
 
     @abstractmethod
