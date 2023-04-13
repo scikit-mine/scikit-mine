@@ -33,7 +33,7 @@ INDEX_TYPES = (
 
 def _remove_zeros(numbers: pd.Series):
     """ Convert unix time nano-second to second by dropping all zeros
-
+    1s = 1_000_000_000 nano-second
     """
     n = 0
     second_limit = 9
