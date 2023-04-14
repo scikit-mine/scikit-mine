@@ -30,17 +30,85 @@ INDEX_TYPES = (
     pd.Index,
 )
 
+def autoscale_time_unit(S_times_nano, verbose=True):
+    """ Convert times from nano-seconds to  upper unit , between ns and second, or in  {second, min, hour, day}
 
-def _remove_zeros(numbers: pd.Series):
-    """ Convert unix time nano-second to second by dropping all zeros
-    1s = 1_000_000_000 nano-second
+    Parameters
+    ----------
+    S_times_nano:  np.ndarray
+      all timestamps in nano-second
+
+    Returns
+    -------
+    converted_times : np.ndarray
+        all times converted to one of the unit  {second, min, hour, day}
+    n_digit_nano_shifted: int
+        number of digit shifted from nano to eventually second
+    resolution : str
+        name of new unit time
+    div_nb_sec : int
+        number by which original times have been divided    { -    , 60, 3600, 24*3600}
+
     """
-    n = 0
-    second_limit = 9
-    while (numbers % 10 == 0).all():  # and n< second_limit:
-        numbers //= 10
-        n += 1
-    return numbers, n
+    shifted_times_in_nano, n_digit_nano_shifted = shift_from_nano_to_sec(S_times_nano)
+    if verbose:
+        print(f"Auto_time_scale option: times in nano are divided by 10^{n_digit_nano_shifted}")
+
+    if n_digit_nano_shifted < 9:
+        converted_times = shifted_times_in_nano
+        resolution = 'under_second'
+        div_nb_sec = 1
+    elif n_digit_nano_shifted == 9:
+        converted_times, div_nb_sec, adjusted_resolution = shift_from_sec_to_upper_unit(shifted_times_in_nano)
+        resolution = adjusted_resolution
+        if verbose and div_nb_sec > 1:
+            print(f"Auto_time_scale option: times in s are divided by {div_nb_sec} ")
+
+    return converted_times, n_digit_nano_shifted, resolution, div_nb_sec
+
+
+def shift_from_sec_to_upper_unit(original_times_in_sec: np.ndarray) -> tuple:
+    """ Convert times in second to a un upper unit  {min, hour, day} , if no seconds are present in times ...
+
+    Parameters
+    ----------
+    original_times_in_sec:  np.ndarray
+      all timestamps in unit second
+    """
+    if (original_times_in_sec % 60 != 0).any():
+        resolution = "second"
+        div_nb = 1
+    else:
+        if (original_times_in_sec % (24 * 3600) == 0).all():
+            resolution = 'day'
+            div_nb = 24 * 3600
+        elif (original_times_in_sec % 3600 == 0).all():
+            resolution = "hour"
+            div_nb = 3600
+        elif (original_times_in_sec % 60 == 0).all():
+            resolution = 'minute'
+            div_nb = 60
+    converted_times_res = original_times_in_sec // div_nb
+    return converted_times_res, div_nb, resolution
+
+
+def shift_from_nano_to_sec(times_nano: np.ndarray) -> tuple:
+    """ Drop all zeros on right side, common to all unix times in nano-second
+    1s = 1_000_000_000 nano-second
+     Parameters
+    ----------
+    times_nano:  np.ndarray
+      all timestamps in nano-second
+    """
+    assert times_nano.dtype == np.int64
+
+    n_unit_shifted = 0
+    converted_times = np.copy(times_nano)
+    second_digit_rank = 9
+    while (converted_times % 10 == 0).all() and n_unit_shifted < second_digit_rank:
+        converted_times //= 10
+        n_unit_shifted += 1
+    return converted_times, n_unit_shifted
 
 
 def _iterdict_str_to_int_keys(dict_):
@@ -82,6 +150,19 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
     - :math:`\\tau` is the index of the first occurrence, called the `cycle starting point`
     - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`
 
+    Parameters
+    ----------
+
+    complex: boolean
+        True : compute complex pattern with horizontal and vertical combinations.
+        False: compute only simple cycles.
+
+    auto_time_scale: boolean
+        True : preprocessing on time data index in nano-second. Compute automatically the timescale for mining cycles by removing
+        extra zeros on time index and possibly change unit from second to upper ones
+        False: no preprocessing on time data index in nano-second
+
+
     Examples
     --------
     >>> from skmine.periodic import PeriodicPatternMiner
@@ -108,7 +189,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             "non_deterministic": True,
             "no_validation": True,
             "preserves_dtype": [],
-            "requires_y": False, #default for transformer
+            "requires_y": False,  # default for transformer
             "X_types": ['2darray']
         }
 
@@ -125,17 +206,8 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             logs, represented as a pandas Series
             This pandas Series must have an index of type in
             (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)
-
-        complex: boolean
-            True : compute complex pattern with horizontal and vertical combinations.
-            False: compute only simple cycles.
-
-        auto_time_scale: boolean
-            True : preprocessing on time data index. Compute automatically the timescale for mining cycles by removing
-            extra zeros on time index.
-            False: no preprocessing on time data index
         """
-
+        verbose = True
         self._validate_data(S, force_all_finite=False, accept_sparse=False, ensure_2d=False,
                             ensure_min_samples=2, dtype=str)
         # associates to each event (key) its associated datetimes (list of values)
@@ -157,23 +229,26 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             if diff:
                 S = S.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
-        S_index64 = S.index.astype("int64")
-        # print("Autoscale before first S.index \n", *S.index[0:4], sep='\n')
-        self.n_zeros_ = 0
+
+        S_times_nano = S.index.astype("int64")
         if self.auto_time_scale:
-            S.index, self.n_zeros_ = _remove_zeros(S_index64)
-            # print("Autoscale after first S.index\n ", S.index[0:4])
-            # print("Autoscale DeltaT", S.index[-1] - S.index[0])
-            # print("Autoscale remove nb zeros ", self.n_zeros_)
+            converted_times_res, n_digit_nano_shifted, resolution, div_nb_sec = autoscale_time_unit(S_times_nano, verbose=verbose)
+            S.index = converted_times_res
+            self.n_zeros_ = n_digit_nano_shifted
+            self.div_nb_sec = div_nb_sec
 
         else:
-            S.index = S_index64
-            # print("No Autoscale first S.index ", *S.index[0:4], sep='\n')
-            # print("No Autoscale DeltaT", S.index[-1] - S.index[0])
+            S.index = S_times_nano
+            resolution = "nano-second"
+
+        self.resolution = resolution
+
+        if verbose:
+            print(f"Adjusted unit time for algorithm : {self.resolution}")
 
         self.alpha_groups_ = S.groupby(S.values).groups
 
-        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups_), complex=complex)
+        cpool, data_details, pc = mine_seqs(dict(self.alpha_groups_), complex=self.complex)
 
         self.data_details_ = data_details
         self.miners_ = pc
@@ -220,8 +295,9 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         0  20  (ring_a_bell)[r=5 p=20]                 5            20      2
         """
         check_is_fitted(self, "miners_")
-        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(
-            self.data_details_, n_zeros=self.n_zeros_, is_datetime=self.is_datetime_)
+        global_stat_dict, patterns_list_of_dict = self.miners_.output_detailed(self.data_details_,
+                                                                               n_zeros=self.n_zeros_,
+                                                                               is_datetime=self.is_datetime_)
 
         if not patterns_list_of_dict:
             return pd.DataFrame()  # FIXME
@@ -229,12 +305,12 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         self.cycles = pd.DataFrame(patterns_list_of_dict)
 
         if self.auto_time_scale:
-            self.cycles.loc[:, ["t0", "period_major"]] *= 10 ** self.n_zeros_
+            self.cycles.loc[:, ["t0", "period_major"]] *= (10 ** self.n_zeros_) * self.div_nb_sec
 
             if self.is_datetime_:
                 self.cycles.loc[:, "t0"] = self.cycles.t0.astype("datetime64[ns]")
                 self.cycles.loc[:, "period_major"] = self.cycles.period_major.astype("timedelta64[ns]")
-                self.cycles.loc[:, "E"] = self.cycles.E.map(np.array) * (10 ** self.n_zeros_)
+                self.cycles.loc[:, "E"] = self.cycles.E.map(np.array) * (10 ** self.n_zeros_ * self.div_nb_sec)
 
                 def to_timedelta(x): return pd.to_timedelta(x, unit='ns')
 
