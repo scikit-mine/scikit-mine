@@ -232,7 +232,7 @@ def read_ubiq_user(filename: str) -> tuple:
         (df, user, start_time)
         df is the returned pd.Series, user is 1_M for example and , start time is the first timestamp
        smartphone lifelogging event for the specified user
-       Events are indexed by timestamps.
+       Events are indexed by timestamps, time unit used is second
     """
     sep = "\t"
     df = pd.read_csv(filename, sep=sep, header=None, dtype="string")
@@ -248,7 +248,6 @@ def read_ubiq_user(filename: str) -> tuple:
         df['time'] = df.index  # succession of events , index = 1 2 3 4 5 ....
     elif filename.endswith('_ISE_data.dat'):
         df['time'] = df['diff_time'].apply(lambda x: start_time + timedelta(seconds=x))
-        # TODO : minuts normal but no residuals , error
     else:
         raise ValueError("cant parse such files")
     df = df[['time', 'event']]

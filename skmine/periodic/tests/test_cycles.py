@@ -15,8 +15,9 @@ from skmine.periodic.cycles import _shift_from_nano_to_sec, _iterdict_str_to_int
 def test_shift_from_nano_to_sec():
     numbers = pd.Index([1587022200000000000, 1587108540000000000, 1587194940000000000,
                         1587281400000000000, 1587367920000000000, 1587627000000000000], dtype='int64')
-    expected_output = (pd.Index([1587022200, 1587108540, 1587194940, 1587281400, 1587367920, 1587627000], dtype='int64'),
-                       9)
+    expected_output = (
+    pd.Index([1587022200, 1587108540, 1587194940, 1587281400, 1587367920, 1587627000], dtype='int64'),
+    9)
     numbers_without_zeros, n_zeros = _shift_from_nano_to_sec(numbers)
     assert (expected_output[0] == numbers_without_zeros).all()
     assert expected_output[1] == n_zeros
@@ -78,7 +79,7 @@ def test_fit(data):
     assert pcm.miners_ is not None
 
 
-def test_discover(data):
+def test_transform(data):
     pcm = PeriodicPatternMiner()
     pcm.fit(data)
     res_transform = pcm.transform(data)
@@ -94,7 +95,7 @@ def test_discover(data):
     assert res_transform["E"].dtypes.name == "object"
 
 
-def test_discover_chronological_order():
+def test_transform_chronological_order():
     pcm = PeriodicPatternMiner()
     data = fetch_health_app()
     pcm.fit(data[:100])
@@ -109,24 +110,25 @@ def test_discover_chronological_order():
 def patterns_json():
     return {
         "is_datetime_": True,
-        "n_zeros_": 10,
+        "n_zeros_": 9,
+        "div_nb_sec_": 60,
         "data_details": {
             "coffee": [
-                158710854
+                26451809
             ],
             "wake up": [
-                158702220,
-                158710854,
-                158719494,
-                158728140,
-                158736792,
-                158762700
+                26450370,
+                26451809,
+                26453249,
+                26454690,
+                26456132,
+                26460450
             ]
         },
         "patterns": [
             {
                 "0": {
-                    "p": 8643,
+                    "p": 1440,
                     "r": 5,
                     "children": [
                         [
@@ -141,12 +143,12 @@ def patterns_json():
                     "parent": 0
                 },
                 "next_id": 2,
-                "t0": 158702220,
+                "t0": 26450370,
                 "E": [
-                    -9,
-                    -3,
-                    3,
-                    9
+                    -1,
+                     0,
+                     1,
+                     2
                 ]
             }
         ]
@@ -168,7 +170,6 @@ def test_export_patterns(data, patterns_json):
 def test_import_patterns(patterns_json):
     pcm = PeriodicPatternMiner()
 
-
     mock_file = mock_open(read_data=json.dumps(patterns_json))
     with patch("builtins.open", mock_file):
         pcm.import_patterns()
@@ -178,9 +179,9 @@ def test_import_patterns(patterns_json):
     assert pcm.n_zeros_ == patterns_json["n_zeros_"]
     assert pcm.is_datetime_ == patterns_json["is_datetime_"]
     assert pcm.data_details_.data_details == {
-        "t_start": 158702220,
-        "t_end": 158762700,
-        "deltaT": 60480,
+        "t_start": 26450370,
+        "t_end": 26460450,
+        "deltaT": 10080,
         "nbOccs": {1: 6, 0: 1, -1: 7},
         "orgFreqs": {1: 6 / 7, 0: 1 / 7},
         "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
@@ -258,7 +259,7 @@ def test_get_residuals(data, expected_reconstruct):
     expected_residuals = expected_residuals.drop('_merge', axis=1)
 
     residuals = pcm.get_residuals()
-    assert_frame_equal(residuals, expected_residuals.reset_index(drop=True))
+    assert_frame_equal(residuals.set_index("time"), expected_residuals.set_index("time"))
 
 
 def test_get_residuals_health_app(data, expected_reconstruct):
@@ -280,4 +281,4 @@ def test_draw_pattern(data):
     graph = pcm.draw_pattern(0)
     assert 0 in res.index
     assert type(graph) == graphviz.graphs.Digraph
-    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 07:30:00\np=1 day, 0:00:30\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'
+    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 07:30:00\np=1 day, 0:00:00\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'

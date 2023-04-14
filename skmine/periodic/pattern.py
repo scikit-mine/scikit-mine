@@ -883,7 +883,7 @@ class Pattern(object):
             else:
                 return "%s|_ [%s] %s\n" % (("\t" * level), nid, self.nodes[nid]["event"])
 
-    def __str__(self, nid=0, map_ev=None, leaves_first=False, n_zeros=0, is_datetime=False):
+    def __str__(self, nid=0, map_ev=None, leaves_first=False, n_zeros=0, div_nb_sec=1,  is_datetime=False):
         """
         Display the pattern as a string. The tree representing the pattern is traversed in depth from left to right.
 
@@ -911,7 +911,7 @@ class Pattern(object):
             r = self.nodes[nid].get("r", "-")
             p = self.nodes[nid].get("p", "-")
             if is_datetime:
-                p *= 10 ** n_zeros
+                p *= (10 ** n_zeros * div_nb_sec) # restore time in nano-second
                 p = timedelta(microseconds=p / 1000)
             ss = "[r=%s p=%s]" % (r, p)
             sc = ""
@@ -919,10 +919,10 @@ class Pattern(object):
                 if ni > 0:
                     d = nn[1]
                     if is_datetime:
-                        d *= 10 ** n_zeros
+                        d *= (10 ** n_zeros * div_nb_sec) # restore time in nano-second
                         d = timedelta(microseconds=d / 1000)
                     sc += " [d=%s] " % d
-                sc += self.__str__(nn[0], map_ev, leaves_first, n_zeros, is_datetime)
+                sc += self.__str__(nn[0], map_ev, leaves_first, n_zeros, div_nb_sec, is_datetime)
             if leaves_first:
                 return "(" + sc + ")" + ss
             return ss + "(" + sc + ")"
