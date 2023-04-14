@@ -50,7 +50,7 @@ def autoscale_time_unit(S_times_nano, verbose=True):
         number by which original times have been divided    { -    , 60, 3600, 24*3600}
 
     """
-    shifted_times_in_nano, n_digit_nano_shifted = shift_from_nano_to_sec(S_times_nano)
+    shifted_times_in_nano, n_digit_nano_shifted = _shift_from_nano_to_sec(S_times_nano)
     if verbose:
         print(f"Auto_time_scale option: times in nano are divided by 10^{n_digit_nano_shifted}")
 
@@ -92,7 +92,7 @@ def shift_from_sec_to_upper_unit(original_times_in_sec: np.ndarray) -> tuple:
     return converted_times_res, div_nb, resolution
 
 
-def shift_from_nano_to_sec(times_nano: np.ndarray) -> tuple:
+def _shift_from_nano_to_sec(times_nano: np.ndarray) -> tuple:
     """ Drop all zeros on right side, common to all unix times in nano-second
     1s = 1_000_000_000 nano-second
      Parameters

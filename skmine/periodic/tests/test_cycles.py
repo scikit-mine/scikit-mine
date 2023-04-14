@@ -9,15 +9,15 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from skmine.datasets import fetch_health_app
-from skmine.periodic.cycles import _remove_zeros, _iterdict_str_to_int_keys, PeriodicPatternMiner
+from skmine.periodic.cycles import _shift_from_nano_to_sec, _iterdict_str_to_int_keys, PeriodicPatternMiner
 
 
-def test_remove_zeros():
+def test_shift_from_nano_to_sec():
     numbers = pd.Index([1587022200000000000, 1587108540000000000, 1587194940000000000,
                         1587281400000000000, 1587367920000000000, 1587627000000000000], dtype='int64')
-    expected_output = (pd.Index([158702220, 158710854, 158719494, 158728140, 158736792, 158762700], dtype='int64'),
-                       10)
-    numbers_without_zeros, n_zeros = _remove_zeros(numbers)
+    expected_output = (pd.Index([1587022200, 1587108540, 1587194940, 1587281400, 1587367920, 1587627000], dtype='int64'),
+                       9)
+    numbers_without_zeros, n_zeros = _shift_from_nano_to_sec(numbers)
     assert (expected_output[0] == numbers_without_zeros).all()
     assert expected_output[1] == n_zeros
 
