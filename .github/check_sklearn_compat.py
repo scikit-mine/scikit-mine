@@ -14,7 +14,7 @@ import skmine.itemsets
 import skmine.periodic
 # import skmine.preprocessing
 
-MODULES = [skmine.periodic, skmine.itemsets]  # ,= skmine.preprocessing,]
+MODULES = [skmine.periodic , skmine.itemsets]  # ,= skmine.preprocessing,]
 
 EXCLUDED_CHECKS = [
     "check_estimators_pickle",
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             # from sklearn 0.23 check_estimator takes an instance as input
             obj = est() if sklearn.__version__[:4] >= "0.23" else est
             checks = check_estimator(obj, generate_only=True)
-            print("obj", type(obj))
+            # print("obj", type(obj))
             for arg, check in checks:
                 # print("check ", check.func)
                 check_name = check.func.__name__  # unwrap partial function
@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 if check_name in EXCLUDED_CHECKS:
                     mssg  += " excluded"
                     continue
-                print(mssg)
+                # print(mssg)
                 desc = "{} === {}".format(est_name, check_name)
                 try:
                     check(arg)
