@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.datasets.periodic &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>skmine.datasets.periodic &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -107,13 +107,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -421,7 +421,7 @@
 <span class="sd">        (df, user, start_time)</span>
 <span class="sd">        df is the returned pd.Series, user is 1_M for example and , start time is the first timestamp</span>
 <span class="sd">       smartphone lifelogging event for the specified user</span>
-<span class="sd">       Events are indexed by timestamps.</span>
+<span class="sd">       Events are indexed by timestamps, time unit used is second</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
@@ -437,7 +437,6 @@
         <span class="n">df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>  <span class="c1"># succession of events , index = 1 2 3 4 5 ....</span>
     <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_ISE_data.dat&#39;</span><span class="p">):</span>
         <span class="n">df</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;diff_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">x</span><span class="p">))</span>
-        <span class="c1"># TODO : minuts normal but no residuals , error</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cant parse such files&quot;</span><span class="p">)</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;event&#39;</span><span class="p">]]</span>

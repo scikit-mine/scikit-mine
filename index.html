@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>Welcome to scikit-mine’s documentation! &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -109,13 +109,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -240,23 +240,26 @@
 <p>scikit-mine is a Python module for pattern mining built on top of
 Pandas/Numpy/SciPy and is distributed under the 3-Clause BSD license.</p>
 <p>It is currently maintained by a team of volunteers.</p>
-<p>See examples in the tutorials; the notebooks are available <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/tree/master/docs/tutorials">here</a>.</p>
+<p>See examples in the tutorials; the notebooks are available <a class="reference external" href="https://github.com/scikit-mine/scikit-mine/tree/master/docs/tutorials">here</a>. To execute the tutorials, you will have to install jupyter notebook or jupyterlab (<a class="reference external" href="https://jupyter.org/install">https://jupyter.org/install</a>)</p>
 </section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>scikit-mine requires Python&gt;=3.7,
+<p>scikit-mine requires Python&gt;=3.8,
 and some extra dependencies</p>
 <ul class="simple">
 <li><p>scipy&gt;=1.2.1</p></li>
 <li><p>pandas&gt;=1.0.0</p></li>
-<li><p>pyroaring</p></li>
+<li><p>pyroaring&gt;=0.3.4</p></li>
 <li><p>joblib&gt;=0.11.1</p></li>
 <li><p>sortedcontainers&gt;=2.1.0</p></li>
-<li><p>dataclasses</p></li>
-<li><p>networkx~=2.5.1</p></li>
-<li><p>wget</p></li>
+<li><p>dataclasses&gt;=0.6</p></li>
+<li><p>networkx</p></li>
+<li><p>wget&gt;=3.2</p></li>
+<li><p>scikit-learn</p></li>
+<li><p>graphviz</p></li>
+<li><p>matplotlib</p></li>
+<li><p>pydot</p></li>
 </ul>
-<p><strong>scikit-learn</strong> is not a dependency. However, scikit-mine is <strong>contiuously tested for interactions with scikit-learn</strong></p>
 </section>
 <section id="development">
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
@@ -326,14 +329,13 @@ and some extra dependencies</p>
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#Load-datasets-separately">Load datasets separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#Load-individual-datasets-from-the-repository">Load individual datasets from the repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#Load-your-own-files-in-FIMI-format">Load your own files in FIMI format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#Describe-those-datasets">Describe those datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/fetch_fimi_datasets.html#Print-basic-statistics-about-a-dataset">Print basic statistics about a dataset</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/generate_synthetic_data_to_train_on.html#A-simple-plot-allow-us-to-check-the-distrution-of-our-transactions-lenghts">A simple plot allow us to check the distrution of our transactions lenghts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/generate_synthetic_data_to_train_on.html#Now-let’s-generate-associated-labels,-for-multiclass-classification">Now let’s generate associated labels, for multiclass classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/datasets/generate_synthetic_transactional_data.html#Check-the-generated-data">Check the generated data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a><ul>
@@ -354,7 +356,7 @@ and some extra dependencies</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#The-problem,-informally">The problem, informally</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#Introduction-to-periodic-pattern-mining">Introduction to periodic pattern mining</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#An-example-with-Canadian-TV-programs">An example with Canadian TV programs</a></li>

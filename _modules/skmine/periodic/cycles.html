@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.periodic.cycles &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>skmine.periodic.cycles &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -107,13 +107,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -195,8 +195,11 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
 
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_is_fitted</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
+
+<span class="kn">from</span> <span class="nn">skmine.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
 <span class="kn">from</span> <span class="nn">.data_sequence</span> <span class="kn">import</span> <span class="n">DataSequence</span>
 <span class="kn">from</span> <span class="nn">.pattern</span> <span class="kn">import</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">getEDict</span><span class="p">,</span> <span class="n">draw_pattern</span>
 <span class="kn">from</span> <span class="nn">.pattern_collection</span> <span class="kn">import</span> <span class="n">PatternCollection</span>
@@ -206,6 +209,7 @@
 <span class="c1">#          Esther Galbrun &lt;esther.galbrun@inria.fr&gt;</span>
 <span class="c1">#          Cyril Regan &lt;cyril.regan@loria.fr&gt;</span>
 <span class="c1">#          Thomas Betton &lt;thomas.betton@irisa.fr&gt;</span>
+<span class="c1">#          Hermann Courteille &lt;hermann.courteille@irisa.fr&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># License: BSD 3 clause</span>
 
@@ -214,37 +218,6 @@
     <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">,</span>
     <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
 <span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_remove_zeros</span><span class="p">(</span><span class="n">numbers</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Convert unix time nano-second to second by dropping all zeros</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">second_limit</span> <span class="o">=</span> <span class="mi">9</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="p">:</span><span class="c1"># and n&lt; second_limit:</span>
-        <span class="n">numbers</span> <span class="o">//=</span> <span class="mi">10</span>
-        <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">n</span>
-
-
-<span class="k">def</span> <span class="nf">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type</span>
-<span class="sd">    will remain unchanged.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">correctedDict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="n">correctedDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-
-    <span class="k">return</span> <span class="n">correctedDict</span>
 
 
 <div class="viewcode-block" id="PeriodicPatternMiner"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner">[docs]</a><span class="k">class</span> <span class="nc">PeriodicPatternMiner</span><span class="p">(</span><span class="n">TransformerMixin</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">):</span>
@@ -267,16 +240,28 @@
 <span class="sd">    - :math:`\\tau` is the index of the first occurrence, called the `cycle starting point`</span>
 <span class="sd">    - :math:`E` is a list of :math:`r - 1` signed integer offsets, i.e `cycle shift corrections`</span>
 
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    complex: boolean</span>
+<span class="sd">        True : compute complex pattern with horizontal and vertical combinations.</span>
+<span class="sd">        False: compute only simple cycles.</span>
+
+<span class="sd">    auto_time_scale: boolean</span>
+<span class="sd">        True : preprocessing on time data index in nano-second. Compute automatically the timescale for mining cycles by removing</span>
+<span class="sd">        extra zeros on time index and possibly change unit from second to upper ones</span>
+<span class="sd">        False: no preprocessing on time data index in nano-second</span>
+
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; from skmine.periodic import PeriodicPatternMiner</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; S = pd.Series(&quot;ring_a_bell&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
 <span class="sd">    &gt;&gt;&gt; pcm = PeriodicPatternMiner().fit(S)</span>
-<span class="sd">    &gt;&gt;&gt; pcm.discover()</span>
-<span class="sd">       start  length  period       cost                             residuals 	event</span>
-<span class="sd">    0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]</span>
-<span class="sd">    1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]</span>
+<span class="sd">    &gt;&gt;&gt; pcm.transform(S)</span>
+<span class="sd">       t0                  pattern  repetition_major  period_major  sum_E</span>
+<span class="sd">    0  20  (ring_a_bell)[r=5 p=20]                 5            20      2</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -285,17 +270,20 @@
 <span class="sd">        &quot;Mining Periodic Pattern with a MDL Criterion&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># associates to each event (key) its associated datetimes (list of values)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">complex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_time_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">complex</span> <span class="o">=</span> <span class="nb">complex</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="o">=</span> <span class="n">auto_time_scale</span>
 
-<div class="viewcode-block" id="PeriodicPatternMiner.fit"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="nb">complex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">auto_time_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_more_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;non_deterministic&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;no_validation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;preserves_dtype&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;requires_y&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># default for transformer</span>
+            <span class="s2">&quot;X_types&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;2darray&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="PeriodicPatternMiner.fit"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;fit PeriodicPatternMiner on data logs</span>
 
 <span class="sd">        This generates new candidate cycles and evaluate them.</span>
@@ -308,17 +296,10 @@
 <span class="sd">            logs, represented as a pandas Series</span>
 <span class="sd">            This pandas Series must have an index of type in</span>
 <span class="sd">            (pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)</span>
-
-<span class="sd">        complex: boolean</span>
-<span class="sd">            True : compute complex pattern with horizontal and vertical combinations.</span>
-<span class="sd">            False: compute only simple cycles.</span>
-
-<span class="sd">        auto_time_scale: boolean</span>
-<span class="sd">            True : preprocessing on time data index. Compute automatically the timescale for mining cycles by removing</span>
-<span class="sd">            extra zeros on time index.</span>
-<span class="sd">            False: no preprocessing on time data index</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="o">=</span> <span class="n">auto_time_scale</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">force_all_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">ensure_min_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;S must be a pandas Series&quot;</span><span class="p">)</span>
@@ -327,46 +308,47 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;S must have an index with a type amongst </span><span class="si">{</span><span class="n">INDEX_TYPES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># there are potentially duplicates, i.e. occurrences that happened at the</span>
+        <span class="n">serie</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">serie</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># there are potentially duplicates, i.e. occurrences that happened at the</span>
             <span class="c1"># same time AND with the same event. At this line, the second condition is not yet verified.</span>
-            <span class="n">len_S</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">())</span>
+            <span class="n">len_S</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">serie</span><span class="p">)</span>
+            <span class="n">serie</span> <span class="o">=</span> <span class="n">serie</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">serie</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">())</span>
             <span class="c1"># if same time and same event,  create Multi inde names =[timestamp, timestamp]</span>
-            <span class="n">diff</span> <span class="o">=</span> <span class="n">len_S</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">len_S</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">serie</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">diff</span><span class="p">:</span>
-                <span class="n">S</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">serie</span> <span class="o">=</span> <span class="n">serie</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;found </span><span class="si">{</span><span class="n">diff</span><span class="si">}</span><span class="s2"> duplicates in the input sequence, they have been removed.&quot;</span><span class="p">)</span>
-        <span class="n">ty</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-        <span class="n">S_index64</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale before first S.index </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
+        <span class="n">S_times_nano</span> <span class="o">=</span> <span class="n">serie</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
-            <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">_remove_zeros</span><span class="p">(</span><span class="n">S_index64</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale after first S.index</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
-
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale DeltaT&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Autoscale remove nb zeros &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
+            <span class="n">converted_times_res</span><span class="p">,</span> <span class="n">n_digit_nano_shifted</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">div_nb_sec</span> <span class="o">=</span> <span class="n">autoscale_time_unit</span><span class="p">(</span><span class="n">S_times_nano</span><span class="p">,</span>
+                                                                                                    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">serie</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">converted_times_res</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">n_digit_nano_shifted</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span> <span class="o">=</span> <span class="n">div_nb_sec</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">S</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">S_index64</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Autoscale first S.index &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Autoscale DeltaT&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">serie</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">S_times_nano</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="s2">&quot;nano-second&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span> <span class="o">=</span> <span class="mi">1</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="n">resolution</span>
 
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusted unit time for algorithm : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups_</span> <span class="o">=</span> <span class="n">serie</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">serie</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
+        <span class="c1"># associates to each event (key) its associated datetimes (list of values)</span>
+        <span class="n">cpool</span><span class="p">,</span> <span class="n">data_details</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">mine_seqs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups_</span><span class="p">),</span> <span class="nb">complex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
 
-        <span class="n">cpool</span><span class="p">,</span> <span class="n">data_details</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">mine_seqs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span><span class="p">),</span> <span class="nb">complex</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="n">data_details</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span> <span class="o">=</span> <span class="n">data_details</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span> <span class="o">=</span> <span class="n">pc</span>
         <span class="c1"># self.cl, self.clRonly, self.clR, self.nb_simple, self.nbR, self.nbC = self.miners_.strDetailed(</span>
-        <span class="c1">#     self.data_details)</span>
-
+        <span class="c1">#     self.data_details_)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="PeriodicPatternMiner.discover"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.discover">[docs]</a>    <span class="k">def</span> <span class="nf">discover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dE_sum</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">chronological_order</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="PeriodicPatternMiner.transform"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">dE_sum</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">chronological_order</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return cycles as a pandas DataFrame, with 3 columns,</span>
 <span class="sd">        with a 2-level multi-index: the first level mapping events,</span>
 <span class="sd">        and the second level being positional</span>
@@ -393,33 +375,34 @@
 <span class="sd">                cost        MDL cost</span>
 <span class="sd">                ==========  ======================================</span>
 
-<span class="sd">            Examples</span>
-<span class="sd">            --------</span>
-<span class="sd">            &gt;&gt;&gt; from skmine.periodic import PeriodicPatternMiner</span>
-<span class="sd">            &gt;&gt;&gt; import pandas as pd</span>
-<span class="sd">            &gt;&gt;&gt; S = pd.Series(&quot;ring_a_bell&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
-<span class="sd">            &gt;&gt;&gt; pcm = PeriodicPatternMiner().fit(S)</span>
-<span class="sd">            &gt;&gt;&gt; pcm.discover()</span>
-<span class="sd">            start  length  period       cost                                residuals 	        event              dE</span>
-<span class="sd">            0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]</span>
-<span class="sd">            1     40       4 	  20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)} 	[ring_a_bell]   [0, -1, 1]</span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from skmine.periodic import PeriodicPatternMiner</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; S = pd.Series(&quot;ring_a_bell&quot;, [10, 20, 32, 40, 60, 79, 100, 240])</span>
+<span class="sd">        &gt;&gt;&gt; pcm = PeriodicPatternMiner().fit(S)</span>
+<span class="sd">        &gt;&gt;&gt; pcm.transform(S)</span>
+<span class="sd">           t0                  pattern  repetition_major  period_major  sum_E</span>
+<span class="sd">        0  20  (ring_a_bell)[r=5 p=20]                 5            20      2</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">global_stat_dict</span><span class="p">,</span> <span class="n">patterns_list_of_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">output_detailed</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="p">,</span> <span class="n">n_zeros</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">,</span> <span class="n">is_datetime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">)</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;miners_&quot;</span><span class="p">)</span>
+        <span class="n">global_stat_dict</span><span class="p">,</span> <span class="n">patterns_list_of_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">output_detailed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span><span class="p">,</span>
+                                                                               <span class="n">n_zeros</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">,</span>
+                                                                               <span class="n">div_nb_sec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">,</span>
+                                                                               <span class="n">is_datetime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">patterns_list_of_dict</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>  <span class="c1"># FIXME</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">patterns_list_of_dict</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;period_major&quot;</span><span class="p">]]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>  <span class="c1"># restore time in nano-second</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;period_major&quot;</span><span class="p">]]</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">t0</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;period_major&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">period_major</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;timedelta64[ns]&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;E&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;E&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">E</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">)</span>
 
                 <span class="k">def</span> <span class="nf">to_timedelta</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;ns&#39;</span><span class="p">)</span>
 
@@ -443,18 +426,20 @@
 <span class="sd">        file: string</span>
 <span class="sd">            name of the json file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># allows us to call export_patterns without explicitly calling discover method before</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
+        <span class="c1"># allows us to call export_patterns without explicitly calling transform method before</span>
+        <span class="n">dummy_var</span> <span class="o">=</span> <span class="mi">17</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dummy_var</span><span class="p">)</span>
 
         <span class="n">big_dict_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="p">[</span><span class="s2">&quot;pattern_json_tree&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
 
-        <span class="n">data_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_groups_</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">data_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 
         <span class="n">big_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;is_datetime_&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">,</span>
             <span class="s2">&quot;n_zeros_&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span><span class="p">,</span>
+            <span class="s2">&quot;div_nb_sec_&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">,</span>
             <span class="s2">&quot;data_details&quot;</span><span class="p">:</span> <span class="n">data_dict</span><span class="p">,</span>
             <span class="s2">&quot;patterns&quot;</span><span class="p">:</span> <span class="n">big_dict_list</span>
         <span class="p">}</span>
@@ -476,9 +461,9 @@
             <span class="n">big_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;n_zeros_&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;div_nb_sec_&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;is_datetime_&quot;</span><span class="p">]</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span> <span class="o">=</span> <span class="n">DataSequence</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;data_details&quot;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span> <span class="o">=</span> <span class="n">DataSequence</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;data_details&quot;</span><span class="p">]))</span>
         <span class="n">big_dict_list</span> <span class="o">=</span> <span class="n">big_dict</span><span class="p">[</span><span class="s2">&quot;patterns&quot;</span><span class="p">]</span>
 
         <span class="n">patterns_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -524,8 +509,7 @@
             <span class="n">drop_duplicates</span> <span class="o">=</span> <span class="n">sort</span> <span class="o">!=</span> <span class="s2">&quot;construction_order&quot;</span>
 
         <span class="n">reconstruct_list</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
+        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">patterns_id</span><span class="p">:</span>
             <span class="n">patterns_id</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getPatterns</span><span class="p">()))</span>
@@ -540,7 +524,11 @@
             <span class="n">occs</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">getOccs</span><span class="p">(</span><span class="n">occsStar</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">Ed</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">occ</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">occs</span><span class="p">):</span>
-                <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">occ</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="k">else</span> <span class="n">occ</span><span class="p">,</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+                    <span class="n">time0</span> <span class="o">=</span> <span class="n">occ</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span> <span class="c1"># restore time in nano-second</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">time0</span> <span class="o">=</span> <span class="n">occ</span>
+                <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time0</span><span class="p">,</span>
                          <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="n">map_ev</span><span class="p">[</span><span class="n">occsStar</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">1</span><span class="p">]]}</span>
 
                 <span class="n">reconstruct_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_</span><span class="p">)</span>
@@ -564,17 +552,17 @@
         <span class="k">return</span> <span class="n">reconstruct_pd</span></div>
 
 <div class="viewcode-block" id="PeriodicPatternMiner.get_residuals"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.get_residuals">[docs]</a>    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">patterns_id</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get all residual occurences, i.e. events not covered by any pattern (no argument)</span>
-<span class="sd">        or get the complementary occurences of the selected patterns         (with a patterns&#39;id list as argument).</span>
+        <span class="sd">&quot;&quot;&quot;Get all residual occurrences, i.e. events not covered by any pattern (no argument)</span>
+<span class="sd">        or get the complementary occurrences of the selected patterns         (with a patterns&#39;id list as argument).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        -------</span>
 <span class="sd">        patterns_id: None or list</span>
-<span class="sd">            None (when `reconstruct()` is called) : complementary of all patterns occurences</span>
-<span class="sd">            List of pattern id : complementary of patterns ids occurences</span>
+<span class="sd">            None (when `reconstruct()` is called) : complementary of all patterns occurrences</span>
+<span class="sd">            List of pattern id : complementary of patterns ids occurrences</span>
 
 <span class="sd">        sort: string</span>
-<span class="sd">            &quot;time&quot; (by default) : sort by occurences time</span>
+<span class="sd">            &quot;time&quot; (by default) : sort by occurrences time</span>
 <span class="sd">            &quot;event&quot; : sort by event names</span>
 <span class="sd">            anything else : sort by pattern reconstruction</span>
 
@@ -589,13 +577,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">patterns_id</span> <span class="o">=</span> <span class="n">patterns_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
-        <span class="n">residuals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getUncoveredOccs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="p">)</span>
+        <span class="n">map_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span><span class="o">.</span><span class="n">getNumToEv</span><span class="p">()</span>
+        <span class="n">residuals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miners_</span><span class="o">.</span><span class="n">getUncoveredOccs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span><span class="p">)</span>
         <span class="n">residuals_transf_list</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">residuals</span><span class="p">:</span>
-            <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span> <span class="k">else</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="n">map_ev</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]]}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
+                <span class="n">time0</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span>  <span class="c1"># restore time in nano-second</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">time0</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dict_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time0</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="n">map_ev</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]]}</span>
             <span class="n">residuals_transf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_</span><span class="p">)</span>
 
         <span class="n">residuals_transf_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">residuals_transf_list</span><span class="p">)</span>
@@ -624,12 +615,12 @@
 
 <div class="viewcode-block" id="PeriodicPatternMiner.draw_pattern"><a class="viewcode-back" href="../../../reference/periodic.html#skmine.periodic.cycles.PeriodicPatternMiner.draw_pattern">[docs]</a>    <span class="k">def</span> <span class="nf">draw_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern_id</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Visually display a pattern based on its id from the discover command.</span>
+<span class="sd">        Visually display a pattern based on its id from the transform command.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        pattern_id : int</span>
-<span class="sd">            The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.</span>
+<span class="sd">            The ID of the pattern to be displayed. This ID is to be retrieved directly from the transform command.</span>
 
 <span class="sd">        directory : str, default=None</span>
 <span class="sd">             Directory where the generated image and the DOT file are stored</span>
@@ -639,33 +630,34 @@
 <span class="sd">        Digraph</span>
 <span class="sd">            The generated tree. To see it in a python script, you have to add .view()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># discover must have been called before draw_pattern</span>
+        <span class="c1"># transform must have been called before draw_pattern</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;discover must have been called before draw_pattern&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;transform must have been called before draw_pattern&quot;</span><span class="p">)</span>
 
         <span class="n">pattern</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cycles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pattern_id</span><span class="p">][</span><span class="s2">&quot;pattern_json_tree&quot;</span><span class="p">])</span>
         <span class="c1"># map each event id to its real textual name</span>
         <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nid</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
                 <span class="k">if</span> <span class="s2">&quot;event&quot;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details</span><span class="o">.</span><span class="n">map_ev_num</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="nb">int</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">])]</span>
+                    <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_details_</span><span class="o">.</span><span class="n">map_ev_num</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="nb">int</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;event&quot;</span><span class="p">])]</span>
 
                 <span class="k">elif</span> <span class="s2">&quot;p&quot;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
-                        <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                        <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">)</span>  <span class="c1"># restore time in nano-second</span>
                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
                             <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;children&quot;</span><span class="p">]):</span>
                         <span class="n">new_distance</span> <span class="o">=</span> <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                         <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
-                            <span class="n">new_distance</span> <span class="o">=</span> <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                            <span class="n">new_distance</span> <span class="o">=</span> <span class="n">child</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+                                        <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">)</span>  <span class="c1"># restore time in nano-second</span>
                             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
                                 <span class="n">new_distance</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">new_distance</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
                         <span class="n">pattern</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">&quot;children&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">child</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_distance</span><span class="p">)</span>
 
             <span class="k">elif</span> <span class="n">nid</span> <span class="o">==</span> <span class="s2">&quot;t0&quot;</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_time_scale</span><span class="p">:</span>
-                    <span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span>
+                    <span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_zeros_</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">div_nb_sec_</span><span class="p">)</span>  <span class="c1"># restore time in nano-second</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_datetime_</span><span class="p">:</span>
                         <span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">1_000_000_000</span><span class="p">)</span>
 
@@ -673,6 +665,107 @@
         <span class="k">if</span> <span class="n">directory</span><span class="p">:</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">graph</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">autoscale_time_unit</span><span class="p">(</span><span class="n">S_times_nano</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert times from nano-seconds to  upper unit , between ns and second, or in  {second, min, hour, day}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    S_times_nano:  np.ndarray</span>
+<span class="sd">      all timestamps in nano-second</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    converted_times : np.ndarray</span>
+<span class="sd">        all times converted to one of the unit  {second, min, hour, day}</span>
+<span class="sd">    n_digit_nano_shifted: int</span>
+<span class="sd">        number of digit shifted from nano to eventually second</span>
+<span class="sd">    resolution : str</span>
+<span class="sd">        name of new unit time</span>
+<span class="sd">    div_nb_sec : int</span>
+<span class="sd">        number by which original times have been divided    { -    , 60, 3600, 24*3600}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shifted_times_in_nano</span><span class="p">,</span> <span class="n">n_digit_nano_shifted</span> <span class="o">=</span> <span class="n">_shift_from_nano_to_sec</span><span class="p">(</span><span class="n">S_times_nano</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auto_time_scale option: times in nano are divided by 10^</span><span class="si">{</span><span class="n">n_digit_nano_shifted</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_digit_nano_shifted</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">converted_times</span> <span class="o">=</span> <span class="n">shifted_times_in_nano</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="s1">&#39;under_second&#39;</span>
+        <span class="n">div_nb_sec</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">n_digit_nano_shifted</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">converted_times</span><span class="p">,</span> <span class="n">div_nb_sec</span><span class="p">,</span> <span class="n">adjusted_resolution</span> <span class="o">=</span> <span class="n">shift_from_sec_to_upper_unit</span><span class="p">(</span><span class="n">shifted_times_in_nano</span><span class="p">)</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="n">adjusted_resolution</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">div_nb_sec</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auto_time_scale option: times in s are divided by </span><span class="si">{</span><span class="n">div_nb_sec</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">converted_times</span><span class="p">,</span> <span class="n">n_digit_nano_shifted</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">div_nb_sec</span>
+
+
+<span class="k">def</span> <span class="nf">shift_from_sec_to_upper_unit</span><span class="p">(</span><span class="n">original_times_in_sec</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Convert times in second to a un upper unit  {min, hour, day} , if no seconds are present in times ...</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original_times_in_sec:  np.ndarray</span>
+<span class="sd">      all timestamps in unit second</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">original_times_in_sec</span> <span class="o">%</span> <span class="mi">60</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="s2">&quot;second&quot;</span>
+        <span class="n">div_nb</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">original_times_in_sec</span> <span class="o">%</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="s1">&#39;day&#39;</span>
+            <span class="n">div_nb</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">original_times_in_sec</span> <span class="o">%</span> <span class="mi">3600</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="s2">&quot;hour&quot;</span>
+            <span class="n">div_nb</span> <span class="o">=</span> <span class="mi">3600</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">original_times_in_sec</span> <span class="o">%</span> <span class="mi">60</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="s1">&#39;minute&#39;</span>
+            <span class="n">div_nb</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">converted_times_res</span> <span class="o">=</span> <span class="n">original_times_in_sec</span> <span class="o">//</span> <span class="n">div_nb</span>
+    <span class="k">return</span> <span class="n">converted_times_res</span><span class="p">,</span> <span class="n">div_nb</span><span class="p">,</span> <span class="n">resolution</span>
+
+
+<span class="k">def</span> <span class="nf">_shift_from_nano_to_sec</span><span class="p">(</span><span class="n">times_nano</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Drop all zeros on right side, common to all unix times in nano-second</span>
+<span class="sd">    1s = 1_000_000_000 nano-second</span>
+<span class="sd">     Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    times_nano:  np.ndarray</span>
+<span class="sd">      all timestamps in nano-second</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">times_nano</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span>
+
+    <span class="n">n_unit_shifted</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">converted_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">times_nano</span><span class="p">)</span>
+    <span class="n">second_digit_rank</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">converted_times</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">n_unit_shifted</span> <span class="o">&lt;</span> <span class="n">second_digit_rank</span><span class="p">:</span>
+        <span class="n">converted_times</span> <span class="o">//=</span> <span class="mi">10</span>
+        <span class="n">n_unit_shifted</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">converted_times</span><span class="p">,</span> <span class="n">n_unit_shifted</span>
+
+
+<span class="k">def</span> <span class="nf">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function will recursively cast all string-keys to int-keys, if possible. If not possible the key-type</span>
+<span class="sd">    will remain unchanged.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">correctedDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">_iterdict_str_to_int_keys</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="n">correctedDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">correctedDict</span>
+
 </pre></div>
 
            </div>

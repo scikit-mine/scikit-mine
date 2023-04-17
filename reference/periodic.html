@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Periodic &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>Periodic &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -113,13 +113,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -225,7 +225,7 @@
 <h2>PeriodicPatternMiner<a class="headerlink" href="#periodicpatternminer" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="skmine.periodic.cycles.PeriodicPatternMiner">
-<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.cycles.</code><code class="sig-name descname">PeriodicPatternMiner</code><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">skmine.periodic.cycles.</code><code class="sig-name descname">PeriodicPatternMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">complex</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">auto_time_scale</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mining periodic cycles with a MDL Criterion</p>
 <p>PeriodicPatternMiner is an approach to mine periodic cycles from event logs
 while relying on a Minimum Description Length (MDL) criterion to evaluate
@@ -244,15 +244,25 @@ the periodic structure present in the data</p>
 <li><p><span class="math notranslate nohighlight">\(\tau\)</span> is the index of the first occurrence, called the <cite>cycle starting point</cite></p></li>
 <li><p><span class="math notranslate nohighlight">\(E\)</span> is a list of <span class="math notranslate nohighlight">\(r - 1\)</span> signed integer offsets, i.e <cite>cycle shift corrections</cite></p></li>
 </ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>complex</strong> (<em>boolean</em>) – True : compute complex pattern with horizontal and vertical combinations.
+False: compute only simple cycles.</p></li>
+<li><p><strong>auto_time_scale</strong> (<em>boolean</em>) – True : preprocessing on time data index in nano-second. Compute automatically the timescale for mining cycles by removing
+extra zeros on time index and possibly change unit from second to upper ones
+False: no preprocessing on time data index in nano-second</p></li>
+</ul>
+</dd>
+</dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicPatternMiner</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring_a_bell&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicPatternMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">   start  length  period       cost                             residuals   event</span>
-<span class="go">0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]</span>
-<span class="go">1     40       4      20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)}   [ring_a_bell]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="go">   t0                  pattern  repetition_major  period_major  sum_E</span>
+<span class="go">0  20  (ring_a_bell)[r=5 p=20]                 5            20      2</span>
 </pre></div>
 </div>
 <p class="rubric">References</p>
@@ -264,30 +274,23 @@ the periodic structure present in the data</p>
 </dl>
 <dl class="py method">
 <dt id="skmine.periodic.cycles.PeriodicPatternMiner.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">complex</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">auto_time_scale</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>fit PeriodicPatternMiner on data logs</p>
 <p>This generates new candidate cycles and evaluate them.
 Residual occurrences are stored as an internal attribute,
 for later reconstruction (MDL is lossless)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>S</strong> (<em>pd.Series</em>) – logs, represented as a pandas Series
+<dd class="field-odd"><p><strong>S</strong> (<em>pd.Series</em>) – logs, represented as a pandas Series
 This pandas Series must have an index of type in
-(pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)</p></li>
-<li><p><strong>complex</strong> (<em>boolean</em>) – True : compute complex pattern with horizontal and vertical combinations.
-False: compute only simple cycles.</p></li>
-<li><p><strong>auto_time_scale</strong> (<em>boolean</em>) – True : preprocessing on time data index. Compute automatically the timescale for mining cycles by removing
-extra zeros on time index.
-False: no preprocessing on time data index</p></li>
-</ul>
+(pd.DatetimeIndex, pd.RangeIndex, pd.Int64Index)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="skmine.periodic.cycles.PeriodicPatternMiner.discover">
-<code class="sig-name descname">discover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dE_sum</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">chronological_order</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.discover" title="Permalink to this definition">¶</a></dt>
+<dt id="skmine.periodic.cycles.PeriodicPatternMiner.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">S</span></em>, <em class="sig-param"><span class="n">dE_sum</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">chronological_order</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return cycles as a pandas DataFrame, with 3 columns,
 with a 2-level multi-index: the first level mapping events,
 and the second level being positional</p>
@@ -329,23 +332,22 @@ False: returm a columns “dE” with the full list of errors.</p></li>
 </table>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicPatternMiner</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring_a_bell&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicPatternMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">discover</span><span class="p">()</span>
-<span class="go">start  length  period       cost                                residuals           event              dE</span>
-<span class="go">0     10       3      11  23.552849 {(240, 0), (10, 0), (32, 0)}            [ring_a_bell]   [0, 0, -1, 1]</span>
-<span class="go">1     40       4      20  29.420668 {(20, 0), (240, 0), (10, 0), (32, 0)}   [ring_a_bell]   [0, -1, 1]</span>
-</pre></div>
-</div>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skmine.periodic</span> <span class="kn">import</span> <span class="n">PeriodicPatternMiner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;ring_a_bell&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span> <span class="o">=</span> <span class="n">PeriodicPatternMiner</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pcm</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="go">   t0                  pattern  repetition_major  period_major  sum_E</span>
+<span class="go">0  20  (ring_a_bell)[r=5 p=20]                 5            20      2</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -401,14 +403,14 @@ for better understanding.</p></li>
 <dl class="py method">
 <dt id="skmine.periodic.cycles.PeriodicPatternMiner.get_residuals">
 <code class="sig-name descname">get_residuals</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">patterns_id</span></em>, <em class="sig-param"><span class="n">sort</span><span class="o">=</span><span class="default_value">'time'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.get_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.get_residuals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all residual occurences, i.e. events not covered by any pattern (no argument)
-or get the complementary occurences of the selected patterns         (with a patterns’id list as argument).</p>
+<dd><p>Get all residual occurrences, i.e. events not covered by any pattern (no argument)
+or get the complementary occurrences of the selected patterns         (with a patterns’id list as argument).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>patterns_id</strong> (<em>None</em><em> or </em><em>list</em>) – None (when <cite>reconstruct()</cite> is called) : complementary of all patterns occurences
-List of pattern id : complementary of patterns ids occurences</p></li>
-<li><p><strong>sort</strong> (<em>string</em>) – “time” (by default) : sort by occurences time
+<li><p><strong>patterns_id</strong> (<em>None</em><em> or </em><em>list</em>) – None (when <cite>reconstruct()</cite> is called) : complementary of all patterns occurrences
+List of pattern id : complementary of patterns ids occurrences</p></li>
+<li><p><strong>sort</strong> (<em>string</em>) – “time” (by default) : sort by occurrences time
 “event” : sort by event names
 anything else : sort by pattern reconstruction</p></li>
 </ul>
@@ -425,11 +427,11 @@ anything else : sort by pattern reconstruction</p></li>
 <dl class="py method">
 <dt id="skmine.periodic.cycles.PeriodicPatternMiner.draw_pattern">
 <code class="sig-name descname">draw_pattern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pattern_id</span></em>, <em class="sig-param"><span class="n">directory</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/skmine/periodic/cycles.html#PeriodicPatternMiner.draw_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skmine.periodic.cycles.PeriodicPatternMiner.draw_pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visually display a pattern based on its id from the discover command.</p>
+<dd><p>Visually display a pattern based on its id from the transform command.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pattern_id</strong> (<em>int</em>) – The ID of the pattern to be displayed. This ID is to be retrieved directly from the discover command.</p></li>
+<li><p><strong>pattern_id</strong> (<em>int</em>) – The ID of the pattern to be displayed. This ID is to be retrieved directly from the transform command.</p></li>
 <li><p><strong>directory</strong> (<em>str</em><em>, </em><em>default=None</em>) – Directory where the generated image and the DOT file are stored</p></li>
 </ul>
 </dd>

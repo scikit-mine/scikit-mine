@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Fetch FIMI datasets &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>Fetch FIMI datasets &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -39,7 +39,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Generate synthetic data to train on" href="generate_synthetic_data_to_train_on.html" />
+    <link rel="next" title="Generate synthetic transactional data" href="generate_synthetic_transactional_data.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" />
     <link href="../../_static/style.css" rel="stylesheet" type="text/css">
 
@@ -110,18 +110,18 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Fetch FIMI datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Load-datasets-separately">Load datasets separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Load-individual-datasets-from-the-repository">Load individual datasets from the repository</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Load-your-own-files-in-FIMI-format">Load your own files in FIMI format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Describe-those-datasets">Describe those datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Print-basic-statistics-about-a-dataset">Print basic statistics about a dataset</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -471,8 +471,8 @@ div.rendered_html tbody tr:hover {
 <section id="Fetch-FIMI-datasets">
 <h1>Fetch <a class="reference external" href="http://fimi.uantwerpen.be/data/">FIMI</a> datasets<a class="headerlink" href="#Fetch-FIMI-datasets" title="Permalink to this headline">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">FIMI</span></code> is a popular repository referencing standard datasets and algorithms in pattern mining</p>
-<section id="Load-datasets-separately">
-<h2>Load datasets separately<a class="headerlink" href="#Load-datasets-separately" title="Permalink to this headline">¶</a></h2>
+<section id="Load-individual-datasets-from-the-repository">
+<h2>Load individual datasets from the repository<a class="headerlink" href="#Load-individual-datasets-from-the-repository" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -585,6 +585,8 @@ Name: accidents, dtype: object
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
+
+  0% [                                                                                  ]   0 / 318
 100% [..................................................................................] 318 / 318
 </pre></div></div>
 </div>
@@ -602,7 +604,7 @@ Name: accidents, dtype: object
 Name: iris.D19.N150.C3.num, dtype: object
 </pre></div></div>
 </div>
-<p>Some datasets like iris also allow <strong>classification and have a target column</strong>. To get X and y, use the <em>return_y</em> parameter.</p>
+<p>Some datasets like iris also allow <strong>classification and have a target column</strong>.To get X and y separately, use the <em>return_y</em> parameter</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -634,7 +636,7 @@ Name: iris.D19.N150.C3.num, dtype: int64
 </section>
 <section id="Load-your-own-files-in-FIMI-format">
 <h2>Load your own files in FIMI format<a class="headerlink" href="#Load-your-own-files-in-FIMI-format" title="Permalink to this headline">¶</a></h2>
-<p>With the <strong>fetch_file</strong> method, load your file. You can indicate if the values in the file are <strong>integers or not</strong>. The performance of the algorithms is better with integers. You can also <strong>specify the separator</strong> between the different items with ‘separator’. By default, it’s a blank space. (Example FIMI format <a class="reference external" href="http://fimi.uantwerpen.be/data/chess.dat">here</a>)</p>
+<p>The <strong>fetch_file</strong> method lets you load your own dataset in FIMI format. You can indicate whether the values in the file, the item identifiers, are <strong>integers or not</strong> (e.g. strings). The performance of the algorithms is better with integers. You can also <strong>specify the separator</strong> between the different items with ‘separator’. By default, it’s a blank space. (Example FIMI format <a class="reference external" href="http://fimi.uantwerpen.be/data/chess.dat">here</a>)</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -659,8 +661,8 @@ Name: data, dtype: object
 </pre></div></div>
 </div>
 </section>
-<section id="Describe-those-datasets">
-<h2>Describe those datasets<a class="headerlink" href="#Describe-those-datasets" title="Permalink to this headline">¶</a></h2>
+<section id="Print-basic-statistics-about-a-dataset">
+<h2>Print basic statistics about a dataset<a class="headerlink" href="#Print-basic-statistics-about-a-dataset" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -694,7 +696,7 @@ Name: data, dtype: object
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="generate_synthetic_data_to_train_on.html" class="btn btn-neutral float-right" title="Generate synthetic data to train on" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="generate_synthetic_transactional_data.html" class="btn btn-neutral float-right" title="Generate synthetic transactional data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

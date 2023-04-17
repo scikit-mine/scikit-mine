@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>skmine.callbacks &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>skmine.callbacks &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -107,13 +107,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -200,7 +200,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    f: callable</span>
 
-<span class="sd">    check if no assignement is made on the ``self`` keyword</span>
+<span class="sd">    check if no assignment is made on the ``self`` keyword</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">p</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;self(\.\w+)?\s*=.*&quot;</span>
@@ -295,18 +295,16 @@
         <span class="c1"># print(&quot;miner set_output&quot;,miner.set_output )</span>
 
         <span class="n">miner_methods</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span> <span class="p">:</span> 
-            <span class="k">try</span><span class="p">:</span> 
-                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">))</span> <span class="p">:</span> 
+        <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">miner</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">f_name</span><span class="p">)):</span>
                     <span class="n">miner_methods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_name</span><span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warning : `f_name`=&#39;</span><span class="si">{</span><span class="n">f_name</span><span class="si">}</span><span class="s2">&#39; return an error for `callable(getattr(miner, f_name)`&quot;</span><span class="p">)</span> 
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warning : `f_name`=&#39;</span><span class="si">{</span><span class="n">f_name</span><span class="si">}</span><span class="s2">&#39; return an error for `callable(getattr(miner, f_name)`&quot;</span><span class="p">)</span>
 
-
-        <span class="c1"># miner_methods = [</span>
+                <span class="c1"># miner_methods = [</span>
         <span class="c1">#     f_name for f_name in dir(miner) if callable(getattr(miner, f_name))</span>
         <span class="c1"># ]</span>
-
 
         <span class="k">for</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">f_name</span> <span class="ow">in</span> <span class="n">miner_methods</span><span class="p">:</span>
@@ -327,6 +325,7 @@
         <span class="nb">print</span><span class="p">(</span>
             <span class="s2">&quot;data size : </span><span class="si">{:.2f}</span><span class="s2"> | model size : </span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_size</span><span class="p">,</span> <span class="n">model_size</span><span class="p">)</span>
         <span class="p">)</span>
+
 
 <span class="k">def</span> <span class="nf">_print_candidates_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> new candidates considered&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)))</span>

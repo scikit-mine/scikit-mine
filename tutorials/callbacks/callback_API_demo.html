@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callback API demo &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>Callback API demo &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -110,7 +110,7 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
@@ -120,7 +120,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../periodic/periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -514,14 +514,6 @@ This tutorial was tested with the following version of skmine : 0.0.11
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-100% [............................................................................] 570408 / 570408
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -556,7 +548,7 @@ Name: mushroom, dtype: object
 <li><p><code class="docutils literal notranslate"><span class="pre">post_gen</span></code> is executed after <code class="docutils literal notranslate"><span class="pre">SLIM.generate_candidates</span></code>, and just records the size of the current batch of candidates</p></li>
 </ol>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -574,7 +566,7 @@ Name: mushroom, dtype: object
 <p>A <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is a collection of callbacks.</p>
 <p>It’s a mapping between function names and their dedicated callbacks. When an instance of <code class="docutils literal notranslate"><span class="pre">skmine.callbacks.CallBacks</span></code> is called (<code class="docutils literal notranslate"><span class="pre">()</span> <span class="pre">operator</span></code>) on an object, it looks for internal methods and tries to attach the callbacks.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -593,7 +585,7 @@ warning : `f_name`=&#39;set_output&#39; return an error for `callable(getattr(mi
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -606,12 +598,12 @@ warning : `f_name`=&#39;set_output&#39; return an error for `callable(getattr(mi
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 30.1 s, sys: 66.5 ms, total: 30.1 s
-Wall time: 30 s
+CPU times: user 30.2 s, sys: 266 ms, total: 30.4 s
+Wall time: 30.1 s
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -705,7 +697,7 @@ Wall time: 30 s
 <p>While the blue curve represents the size of the data, red vertical lines emphasize the end of a batch of candidates.</p>
 <p><strong>We can clearly dinstinguish the beginning of a batch of candidates, where the learning curve is quite abrupt, from the end of a batch, where it reaches a plateau</strong>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -714,98 +706,209 @@ Wall time: 30 s
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 [(1064327.8204536438, 2049.1517753601074),
+ (1064327.8204536438, 2049.1517753601074),
+ (1019045.3720026016, 2051.0723099708557),
  (1019045.3720026016, 2051.0723099708557),
  (980036.730214119, 2075.213014602661),
+ (980036.730214119, 2075.213014602661),
+ (948613.6116323471, 2102.6085658073425),
  (948613.6116323471, 2102.6085658073425),
  (927717.8376092911, 2118.527575492859),
+ (927717.8376092911, 2118.527575492859),
+ (907849.3784189224, 2138.470380783081),
  (907849.3784189224, 2138.470380783081),
  (889519.3478527069, 2157.9796571731567),
+ (889519.3478527069, 2157.9796571731567),
+ (871974.2353172302, 2192.7303881645203),
  (871974.2353172302, 2192.7303881645203),
  (854607.3957920074, 2208.895321369171),
+ (854607.3957920074, 2208.895321369171),
+ (838443.3827610016, 2225.1477360725403),
  (838443.3827610016, 2225.1477360725403),
  (823428.2101373672, 2264.49365234375),
+ (823428.2101373672, 2264.49365234375),
+ (808966.1101493835, 2287.104096889496),
  (808966.1101493835, 2287.104096889496),
  (792759.5926294327, 2293.201919078827),
+ (792759.5926294327, 2293.201919078827),
+ (780306.3465356827, 2344.104003429413),
  (780306.3465356827, 2344.104003429413),
  (768081.5152606964, 2392.268000602722),
+ (768081.5152606964, 2392.268000602722),
+ (756362.2376337051, 2409.8285970687866),
  (756362.2376337051, 2409.8285970687866),
  (745031.9830083847, 2421.723343372345),
+ (745031.9830083847, 2421.723343372345),
+ (734200.0674972534, 2446.078966140747),
  (734200.0674972534, 2446.078966140747),
  (723434.2704172134, 2456.3236446380615),
+ (723434.2704172134, 2456.3236446380615),
+ (712732.7913103104, 2461.307161808014),
  (712732.7913103104, 2461.307161808014),
  (702638.7939929962, 2530.0034675598145),
+ (702638.7939929962, 2530.0034675598145),
+ (692757.5342140198, 2553.6208057403564),
  (692757.5342140198, 2553.6208057403564),
  (683180.6969127655, 2565.5511989593506),
+ (683180.6969127655, 2565.5511989593506),
+ (673874.3940858841, 2619.1964559555054),
  (673874.3940858841, 2619.1964559555054),
  (664669.040602684, 2694.46364402771),
+ (664669.040602684, 2694.46364402771),
+ (655349.6174497604, 2703.4007120132446),
  (655349.6174497604, 2703.4007120132446),
  (645934.4946928024, 2729.645245552063),
+ (645934.4946928024, 2729.645245552063),
+ (636988.622294426, 2742.826548576355),
  (636988.622294426, 2742.826548576355),
  (628349.489894867, 2745.7087755203247),
+ (628349.489894867, 2745.7087755203247),
+ (619778.3561525345, 2791.6579875946045),
  (619778.3561525345, 2791.6579875946045),
  (612687.4520568848, 2765.7485609054565),
+ (612687.4520568848, 2765.7485609054565),
+ (604839.8522281647, 2794.495764732361),
  (604839.8522281647, 2794.495764732361),
  (597740.2815599442, 2801.642425060272),
+ (597740.2815599442, 2801.642425060272),
+ (591211.9014139175, 2805.2541251182556),
  (591211.9014139175, 2805.2541251182556),
  (585517.1406850815, 2851.7055792808533),
+ (585517.1406850815, 2851.7055792808533),
+ (579929.8582677841, 2877.48024892807),
  (579929.8582677841, 2877.48024892807),
  (574430.0130376816, 2916.439881801605),
+ (574430.0130376816, 2916.439881801605),
+ (569052.748840332, 2923.763541698456),
  (569052.748840332, 2923.763541698456),
  (563976.3026885986, 2941.1488165855408),
+ (563976.3026885986, 2941.1488165855408),
+ (558968.347108841, 2923.6829719543457),
  (558968.347108841, 2923.6829719543457),
  (554284.5226974487, 3014.9049005508423),
+ (554284.5226974487, 3014.9049005508423),
+ (549905.7714662552, 3019.4470205307007),
  (549905.7714662552, 3019.4470205307007),
  (544997.0604438782, 3024.4853563308716),
+ (544997.0604438782, 3024.4853563308716),
+ (540950.6344032288, 3050.9515557289124),
  (540950.6344032288, 3050.9515557289124),
  (537252.2906827927, 3066.4759969711304),
+ (537252.2906827927, 3066.4759969711304),
+ (532131.9468197823, 3083.5683188438416),
  (532131.9468197823, 3083.5683188438416),
  (527885.6507277489, 3100.84166765213),
+ (527885.6507277489, 3100.84166765213),
+ (522150.7439804077, 3105.057946205139),
  (522150.7439804077, 3105.057946205139),
  (516739.6784582138, 3125.0889949798584),
+ (516739.6784582138, 3125.0889949798584),
+ (511636.4079031944, 3152.4172925949097),
  (511636.4079031944, 3152.4172925949097),
  (508022.9669327736, 3199.241506099701),
+ (508022.9669327736, 3199.241506099701),
+ (504501.93383073807, 3269.2803320884705),
  (504501.93383073807, 3269.2803320884705),
  (500812.76487112045, 3274.8100786209106),
+ (500812.76487112045, 3274.8100786209106),
+ (497417.9516406059, 3365.587016582489),
  (497417.9516406059, 3365.587016582489),
  (492801.83930683136, 3369.3371634483337),
+ (492801.83930683136, 3369.3371634483337),
+ (489391.1609711647, 3467.619252681732),
  (489391.1609711647, 3467.619252681732),
  (485460.7992911339, 3472.116714000702),
+ (485460.7992911339, 3472.116714000702),
+ (482427.1781849861, 3477.5840849876404),
  (482427.1781849861, 3477.5840849876404),
  (479693.1807589531, 3497.0940837860107),
+ (479693.1807589531, 3497.0940837860107),
+ (476574.6060566902, 3516.7616815567017),
  (476574.6060566902, 3516.7616815567017),
  (473364.8910665512, 3536.486557483673),
+ (473364.8910665512, 3536.486557483673),
+ (470712.14954042435, 3547.9589014053345),
  (470712.14954042435, 3547.9589014053345),
  (468034.41232585907, 3630.8001165390015),
+ (468034.41232585907, 3630.8001165390015),
+ (465488.4886255264, 3650.3392448425293),
  (465488.4886255264, 3650.3392448425293),
  (462855.69601774216, 3748.0396962165833),
+ (462855.69601774216, 3748.0396962165833),
+ (460318.39687108994, 3846.327386379242),
  (460318.39687108994, 3846.327386379242),
  (457533.85771226883, 3850.8916816711426),
+ (457533.85771226883, 3850.8916816711426),
+ (455091.3696861267, 3860.352683544159),
  (455091.3696861267, 3860.352683544159),
  (451439.63231420517, 3890.251036167145),
+ (451439.63231420517, 3890.251036167145),
+ (449009.84144067764, 3881.3497910499573),
  (449009.84144067764, 3881.3497910499573),
  (446528.81369543076, 3898.210277557373),
+ (446528.81369543076, 3898.210277557373),
+ (444225.6063990593, 3904.679087638855),
  (444225.6063990593, 3904.679087638855),
  (441868.0961327553, 3924.2356181144714),
+ (441868.0961327553, 3924.2356181144714),
+ (439658.52277326584, 3959.026750564575),
  (439658.52277326584, 3959.026750564575),
  (437459.57193517685, 3981.3535590171814),
+ (437459.57193517685, 3981.3535590171814),
+ (435022.1490917206, 4005.7886300086975),
  (435022.1490917206, 4005.7886300086975),
  (432903.7034549713, 4031.1638164520264),
+ (432903.7034549713, 4031.1638164520264),
+ (430781.06565475464, 4047.012207508087),
  (430781.06565475464, 4047.012207508087),
  (428734.2130870819, 4052.7625794410706),
+ (428734.2130870819, 4052.7625794410706),
+ (426716.5517811775, 4061.1834139823914),
  (426716.5517811775, 4061.1834139823914),
  (424729.18721199036, 4069.7247982025146),
+ (424729.18721199036, 4069.7247982025146),
  (422736.1689748764, 4099.728016376495),
- (420768.4673900604, 4107.899528026581)]
+ (422736.1689748764, 4099.728016376495),
+ (420768.4673900604, 4107.899528026581),
+ (420768.4673900604, 4107.899528026581),
+ (418418.19539165497, 4113.049150466919),
+ (418418.19539165497, 4113.049150466919),
+ (416493.6862053871, 4118.254427909851),
+ (416493.6862053871, 4118.254427909851),
+ (414565.99742126465, 4124.003650665283),
+ (414565.99742126465, 4124.003650665283),
+ (412686.0111503601, 4114.948963165283),
+ (412686.0111503601, 4114.948963165283),
+ (410796.34900665283, 4121.841695308685),
+ (410796.34900665283, 4121.841695308685),
+ (408918.20883369446, 4112.796407222748),
+ (408918.20883369446, 4112.796407222748),
+ (407037.3795146942, 4129.733689785004),
+ (407037.3795146942, 4129.733689785004),
+ (405187.4784345627, 4138.643919467926),
+ (405187.4784345627, 4138.643919467926),
+ (403360.82039642334, 4147.217342376709),
+ (403360.82039642334, 4147.217342376709),
+ (401540.30622291565, 4152.1692061424255),
+ (401540.30622291565, 4152.1692061424255),
+ (399756.1656303406, 4169.316841125488),
+ (399756.1656303406, 4169.316841125488),
+ (398016.8108062744, 4188.394077777863),
+ (398016.8108062744, 4188.394077777863),
+ (396290.0697169304, 4233.978398323059),
+ (396290.0697169304, 4233.978398323059),
+ (394593.36030578613, 4247.3708510398865),
+ (394593.36030578613, 4247.3708510398865)]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -824,7 +927,7 @@ Wall time: 30 s
 <hr class="docutils" />
 <p>Here is how the model size goes up</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -833,12 +936,12 @@ Wall time: 30 s
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;Axes: &gt;
+&lt;AxesSubplot:&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -850,7 +953,7 @@ Wall time: 30 s
 </div>
 <p>And finally the evolution of the total size of our dataset after compression via SLIM following MDL</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -860,12 +963,12 @@ Wall time: 30 s
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;Axes: &gt;
+&lt;AxesSubplot:&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -877,7 +980,7 @@ Wall time: 30 s
 </div>
 <p>From the sizes saved in df, we can determine the compression ratio of our dataset after applying SLIM</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -887,31 +990,13 @@ Wall time: 30 s
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-39.84298029523138
+37.401476358134936
 </pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
-</pre></div>
-</div>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:

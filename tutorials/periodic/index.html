@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>&lt;no title&gt; &mdash; scikit-mine 0.0.11 documentation</title>
+  <title>&lt;no title&gt; &mdash; scikit-mine 1.0.0 documentation</title>
   
 
   
@@ -39,7 +39,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Periodic pattern mining on canadian TV logs" href="periodic_pattern_mining_on_canadian_TV_logs.html" />
+    <link rel="next" title="Periodic pattern mining, an example with Canadian TV programs" href="periodic_pattern_mining_on_canadian_TV_logs.html" />
     <link rel="prev" title="GraphMDL for graph pattern mining" href="../graph/GraphMDL_for_graph_pattern_mining.html" />
     <link href="../../_static/style.css" rel="stylesheet" type="text/css">
 
@@ -110,13 +110,13 @@
 <p><span class="caption-text">Tutorials</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../datasets/fetch_fimi_datasets.html">Fetch FIMI datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../datasets/generate_synthetic_data_to_train_on.html">Generate synthetic data to train on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/generate_synthetic_transactional_data.html">Generate synthetic transactional data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/linear_time_closed_item_set_miner.html">Linear time Closed item set Miner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/SLIM_for_market_basket_analysis.html">SLIM for market basket analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../itemsets/classification_examples_with_SLIM.html">Classification examples with SLIM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../callbacks/callback_API_demo.html">Callback API demo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph/GraphMDL_for_graph_pattern_mining.html">GraphMDL for graph pattern mining</a></li>
-<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#References">References</a></li>
 </ul>
 <p><span class="caption-text">About</span></p>
@@ -217,7 +217,7 @@
 </style>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining on canadian TV logs</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html">Periodic pattern mining, an example with Canadian TV programs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#The-problem,-informally">The problem, informally</a></li>
 <li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Introduction-to-periodic-pattern-mining">Introduction to periodic pattern mining</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#The-cycle-:-a-building-block-for-periodic-pattern-mining">The cycle : a building block for periodic pattern mining</a></li>
@@ -238,9 +238,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#Load-your-own-custom-datasets">Load your own custom datasets</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#1.-Each-line-consists-of-a-datetime-followed-by-its-associated-event.-By-default,-the-separator-is-a-``,``.-This-is-customisable.">1. <strong>Each line consists of a datetime followed by its associated event.</strong> By default, <strong>the separator is a ``,``</strong>. This is customisable.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#1.-**Each-line-consists-of-a-datetime-followed-by-its-associated-event.">1. **Each line consists of a datetime followed by its associated event.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#2.-Datetimes-can-also-be-replaced-by-integers.">2. <strong>Datetimes can also be replaced by integers</strong>.</a></li>
-<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#3.-Use-only-the-name-of-the-events.-In-this-case,-the-indexes-correspond-to-the-line-numbers-(starting-from-0).">3. <strong>Use only the name of the events</strong>. In this case, <strong>the indexes correspond to the line numbers (starting from 0)</strong>.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="periodic_pattern_mining_on_canadian_TV_logs.html#3.-Use-only-the-name-of-the-events.">3. <strong>Use only the name of the events</strong>.</a></li>
 </ul>
 </li>
 </ul>
@@ -257,7 +257,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="periodic_pattern_mining_on_canadian_TV_logs.html" class="btn btn-neutral float-right" title="Periodic pattern mining on canadian TV logs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="periodic_pattern_mining_on_canadian_TV_logs.html" class="btn btn-neutral float-right" title="Periodic pattern mining, an example with Canadian TV programs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../graph/GraphMDL_for_graph_pattern_mining.html" class="btn btn-neutral float-left" title="GraphMDL for graph pattern mining" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
