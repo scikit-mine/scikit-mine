@@ -12,9 +12,10 @@ from sklearn.utils.estimator_checks import check_estimator
 
 import skmine.itemsets
 import skmine.periodic
+
 # import skmine.preprocessing
 
-MODULES = [skmine.periodic , skmine.itemsets]  # ,= skmine.preprocessing,]
+MODULES = [skmine.periodic, skmine.itemsets]  # ,= skmine.preprocessing,]
 
 EXCLUDED_CHECKS = [
     "check_estimators_pickle",
@@ -23,15 +24,14 @@ EXCLUDED_CHECKS = [
     "check_fit_idempotent",
     "check_dict_unchanged",
     "check_estimators_dtypes",
-    "check_estimators_fit_returns_self", #pb with PeriodicPAtternMiner no label y
-    "check_estimators_overwrite_params",  #pb with PeriodicPAtternMiner no label y
-    "check_estimator_sparse_data",#pb with PeriodicPAtternMiner no label y
-    "check_fit_score_takes_y", #pb with PeriodicPAtternMiner no label y
-    "check_fit2d_1feature",                       #pb with PeriodicPAtternMiner no label y
+    "check_estimators_fit_returns_self",  # pb with PeriodicPAtternMiner no label y
+    "check_estimators_overwrite_params",  # pb with PeriodicPAtternMiner no label y
+    "check_estimator_sparse_data",  # pb with PeriodicPAtternMiner no label y
+    "check_fit_score_takes_y",  # pb with PeriodicPAtternMiner no label y
+    "check_fit2d_1feature",  # pb with PeriodicPAtternMiner no label y
     "check_fit_check_is_fitted",
     "check_dont_overwrite_parameters"
-    ]
-# "check_fit1d"]
+]
 #     "check_no_attributes_set_in_init",
 #     "check_estimator_sparse_data",
 #     "check_estimators_pickle",
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                 check_name = check.func.__name__  # unwrap partial function
                 mssg = check_name
                 if check_name in EXCLUDED_CHECKS:
-                    mssg  += " excluded"
+                    mssg += " excluded"
                     continue
                 # print(mssg)
                 desc = "{} === {}".format(est_name, check_name)

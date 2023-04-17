@@ -119,28 +119,28 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             raise TypeError(f"S must have an index with a type amongst {INDEX_TYPES}")
 
         self.is_datetime_ = isinstance(S.index, pd.DatetimeIndex)
-
-        if S.index.duplicated().any():  # there are potentially duplicates, i.e. occurrences that happened at the
+        serie = S.copy(deep=True)
+        if serie.index.duplicated().any():  # there are potentially duplicates, i.e. occurrences that happened at the
             # same time AND with the same event. At this line, the second condition is not yet verified.
-            len_S = len(S)
-            S = S.groupby(by=S.index).apply(lambda x: x.drop_duplicates())
+            len_S = len(serie)
+            serie = serie.groupby(by=serie.index).apply(lambda x: x.drop_duplicates())
             # if same time and same event,  create Multi inde names =[timestamp, timestamp]
-            diff = len_S - len(S)
+            diff = len_S - len(serie)
             if diff:
-                S = S.reset_index(level=0, drop=True)
+                serie = serie.reset_index(level=0, drop=True)
                 warnings.warn(f"found {diff} duplicates in the input sequence, they have been removed.")
 
-        S_times_nano = S.index.astype("int64")
+        S_times_nano = serie.index.astype("int64")
         verbose = False
         if self.auto_time_scale:
             converted_times_res, n_digit_nano_shifted, resolution, div_nb_sec = autoscale_time_unit(S_times_nano,
                                                                                                     verbose=False)
-            S.index = converted_times_res
+            serie.index = converted_times_res
             self.n_zeros_ = n_digit_nano_shifted
             self.div_nb_sec_ = div_nb_sec
 
         else:
-            S.index = S_times_nano
+            serie.index = S_times_nano
             resolution = "nano-second"
             self.div_nb_sec_ = 1
 
@@ -149,7 +149,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
         if verbose:
             print(f"Adjusted unit time for algorithm : {self.resolution}")
 
-        self.alpha_groups_ = S.groupby(S.values).groups
+        self.alpha_groups_ = serie.groupby(serie.values).groups
         # associates to each event (key) its associated datetimes (list of values)
         cpool, data_details, pc = mine_seqs(dict(self.alpha_groups_), complex=self.complex)
 
