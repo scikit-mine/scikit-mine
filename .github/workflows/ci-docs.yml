@@ -14,7 +14,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
-          python-version: "3.7"
+          python-version: "3.6.12"
           environment-file: .github/environment-docs.yaml
           activate-environment: scikit-mine-docs
           auto-activate-base: false
