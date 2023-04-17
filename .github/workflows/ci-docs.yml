@@ -1,8 +1,8 @@
 name: CI
 on:
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -15,7 +15,7 @@ jobs:
         with:
           miniconda-version: "latest"
           python-version: "3.8"
-          # environment-file: .github/environment-docs.yaml
+          environment-file: .github/environment-docs.yaml
           activate-environment: scikit-mine-docs
           auto-activate-base: false
 
