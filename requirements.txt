@@ -4,6 +4,10 @@ pyroaring>=0.3.4
 joblib>=0.11.1
 sortedcontainers>=2.1.0
 dataclasses>=0.6
-networkx>=2.5.1
+networkx
 wget>=3.2
 scikit-learn
+graphviz
+matplotlib
+pydot
+# notebook

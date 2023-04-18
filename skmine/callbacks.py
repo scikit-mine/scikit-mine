@@ -1,9 +1,8 @@
 """
 Callback API for scikit-mine
 """
-from inspect import signature, getsource
-
 import re
+from inspect import signature, getsource
 
 
 def has_self_assigment(f):
@@ -12,7 +11,7 @@ def has_self_assigment(f):
     ----------
     f: callable
 
-    check if no assignement is made on the ``self`` keyword
+    check if no assignment is made on the ``self`` keyword
     """
     try:
         p = r"self(\.\w+)?\s*=.*"
@@ -100,9 +99,24 @@ class CallBacks(dict):
     update = _frozen
 
     def __call__(self, miner):
-        miner_methods = [
-            f_name for f_name in dir(miner) if callable(getattr(miner, f_name))
-        ]
+        # print("dir(miner)", dir(miner))
+        # print("miner", miner)
+        # print("miner transform", getattr(miner, "transform"))
+        # print("miner update", getattr(miner, "update"),miner.update )
+        # print("miner set_output",miner.set_output )
+
+        miner_methods = []
+        for f_name in dir(miner):
+            try:
+                if callable(getattr(miner, f_name)):
+                    miner_methods.append(f_name)
+            except:
+                print(f"warning : `f_name`='{f_name}' return an error for `callable(getattr(miner, f_name)`")
+
+                # miner_methods = [
+        #     f_name for f_name in dir(miner) if callable(getattr(miner, f_name))
+        # ]
+
         for f_name in self.keys():
             if not f_name in miner_methods:
                 raise ValueError(
@@ -122,6 +136,7 @@ def _print_positive_gain(self, data_size, model_size, *_):
         print(
             "data size : {:.2f} | model size : {:.2f}".format(data_size, model_size)
         )
+
 
 def _print_candidates_size(self, candidates):
     print("{} new candidates considered".format(len(candidates)))

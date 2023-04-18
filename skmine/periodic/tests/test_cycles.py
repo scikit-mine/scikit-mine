@@ -1,301 +1,284 @@
 import datetime as dt
+import json
+from unittest.mock import patch, mock_open
 
+import graphviz
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
-from .. import cycles
-from ..cycles import (
-    PeriodicCycleMiner,
-    SingleEventCycleMiner,
-    _generate_candidates_batch,
-    _recover_splits_rec,
-    compute_cycles_dyn,
-    cycle_length,
-    evaluate,
-    extract_triples,
-    generate_candidates,
-    get_table_dyn,
-    merge_triples,
-    residual_length,
-    sliding_window_view,
-)
+from skmine.datasets import fetch_health_app
+from skmine.periodic.cycles import _shift_from_nano_to_sec, _iterdict_str_to_int_keys, PeriodicPatternMiner
+
+
+def test_shift_from_nano_to_sec():
+    numbers = pd.Index([1587022200000000000, 1587108540000000000, 1587194940000000000,
+                        1587281400000000000, 1587367920000000000, 1587627000000000000], dtype='int64')
+    expected_output = (
+    pd.Index([1587022200, 1587108540, 1587194940, 1587281400, 1587367920, 1587627000], dtype='int64'),
+    9)
+    numbers_without_zeros, n_zeros = _shift_from_nano_to_sec(numbers)
+    assert (expected_output[0] == numbers_without_zeros).all()
+    assert expected_output[1] == n_zeros
+
+
+def test_iterdict_str_to_int_keys_with_str_keys():
+    assert _iterdict_str_to_int_keys({"1": {"2": "value1"}, "3": ["4", "5"]}) == {1: {2: "value1"}, 3: ["4", "5"]}
+
+
+def test_iterdict_str_to_int_keys_with_mixed_keys():
+    assert _iterdict_str_to_int_keys({"1": {"key_2": "value1"}, 3: ["4", "5"]}) == {1: {"key_2": "value1"},
+                                                                                    3: ["4", "5"]}
+
+
+def test_iterdict_str_to_int_keys_with_nested_dicts():
+    assert _iterdict_str_to_int_keys({"1": {"2": {"3": "value1"}}}) == {1: {2: {3: "value1"}}}
+
+
+def test_iterdict_str_to_int_keys_with_nested_lists():
+    assert _iterdict_str_to_int_keys({"1": {"2": ["3", {"4": "value1"}]}}) == {1: {2: ["3", {4: "value1"}]}}
+
+
+@pytest.fixture()
+def data():
+    one_day = 60 * 24  # a day in minutes
+    minutes = [0, one_day - 1, one_day - 1, one_day - 1, one_day * 2 - 1, one_day * 3, one_day * 4 + 2, one_day * 7]
+
+    S = pd.Series("wake up", index=minutes)
+    start = dt.datetime.strptime("16/04/2020 07:30", "%d/%m/%Y %H:%M")
+    S.index = S.index.map(lambda e: start + dt.timedelta(minutes=e))
+    S.index = S.index.round("min")  # minutes as the lowest unit of difference
+    S[3] = "coffee"
+    return S
+
+
+def test_fit(data):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+
+    assert pcm.is_datetime_ is True
+    assert pcm.auto_time_scale is True
+    assert pcm.n_zeros_ > 0
+    assert [*pcm.alpha_groups_.keys()] == ["coffee", "wake up"]
+    assert len(pcm.alpha_groups_["coffee"]) == 1
+    assert len(pcm.alpha_groups_["wake up"]) == 6  # one duplicate has been removed
+    expected_data_details = {
+        "t_start": "",
+        "t_end": "",
+        "deltaT": "",
+        "nbOccs": {1: 6, 0: 1, -1: 7},
+        "orgFreqs": {1: 6 / 7, 0: 1 / 7},
+        "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
+        "blck_delim": -2 * np.log2(1 / 3)
+    }
+    assert pcm.data_details_.data_details["nbOccs"] == expected_data_details["nbOccs"]
+    assert pcm.data_details_.data_details["orgFreqs"] == expected_data_details["orgFreqs"]
+    assert pcm.data_details_.data_details["adjFreqs"] == expected_data_details["adjFreqs"]
+    assert pcm.data_details_.data_details["blck_delim"] == expected_data_details["blck_delim"]
+    assert pcm.miners_ is not None
+
+
+def test_transform(data):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+    res_transform = pcm.transform(data)
+
+    assert len(res_transform.columns) == 5
+    assert res_transform["t0"].dtypes.name == "datetime64[ns]"
+    assert res_transform["pattern"].dtypes.name == "object"
+    assert res_transform["repetition_major"].dtypes.name == "int64"
+    assert res_transform["period_major"].dtypes.name == "timedelta64[ns]"
+    assert res_transform["sum_E"].dtypes.name == "timedelta64[ns]"
+
+    res_transform = pcm.transform(data, dE_sum=False)
+    assert res_transform["E"].dtypes.name == "object"
+
+
+def test_transform_chronological_order():
+    pcm = PeriodicPatternMiner()
+    data = fetch_health_app()
+    pcm.fit(data[:100])
+    res_transform_not_sorted = pcm.transform(data, chronological_order=False)
+    assert res_transform_not_sorted["t0"].is_monotonic_increasing is False
+
+    res_transform_sorted = pcm.transform(data, chronological_order=True)
+    assert res_transform_sorted["t0"].is_monotonic_increasing is True
 
 
 @pytest.fixture
-def minutes():
-    cuts = np.arange(3) * 400
-    smalls = np.arange(0, 20, 2).reshape((10, 1))
-    return (cuts + smalls).T.reshape(-1)
-
-
-def index_to_datetime(index, scale="minutes"):
-    now = dt.datetime(2021, 4, 20, 12, 15, 00)
-    index = index.map(lambda e: dt.timedelta(minutes=e))  # TODO minutes as scale
-    return pd.to_datetime(index + now)
-
-
-@pytest.fixture
-def cut_points():
+def patterns_json():
     return {
-        (2, 7): 3,
-        (2, 5): 2,
-        (1, 3): None,
-        (4, 6): None,
-        (1, 7): 3,
-        (1, 6): 3,
-        (0, 6): 3,
-        (5, 7): None,
-        (4, 7): None,
-        (1, 4): 3,
-        (2, 4): -1,
-        (1, 5): 3,
-        (2, 6): 3,
-        (0, 5): 3,
-        (0, 7): 3,
-        (3, 6): 3,
-        (0, 4): 3,
-        (3, 7): 3,
-        (0, 3): None,
-        (0, 2): None,
-        (3, 5): -1,
+        "is_datetime_": True,
+        "n_zeros_": 9,
+        "div_nb_sec_": 60,
+        "data_details": {
+            "coffee": [
+                26451809
+            ],
+            "wake up": [
+                26450370,
+                26451809,
+                26453249,
+                26454690,
+                26456132,
+                26460450
+            ]
+        },
+        "patterns": [
+            {
+                "0": {
+                    "p": 1440,
+                    "r": 5,
+                    "children": [
+                        [
+                            1,
+                            0
+                        ]
+                    ],
+                    "parent": None
+                },
+                "1": {
+                    "event": 1,
+                    "parent": 0
+                },
+                "next_id": 2,
+                "t0": 26450370,
+                "E": [
+                    -1,
+                     0,
+                     1,
+                     2
+                ]
+            }
+        ]
     }
 
 
+def test_export_patterns(data, patterns_json):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+    pcm.export_patterns()
+
+    with patch("builtins.open", mock_open()) as mock_file:
+        pcm.export_patterns()
+
+        handle = mock_file()
+        handle.write.assert_called_once_with(json.dumps(patterns_json))
+
+
+def test_import_patterns(patterns_json):
+    pcm = PeriodicPatternMiner()
+
+    mock_file = mock_open(read_data=json.dumps(patterns_json))
+    with patch("builtins.open", mock_file):
+        pcm.import_patterns()
+
+        mock_file.assert_called_once_with("patterns.json", "r")
+
+    assert pcm.n_zeros_ == patterns_json["n_zeros_"]
+    assert pcm.is_datetime_ == patterns_json["is_datetime_"]
+    assert pcm.data_details_.data_details == {
+        "t_start": 26450370,
+        "t_end": 26460450,
+        "deltaT": 10080,
+        "nbOccs": {1: 6, 0: 1, -1: 7},
+        "orgFreqs": {1: 6 / 7, 0: 1 / 7},
+        "adjFreqs": {1: 6 * 1 / (3 * 7), 0: 1 * 1 / (3 * 7), '(': 1 / 3, ')': 1 / 3},
+        "blck_delim": -2 * np.log2(1 / 3)
+    }
+    assert len(pcm.miners_.patterns) == len(patterns_json["patterns"])
+    assert list(pcm.miners_.patterns[0][0].nodes.keys()) == [0, 1]
+    assert pcm.miners_.patterns[0][0].nodes[0] == patterns_json["patterns"][0]["0"]
+    assert pcm.miners_.patterns[0][0].nodes[1] == patterns_json["patterns"][0]["1"]
+    assert pcm.miners_.patterns[0][1] == patterns_json["patterns"][0]["t0"]
+    assert pcm.miners_.patterns[0][2] == patterns_json["patterns"][0]["E"]
+
+
+def test_import_export_patterns(data):
+    pcm1 = PeriodicPatternMiner()
+    pcm1.fit(data)
+    dummy_var = 17
+    res1 = pcm1.transform(dummy_var)
+    pcm1.export_patterns()
+    pcm2 = PeriodicPatternMiner()
+    pcm2.import_patterns()
+    res2 = pcm2.transform(dummy_var)
+
+    assert_frame_equal(res1, res2)
+
+
 @pytest.fixture
-def triples():
-    return np.array(
-        [
-            [0, 2, 4],
-            [0, 2, 6],
-            [0, 4, 6],
-            [2, 4, 6],
-            [400, 402, 404],
-            [400, 402, 406],
-            [400, 404, 406],
-            [402, 404, 406],
-        ]
-    )
+def expected_reconstruct():
+    expected_reconstruct = pd.DataFrame({
+        'time': ['2020-04-16 07:30:00', '2020-04-17 07:29:00', '2020-04-18 07:29:00', '2020-04-19 07:30:00',
+                 '2020-04-20 07:32:00'],
+        'event': ['wake up', 'wake up', 'wake up', 'wake up', 'wake up']
+    })
+    expected_reconstruct['time'] = pd.to_datetime(expected_reconstruct['time'])
+    return expected_reconstruct
 
 
-@pytest.mark.parametrize("k", [3, 5])
-def test_window_view(minutes, k):
-    w = sliding_window_view(minutes, k)
-    assert w.shape == (len(minutes) - k + 1, k)
-    np.testing.assert_array_equal(w[0], minutes[:k])
-    np.testing.assert_array_equal(w[-1], minutes[-k:])
+def test_reconstruct(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
+
+    reconstruct = pcm.reconstruct()
+    assert_frame_equal(reconstruct, expected_reconstruct)
 
 
-def test_cycle_length_triples(minutes):
-    triples = sliding_window_view(minutes, 3)
-    inter = sliding_window_view(np.diff(minutes), 2)
-    delta_S = minutes[-1] - minutes[0]
-    L_a, L_r, L_p, L_tau, L_E = cycle_length(triples, inter, len(minutes), delta_S)
+def test_reconstruct_order():
+    pcm = PeriodicPatternMiner()
+    data = fetch_health_app()
+    pcm.fit(data[:100])
 
-    # TODO : test L_a
-    assert L_r == pytest.approx(4.9069, rel=1e-4)
-    assert len(np.unique(L_p)) == 1
-    assert np.unique(L_p)[0] == pytest.approx(8.6759, rel=1e-4)
-    np.testing.assert_array_almost_equal(
-        np.unique(L_tau), np.array([8.7649, 9.6706]), decimal=4
-    )
-    assert L_tau.mean() == pytest.approx(9.5413, rel=1e-4)
+    reconstruct_time = pcm.reconstruct()
+    assert reconstruct_time["time"].is_monotonic_increasing is True
 
-    np.testing.assert_array_almost_equal(
-        np.unique(L_E), np.array([4.0, 384.0]), decimal=2
-    )
-    assert L_E.mean() == pytest.approx(58.2857)
+    reconstruct_event = pcm.reconstruct(sort="event")
+    assert reconstruct_event["time"].is_monotonic_increasing is False
+    assert reconstruct_event["event"].is_monotonic_increasing is True
+    assert len(reconstruct_time) == len(reconstruct_event)
 
-
-@pytest.mark.parametrize(
-    "idx,length", ([slice(0, 10), 11.2627], [2, 14.5846], [slice(0, 30), 9.6777])
-)
-def test_residual_length(minutes, idx, length):
-    # np.log2(delta_S + 1) - np.log2(len(idx) / 30.)
-    S_a = minutes[idx]
-    delta_S = minutes[-1] - minutes[0]
-    r = residual_length(S_a, len(minutes), delta_S)
-    assert r == pytest.approx(length, rel=1e-4)
+    reconstruct_construction = pcm.reconstruct(sort="construction_order")
+    assert reconstruct_construction["time"].is_monotonic_increasing is False
+    assert reconstruct_construction["event"].is_monotonic_increasing is False
+    # by default, construction_order keeps duplicates to better understand the reconstruction
+    assert len(reconstruct_construction) >= len(reconstruct_time)
+    assert len(reconstruct_construction[reconstruct_construction.duplicated()]) == 1
 
 
-def test_get_table_dyn(cut_points):
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
-    scores, cut_points = get_table_dyn(minutes, len(minutes))
-    expected_len = ((len(minutes) - 1) * (len(minutes) - 2)) / 2
-    assert len(scores) == len(cut_points) == expected_len
-    assert cut_points == cut_points
-    assert np.mean(list(scores.values())) == pytest.approx(37.3237, rel=1e-4)
+def test_get_residuals(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    pcm.fit(data)
 
+    # Getting the complementary data with expected_reconstruct will give us the expected residuals
+    data = pd.DataFrame({"time": data.index, "event": data.values})
+    expected_residuals = pd.merge(data, expected_reconstruct, how='outer', indicator=True)
+    expected_residuals = expected_residuals.loc[expected_residuals['_merge'] == 'left_only']
+    expected_residuals = expected_residuals.drop('_merge', axis=1)
 
-def test_recover_split_rec(cut_points):
-    assert _recover_splits_rec(cut_points, 0, 7) == [(0, 3), (4, 7)]
-
-
-def test_compute_cycles_dyn():
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
-
-    occs, covered = compute_cycles_dyn(minutes, len(minutes))
-    assert set(covered) == set(range(len(minutes)))
-    assert isinstance(occs, list)
-
-
-def test_compute_cycles_dyn_different_split_sizes(monkeypatch):
-    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-
-    monkeypatch.setattr(
-        cycles, "_recover_splits_rec", lambda *args: [(0, 2), (3, 5), (6, 11)]
-    )
-
-    occs, covered = compute_cycles_dyn(minutes, len(minutes))
-    assert set(covered) == set(range(len(minutes)))
-    assert all([isinstance(e, np.ndarray) for e in occs])
-    assert [e.shape for e in occs] == [(1, 6), (2, 3)]
-
-
-def test_extract_triples(triples):
-    minutes = pd.Index(np.array([0, 2, 4, 6, 400, 402, 404, 406]))
-    delta_S = minutes[-1] - minutes[0]
-    l_max = np.log2(delta_S + 1) - 2
-    t = extract_triples(minutes, l_max)
-    assert t.ndim == 2
-    np.testing.assert_array_equal(triples, t)
-
-
-def test_merge_triples(triples):
-    merged = merge_triples(triples)
-    # original triples (size 3) should all have been merged into larger candidates
-    assert len(merged) == 1
-    np.testing.assert_array_equal(np.unique(merged[0]), np.unique(triples))
-
-
-def test_generate_candidate_batch():
-    minutes = pd.Index([0, 20, 31, 40, 60, 240, 400, 420, 440, 460])
-    cands = _generate_candidates_batch(minutes, len(minutes))
-    widths = [_.shape[1] for _ in cands]
-    assert all(x > y for x, y in zip(widths, widths[1:]))  # monotonic but decreasing
-
-
-def test_generate_candidates():
-    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cycles = generate_candidates(minutes, len(minutes))
-    assert cycles.length.sum() == len(minutes)
-    _types = np.unique(cycles.dtypes)
-    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
-    assert np.issubdtype(_types[0], np.number)
-    assert cycles.length.tolist() == [6, 6]  # [6, 3, 3] ?
-    assert (cycles.period == 2).all()
-    assert cycles.index.is_monotonic_increasing
-
-
-def test_evaluate_overlapping_candidates():
-    minutes = np.array([0, 2, 4, 6, 8, 10, 400, 402, 404, 406, 408, 410])
-    cands = generate_candidates(minutes, len(minutes))
-    cycles = evaluate(cands, k=2)
-    _types = np.unique(cycles.dtypes)
-    assert set(cycles.columns.to_list()).issuperset({"start", "length", "period", "dE"})
-    assert np.issubdtype(_types[0], np.number)
-    assert cycles.length.tolist() == [6, 6]
-    assert (cycles.period == 2).all()
-
-
-def test_fit():
-    minutes = np.array([0, 2, 4, 6, 400, 402, 404, 406])
-
-    S = pd.Series("alpha", index=minutes)
-    S.index = index_to_datetime(S.index)
-    S.index = pd.to_datetime(S.index)
-
-    pcm = PeriodicCycleMiner()
-    pcm.fit(S)
-
-    assert len(pcm.miners_) == 1
-    assert sum(map(len, (m.cycles_ for m in pcm.miners_.values()))) == 2
-    assert all(
-        "dE" in c.columns for c in map(lambda m: m.cycles_, pcm.miners_.values())
-    )
-
-
-def test_discover():
-    minutes = np.array([0, 2, 4, 6, 25, 400, 402, 404, 406])
-
-    S = pd.Series("alpha", index=minutes)
-    S = S.append(pd.Series("beta", index=[10, 17, 24, 31]))
-    S.index = index_to_datetime(S.index)
-    S.sort_index(inplace=True)
-    pcm = PeriodicCycleMiner()
-    cycles = pcm.fit_discover(S)
-    assert (cycles.dtypes != "object").all()  # only output structured data
-    cycles = pcm.discover(tids=True)  # now pull out tids
-    assert list(cycles.tids.loc["beta"].iloc[0]) == [4, 5, 6, 8]
-
-
-@pytest.mark.parametrize("is_datetime", (True, False))
-def test_reconstruct(is_datetime):
-    minutes = np.array([0, 2, 4, 6, 400, 400, 402, 404, 406])
-
-    S = pd.Series("alpha", index=minutes)
-    # add infrequent item to be included in reconstructed
-    S = S.append(pd.Series("beta", index=[10]))
-    S.sort_index(inplace=True)
-
-    if is_datetime:
-        S.index = index_to_datetime(S.index)
-
-    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
-    assert pcm.is_datetime_ == is_datetime
-    reconstructed = pcm.reconstruct()
-    pd.testing.assert_index_equal(reconstructed.index, S.index.drop_duplicates())
-
-
-def test_fit_triples_and_residuals():
-    minutes = np.array([0, 20, 31, 40, 60, 240, 400, 420, 431, 440, 460, 781])
-
-    S = pd.Series("alpha", index=minutes)
-
-    pcm = PeriodicCycleMiner(keep_residuals=True).fit(S)
-    # pd.testing.assert_index_equal(pcm.residuals_["alpha"], pd.Int64Index([240, 781]))
-
-    rec_minutes = pcm.reconstruct()
-
-    pd.testing.assert_series_equal(S, rec_minutes)
-
-
-def test_duplicates():
-    S = pd.Series("alpha", index=[20, 20, 40, 50])
-    with pytest.warns(UserWarning):
-        PeriodicCycleMiner().fit(S)
-
-
-def test_small_datetime():
-    minutes = [10, 20, 32, 40, 60, 79, 100, 240]
-    # just check it does not break
-    S = pd.Series("ring_a_bell", index=minutes)
-    S.index = index_to_datetime(S.index)
-    pcm = PeriodicCycleMiner().fit(S)
-    cycles = pcm.discover(shifts=True)
-    assert "dE" in cycles.columns
-
-
-@pytest.mark.parametrize(
-    "_input,raise_warning",
-    [([20, 31, 40, 60, 240], False), ([20, 35, 40, 240], True), ([20, 40, 50], False)],
-)
-def test_candidates(_input, raise_warning):
-    minutes = np.array(_input)
-
-    with pytest.warns(None, match="candidate") as record:
-        SingleEventCycleMiner().fit(minutes)
-
-    assert len(record) == int(raise_warning)
-
-
-@pytest.mark.parametrize("keep_residuals", [True, False])
-def test_get_residuals(keep_residuals):
-    minutes = np.array([0, 20, 31, 40, 60, 154, 240, 270, 300, 330, 358])
-
-    S = pd.Series("alpha", index=minutes)
-
-    pcm = PeriodicCycleMiner(keep_residuals=keep_residuals).fit(S)
     residuals = pcm.get_residuals()
-    # assert isinstance(residuals.index, pd.DatetimeIndex)
-    np.testing.assert_array_equal(residuals.index, [154] * int(keep_residuals))
+    assert_frame_equal(residuals.set_index("time"), expected_residuals.set_index("time"))
+
+
+def test_get_residuals_health_app(data, expected_reconstruct):
+    pcm = PeriodicPatternMiner()
+    data = fetch_health_app()
+    pcm.fit(data[:100])
+
+    residuals_not_sorted = pcm.get_residuals()
+    assert residuals_not_sorted["event"].is_monotonic_increasing is False
+
+    residuals_event_sorted = pcm.get_residuals(sort="event")
+
+    assert residuals_event_sorted["event"].is_monotonic_increasing is True
+
+
+def test_draw_pattern(data):
+    pcm = PeriodicPatternMiner().fit(data)
+    res = pcm.transform(data)
+    graph = pcm.draw_pattern(0)
+    assert 0 in res.index
+    assert type(graph) == graphviz.graphs.Digraph
+    assert graph.source == 'digraph {\n\t0 [label="𝜏=2020-04-16 07:30:00\np=1 day, 0:00:00\nr=5" shape=box]\n\t1 [label="wake up"]\n\t0 -> 1 [dir=none]\n}\n'

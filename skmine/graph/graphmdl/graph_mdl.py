@@ -1,12 +1,10 @@
-import copy
-import logging
 import time
-import networkx
+
 from skmine.base import BaseMiner
-from skmine.graph.graphmdl.label_codes import LabelCodes
+from skmine.graph.graphmdl import utils
 from skmine.graph.graphmdl.code_table import CodeTable
 from skmine.graph.graphmdl.code_table_row import CodeTableRow
-from skmine.graph.graphmdl import utils
+from skmine.graph.graphmdl.label_codes import LabelCodes
 
 
 def _order_pruning_rows(row):

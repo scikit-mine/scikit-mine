@@ -1,9 +1,6 @@
-from ..utils import _check_growth_rate
-from ..utils import _check_min_supp
-from ..utils import _check_random_state
-from ..utils import filter_maximal
-from ..utils import filter_minimal
-from ..utils import intersect2d
+import numpy as np
+import pandas as pd
+import pytest
 
 from ..utils import (
     _check_growth_rate,
@@ -14,11 +11,6 @@ from ..utils import (
     filter_minimal,
     intersect2d,
 )
-
-
-import numpy as np
-import pandas as pd
-import pytest
 
 
 def test_check_random_state():

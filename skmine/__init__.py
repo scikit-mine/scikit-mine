@@ -8,5 +8,5 @@ Pattern mining algorithms for the Python ecosystem
 # joblib currently disable logging inside delayed functions
 __author__ = """scikit-mine team"""
 __email__ = """skm-dev@inria.fr"""
-__version__ = "0.0.11"  # pylint: disable= undefined-variable, pointless-statement
+__version__ = "1.0.0"  # pylint: disable= undefined-variable, pointless-statement
 __credits__ = "Centre Inria de l'Université de Rennes"

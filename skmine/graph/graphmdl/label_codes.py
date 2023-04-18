@@ -1,4 +1,5 @@
 from networkx import Graph
+
 import skmine.graph.graphmdl.utils as utils
 
 

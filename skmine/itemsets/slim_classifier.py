@@ -40,8 +40,9 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
         self.pruning = pruning
 
     def _more_tags(self):
-        return {
-            "no_validation": True}
+        return {"non_deterministic": True,
+                "no_validation": True,
+                "preserves_dtype": []}
 
     def fit(self, X, y):
         """Fit the model according to the given training data.
@@ -94,4 +95,3 @@ class SlimClassifier(BaseEstimator, ClassifierMixin):
 
     def __copy__(self):
         return SlimClassifier(items=self.items, pruning=self.pruning)
-
