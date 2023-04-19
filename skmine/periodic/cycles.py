@@ -143,6 +143,7 @@ class PeriodicPatternMiner(TransformerMixin, BaseEstimator):
             serie.index = S_times_nano
             resolution = "nano-second"
             self.div_nb_sec_ = 1
+
         # TODO : merge self.div_nb_sec_ and self.n_zeros_ to just one number, by which nano-seconds are divided
 
         self.resolution = resolution
