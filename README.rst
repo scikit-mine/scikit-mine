@@ -70,7 +70,7 @@ and some extra dependencies
 Development
 -----------
 
-This project is funded by the `INRIA center in Rennes, Brittany, France <https://www.inria.fr/fr/centre-inria-rennes-bretagne-atlantique>`_.
+This project benefitted from fundings from the `INRIA center in Rennes, Brittany, France <https://www.inria.fr/fr/centre-inria-rennes-bretagne-atlantique>`_, as well as from the `CNRS PNRIA Programme <https://www.ins2i.cnrs.fr/fr/reseau-des-ingenieurs-cnrs-du-programme-national-de-recherche-en-intelligence-artificielle-pnria>`_.
 
 We welcome new contributors of all experience levels. 
 
@@ -79,9 +79,14 @@ Internal Contributors
 ---------------------
 
 - Rémi Adon (https://github.com/remiadon)
-- Luis Galárraga (https://github.com/lgalarra)
-- Josie Signe (https://github.com/Darlysia)
-- Esther Galbrun (https://github.com/nurblageij)
 - Hermann Courteille (https://github.com/hermann74)
 - Cyril Regan (https://github.com/cyril-data)
 - Thomas Betton (https://github.com/thomasbtnfr)
+- Esther Galbrun (https://github.com/nurblageij)
+- Peggy Cellier (https://github.com/PeggyCellier)
+- Alexandre Termier (https://github.com/alexandre-termier)
+- Luis Galárraga (https://github.com/lgalarra)
+- Josie Signe (https://github.com/Darlysia)
+- Francesco Bariatti (https://github.com/fbariatti)
+- Mensah-David Assigbi (https://github.com/davidassigbi)
+- Arnauld-Cyriaque Djedjemel (https://github.com/Ariaque)
